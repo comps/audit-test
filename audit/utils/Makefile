@@ -79,7 +79,10 @@ PTS_EXE		= get_pts
 PTS_OBJS	= get_pts.o
 PTS_LINK	= /tmp/$(PTS_EXE)
 
-all:: deps $(UTILS_AR) $(SEM_EXE) $(RC_EXE) $(PTS_EXE) $(AUDIT_TRAIL_EXE) exit_with_pid_status
+EXIT_EXE	= exit_with_pid_status
+EXIT_OBJS	= exit_with_pid_status.o
+
+all:: deps $(UTILS_AR) $(SEM_EXE) $(RC_EXE) $(PTS_EXE) $(AUDIT_TRAIL_EXE) $(EXIT_EXE)
 
 $(UTILS_AR):: $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)
@@ -91,8 +94,9 @@ $(SEM_EXE):: $(SEM_OBJS)
 	cp $(SEM_EXE) $(SEM_EXE2)
 	chmod 700 $(SEM_EXE2)
 
-exit_with_pid_status: exit_with_pid_status.c
-	$(CC) $(FLAGS) $(ARCH) -o exit_with_pid_status exit_with_pid_status.c
+$(EXIT_EXE): $(EXIT_OBJS)
+	$(CC) $(FLAGS) $(ARCH) -o $@ $(EXIT_OBJS)
+	rm -f $(EXIT_OBJS)
 
 $(RC_EXE):: $(RC_OBJS)
 	$(CC) $(FLAGS) $(ARCH) -o $@ $(RC_OBJS)
@@ -104,7 +108,8 @@ $(PTS_EXE):: $(PTS_OBJS)
 	ln -sf `pwd`/$@ $(PTS_LINK) 
 
 clean::
-	rm -f *.a *.o $(SEM_EXE) $(RC_EXE) $(PTS_LINK) $(PTS_EXE) $(AUDIT_TRAIL_EXE)
+	rm -f *.a *.o $(SEM_EXE) $(SEM_EXE2) $(RC_EXE) $(PTS_LINK) \
+	$(PTS_EXE) $(AUDIT_TRAIL_EXE) $(EXIT_EXE)
 
 include $(TOPDIR)/rules.mk
 

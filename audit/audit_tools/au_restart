@@ -1,0 +1,118 @@
+#!/usr/bin/perl
+# Copyright (C) International Business Machines Corp., 2003
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details. 
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+# USA 
+#
+# FILE: au_restart
+#
+# PURPOSE: test for audit starting and stopping records
+#
+# DESCRIPTION:    This test uses `/etc/init.d/audit restart` to generate audit records
+#                 for the starting and stopping of the audit daemon.
+#
+
+# HISTORY:
+#       11/2003 Originated by Dustin Kirkland <k1rkland@us.ibm.com>
+
+use strict;
+require au_params;
+require au_utils;
+
+my $augrep_exec = au_params::augrep_executable();
+
+my $audit_log_fullpath = au_params::audit_log_fullpath();
+my $audit_logs_fullpath = au_params::audit_logs_fullpath();
+my $audit_log_link_fullpath = au_params::audit_log_link_fullpath();
+my $auditd_executable = au_params::auditd_executable();
+
+my $au_start_failcount = 0;
+my $au_start_successcount = 0;
+my $au_stop_failcount = 0;
+my $au_stop_successcount = 0;
+my $au_reload_failcount = 0;
+my $au_reload_successcount = 0;
+
+my $au_cmd = "";
+
+my @results;
+
+au_utils::preTestSetup();
+
+print("Resarting audit...\n");
+`/etc/init.d/audit restart`;
+if ( $? != 0 ) {
+	print("ERROR: Problem restarting audit.\n");
+}
+
+# Look for an audit start record
+$au_cmd = "$augrep_exec -e TEXT -U AUDIT_start";
+@results = `$au_cmd`;
+if ( @results >= 1 ) {
+  print "TEST PASS: $au_cmd\n";
+  $au_start_successcount++;
+} else {
+  print "TEST FAIL: $au_cmd\n";
+  $au_start_failcount++;
+}
+# Look for an audit stop record
+$au_cmd = "$augrep_exec -e TEXT -U AUDIT_stop";
+@results = `$au_cmd`;
+if ( @results >= 1 ) {
+  print "TEST PASS: $au_cmd\n";
+  $au_stop_successcount++;
+} else {
+  print "TEST FAIL: $au_cmd\n";
+  $au_stop_failcount++;
+}
+
+print("Reloading audit...\n");
+`auditd -r`;
+if ( $? != 0 ) {
+        print("ERROR: Problem reloading audit.\n");
+}
+
+# Look for an audit reload record
+sleep(5);
+$au_cmd = "$augrep_exec -e TEXT -U AUDCONF_reload";
+@results = `$au_cmd`;
+if ( @results >= 1 ) {
+  print "TEST PASS: $au_cmd\n";
+  $au_reload_successcount++;
+} else {
+  print "TEST FAIL: $au_cmd\n";
+  $au_reload_failcount++;
+}
+
+
+EXIT:
+
+#Final output
+print ("\n\taudit start record results");
+print ("\tsuccess count: $au_start_successcount");
+print ("\tfail count: $au_start_failcount\n");
+
+print ("\n\taudit stop record results");
+print ("\tsuccess count: $au_stop_successcount");
+print ("\tfail count: $au_stop_failcount\n");
+
+print ("\n\taudit reload record results");
+print ("\tsuccess count: $au_reload_successcount");
+print ("\tfail count: $au_reload_failcount\n\n");
+
+print ("TEST PASSED = " . ($au_start_successcount + $au_stop_successcount + $au_reload_successcount) . ", FAILED = " . ($au_start_failcount + $au_stop_failcount + $au_reload_failcount) . "\n");
+
+#Final clean
+au_utils::postTestCleanup();

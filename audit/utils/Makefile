@@ -1,0 +1,116 @@
+#########################################################################
+#   Copyright (C) International Business Machines  Corp., 2003
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+#   the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program;  if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#
+#
+#  FILE   : Makefile
+#
+#  PURPOSE: The default "all" target uses the gcc compiler to compile all
+#           files in the current directory that end in ".c" (source code).
+#
+#           The "clean" target removes all files the end in ".o" (object
+#           files).
+#
+#
+#  HISTORY:
+#    06/03 originated by Dustin Kirkland (k1rkland@us.ibm.com
+#    08/03 Updated by Daniel H. Jones <danjones@us.ibm.com>
+#    09/03 Updated by Michael A. Halcrow <mike@halcrow.us>
+#    05/04 Updated by Daniel H. Jones <danjones@us.ibm.com>
+#
+##########################################################################
+
+TOPDIR		= ../..
+MAINDIR		= ..
+
+CC		= gcc
+FLAGS		+= $(CFLAGS)
+INCLUDES 	= -I./include -I../include
+
+AR		= ar
+RANLIB		= ranlib
+
+UTILS_AR	= laus_test_utils.a
+UTILS_OBJS	= audit_args.o			\
+		  audit_clear.o			\
+		  audit_config.o		\
+		  audit_read.o			\
+		  audit_start.o			\
+		  audit_stop.o			\
+		  audit_verify.o		\
+		  audit_reload.o		\
+		  create_dir.o			\
+		  create_file.o			\
+		  create_temp_file.o		\
+		  create_temp_file_name.o	\
+		  create_temp_user_name.o	\
+		  create_temp_group_name.o	\
+		  create_temp_dir.o		\
+		  find_next_pts.o		\
+		  get_identifiers.o		\
+		  get_laus_data.o		\
+		  get_login_uid.o		\
+		  mysprintf.o			\
+		  file_utils.o			\
+		  run.o				\
+		  get_pid.o
+
+SEM_EXE		= semaphore_poster
+SEM_EXE2	= semaphore_poster2
+SEM_OBJS	= semaphore_poster.o
+
+RC_EXE		= rc_return
+RC_OBJS		= rc_return.o
+
+PTS_EXE		= get_pts
+PTS_OBJS	= get_pts.o
+PTS_LINK	= /tmp/$(PTS_EXE)
+
+all:: deps $(UTILS_AR) $(SEM_EXE) $(RC_EXE) $(PTS_EXE) $(AUDIT_TRAIL_EXE) exit_with_pid_status
+
+$(UTILS_AR):: $(UTILS_OBJS)
+	$(AR) rc $@ $(UTILS_OBJS)
+	$(RANLIB) $@
+
+$(SEM_EXE):: $(SEM_OBJS)
+	$(CC) $(FLAGS) $(ARCH) -o $@ $(SEM_OBJS)
+	rm -f $(SEM_OBJS)
+	cp $(SEM_EXE) $(SEM_EXE2)
+	chmod 700 $(SEM_EXE2)
+
+exit_with_pid_status: exit_with_pid_status.c
+	$(CC) $(FLAGS) $(ARCH) -o exit_with_pid_status exit_with_pid_status.c
+
+$(RC_EXE):: $(RC_OBJS)
+	$(CC) $(FLAGS) $(ARCH) -o $@ $(RC_OBJS)
+	rm -f $(RC_OBJS)
+
+$(PTS_EXE):: $(PTS_OBJS)
+	$(CC) $(FLAGS) $(ARCH) -o $@ $(PTS_OBJS)
+	rm -f $(PTS_OBJS)
+	ln -sf `pwd`/$@ $(PTS_LINK) 
+
+clean::
+	rm -f *.a *.o $(SEM_EXE) $(RC_EXE) $(PTS_LINK) $(PTS_EXE) $(AUDIT_TRAIL_EXE)
+
+include $(TOPDIR)/rules.mk
+
+ifneq (,$(findstring ppc, $(MACHINE)))
+	INCLUDES += -I/usr/include
+endif
+
+

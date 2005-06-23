@@ -46,7 +46,7 @@ UTILS_OBJS	= post_trustedprogram.o		\
 		  trusted_program.o 	       \
 		  shadow_test_setup.o
 
-all:: $(UTILS_AR)
+all: $(UTILS_AR)
 
 $(UTILS_AR):: $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)

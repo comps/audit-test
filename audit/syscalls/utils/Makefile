@@ -44,7 +44,7 @@ UTILS_AR	= syscall_test_utils.a
 UTILS_OBJS	= post_syscall.o		\
 		  pre_syscall.o
 
-all:: $(UTILS_AR)
+all: $(UTILS_AR)
 
 $(UTILS_AR):: $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)

@@ -52,12 +52,12 @@ ALL_OBJS        = $(PAM_LAUS_OBJS)
 
 SUB_DIRS        = tests utils ../utils
 
-all:: subdirs deps $(EXE)
+all: subdirs deps $(EXE)
 
 $(EXE):: $(ALL_OBJS) $(UTILS_AR)
 	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) pam_laus.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive 
 
-run:: all
+run: all
 	$(AUDIT_CLEAN_LOG)
 	./$(EXE) &> ./$(EXE).run.log
 

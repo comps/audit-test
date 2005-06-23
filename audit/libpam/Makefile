@@ -52,12 +52,12 @@ ALL_OBJS        = $(LIBPAM_OBJS)
 
 SUB_DIRS        = tests utils ../utils
 
-all:: subdirs deps $(EXE)
+all: subdirs deps $(EXE)
 
 $(EXE):: $(ALL_OBJS)
 	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) libpam.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive -llaus
 
-run:: all
+run: all
 	$(AUDIT_CLEAN_LOG)
 	./$(EXE) &> ./$(EXE).run.log
 

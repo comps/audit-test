@@ -54,12 +54,12 @@ TRUSTEDPROGRAM_OBJS = trustedprograms.o
 
 ALL_OBJS = $(TRUSTEDPROGRAM_OBJS)
 
-all:: subdirs deps $(EXE)
+all: subdirs deps $(EXE)
 
 $(EXE):: $(ALL_OBJS) $(UTILS_AR)
 	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) trustedprograms.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive -llaus
 
-run:: all
+run: all
 	$(AUDIT_CLEAN_LOG)
 	./$(EXE) &> ./$(EXE).run.log
 

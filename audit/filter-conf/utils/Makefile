@@ -47,7 +47,7 @@ ALL_OBJS	= $(UTILS_OBJS)
 
 INCLUDES	= -I$(TOPDIR)/include -I$(CURRENTDIR)/include
 
-all:: deps $(UTILS_AR)
+all: deps $(UTILS_AR)
 
 $(UTILS_AR): $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)

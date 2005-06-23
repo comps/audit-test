@@ -36,7 +36,7 @@ INCLUDES		= -I../include  -I../syscalls/include -I../trustedprograms/include
 CC		= gcc
 FLAGS		+= $(CFLAGS)
 
-all:: test_setxattr test_groupadd test_bind
+all: test_setxattr test_groupadd test_bind
 
 utils::
 	make -C ../utils
@@ -71,7 +71,7 @@ clean::
 	rm -f test_bind
 	rm -f test_groupadd
 
-run:: all
+run: all
 	$(AUDIT_CLEAN_LOG)
 #	./au_login &> ./au_login.run.log
 	./au_netlink &> ./au_netlink.run.log

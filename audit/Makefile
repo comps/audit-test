@@ -40,17 +40,17 @@ SUB_DIRS        = utils \
 		  syscalls 
 LOG		= run.log
 
-all:: subdirs
+all: subdirs
 
 clean:: subdirs
 
-msgque::
+msgque:
 	./rm_msgque
 
-run:: msgque subdirs
+run: msgque subdirs
 	make report	
 
-report::
+report:
 	tail -n 1 */*.run.log > $(LOG)
 	echo "" >> $(LOG)
 	echo "----------------------------------" >> $(LOG)

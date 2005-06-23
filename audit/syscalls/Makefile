@@ -63,9 +63,9 @@ SUB_DIRS = tests utils ../utils
 #LIBS += -llaus
 LIBS +=
 
-all:: subdirs deps $(EXE)
+all: subdirs deps $(EXE)
 
-run:: all
+run: all
 ifeq ($(shell whoami),root)
 	$(AUDIT_CLEAN_LOG)
 	./syscalls &> ./syscalls.run.log

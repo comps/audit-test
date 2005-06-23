@@ -53,7 +53,7 @@ OBJ=	test_at.o \
 	test_userdel.o \
 	test_usermod.o 
 
-all:: $(TESTS_AR)
+all: $(TESTS_AR)
 
 $(TESTS_AR):: $(OBJ)
 	$(AR) rc $@ $(OBJ)

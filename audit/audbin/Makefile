@@ -33,11 +33,11 @@
 
 TOPDIR		= ..
 
-all::
+all:
 
 clean::
 
-run::
+run:
 	./audbin.pl &> ./audbin.pl.run.log
 
 include $(TOPDIR)/rules.mk

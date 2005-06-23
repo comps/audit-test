@@ -82,7 +82,7 @@ PTS_LINK	= /tmp/$(PTS_EXE)
 EXIT_EXE	= exit_with_pid_status
 EXIT_OBJS	= exit_with_pid_status.o
 
-all:: deps $(UTILS_AR) $(SEM_EXE) $(RC_EXE) $(PTS_EXE) $(AUDIT_TRAIL_EXE) $(EXIT_EXE)
+all: deps $(UTILS_AR) $(SEM_EXE) $(RC_EXE) $(PTS_EXE) $(AUDIT_TRAIL_EXE) $(EXIT_EXE)
 
 $(UTILS_AR):: $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)

@@ -43,7 +43,7 @@ TESTS_AR	= pam_laus_test.a
 OBJ=	test_sshd.o \
 	test_vsftpd.o 
 
-all:: $(TESTS_AR)
+all: $(TESTS_AR)
 
 $(TESTS_AR):: $(OBJ)
 	$(AR) rc $@ $(OBJ)

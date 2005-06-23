@@ -52,12 +52,12 @@ SUB_DIRS	= utils tests ../utils
 INCLUDES	= -I$(TOPDIR)/include -I$(CURRENTDIR)/include
 LIBS		+= -llaus
 
-all:: subdirs deps $(FILTER_EXE)
+all: subdirs deps $(FILTER_EXE)
 
 $(FILTER_EXE): $(FILTER_OBJS) $(FILTER_ARS)
 	$(CC) -o $@ $(FILTER_OBJS) $(ARCH) -Wl,--whole-archive -Wl,$(FILTER_ARS) -Wl,--no-whole-archive $(LIBS)
 
-run::
+run:
 	$(AUDIT_CLEAN_LOG)
 	./$(FILTER_EXE) $(DEBUG_ARG) $(USER_ARG) $(LOGIN_ARG) &> ./$(FILTER_EXE).run.log
 

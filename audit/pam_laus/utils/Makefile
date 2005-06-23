@@ -47,7 +47,7 @@ UTILS_OBJS	= post_pam_program.o		\
 		  pam_program.o
 
 
-all:: $(UTILS_AR)
+all: $(UTILS_AR)
 
 $(UTILS_AR):: $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)

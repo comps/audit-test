@@ -56,7 +56,7 @@ SUB_DIRS	= utils tests ../utils
 INCLUDES	= -I$(TOPDIR)/include -I$(CURRENTDIR)/include
 LIBS		+= -llaus
 
-all:: subdirs deps $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
+all: subdirs deps $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
 
 $(FAILSAFE_EXE): $(FAILSAFE_OBJS) $(FAILSAFE_ARS)
 	$(CC) -o $@ $(ARCH) $(FAILSAFE_OBJS) -Wl,--whole-archive -Wl,$(FAILSAFE_ARS) -Wl,--no-whole-archive $(LIBS)
@@ -64,7 +64,7 @@ $(FAILSAFE_EXE): $(FAILSAFE_OBJS) $(FAILSAFE_ARS)
 $(FAILSAFE_NOTIFY): $(FAILSAFE_EXE)
 	$(LN) -sf $< $@
 
-run:: all
+run: all
 	./$(FAILSAFE_EXE) $(DEBUG_ARG) $(USER_ARG) $(LOGIN_ARG) &> ./$(FAILSAFE_EXE).run.log
 
 clean:: subdirs

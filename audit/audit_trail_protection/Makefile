@@ -42,7 +42,7 @@ AUDIT_TRAIL_OBJS = audit_trail_protection.o
 
 EXE = $(AUDIT_TRAIL_EXE)
 
-all:: $(EXE)
+all: $(EXE)
 
 $(EXE): $(AUDIT_TRAIL_OBJS)
 	$(CC) $(FLAGS) $(ARCH) -o $@ $(AUDIT_TRAIL_OBJS)
@@ -51,7 +51,7 @@ $(EXE): $(AUDIT_TRAIL_OBJS)
 clean::
 	rm -f *.a *.o $(AUDIT_TRAIL_EXE)
 
-run:: all
+run: all
 	./$(EXE) &> ./$(EXE).run.log
 
 include $(TOPDIR)/rules.mk

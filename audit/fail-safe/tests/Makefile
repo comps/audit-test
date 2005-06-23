@@ -47,7 +47,7 @@ ALL_OBJS	= $(TESTS_OBJS)
 
 INCLUDES	= -I$(TOPDIR)/include -I$(CURRENTDIR)/include
 
-all:: deps $(TESTS_AR)
+all: deps $(TESTS_AR)
 
 $(TESTS_AR): $(TESTS_OBJS)
 	$(AR) rc $@ $(TESTS_OBJS)

@@ -145,7 +145,7 @@ OBJ=	test_access.o \
 	test_vfork.o \
 
 
-all:: $(TESTS_AR)
+all: $(TESTS_AR)
 
 $(TESTS_AR):: $(OBJ)
 	$(AR) rc $@ $(OBJ)

@@ -55,6 +55,8 @@
 #include <limits.h>
 #include <stdlib.h>
 
+/* <linux/module.h> can't be included in userspace */
+int delete_module(const char *);
 
 int test_init_module(laus_data* dataPtr) {
 

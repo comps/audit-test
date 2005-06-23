@@ -50,6 +50,8 @@ void test_pamprogram(pamprogram_commands command_data[],
 			 int array_size,
 			 laus_data* dataPtr);
 
+int prePAMProgram(laus_data* dataPtr);
+int postPAMProgram(laus_data* dataPtr);
 int runPAMProgram( laus_data* dataPtr, char* command );
 int verifyPAMProgram( laus_data* dataPtr );
 

@@ -29,6 +29,7 @@
 **********************************************************************/
 
 #include "../../include/utils.h"
+#include "pam_laus.h"
 #include "logoptions.h"
 #include <string.h>
 

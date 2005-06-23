@@ -32,6 +32,7 @@
 
 #include "utils.h"
 #include <string.h>
+#include <sys/wait.h>
 
 /*
 ** exec a program
@@ -90,7 +91,7 @@ int run(char* string) {
     }
   } else {
     // We are in the parent
-    waitpid(pid);
+    waitpid(pid, NULL, 0);
   }
 
 // EXIT:         // not needed?

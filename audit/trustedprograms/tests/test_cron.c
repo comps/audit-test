@@ -41,6 +41,7 @@
  **********************************************************************/
 
 #include "trustedprograms.h"
+#include <time.h>
 
 int test_cron(laus_data* dataPtr) {
 

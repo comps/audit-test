@@ -30,6 +30,7 @@
 **********************************************************************/
 
 #include "utils.h"
+#include "trustedprograms.h"
 #include "logoptions.h"
 #include <string.h>
 #include <stdlib.h>

@@ -30,6 +30,7 @@
 **********************************************************************/
 
 #include "utils.h"
+#include <time.h>
 
 int preTrustedProgram(laus_data* dataPtr) {
 

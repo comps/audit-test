@@ -58,8 +58,12 @@ int stopClearStartAudit();
 int verifyLog(laus_data* dataPtr, log_options logOption);
 int verify(int return_code, laus_data* dataPtr, log_options logOption);
 int getIdentifiers( identifiers_t* identifiers );
+int getPid(char* executable);
 int preSysCall(laus_data* dataPtr);
 int postSysCall(laus_data* dataPtr, int resultErrno, int errorRC, int expectedErrno);
+int arg_vector(char** vector, int vector_size, const ARG_TYPE type,
+	const int size, const char* src);
+int arg_get(ARG_TYPE* ptype, int* psize, char* dest, const char** src);
 int auditArg0( laus_data* lausDataPtr );
 int auditArg1( laus_data* lausDataPtr, const int auditArgType, const int size, void* dataPtr );
 int auditArg2( laus_data* lausDataPtr,

@@ -57,7 +57,7 @@
    
    #include "syscalls.h"
    #undef _POSIX_SOURCE
-   #include <linux/capability.h>
+   #include <sys/capability.h>
    
    int test_capset(laus_data* dataPtr) {
      

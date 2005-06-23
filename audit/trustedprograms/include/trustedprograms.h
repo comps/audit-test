@@ -59,10 +59,13 @@ void test_trustedprogram(trustedprogram_commands command_data[],
 			 int array_size,
 			 laus_data* dataPtr);
 
+int preTrustedProgram(laus_data* dataPtr);
+int postTrustedProgram(laus_data* dataPtr);
 int runTrustedProgramAndVerify(laus_data* dataPtr, char* command);
 int runTrustedProgramWithoutVerify( laus_data* dataPtr, char* command );
 int verifyTrustedProgram( laus_data* dataPtr );
 
+int ShadowTestSetup(int backupBool);
 int SystemX(char* command);
 #define system SystemX
 

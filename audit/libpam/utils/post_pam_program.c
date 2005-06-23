@@ -30,6 +30,7 @@
 **********************************************************************/
 
 #include "../../include/utils.h"
+#include <time.h>
 
 int postPAMProgram(laus_data* dataPtr) {
 

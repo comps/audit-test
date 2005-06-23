@@ -117,7 +117,7 @@ int arg_vector( char** vector, int vector_size, const ARG_TYPE type, const int s
 ** from the source buffer and reset the source buffer pointer
 ** to the next position.
 */
-int arg_get(ARG_TYPE* ptype, int* psize, char* dest, char** src) {
+int arg_get(ARG_TYPE* ptype, int* psize, char* dest, const char** src) {
   int rc = 0;
   memcpy(ptype, *src, sizeof(*ptype));
   *src += sizeof(*ptype);

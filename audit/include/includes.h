@@ -34,10 +34,11 @@
 #include <errno.h>        // Needed for all tests
 #include <sys/types.h>    // Needed for most tests
 #include <sys/stat.h>     // Needed for file-related tests
-#include <asm/fcntl.h>    // Needed for file related tests
+#include <fcntl.h>	  // Needed for file related tests
 #include <unistd.h>       // Needed for most tests
 #include "asm/unistd.h"   // Needed for most tests
 #include <linux/limits.h> // Needed for most tests
+#include <sys/fsuid.h>    // Needed for file system check tests
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

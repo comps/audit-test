@@ -48,7 +48,7 @@ UTILS_OBJS	= post_trustedprogram.o		\
 
 all: $(UTILS_AR)
 
-$(UTILS_AR):: $(UTILS_OBJS)
+$(UTILS_AR): $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)
 	$(RANLIB) $@
 

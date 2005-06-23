@@ -49,17 +49,11 @@ UTILS_OBJS	= post_pam_program.o		\
 
 all: $(UTILS_AR)
 
-$(UTILS_AR):: $(UTILS_OBJS)
+$(UTILS_AR): $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)
 	$(RANLIB) $@
 
 clean::
 	rm -f *.a *.o
-
-#
-# Compile rule
-#
-%.o:: %.c
-	$(CC) $(FLAGS) $(ARCH) $(INCLUDES) -c -o $@ $<
 
 include $(TOPDIR)/rules.mk

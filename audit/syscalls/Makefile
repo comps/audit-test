@@ -73,7 +73,7 @@ else
 	@echo "You must run this as root"
 endif
 
-$(EXE):: $(ALL_OBJS) $(UTILS_AR) $(TESTS_AR)
+$(EXE): $(ALL_OBJS) $(UTILS_AR) $(TESTS_AR)
 	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) syscalls.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive $(LIBS)
 
 clean:: subdirs

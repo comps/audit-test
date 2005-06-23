@@ -55,7 +55,7 @@ OBJ=	test_at.o \
 
 all: $(TESTS_AR)
 
-$(TESTS_AR):: $(OBJ)
+$(TESTS_AR): $(OBJ)
 	$(AR) rc $@ $(OBJ)
 	$(RANLIB) $@
 

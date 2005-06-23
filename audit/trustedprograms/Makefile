@@ -56,7 +56,7 @@ ALL_OBJS = $(TRUSTEDPROGRAM_OBJS)
 
 all: subdirs deps $(EXE)
 
-$(EXE):: $(ALL_OBJS) $(UTILS_AR)
+$(EXE): $(ALL_OBJS) $(UTILS_AR)
 	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) trustedprograms.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive -llaus
 
 run: all

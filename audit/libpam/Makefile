@@ -54,7 +54,7 @@ SUB_DIRS        = tests utils ../utils
 
 all: subdirs deps $(EXE)
 
-$(EXE):: $(ALL_OBJS)
+$(EXE): $(ALL_OBJS)
 	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) libpam.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive -llaus
 
 run: all

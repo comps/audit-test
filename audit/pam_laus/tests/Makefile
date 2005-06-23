@@ -45,17 +45,11 @@ OBJ=	test_sshd.o \
 
 all: $(TESTS_AR)
 
-$(TESTS_AR):: $(OBJ)
+$(TESTS_AR): $(OBJ)
 	$(AR) rc $@ $(OBJ)
 	$(RANLIB) $@
 
 clean::
 	rm -f *.a *.o
-
-#
-# Compile rule
-#
-#%.o:: %.c
-#	$(CC) $(INCLUDES) $(FLAGS) $(ARCH) -c -o $@ $<
 
 include $(TOPDIR)/rules.mk

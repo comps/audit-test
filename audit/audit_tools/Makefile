@@ -38,31 +38,31 @@ FLAGS		+= $(CFLAGS)
 
 all: test_setxattr test_groupadd test_bind
 
-utils::
+utils:
 	make -C ../utils
 
-syscalls_utils::
+syscalls_utils:
 	make -C ../syscalls/utils
 
-trustedprograms_utils::
+trustedprograms_utils:
 	make -C ../trustedprograms/utils
 
-test_setxattr:: test_setxattr.o utils syscalls_utils
+test_setxattr: test_setxattr.o utils syscalls_utils
 	$(CC) $(FLAGS) $(ARCH) -o test_setxattr test_setxattr.o ../utils/laus_test_utils.a ../syscalls/utils/syscall_test_utils.a $(INCLUDES)
 
-test_setxattr.o:: test_setxattr.c ../syscalls/include/syscalls.h
+test_setxattr.o: test_setxattr.c ../syscalls/include/syscalls.h
 	$(CC) $(FLAGS) $(ARCH) -c -o test_setxattr.o test_setxattr.c $(INCLUDES)
 
-test_bind:: test_bind.o utils syscalls_utils
+test_bind: test_bind.o utils syscalls_utils
 	$(CC) $(FLAGS) $(ARCH) -o test_bind test_bind.o ../utils/laus_test_utils.a ../syscalls/utils/syscall_test_utils.a $(INCLUDES)
 
-test_bind.o:: test_bind.c ../syscalls/include/syscalls.h
+test_bind.o: test_bind.c ../syscalls/include/syscalls.h
 	$(CC) $(FLAGS) $(ARCH) -c -o test_bind.o test_bind.c $(INCLUDES)
 
-test_groupadd:: test_groupadd.o utils trustedprograms_utils
+test_groupadd: test_groupadd.o utils trustedprograms_utils
 	$(CC) $(FLAGS) $(ARCH) -o test_groupadd test_groupadd.o ../utils/laus_test_utils.a ../trustedprograms/utils/trustedprogram_test_utils.a $(INCLUDES)
 
-test_groupadd.o:: test_groupadd.c ../trustedprograms/include/trustedprograms.h
+test_groupadd.o: test_groupadd.c ../trustedprograms/include/trustedprograms.h
 	$(CC) $(FLAGS) $(ARCH) -c -o test_groupadd.o test_groupadd.c $(INCLUDES)
 
 clean::

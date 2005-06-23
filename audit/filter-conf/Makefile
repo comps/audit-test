@@ -61,7 +61,13 @@ run:
 	$(AUDIT_CLEAN_LOG)
 	./$(FILTER_EXE) $(DEBUG_ARG) $(USER_ARG) $(LOGIN_ARG) &> ./$(FILTER_EXE).run.log
 
-clean:: subdirs
-	$(RM) *.a *.o $(FILTER_EXE)
+clean:
+	make clean -C tests
+	make clean -C utils
+	$(RM) -r .deps
+	$(RM) *.o
+
+clobber: clean
+	$(RM) $(FILTER_EXE)
 
 include $(TOPDIR)/rules.mk

@@ -90,26 +90,26 @@ $(UTILS_AR): $(UTILS_OBJS)
 
 $(SEM_EXE): $(SEM_OBJS)
 	$(CC) $(FLAGS) $(ARCH) -o $@ $(SEM_OBJS)
-	rm -f $(SEM_OBJS)
 	cp $(SEM_EXE) $(SEM_EXE2)
 	chmod 700 $(SEM_EXE2)
 
 $(EXIT_EXE): $(EXIT_OBJS)
 	$(CC) $(FLAGS) $(ARCH) -o $@ $(EXIT_OBJS)
-	rm -f $(EXIT_OBJS)
 
 $(RC_EXE): $(RC_OBJS)
 	$(CC) $(FLAGS) $(ARCH) -o $@ $(RC_OBJS)
-	rm -f $(RC_OBJS)
 
 $(PTS_EXE): $(PTS_OBJS)
 	$(CC) $(FLAGS) $(ARCH) -o $@ $(PTS_OBJS)
-	rm -f $(PTS_OBJS)
 	ln -sf `pwd`/$@ $(PTS_LINK) 
 
-clean::
-	rm -f *.a *.o $(SEM_EXE) $(SEM_EXE2) $(RC_EXE) $(PTS_LINK) \
-	$(PTS_EXE) $(AUDIT_TRAIL_EXE) $(EXIT_EXE)
+clean:
+	$(RM) -r .deps
+	$(RM) *.o 
+
+clobber: clean
+	$(RM) $(UTILS_AR) $(SEM_EXE) $(SEM_EXE2) $(RC_EXE) \
+	$(PTS_LINK) $(PTS_EXE) $(AUDIT_TRAIL_EXE) $(EXIT_EXE)
 
 include $(TOPDIR)/rules.mk
 

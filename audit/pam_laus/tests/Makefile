@@ -49,7 +49,7 @@ $(TESTS_AR): $(OBJ)
 	$(AR) rc $@ $(OBJ)
 	$(RANLIB) $@
 
-clean::
-	rm -f *.a *.o
+clean:
+	$(RM) *.a *.o
 
 include $(TOPDIR)/rules.mk

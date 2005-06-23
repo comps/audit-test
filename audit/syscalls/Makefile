@@ -76,8 +76,13 @@ endif
 $(EXE): $(ALL_OBJS) $(UTILS_AR) $(TESTS_AR)
 	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) syscalls.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive $(LIBS)
 
-clean:: subdirs
-	rm -f *.o
-	rm -f $(EXE)
+clean:
+	make clean -C tests
+	make clean -C utils
+	$(RM) -r .deps
+	$(RM) *.o
+
+clobber: clean
+	$(RM) $(EXE)
 
 include $(TOPDIR)/rules.mk

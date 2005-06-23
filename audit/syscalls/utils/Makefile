@@ -50,7 +50,7 @@ $(UTILS_AR): $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)
 	$(RANLIB) $@
 
-clean::
+clean:
 	rm -f *.a *.o
 
 

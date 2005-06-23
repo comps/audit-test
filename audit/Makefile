@@ -42,7 +42,9 @@ LOG		= run.log
 
 all: subdirs
 
-clean:: subdirs
+clean: subdirs
+
+clobber: subdirs
 
 msgque:
 	./rm_msgque
@@ -61,9 +63,10 @@ report:
 	echo "ERROR:" >> $(LOG)
 	-grep -H "\WERROR\W" */*.run.log >> $(LOG)
 
-cleanup::
+cleanup:
 	grep "^laus_" /etc/passwd | awk -F: '{print $$1}' | xargs -i userdel -r {}
 	grep "^laus_" /etc/group | awk -F: '{print $$1}' | xargs -i groupdel {}
-	rm -rf /tmp/laus??????
+	$(RM) -r /tmp/laus??????
+	$(RM) /etc/security/opasswd  2>/dev/null
 
 include $(TOPDIR)/rules.mk

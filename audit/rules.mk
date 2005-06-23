@@ -39,7 +39,6 @@ Z		:= s390
 Z64		:= s390x
 X86_64		:= x86_64
 HOME_DIR	:= $(shell pwd | awk -F"laus_test" '{print $$1}')
-ASM_DIR		:= $(HOME_DIR)laus_test/include/asm
 SYSTEMINFO      := systeminfo.run.log
 FLAGS           := -g -O2 -Wall
 
@@ -131,11 +130,6 @@ depsdir::
 
 headers:: 
 
-clean::
-	$(RM) -r .deps
-	$(RM) -r $(ASM_DIR)
-
-
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 # Include dependencies if goals do not include 'clean'
 .deps/%.d: %.c
@@ -145,11 +139,6 @@ ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 		[ -s $@ ] || $(RM) $@'
 
 -include .deps/*.d
-else
-# Insure that clean is the only goal if specified
-ifneq ($(words $(MAKECMDGOALS)), 1)
-$(error The 'clean' goal must be the only goal specified)
-endif
 endif
 
 #
@@ -169,15 +158,6 @@ test:: subdirs
 
 rmlogs:: subdirs
 	-find . | grep "run.log" | xargs -i rm -f {}
-
-cleanup::
-	-grep "^laus_" /etc/passwd | awk -F: '{print $$1}' | xargs -i userdel -r {}
-	-grep "^lausg_" /etc/group | awk -F: '{print $$1}' | xargs -i groupdel {}
-	-grep "^fpermu" /etc/passwd | awk -F: '{print $$1}' | xargs -i userdel -r {}
-	-grep "^fpermg" /etc/group | awk -F: '{print $$1}' | xargs -i groupdel {}
-	-rm -rf /tmp/laus??????  2>/dev/null
-	-rm -f /etc/security/opasswd  2>/dev/null
-	-cd /home
 
 verifydeps::
 	# MODE must be defined to either MODE=32 or MODE=64

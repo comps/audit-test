@@ -65,11 +65,11 @@ test_groupadd: test_groupadd.o utils trustedprograms_utils
 test_groupadd.o: test_groupadd.c ../trustedprograms/include/trustedprograms.h
 	$(CC) $(FLAGS) $(ARCH) -c -o test_groupadd.o test_groupadd.c $(INCLUDES)
 
-clean::
-	rm -f *.o
-	rm -f test_setxattr
-	rm -f test_bind
-	rm -f test_groupadd
+clean:
+	$(RM) *.o
+
+clobber: clean
+	$(RM) test_bind test_groupadd test_setxattr
 
 run: all
 	$(AUDIT_CLEAN_LOG)

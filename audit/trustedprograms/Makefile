@@ -63,8 +63,13 @@ run: all
 	$(AUDIT_CLEAN_LOG)
 	./$(EXE) &> ./$(EXE).run.log
 
-clean:: subdirs
-	rm -f *.o
-	rm -f $(EXE)
+clean: 
+	make clean -C tests
+	make clean -C utils
+	$(RM) -r .deps
+	$(RM) *.o
+
+clobber: clean 
+	$(RM) $(EXE)
 
 include $(TOPDIR)/rules.mk

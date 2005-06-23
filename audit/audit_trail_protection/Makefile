@@ -46,10 +46,12 @@ all: $(EXE)
 
 $(EXE): $(AUDIT_TRAIL_OBJS)
 	$(CC) $(FLAGS) $(ARCH) -o $@ $(AUDIT_TRAIL_OBJS)
-	rm -f $(AUDIT_TRAIL_OBJS)
 
-clean::
-	rm -f *.a *.o $(AUDIT_TRAIL_EXE)
+clean:
+	$(RM) *.o
+
+clobber: clean
+	$(RM) $(EXE)
 
 run: all
 	./$(EXE) &> ./$(EXE).run.log

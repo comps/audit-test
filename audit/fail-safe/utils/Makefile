@@ -53,7 +53,8 @@ $(UTILS_AR): $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)
 	$(RANLIB) $@
 
-clean::
+clean:
+	$(RM) -r .deps
 	$(RM) *.a *.o
 
 include $(TOPDIR)/rules.mk

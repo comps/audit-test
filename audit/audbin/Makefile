@@ -35,7 +35,9 @@ TOPDIR		= ..
 
 all:
 
-clean::
+clean:
+
+clobber: clean
 
 run:
 	./audbin.pl &> ./audbin.pl.run.log

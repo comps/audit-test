@@ -60,8 +60,8 @@ $(TESTS_AR): $(TESTS_OBJS)
 	$(AR) rc $@ $(TESTS_OBJS)
 	$(RANLIB) $@
 
-clean::
+clean:
+	$(RM) -r .deps
 	$(RM) *.a *.o
-
 
 include $(TOPDIR)/rules.mk

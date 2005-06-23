@@ -67,7 +67,13 @@ $(FAILSAFE_NOTIFY): $(FAILSAFE_EXE)
 run: all
 	./$(FAILSAFE_EXE) $(DEBUG_ARG) $(USER_ARG) $(LOGIN_ARG) &> ./$(FAILSAFE_EXE).run.log
 
-clean:: subdirs
-	$(RM) *.a *.o $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
+clean:
+	make clean -C tests
+	make clean -C utils
+	$(RM) -r .deps
+	$(RM) *.o 
+
+clobber: clean
+	$(RM) $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
 
 include $(TOPDIR)/rules.mk

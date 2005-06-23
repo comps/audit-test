@@ -110,7 +110,8 @@ else
 endif
 
 
-.PHONY: all clean deps depsdir subdirs $(SUB_DIRS) test run
+.PHONY: all clean deps depsdir subdirs $(SUB_DIRS) test run \
+	cleanup extract msgque report rmlogs
 
 #
 # Compile rules

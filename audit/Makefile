@@ -27,7 +27,7 @@
 #
 ##########################################################################
 
-TOPDIR		= ..
+TOPDIR		= .
 SUB_DIRS        = utils \
 		  fail-safe \
 		  audbin \
@@ -45,7 +45,7 @@ all:: subdirs
 clean:: subdirs
 
 msgque::
-	../rm_msgque
+	./rm_msgque
 
 run:: msgque subdirs
 	make report	

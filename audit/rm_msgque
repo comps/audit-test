@@ -1,4 +1,5 @@
-##########################################################################
+#!/bin/sh
+#
 #   Copyright (C) International Business Machines  Corp., 2003
 #
 #   This program is free software;  you can redistribute it and/or modify
@@ -17,44 +18,20 @@
 #
 #
 #
-#  FILE   : Makefile
+#  FILE   : rm_msgque
 #
-#  PURPOSE: The default "all" target will build all targets within this
-#           makefile.
-#
-#           The "clean" target removes all targets and all intermediate
-#           files.
-#
+#  PURPOSE: simple script to remove the message que on the system
 #
 #  HISTORY:
-#    09/03 originated by Tom Lendacky (toml@us.ibm.com)
+#       09/04 Loulwa Salem (loulwa@us.ibm.com)
 #
-##########################################################################
 
-TOPDIR		= ../..
-CURRENTDIR	= ..
-
-CC		= gcc
-
-AR		= ar
-RANLIB		= ranlib
-
-TESTS_AR	= failsafe_tests.a
-TESTS_OBJS	= test_rollover.o		\
-		  test_rollover_failure.o
-
-ALL_OBJS	= $(TESTS_OBJS)
-
-INCLUDES	= -I$(TOPDIR)/include -I$(CURRENTDIR)/include
-
-all:: deps $(TESTS_AR)
-
-$(TESTS_AR): $(TESTS_OBJS)
-	$(AR) rc $@ $(TESTS_OBJS)
-	$(RANLIB) $@
-
-clean::
-	$(RM) *.a *.o
-
-
-include $(TOPDIR)/rules.mk
+FILE="msgque_file"
+                                                                                
+ipcs -q | cut -f2 -d' ' > $FILE
+while read LINE
+do
+        ipcrm -q $LINE 2>/dev/null
+done < $FILE
+                                                                                
+rm -f $FILE

@@ -33,8 +33,7 @@
 #
 ##########################################################################
 
-TOPDIR		= ../../..
-MAINDIR		= ../..
+TOPDIR		= ../..
 INCLUDES	= -I../include -I../../include
 CC		= gcc
 FLAGS		+= $(CFLAGS)

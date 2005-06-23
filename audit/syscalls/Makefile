@@ -39,8 +39,7 @@
 #    08/03 Updated by Daniel H. Jones <danjones@us.ibm.com>
 #
 ##########################################################################
-TOPDIR=../..
-MAINDIR=..
+TOPDIR=..
 CURRENTDIR=.
 MAKE=make
 CC=gcc
@@ -52,7 +51,7 @@ IP := ppc64 powerpc64
 Z := s390
 X86_64 := x86_64
 
-UTILS_AR = $(MAINDIR)/utils/laus_test_utils.a
+UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
 TESTS_AR = tests/syscall_test.a
 
 SYSCALL_OBJS = syscalls.o

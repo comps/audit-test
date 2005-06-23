@@ -31,8 +31,7 @@
 #
 ##########################################################################
 
-TOPDIR		= ../..
-MAINDIR		= ..
+TOPDIR		= ..
 CURRENTDIR	= .
 
 CC		= gcc
@@ -42,7 +41,7 @@ RANLIB		= ranlib
 
 FILTER_EXE	= filterconf
 FILTER_OBJS	= filterconf.o
-FILTER_ARS	= $(MAINDIR)/utils/laus_test_utils.a	\
+FILTER_ARS	= $(TOPDIR)/utils/laus_test_utils.a	\
 		  $(CURRENTDIR)/utils/filter_conf_utils.a	\
 		  $(CURRENTDIR)/tests/filter_conf_tests.a
 
@@ -50,7 +49,7 @@ ALL_OBJS	= $(FILTER_OBJS)
 
 SUB_DIRS	= utils tests ../utils
 
-INCLUDES	= -I$(MAINDIR)/include -I$(CURRENTDIR)/include
+INCLUDES	= -I$(TOPDIR)/include -I$(CURRENTDIR)/include
 LIBS		+= -llaus
 
 all:: subdirs deps $(FILTER_EXE)

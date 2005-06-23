@@ -40,14 +40,13 @@
 #
 ##########################################################################
 
-TOPDIR=../..
-MAINDIR=..
+TOPDIR=..
 MAKE=make
 CC=gcc
 INCLUDES=-I./include -I../include
 EXE=trustedprograms
 
-UTILS_AR = $(MAINDIR)/utils/laus_test_utils.a
+UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
 
 SUB_DIRS = tests utils ../utils
 

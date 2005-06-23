@@ -31,7 +31,7 @@
 #    08/03 reimplemented by Daniel H. Jones <danjones@us.ibm.com>
 #
 ##########################################################################
-TOPDIR=../../..
+TOPDIR=../..
 CC=gcc
 FLAGS += $(CFLAGS)
 INCLUDES=-I../include -I../../include

@@ -42,10 +42,9 @@ MAKE=make
 CC=gcc
 INCLUDES=-I./include -I../include
 EXE=pam_laus
-TOPDIR          = ../..
-MAINDIR         = ..
+TOPDIR          = ..
 
-UTILS_AR = $(MAINDIR)/utils/laus_test_utils.a
+UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
 
 PAM_LAUS_OBJS   = pam_laus.o
 

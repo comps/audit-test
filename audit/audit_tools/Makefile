@@ -31,8 +31,7 @@
 #
 ##########################################################################
 
-TOPDIR		= ../..
-MAINDIR		= ..
+TOPDIR		= ..
 INCLUDES		= -I../include  -I../syscalls/include -I../trustedprograms/include
 CC		= gcc
 FLAGS		+= $(CFLAGS)

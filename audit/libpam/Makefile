@@ -42,10 +42,9 @@ MAKE=make
 CC=gcc
 INCLUDES=-I./include -I../include
 EXE=libpam
-TOPDIR          = ../..
-MAINDIR         = ..
+TOPDIR          = ..
 CURRENTDIR	= .
-UTILS_AR = $(MAINDIR)/utils/laus_test_utils.a
+UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
 
 LIBPAM_OBJS     = libpam.o
 

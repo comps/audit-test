@@ -31,8 +31,7 @@
 #
 ##########################################################################
 
-TOPDIR		= ../../..
-MAINDIR		= ../..
+TOPDIR		= ../..
 CURRENTDIR	= ..
 
 CC		= gcc
@@ -46,7 +45,7 @@ UTILS_OBJS	= filter_call_utils.o		\
 
 ALL_OBJS	= $(UTILS_OBJS)
 
-INCLUDES	= -I$(MAINDIR)/include -I$(CURRENTDIR)/include
+INCLUDES	= -I$(TOPDIR)/include -I$(CURRENTDIR)/include
 
 all:: deps $(UTILS_AR)
 

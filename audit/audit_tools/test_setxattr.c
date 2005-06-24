@@ -39,7 +39,7 @@ int debug = 2;
 
 int aucat_test_setxattr( int succeed, char* username );
 
-int main( int argc, char** argv[] ) {
+int main( int argc, char* argv[] ) {
 
     aucat_test_setxattr( 1, argv[1] );
     aucat_test_setxattr( 0, argv[1] );

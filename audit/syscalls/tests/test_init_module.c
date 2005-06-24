@@ -82,7 +82,7 @@ int test_init_module(laus_data* dataPtr) {
 	// Set up
 	system( "echo /lib/modules/`uname -r`/kernel/fs/binfmt_misc.ko > /tmp/laus_module" );
 	fPtr = fopen("/tmp/laus_module", "r");
-  	fscanf( fPtr, "%s", &test_module_path );
+  	fscanf( fPtr, "%s", test_module_path );
         fclose( fPtr );
 	unlink("/tmp/laus_module");
 		

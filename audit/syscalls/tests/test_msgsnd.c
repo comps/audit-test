@@ -96,7 +96,7 @@ int test_msgsnd(laus_data* dataPtr) {
 	buf.mtext[2] = buf_on_disk.mtext[2] = 'c';
 
 
-	printf(" >>> buf address: %x <<< \n", &buf);
+	printf(" >>> buf address: %p <<< \n", &buf);
 	if( dataPtr->successCase ) {
 		dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = 0;
 	} else {

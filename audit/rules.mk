@@ -40,7 +40,7 @@ Z64		:= s390x
 X86_64		:= x86_64
 HOME_DIR	:= $(shell pwd | awk -F"laus_test" '{print $$1}')
 SYSTEMINFO      := systeminfo.run.log
-FLAGS           := -g -O2 -Wall -D_GNU_SOURCE
+FLAGS           := -g -O2 -Wall -Werror -D_GNU_SOURCE
 
 AUDIT_CLEAN_LOG := /etc/init.d/audit stop; /bin/rm -f /var/log/audit.d/*; /etc/init.d/audit start
 

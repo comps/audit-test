@@ -242,7 +242,7 @@ int init_audit_conf(uid_t uid, gid_t gid) {
 	struct stat fs, ds;
 
 	int i, j, k;
-	char *devtype[3] = {"hd", "sd", "dasd", "iseries/vd"};
+	char *devtype[4] = {"hd", "sd", "dasd", "iseries/vd"};
 	char devname[32];
 	int devfound = 0;
 

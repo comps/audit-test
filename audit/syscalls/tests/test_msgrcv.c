@@ -48,8 +48,8 @@
  **
  **********************************************************************/
    
+#include "includes.h"
 #include "syscalls.h"
-#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #if defined(__PPC64)
@@ -57,7 +57,6 @@
 #else
 #include <asm/ipc.h>
 #endif
-#include <asm/unistd.h>
 //#include <linux/ipc.h>
 //#include <linux/msg.h>
 

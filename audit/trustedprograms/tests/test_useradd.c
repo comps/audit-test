@@ -40,6 +40,7 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "trustedprograms.h"
 
 int test_useradd(laus_data* dataPtr) {

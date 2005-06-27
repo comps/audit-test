@@ -56,9 +56,8 @@
    **
    **********************************************************************/
    
+   #include "includes.h"
    #include "syscalls.h"
-   #include <sys/types.h>
-   #include <sys/stat.h>
    
    int test_access(laus_data* dataPtr) {
      

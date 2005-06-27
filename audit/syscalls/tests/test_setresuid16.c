@@ -60,8 +60,8 @@
     **
     **********************************************************************/
 #if !defined(__PPC) && !defined(__X86_64) 
+   #include "includes.h"
    #include "syscalls.h"
-   #include <unistd.h>
    
    int test_setresuid16(laus_data* dataPtr) {
      

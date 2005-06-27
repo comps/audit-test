@@ -31,7 +31,6 @@
 
 #ifndef _PAMPROGRAMS_H
 #define _PAMPROGRAMS_H
-#include "../../include/includes.h"
 
 typedef struct {
   char* command;

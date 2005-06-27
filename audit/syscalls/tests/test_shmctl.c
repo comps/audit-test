@@ -51,6 +51,7 @@
  **
  **********************************************************************/
    
+#include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
 #if defined(__PPC64)

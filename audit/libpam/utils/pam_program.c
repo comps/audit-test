@@ -28,10 +28,9 @@
 **
 **********************************************************************/
 
-#include "utils.h"
+#include "includes.h"
 #include "libpam.h"
 #include "logoptions.h"
-#include <string.h>
 
 int runPAMProgram( laus_data* dataPtr, char* command ) {
   int rc = 0;

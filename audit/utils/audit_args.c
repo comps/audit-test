@@ -35,9 +35,7 @@
 **
 **********************************************************************/
 
-#include "utils.h"
-#include "types.h"
-
+#include "includes.h"
 
 /*
 ** This function is used to build the syscall parameters data. The first call (with a null pointer)

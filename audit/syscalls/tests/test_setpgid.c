@@ -48,6 +48,7 @@
  **
  **********************************************************************/
    
+#include "includes.h"
 #include "syscalls.h"
    
 int test_setpgid(laus_data* dataPtr) {

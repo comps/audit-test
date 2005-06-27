@@ -28,10 +28,8 @@
 
 #ifndef NOXATTR
 
-
+#include "includes.h"
 #include "syscalls.h"
-#include <sys/types.h>
-#include <unistd.h>
 #include <attr/xattr.h>
 #include <pwd.h>
 

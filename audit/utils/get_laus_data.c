@@ -31,8 +31,7 @@
 **
 **********************************************************************/
 
-#include "utils.h"
-#include "globals.h"
+#include "includes.h"
 
 /*
 ** Get data necessary for audit record verification

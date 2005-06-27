@@ -47,8 +47,8 @@
    **
    **********************************************************************/
    
+   #include "includes.h"
    #include "syscalls.h"
-   #include <stdio.h>
    
    int test_rename(laus_data* dataPtr) {
 

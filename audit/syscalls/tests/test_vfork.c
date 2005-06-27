@@ -51,10 +51,9 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "syscalls.h"
-#include <sys/types.h>
 #include <sys/wait.h>
-#include <unistd.h>
 #include <sched.h>
 
 int test_vfork(laus_data* dataPtr) {

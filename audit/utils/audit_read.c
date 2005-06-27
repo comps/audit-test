@@ -30,13 +30,8 @@
 **
 **********************************************************************/
 
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/stat.h>
+#include "includes.h"
 #include <sys/mman.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <string.h>
 
 #include "audit_read.h"
 

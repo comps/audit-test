@@ -39,6 +39,7 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "trustedprograms.h"
 
 int test_groupmod(laus_data* dataPtr) {

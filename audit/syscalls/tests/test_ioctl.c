@@ -40,10 +40,9 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "syscalls.h"
 #include <termio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
 
 int test_ioctl(laus_data* dataPtr) {

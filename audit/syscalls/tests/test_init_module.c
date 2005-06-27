@@ -51,9 +51,8 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "syscalls.h"
-#include <limits.h>
-#include <stdlib.h>
 
 /* <linux/module.h> can't be included in userspace */
 int delete_module(const char *);

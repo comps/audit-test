@@ -49,9 +49,8 @@
  **
  **********************************************************************/
 
-
+#include "includes.h"
 #include "syscalls.h"
-#include <sys/types.h>
 #include <attr/xattr.h>
 
 int test_setxattr(laus_data* dataPtr) {

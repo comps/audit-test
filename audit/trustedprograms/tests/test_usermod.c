@@ -38,6 +38,7 @@
  **    07/2003 Adapted by Michael A. Halcrow <mike@halcrow.us>
  **
  **********************************************************************/
+#include "includes.h"
 #include "trustedprograms.h"
 
 int test_usermod(laus_data* dataPtr) {

@@ -39,6 +39,7 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "trustedprograms.h"
 
 int test_atd(laus_data* dataPtr) {

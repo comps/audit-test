@@ -30,11 +30,6 @@
  **
  **********************************************************************/
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include "includes.h"
 
 int getIdentifiers( identifiers_t* identifiers ) {

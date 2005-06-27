@@ -34,10 +34,8 @@
  **
  **********************************************************************/
 
-#include "utils.h"
-#include <stdlib.h>
+#include "includes.h"
 #include <grp.h>
-#include <sys/types.h>
 
 /*
 ** Generate unique group name and gid

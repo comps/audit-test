@@ -52,6 +52,7 @@
    **
    **********************************************************************/
    
+  #include "includes.h"
   #include "syscalls.h"
    
   int test_sethostname(laus_data* dataPtr) {

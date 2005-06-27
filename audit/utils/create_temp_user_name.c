@@ -31,10 +31,8 @@
 **
 **********************************************************************/
 
-#include "utils.h"
-#include <stdlib.h>
+#include "includes.h"
 #include <pwd.h>
-#include <sys/types.h>
 
 /*
 ** Generate unique user name, uid, homedir

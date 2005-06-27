@@ -66,9 +66,8 @@
    **
    **********************************************************************/
    
+   #include "includes.h"
    #include "syscalls.h"
-   #include <unistd.h>
-   #include <sys/types.h>
    #include <dirent.h>
    
    int test_fchdir(laus_data* dataPtr) {

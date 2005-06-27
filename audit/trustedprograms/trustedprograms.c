@@ -51,11 +51,9 @@
 **********************************************************************/
 
 #include "includes.h"
-#include "utils.h"
 #include "trustedprograms.h"
 #include <pwd.h>
 #include <getopt.h>
-#include <string.h>
 
 int test_rc = 0;
 int pass_testcases = 0;

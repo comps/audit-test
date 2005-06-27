@@ -66,8 +66,7 @@
    
 #if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
 
-#include "syscalls.h"
-#include <unistd.h>
+#include "includes.h"
    
 int test_setfsuid32(laus_data* dataPtr) {
 

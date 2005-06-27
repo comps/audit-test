@@ -56,9 +56,8 @@
     **
     **********************************************************************/
    
+   #include "includes.h"
    #include "syscalls.h"
-   #include <sys/types.h>
-   #include <unistd.h>
    #include <grp.h>
    
    int test_setgroups(laus_data* dataPtr) {

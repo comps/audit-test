@@ -35,7 +35,6 @@
 #include <asm/param.h>
 #include <laus.h>
 #include <linux/audit.h>
-#include <types.h>
         
 #if (defined(__S390X) || defined(__X86_64) || defined(__PPC64)) && defined(__MODE_32)
 // This is needed for accurate processing of headers on 64bit platforms when test suite

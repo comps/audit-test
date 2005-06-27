@@ -48,11 +48,6 @@ typedef long __laus_int64;
 typedef int __laus_int32;
 #endif
 
-
-#define AUD_MAX_HOSTNAME	256
-#define AUD_MAX_ADDRESS		256
-#define AUD_MAX_TERMINAL	256
-
 #define NO_CHECK_SYSCALL_DATA 0x7ba970a7
 
 typedef struct {

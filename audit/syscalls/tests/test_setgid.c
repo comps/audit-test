@@ -59,9 +59,8 @@
     **
     **********************************************************************/
    
+   #include "includes.h"
    #include "syscalls.h"
-   #include <sys/types.h>
-   #include <unistd.h>
    
    int test_setgid(laus_data* dataPtr) {
      

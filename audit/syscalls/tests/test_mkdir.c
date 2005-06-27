@@ -50,9 +50,8 @@
    **
    **********************************************************************/
    
+   #include "includes.h"
    #include "syscalls.h"
-   #include <sys/stat.h>
-   #include <sys/types.h>
    
    int test_mkdir(laus_data* dataPtr) {
      

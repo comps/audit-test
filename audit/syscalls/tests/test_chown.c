@@ -54,9 +54,8 @@
    **
    **********************************************************************/
    
+   #include "includes.h"
    #include "syscalls.h"
-   #include <sys/types.h>
-   #include <unistd.h>
    
    int test_chown(laus_data* dataPtr) {
      

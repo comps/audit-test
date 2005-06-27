@@ -55,6 +55,7 @@
 
 #ifdef __IX86
    
+   #include "includes.h"
    #include "syscalls.h"
    #include <sys/io.h>
    

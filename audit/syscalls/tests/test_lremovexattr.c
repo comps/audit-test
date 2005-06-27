@@ -51,10 +51,8 @@
  **
  **********************************************************************/
 
-
-
+#include "includes.h"
 #include "syscalls.h"
-#include <sys/types.h>
 #include <attr/xattr.h>
 
 int test_lremovexattr(laus_data* dataPtr) {

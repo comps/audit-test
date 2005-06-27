@@ -39,6 +39,7 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "trustedprograms.h"
 
 int test_groupadd(laus_data* dataPtr) {

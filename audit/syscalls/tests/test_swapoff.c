@@ -54,8 +54,8 @@
  **
  **********************************************************************/
    
+#include "includes.h"
 #include "syscalls.h"
-#include <unistd.h>
 #include <asm/page.h>
 #include <sys/swap.h>
    

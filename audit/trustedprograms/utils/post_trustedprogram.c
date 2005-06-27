@@ -28,7 +28,8 @@
 **
 **********************************************************************/
 
-#include "utils.h"
+#include "includes.h"
+#include "trustedprograms.h"
 #include <time.h>
 
 int postTrustedProgram(laus_data* dataPtr) {

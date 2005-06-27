@@ -1,8 +1,6 @@
-#include <sys/types.h>
+#include "includes.h"
 #include <sys/ipc.h>
 #include <sys/sem.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 typedef struct sembuf_s {
   short sem_num;

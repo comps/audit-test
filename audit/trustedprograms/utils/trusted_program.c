@@ -29,11 +29,9 @@
 **
 **********************************************************************/
 
-#include "utils.h"
+#include "includes.h"
 #include "trustedprograms.h"
 #include "logoptions.h"
-#include <string.h>
-#include <stdlib.h>
 #include <sys/wait.h>
 
 int runTrustedProgramAndVerify(laus_data* dataPtr, char* command) {

@@ -28,7 +28,8 @@
 **
 **********************************************************************/
 
-#include "utils.h"
+#include "includes.h"
+#include "trustedprograms.h"
 
 int ShadowTestSetup( int backupBool ) {
 

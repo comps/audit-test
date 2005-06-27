@@ -49,9 +49,8 @@
     **
     **********************************************************************/
    
+   #include "includes.h"
    #include "syscalls.h"
-   #include <unistd.h>
-   #include <linux/unistd.h>
    
    int test_syslog(laus_data* dataPtr) {
      

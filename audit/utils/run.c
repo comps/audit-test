@@ -30,8 +30,7 @@
 **
 **********************************************************************/
 
-#include "utils.h"
-#include <string.h>
+#include "includes.h"
 #include <sys/wait.h>
 
 /*

@@ -48,8 +48,8 @@
  **
  **********************************************************************/
    
+#include "includes.h"
 #include "syscalls.h"
-#include <sys/types.h>
 #include <signal.h>
    
 int test_kill(laus_data* dataPtr) {

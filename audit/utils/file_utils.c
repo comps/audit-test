@@ -27,9 +27,7 @@
 **
 **********************************************************************/
 
-#include "utils.h"
-#include <stdlib.h>
-#include <stdio.h>
+#include "includes.h"
 
 /*
 ** Create a backup file with a .bak extention

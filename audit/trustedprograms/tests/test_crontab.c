@@ -40,6 +40,7 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "trustedprograms.h"
 
 int test_crontab(laus_data* dataPtr) {

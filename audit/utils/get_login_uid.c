@@ -30,9 +30,7 @@
 **
 **********************************************************************/
 
-
-#include "utils.h"
-#include "globals.h"
+#include "includes.h"
 
 int getLoginUID() {
   int rc = -1;

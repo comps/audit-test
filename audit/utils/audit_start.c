@@ -31,9 +31,7 @@
 **
 **********************************************************************/
 
-#include "utils.h"
-
-#include "laus.h"
+#include "includes.h"
 
 /*
 ** Start auditing system calls

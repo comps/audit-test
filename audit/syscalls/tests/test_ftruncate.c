@@ -50,8 +50,8 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "syscalls.h"
-#include <unistd.h>
 
 /*
  ** execute a ftruncate operation

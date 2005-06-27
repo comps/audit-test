@@ -28,9 +28,7 @@
 **
 **********************************************************************/
 
-#include "utils.h"
-
-#include "laus.h"
+#include "includes.h"
 
 /*
 ** Reload the auditing configuration

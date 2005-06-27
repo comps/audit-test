@@ -56,6 +56,7 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "syscalls.h"
 
 /* <linux/module.h> can't be included in userspace */

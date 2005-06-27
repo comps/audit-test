@@ -52,17 +52,12 @@
 **********************************************************************/
 
 #include "includes.h"
-#include "utils.h"
 #include "syscalls.h"
 #include "syscalls_array.h"
 #include "logoptions.h"
 
 #include <pwd.h>
 #include <getopt.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
 
 char cwd[PATH_MAX];
 

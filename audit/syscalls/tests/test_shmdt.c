@@ -55,8 +55,8 @@
    **
    **********************************************************************/
    
+   #include "includes.h"
    #include "syscalls.h"
-   #include <sys/types.h>
    #include <sys/shm.h>
    #include <asm/page.h>
 #if defined(__PPC64)

@@ -49,10 +49,10 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "syscalls.h"
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <unistd.h>
 
 #if defined(__MODE_32) || defined(__IX86)
 typedef long long __my64;

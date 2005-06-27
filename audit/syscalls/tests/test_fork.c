@@ -47,9 +47,8 @@
  **
  **********************************************************************/
    
+#include "includes.h"
 #include "syscalls.h"
-#include <sys/types.h>
-#include <unistd.h>
 #include <sched.h>
    
 int test_fork(laus_data* dataPtr) {

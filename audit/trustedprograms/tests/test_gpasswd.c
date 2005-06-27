@@ -40,6 +40,7 @@
  **
  **********************************************************************/
 
+#include "includes.h"
 #include "trustedprograms.h"
 #include <sys/ipc.h>
 #include <sys/shm.h>

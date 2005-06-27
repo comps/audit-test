@@ -42,9 +42,8 @@
 **
 **********************************************************************/
 
-#include "utils.h"
+#include "includes.h"
 #include "tempname.h"
-#include <stdlib.h>
 
 /*
 ** Create a test file

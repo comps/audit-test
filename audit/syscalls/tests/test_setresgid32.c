@@ -62,8 +62,8 @@
 
 #if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
    
+   #include "includes.h"
    #include "syscalls.h"
-   #include <unistd.h>
    
    int test_setresgid32(laus_data* dataPtr) {
      

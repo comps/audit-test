@@ -51,9 +51,8 @@
    **********************************************************************/
 #if !defined(__PPC) && !defined(__X86_64)
    
+   #include "includes.h"
    #include "syscalls.h"
-   #include <sys/types.h>
-   #include <unistd.h>
    
    int test_chown16(laus_data* dataPtr) {
      

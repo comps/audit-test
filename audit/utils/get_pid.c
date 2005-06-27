@@ -25,7 +25,6 @@
  **
  **********************************************************************/
 
-#include <stdio.h>
 #include "includes.h"
 
 int getPid( char* executable ) {

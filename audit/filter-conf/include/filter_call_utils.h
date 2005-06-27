@@ -28,8 +28,5 @@
 **
 **********************************************************************/
 
-#include "includes.h"
-
-
 int pre_filter_call(laus_data *ld);
 int post_filter_call(laus_data *ld);

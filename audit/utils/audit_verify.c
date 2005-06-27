@@ -670,16 +670,16 @@ int compare_var_parms (const char *actual, const char *expect)
 	} else {
             if ( memcmp( buffer_a, buffer_e, size_e ) != 0 ) {
 		printf9("String value mismatch in variable arguments\n");
-		printf("actual: ");
+		printf9prime("actual: ");
 		for (i = 0; i < size_a; i++) {
 			printf("%02X", buffer_a[i]);
 		}
-		printf("\n");
-                printf("expect: ");
+		printf9prime("\n");
+                printf9prime("expect: ");
                 for (i = 0; i < size_e; i++) {
                         printf("%02X", buffer_e[i]);
                 }
-                printf("\n");
+                printf9prime("\n");
 		rc = -1;
 		goto out;
 	    }

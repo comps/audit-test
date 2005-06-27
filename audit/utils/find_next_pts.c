@@ -24,7 +24,7 @@
 **    10/03 Originated by Michael A. Halcrow <mike@halcrow.us>
 **
 **********************************************************************/
-#include "../include/includes.h"
+#include "includes.h"
 
 #define MAX_PTS_CHARACTERS 10
 

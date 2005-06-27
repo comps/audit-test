@@ -32,7 +32,7 @@
 ##########################################################################
 
 TOPDIR		= ../..
-CURRENTDIR	= ..
+TESTDIR		= ..
 
 CC		= gcc
 
@@ -45,7 +45,7 @@ UTILS_OBJS	= failsafe_utils.o		\
 
 ALL_OBJS	= $(UTILS_OBJS)
 
-INCLUDES	= -I$(TOPDIR)/include -I$(CURRENTDIR)/include
+INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 all: deps $(UTILS_AR)
 

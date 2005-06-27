@@ -39,7 +39,7 @@
  **
  **********************************************************************/
 
-#include "../include/libpam.h"
+#include "libpam.h"
 #include "tempname.h"
 #include <time.h>
 #include <pwd.h>

@@ -35,10 +35,10 @@
 ##########################################################################
 
 TOPDIR		= ..
-
+TESTDIR		= .
 CC		= gcc
 FLAGS		+= $(CFLAGS)
-INCLUDES 	= -I./include -I../include
+INCLUDES 	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 AR		= ar
 RANLIB		= ranlib

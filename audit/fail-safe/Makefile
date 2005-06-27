@@ -32,7 +32,7 @@
 ##########################################################################
 
 TOPDIR		= ..
-CURRENTDIR	= .
+TESTDIR		= .
 
 CC		= gcc
 
@@ -44,16 +44,16 @@ LN		= ln
 FAILSAFE_EXE	= failsafe
 FAILSAFE_OBJS	= failsafe.o
 FAILSAFE_ARS	= $(TOPDIR)/utils/laus_test_utils.a	\
-		  $(CURRENTDIR)/utils/failsafe_utils.a	\
-		  $(CURRENTDIR)/tests/failsafe_tests.a
+		  $(TESTDIR)/utils/failsafe_utils.a	\
+		  $(TESTDIR)/tests/failsafe_tests.a
 
 FAILSAFE_NOTIFY	= failsafe_notify
 
 ALL_OBJS	= $(FAILSAFE_OBJS)
 
-SUB_DIRS	= utils tests ../utils
+SUB_DIRS	= utils tests $(TOPDIR)/utils
 
-INCLUDES	= -I$(TOPDIR)/include -I$(CURRENTDIR)/include
+INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 LIBS		+= -llaus
 
 all: subdirs deps $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)

@@ -38,7 +38,7 @@
  **
  **********************************************************************/
 
-#include "../include/pam_laus.h"
+#include "pam_laus.h"
 #include "tempname.h"
 #include <time.h>
 #include <pwd.h>

@@ -50,9 +50,9 @@
 **
 **********************************************************************/
 
-#include "../include/includes.h"
-#include "../include/utils.h"
-#include "include/trustedprograms.h"
+#include "includes.h"
+#include "utils.h"
+#include "trustedprograms.h"
 #include <pwd.h>
 #include <getopt.h>
 #include <string.h>

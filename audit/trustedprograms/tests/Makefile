@@ -31,10 +31,11 @@
 #    08/03 reimplemented by Daniel H. Jones <danjones@us.ibm.com>
 #
 ##########################################################################
-TOPDIR=../..
-CC=gcc
-FLAGS += $(CFLAGS)
-INCLUDES=-I../include -I../../include
+TOPDIR		= ../..
+TESTDIR		= ..
+CC		= gcc
+FLAGS 		+= $(CFLAGS)
+INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 AR		= ar
 RANLIB		= ranlib

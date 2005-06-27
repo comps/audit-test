@@ -51,9 +51,9 @@
 **
 **********************************************************************/
 
-#include "../include/includes.h"
-#include "../include/utils.h"
-#include "include/pam_laus.h"
+#include "includes.h"
+#include "utils.h"
+#include "pam_laus.h"
 #include <pwd.h>
 #include <getopt.h>
 #include <string.h>

@@ -29,7 +29,7 @@
 **
 **********************************************************************/
 
-#include "../../include/utils.h"
+#include "utils.h"
 #include <time.h>
 
 int prePAMProgram(laus_data* dataPtr) {

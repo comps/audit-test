@@ -40,11 +40,12 @@
 #
 ##########################################################################
 
-TOPDIR=..
-MAKE=make
-CC=gcc
-INCLUDES=-I./include -I../include
-EXE=trustedprograms
+TOPDIR		= ..
+TESTDIR		= .
+MAKE		= make
+CC		= gcc
+INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+EXE		= trustedprograms
 
 UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
 

@@ -35,7 +35,7 @@ TOPDIR		= ..
 
 CC		= gcc
 FLAGS		+= $(CFLAGS)
-INCLUDES 	= -I./include -I../include
+INCLUDES 	= -I$(TOPDIR)/include
 
 AUDIT_TRAIL_EXE  = audit_trail_protection
 AUDIT_TRAIL_OBJS = audit_trail_protection.o

@@ -38,7 +38,7 @@
  **
  **********************************************************************/
 
-#include "../include/trustedprograms.h"
+#include "trustedprograms.h"
 #include "tempname.h"
 #include <time.h>
 #include <pwd.h>

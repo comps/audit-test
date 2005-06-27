@@ -32,9 +32,9 @@
 ##########################################################################
 
 TOPDIR		= ../..
-
+TESTDIR		= ..
 CC		= gcc
-INCLUDES	= 
+INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 FLAGS		+= $(CFLAGS)
 
 AR		= ar

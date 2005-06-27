@@ -32,7 +32,7 @@
 ##########################################################################
 
 TOPDIR		= ../..
-CURRENTDIR	= ..
+TESTDIR		= ..
 
 CC		= gcc
 
@@ -52,7 +52,7 @@ TESTS_OBJS	= test_int_cmp.o	\
 
 ALL_OBJS	= $(TESTS_OBJS)
 
-INCLUDES	= -I$(TOPDIR)/include -I$(CURRENTDIR)/include
+INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 all: deps $(TESTS_AR)
 

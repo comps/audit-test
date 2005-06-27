@@ -38,13 +38,13 @@
 #
 ##########################################################################
 
-MAKE=make
-CC=gcc
-INCLUDES=-I./include -I../include
-EXE=libpam
+MAKE		= make
+CC		= gcc
+EXE		= libpam
 TOPDIR          = ..
-CURRENTDIR	= .
-UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
+TESTDIR		= .
+INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+UTILS_AR 	= $(TOPDIR)/utils/laus_test_utils.a
 
 LIBPAM_OBJS     = libpam.o
 

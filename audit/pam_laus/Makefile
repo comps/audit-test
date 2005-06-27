@@ -38,11 +38,12 @@
 #
 ##########################################################################
 
-MAKE=make
-CC=gcc
-INCLUDES=-I./include -I../include
-EXE=pam_laus
 TOPDIR          = ..
+TESTDIR		= .
+MAKE		= make
+CC		= gcc
+INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+EXE		= pam_laus
 
 UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
 

@@ -30,7 +30,7 @@
 **
 **********************************************************************/
 
-#include "../../include/utils.h"
+#include "utils.h"
 #include <time.h>
 
 int postSysCall(laus_data* dataPtr, int resultErrno, int errorRC, int expectedErrno) {

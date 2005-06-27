@@ -31,7 +31,7 @@
 **
 **********************************************************************/
 
-#include "../../include/utils.h"
+#include "utils.h"
 #include <time.h>
 
 int preSysCall(laus_data* dataPtr) {

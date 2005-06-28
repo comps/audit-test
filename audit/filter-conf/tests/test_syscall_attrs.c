@@ -108,7 +108,8 @@ EXIT:
 	return rc;
 }
 
-#ifndef __X86_64   //no syscalls have minor numbers other than 0
+#if !defined(__X86_64) && !defined(__IA64)
+//no syscalls have minor numbers other than 0
 /**********************************************************************
 **  Function: test_syscall_minor
 **    Tests the syscall-minor system call support.

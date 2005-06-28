@@ -116,6 +116,9 @@ Arguments:\n\
 #ifdef __X86_64
   int arch =  AUDIT_ARCH_X86_64;
 #endif
+#ifdef __IA64
+  int arch =  AUDIT_ARCH_IA64;
+#endif
 
   // Array contains data for each pam program test.
   pam_data pamTests[] = {

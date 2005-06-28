@@ -17,38 +17,39 @@
  **
  **
  **
- **  FILE   : test_utime.c
+ **  FILE   : test_utimes.c
  **
- **  PURPOSE: The test_utime() function builds into the laus_test
+ **  PURPOSE: The test_utimes() function builds into the laus_test
  **           framework to verify that the Linux Audit System accurately
  **           logs both successful and erroneous execution of the
- **           "utime" system call.
+ **           "utimes" system call.
  **
  **           In the successful case, this function:
  **             1) Creates the temporary file
- **             2) Creates the utime data structure
- **             3) Executes the "utime" system call
+ **             2) Creates the timeval data structure
+ **             3) Executes the "utimes" system call
  **
  **           The successful case executes the expected conditions
- **           described by the "utime" system call manpage.  That is,
- **           the utime() function is called using a valid filename 
+ **           described by the "utimes" system call manpage.  That is,
+ **           the utimes() function is called using a valid filename 
  **           and actually changes the access and modified timestamps
  **           on the file.
  **
  **            In the erroneous case, this function:
  **             1) Creates the temporary file
- **             2) Creates the utime data structure
- **             3) Executes the "utime" system call as helper_uid
+ **             2) Creates the timeval data structure
+ **             3) Executes the "utimes" system call as helper_uid
  **
  **            The erroneous case executes the faulty conditions
  **            described by the "EPERM" errno.
- **            That is, the utime() function is called on NULL.
+ **            That is, the utimes() function is called on NULL.
  **
  **
  **  HISTORY:
  **    06/03 originated by Dustin Kirkland (k1rkland@us.ibm.com)
  **    10/03 furthered by Kylene J. Smith (kylene@us.ibm.com)
  **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
+ **    05/05 modified utime() => utimes(): Amy Griffis <amy.griffis@hp.com>
  **
  **********************************************************************/
 
@@ -58,7 +59,7 @@
 #include <sys/time.h>
 
 /* Skip test on platforms that don't support the call */
-#ifdef __NR_utime
+#ifdef __NR_utimes
 
 #if (defined(__S390X) || defined(__X86_64) || defined(__PPC64)) && defined(__MODE_32)
 // This is needed for accurate processing of headers on 64bit platforms when test suite
@@ -74,15 +75,15 @@ struct timespec_on_disk {   // edited from /usr/include/time.h
 #endif
 
 /*
- ** execute a utime operation
+ ** execute a utimes operation
  */
-int test_utime(laus_data* dataPtr) {
+int test_utimes(laus_data* dataPtr) {
 
 	int rc = 0;
 	int exp_errno = EPERM;
 	char* fileName = NULL;
 	struct timespec_on_disk mod_time, acc_time;  
-	struct utimbuf utbuf;
+	struct timeval utbuf[2];
 
 
 	// Set the syscall specific data
@@ -95,23 +96,24 @@ int test_utime(laus_data* dataPtr) {
 		goto EXIT;
 	}
 
-	// utime setup
-	utbuf.modtime = mod_time.tv_sec = 10;
-	mod_time.tv_nsec = 0;
-	utbuf.actime = acc_time.tv_sec = 30;
+	// utimes setup
+	acc_time.tv_sec = 30;
 	acc_time.tv_nsec = 0;
+	mod_time.tv_sec = 10;
+	mod_time.tv_nsec = 0;
+	memcpy(&(utbuf[0].tv_sec), &acc_time, sizeof(acc_time));
+	memcpy(&(utbuf[1].tv_sec), &mod_time, sizeof(mod_time));
 
 	if ( !dataPtr->successCase ) {
-
 		dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
 	}
 
 
 	// Set up audit argument buffer
 	if( ( rc = auditArg3( dataPtr,
-					AUDIT_ARG_PATH, strlen(fileName), fileName,
-					AUDIT_ARG_POINTER, sizeof(struct timespec_on_disk), &acc_time,
-					AUDIT_ARG_POINTER, sizeof(struct timespec_on_disk), &mod_time 
+			      AUDIT_ARG_PATH, strlen(fileName), fileName,
+			      AUDIT_ARG_POINTER, sizeof(struct timespec_on_disk), &acc_time,
+			      AUDIT_ARG_POINTER, sizeof(struct timespec_on_disk), &mod_time
 			    ) ) != 0 ) {
 		printf1( "Error setting up audit argument buffer\n" );
 		goto EXIT;
@@ -124,7 +126,7 @@ int test_utime(laus_data* dataPtr) {
 	}
 
 	// Execute system call
-	dataPtr->laus_var_data.syscallData.result = utime( fileName, &utbuf );
+	dataPtr->laus_var_data.syscallData.result = utimes( fileName, utbuf );
 
 	// Do post-system call work
 	if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
@@ -133,7 +135,7 @@ int test_utime(laus_data* dataPtr) {
 	}
 
 EXIT_CLEANUP:  
-	// utime cleanup
+	// utimes cleanup
 	if ((rc = unlink(fileName)) != 0) {
 		printf1("ERROR: Unable to remove file %s: errno=%i\n", 
 				fileName, errno);
@@ -146,4 +148,4 @@ EXIT:
 	return rc;
 }
 
-#endif /* __NR_utime */
+#endif /* __NR_utimes */

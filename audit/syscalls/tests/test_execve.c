@@ -101,6 +101,8 @@
    dataPtr->msg_arch = AUDIT_ARCH_X86_64;
 #elif defined(__PPC64) && defined(__MODE_32)
    dataPtr->msg_arch = AUDIT_ARCH_PPC;
+#elif defined(__IA64) && defined(__MODE_32)
+   dataPtr->msg_arch = AUDIT_ARCH_IA64;
 #endif
    /**
     * Do as much setup work as possible right here

@@ -38,6 +38,7 @@ IP		:= ppc64 powerpc64
 Z		:= s390
 Z64		:= s390x
 X86_64		:= x86_64
+IA		:= ia64
 HOME_DIR	:= $(shell pwd | awk -F"laus_test" '{print $$1}')
 SYSTEMINFO      := systeminfo.run.log
 FLAGS           := -g -O2 -Wall -Werror -D_GNU_SOURCE
@@ -81,6 +82,10 @@ else
 				else
 					ifneq (,$(findstring $(MACHINE), $(X86_64)))
 						ARCH := -D__X86_64
+					else
+						ifneq (,$(findstring $(MACHINE), $(IA)))
+							ARCH := -D__IA64
+						endif
 					endif
 				endif
 			endif
@@ -101,7 +106,7 @@ ifeq ($(MODE), 32)
 		endif
 	endif
 else
-	ifeq (,$(findstring $(MACHINE),$(X)))
+	ifeq (,$(findstring $(MACHINE),($(X),$(IA))))
 		ARCH += -m64 -D__MODE_64
 		export LIB_DIR = /lib64
 		export LDFLAGS = -m64

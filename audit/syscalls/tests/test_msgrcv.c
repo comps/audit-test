@@ -54,7 +54,7 @@
 #include <sys/msg.h>
 #if defined(__PPC64)
 #include <asm-ppc64/ipc.h>
-#else
+#elif !defined(__IA64)
 #include <asm/ipc.h>
 #endif
 //#include <linux/ipc.h>
@@ -143,7 +143,7 @@ int test_msgrcv(laus_data* dataPtr) {
   // Execute system call
   dataPtr->laus_var_data.syscallData.result = msgrcv( msgid, &buf2, msgsz, msgtyp, msgflg ); 
   /*
-#ifdef __X86_64
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
   dataPtr->laus_var_data.syscallData.result = syscall( __NR_msgrcv, msgid, msgsz, msgflg, &buf2, msgtyp ); 
 #elif defined(TEST_MSGRCV_VER0)
 	kludge.msgp = &buf2;

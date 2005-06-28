@@ -55,7 +55,7 @@
 #include <sys/msg.h>
 #if defined(__PPC64)
 #include <asm-ppc64/ipc.h>
-#else
+#elif !defined(__IA64)
 #include <asm/ipc.h>
 #endif
 
@@ -123,7 +123,7 @@ int test_msgsnd(laus_data* dataPtr) {
 	}
 
 	// Execute system call
-#if defined(__X86_64) && !defined(__MODE_32)
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
 	dataPtr->laus_var_data.syscallData.result = syscall( __NR_msgsnd, msgid, &buf, msgsz, msgflg );
 #else
 	dataPtr->laus_var_data.syscallData.result = syscall( __NR_ipc, MSGSND, msgid, msgsz, msgflg, &buf ); 

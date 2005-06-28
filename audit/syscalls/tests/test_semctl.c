@@ -54,7 +54,7 @@
 #include <sys/ipc.h>
 #if defined(__PPC64)
 #include <asm-ppc64/ipc.h>
-#else
+#elif !defined(__IA64)
 #include <asm/ipc.h>
 #endif
 #include <sys/sem.h>
@@ -100,7 +100,7 @@ int test_semctl(laus_data* dataPtr) {
 			AUDIT_ARG_IMMEDIATE, sizeof( int ), &semid,
 			AUDIT_ARG_IMMEDIATE, sizeof( int ), &semnum,
 			AUDIT_ARG_IMMEDIATE, sizeof( int ), &cmd_on_disk,
-#if defined(__X86_64) && !defined(__MODE_32)
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
                         AUDIT_ARG_POINTER, 0, &buf
 #else
 			AUDIT_ARG_NULL, 0, NULL
@@ -117,7 +117,7 @@ int test_semctl(laus_data* dataPtr) {
   }
    
   // Execute system call
-#if defined(__X86_64) && !defined(__MODE_32)
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
   dataPtr->laus_var_data.syscallData.result = semctlrc = syscall( __NR_semctl, semid, 0, cmd, &buf );
 #else
   dataPtr->laus_var_data.syscallData.result = semctlrc = syscall( __NR_ipc, SEMCTL, semid, 0, cmd, &buf );

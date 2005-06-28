@@ -9,6 +9,7 @@ P="ppc powerpc"
 IP="ppc64 powerpc64"
 Z="s390"
 X86_64="x86_64"
+IA="ia64"
 
 APPS="attr-devel \
 binutils \

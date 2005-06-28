@@ -60,7 +60,7 @@
 #include <sys/ipc.h>
 #if defined(__PPC64)
 #include <asm-ppc64/ipc.h>
-#else
+#elif !defined(__IA64)
 #include <asm/ipc.h>
 #endif
 #include <asm/page.h>
@@ -75,7 +75,7 @@ int test_shmget(laus_data* dataPtr) {
   int secondShmid = 0;
   //int doNotDeallocate = 0;
   int mode;
-  static int pageSize = PAGE_SIZE;
+  static int pageSize;
    
   // Set the syscall-specific data
   dataPtr->laus_var_data.syscallData.code = AUDIT_shmget;
@@ -98,6 +98,7 @@ int test_shmget(laus_data* dataPtr) {
   }
    
   // Set up audit argument buffer
+  pageSize = PAGE_SIZE; /* macro on IA64 */
   if( ( rc = auditArg3( dataPtr,
 		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &key,
 		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &pageSize,
@@ -114,7 +115,7 @@ int test_shmget(laus_data* dataPtr) {
    
   // Execute system call
   //  dataPtr->laus_var_data.syscallData.result = secondShmid = shmget( key, PAGE_SIZE, mode );
-#if defined(__X86_64) && !defined(__MODE_32)
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
   dataPtr->laus_var_data.syscallData.result = secondShmid = syscall( __NR_shmget,
                                                                      key, PAGE_SIZE, mode );
 #else

@@ -61,7 +61,7 @@
 #include <sys/ipc.h>
 #if defined(__PPC64)
 #include <asm-ppc64/ipc.h>
-#else
+#elif !defined(__IA64)
 #include <asm/ipc.h>
 #endif
 #include <sys/msg.h>
@@ -113,7 +113,7 @@ int test_msgget(laus_data* dataPtr) {
    
   // Execute system call
   //     dataPtr->laus_var_data.syscallData.result = secondMsgid = msgget( key, mode );
-#if defined(__X86_64) && !defined(__MODE_32)
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
   dataPtr->laus_var_data.syscallData.result = secondMsgid = syscall( __NR_msgget, key, mode );
 #else
   dataPtr->laus_var_data.syscallData.result = secondMsgid = syscall( __NR_ipc, MSGGET, key, mode );

@@ -62,7 +62,7 @@
 #include <sys/ipc.h>
 #if defined(__PPC64)
 #include <asm-ppc64/ipc.h>
-#else
+#elif !defined(__IA64)
 #include <asm/ipc.h>
 #endif
 #include <sys/sem.h>
@@ -115,7 +115,7 @@ int test_semget(laus_data* dataPtr) {
   preSysCall( dataPtr );
    
   // Execute the semget system call
-#if defined(__X86_64) && !defined(__MODE_32)
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
   dataPtr->laus_var_data.syscallData.result = secondSemid = syscall( __NR_semget,
                                                                      key, nsems, mode );
 #else

@@ -56,6 +56,7 @@
 #include <sys/wait.h>
 #include <sched.h>
 
+#ifdef __NR_vfork
 int test_vfork(laus_data* dataPtr) {
 
 	int rc = 0;
@@ -138,3 +139,4 @@ EXIT:
 	printf5( "Returning from test\n" );
 	return rc;
 }
+#endif // __NR_vfork

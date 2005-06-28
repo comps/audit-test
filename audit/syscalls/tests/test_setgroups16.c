@@ -54,7 +54,7 @@
     **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
     **
     **********************************************************************/
-#if !defined(__PPC) && !defined(__X86_64)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__IA64)
    
    #include "includes.h"
    #include "syscalls.h"

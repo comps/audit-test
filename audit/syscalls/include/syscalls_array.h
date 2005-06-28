@@ -38,19 +38,22 @@
     { &test_chdir, "chdir", NULL }, 
     { &test_chmod, "chmod", NULL }, 
     { &test_chown, "chown", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_chown16, "chown16", NULL }, 
     { &test_chown32, "chown32", NULL }, 
 #endif
     { &test_chroot, "chroot", NULL }, 
     { &test_clone, "clone", NULL }, 
+#ifdef __IA64
+    { &test_clone2, "clone2", NULL }, 
+#endif
     { &test_creat, "creat", NULL }, 
     { &test_delete_module, "delete_module", NULL }, 
     { &test_execve, "execve", NULL }, 
     { &test_fchdir, "fchdir", NULL }, 
     { &test_fchmod, "fchmod", NULL }, 
     { &test_fchown, "fchown", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_fchown16, "fchown16", NULL }, 
     { &test_fchown32, "fchown32", NULL }, 
 #endif
@@ -58,7 +61,7 @@
     { &test_fremovexattr, "fremovexattr", NULL }, 
     { &test_fsetxattr, "fsetxattr", NULL }, 
     { &test_ftruncate, "ftruncate", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_ftruncate64, "ftruncate64", NULL }, 
 #endif
     { &test_init_module, "init_module", NULL }, 
@@ -105,7 +108,7 @@
 #endif
     { &test_kill, "kill", NULL }, 
     { &test_lchown, "lchown", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_lchown16, "lchown16", NULL }, 
     { &test_lchown32, "lchown32", NULL }, 
 #endif
@@ -131,22 +134,22 @@
     { &test_semtimedop, "semtimedop", NULL },
     { &test_setdomainname, "setdomainname", NULL }, 
     { &test_setfsgid, "setfsgid", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_setfsgid16, "setfsgid16", NULL }, 
     { &test_setfsgid32, "setfsgid32", NULL }, 
 #endif
     { &test_setfsuid, "setfsuid", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_setfsuid16, "setfsuid16", NULL }, 
     { &test_setfsuid32, "setfsuid32", NULL }, 
 #endif
     { &test_setgid, "setgid", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_setgid16, "setgid16", NULL }, 
     { &test_setgid32, "setgid32", NULL }, 
 #endif
     { &test_setgroups, "setgroups", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_setgroups16, "setgroups16", NULL }, 
     { &test_setgroups32, "setgroups32", NULL }, 
 #endif
@@ -154,22 +157,22 @@
     { &test_setpgid, "setpgid", NULL }, 
     { &test_setpriority, "setpriority", NULL }, 
     { &test_setregid, "setregid", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) 
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_setregid16, "setregid16", NULL },
     { &test_setregid32, "setregid32", NULL }, 
 #endif
     { &test_setresgid, "setresgid", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) 
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_setresgid16, "setresgid16", NULL }, 
     { &test_setresgid32, "setresgid32", NULL }, 
 #endif
     { &test_setresuid, "setresuid", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_setresuid16, "setresuid16", NULL }, 
     { &test_setresuid32, "setresuid32", NULL }, 
 #endif
     { &test_setreuid, "setreuid", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_setreuid16, "setreuid16", NULL }, 
     { &test_setreuid32, "setreuid32", NULL }, 
 #endif
@@ -177,7 +180,7 @@
     { &test_setsid, "setsid", NULL }, 
     { &test_settimeofday, "settimeofday", NULL }, 
     { &test_setuid, "setuid", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_setuid16, "setuid16", NULL }, 
     { &test_setuid32, "setuid32", NULL }, 
 #endif
@@ -192,13 +195,19 @@
     { &test_syslog, "syslog", NULL },  
     { &test_tkill, "tkill", NULL },
     { &test_truncate, "truncate", NULL }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     { &test_truncate64, "truncate64", NULL }, 
 #endif
     { &test_umask, "umask", NULL }, 
     { &test_unlink, "unlink", NULL }, 
+#ifndef __IA64
     { &test_utime, "utime", NULL }, 
+#endif
+#ifdef __IA64
+    { &test_utimes, "utimes", NULL }, 
+#endif
+#ifndef __IA64
     { &test_vfork, "vfork", NULL }, 
-
+#endif
   };
 

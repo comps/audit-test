@@ -44,6 +44,7 @@ int test_chown16(laus_data* dataPtr);
 int test_chown32(laus_data* dataPtr);
 int test_chroot(laus_data* dataPtr);
 int test_clone(laus_data* dataPtr);
+int test_clone2(laus_data* dataPtr);
 int test_creat(laus_data* dataPtr);
 int test_delete_module(laus_data* dataPtr);
 int test_execve(laus_data* dataPtr);
@@ -167,6 +168,7 @@ int test_truncate64(laus_data* dataPtr);
 int test_umask(laus_data* dataPtr);
 int test_unlink(laus_data* dataPtr);
 int test_utime(laus_data* dataPtr);
+int test_utimes(laus_data* dataPtr);
 int test_vfork(laus_data* dataPtr);
 
 

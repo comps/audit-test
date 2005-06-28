@@ -50,6 +50,7 @@ P 		:= ppc powerpc
 IP 		:= ppc64 powerpc64
 Z 		:= s390
 X86_64 		:= x86_64
+IA := ia64
 
 UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
 TESTS_AR = tests/syscall_test.a

@@ -17,27 +17,27 @@
  **
  **
  **
- **  FILE       : test_clone.c
+ **  FILE       : test_clone2.c
  **
- **  PURPOSE    : To test the clone library call auditing.
+ **  PURPOSE    : To test the clone2 library call auditing.
  **
- **  DESCRIPTION: The test_clone() function builds into the
+ **  DESCRIPTION: The test_clone2() function builds into the
  **  laus_test framework to verify that the Linux Audit System
  **  accurately logs both successful and erroneous execution of the
- **  "clone" system call.
+ **  "clone2" system call.
  **
  **  In the successful case, this function:
  **   1) Malloc some memory for the child process stack
- **   2) Preform the syscall(__NR_clone ...  with the VFORK flag so 
+ **   2) Preform the syscall(__NR_clone2 ...  with the VFORK flag so 
  **      the parent waits.
  **   3) Clean up by freeing the child stack.
  **
- **  The successful case does a syscall(__NR_clone ...in the VFORK 
+ **  The successful case does a syscall(__NR_clone2 ...in the VFORK 
  **  mode.  The parent will wait and then finish the post_syscall 
  **  and clean-up stuff.
  **
  **  In the erroneous case, this function:
- **   1) Preforms the syscall(__NR_clone ... with the VFORK flag and 
+ **   1) Preforms the syscall(__NR_clone2 ... with the VFORK flag and 
  **      the CLONE_PID a NULL value for the stack.  This will only 
  **      fail if user is NOT root.
  **
@@ -48,6 +48,7 @@
  **    06/03 Originated by Kylene J. Smith <kylene@us.ibm.com>
  **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
  **    04/04 Modified test to call glibc interface by Kimberly D. Simon <kdsimon@us.ibm.com>
+ **    05/05 modified clone() => clone2(): Amy Griffis <amy.griffis@hp.com>
  **
  **********************************************************************/
 
@@ -55,23 +56,19 @@
 #include "syscalls.h"
 #include <sched.h>
 
-#ifndef __IA64
-int fn(void *x) {
-	sleep(1);
-	return 0;
-}
-#endif
+#ifdef __NR_clone2
 
-int test_clone(laus_data* dataPtr) {
+int test_clone2(laus_data* dataPtr) {
 
 
 	int rc = 0;
 	int exp_errno = EPERM;
 	int flags = CLONE_VFORK;
-	// int flags = CLONE_FS|CLONE_VFORK|CLONE_PARENT|CLONE_SYSVSEM|0x8000068;
 	pid_t pid;
 
 	// Set the syscall-specific data
+	// BUGBUG: /usr/include/linux/audit.h should be patched to
+	// include AUDIT_clone2
 	printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_clone );
 	dataPtr->laus_var_data.syscallData.code = AUDIT_clone;
 
@@ -80,9 +77,6 @@ int test_clone(laus_data* dataPtr) {
 
 	} else {	// Set up for error
 
-		// BUGBUG: For some reason, we are not able to fail the the clone() syscall
-		//   in the 2.6 kernel.
-//		flags |= CLONE_NEWNS;
 		rc = SKIP_TEST_CASE;
 		goto EXIT;
 
@@ -102,23 +96,18 @@ int test_clone(laus_data* dataPtr) {
 	}
 
 	// Execute system call--parent waits b/c of CLONE_VFORK flag
-#ifdef __IA64
-	// ia64 glibc doesn't have a symbol for clone
-	pid = syscall( __NR_clone, flags, NULL );
-#else
-	char* stack = malloc(65536);
-	pid = clone( fn, (void*)(stack+32768), flags, NULL );
-#endif
+	// glibc doesn't export a public clone2 symbol
+	pid = syscall( __NR_clone2, flags, NULL );
 	switch (pid) {
-		case -1:
-			printf1("ERROR: clone failed (%d)\n", pid);
-			goto EXIT_CLEANUP;
-		case 0:
-			//In child
-			_exit(0);	    
-		default:
-			//In parent
-			dataPtr->laus_var_data.syscallData.result = pid;
+	    case -1:
+		printf1("ERROR: clone2 failed (%d)\n", pid);
+		goto EXIT_CLEANUP;
+	    case 0:
+		//In child
+		_exit(0);	    
+	    default:
+		//In parent
+		dataPtr->laus_var_data.syscallData.result = pid;
 	}
 
 	// Do post-system call work
@@ -134,3 +123,5 @@ EXIT:
 	printf5( "Returning from test\n" );
 	return rc;
 }
+
+#endif /* __NR_clone2 */

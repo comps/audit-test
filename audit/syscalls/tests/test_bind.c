@@ -67,7 +67,7 @@
      
     
      int rc = 0;
-#if defined(__S390X) || defined(__PPC64) || defined(__X86_64)
+#if defined(__S390X) || defined(__PPC64) || defined(__X86_64) || defined(__IA64)
      __s64 exp_errno = EBADF;
 #else
      int exp_errno = EBADF;

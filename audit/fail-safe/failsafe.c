@@ -136,6 +136,9 @@ int failsafe_main(int argc, char **argv) {
 #ifdef __X86_64
 	int arch = AUDIT_ARCH_X86_64;
 #endif
+#ifdef __IA64
+	int arch = AUDIT_ARCH_IA64;
+#endif
 	int i;
 
 	int option;

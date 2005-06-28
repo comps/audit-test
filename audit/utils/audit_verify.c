@@ -521,7 +521,7 @@ void var_parms (int level, int call, const char *src )
 			printf_level_prime( level, "\n\t\t\tindex=%i, value=%i",
 					    idx, ((u_int16_t*)grp_array)[idx] );
 		    break;
-#if !defined(__PPC) && !defined(__S390X) 
+#if !defined(__PPC) && !defined(__S390X) && !defined(__IA64)
 		case __NR_setgroups32:
 
 		    bnd = size/sizeof(gid_t);
@@ -573,7 +573,7 @@ void debug_expected( const laus_data* dataPtr)
     printf5("\ttype      : %i\n", dataPtr->msg_type);
     printf5("\tarch      : %i\n", dataPtr->msg_arch);
     printf5("\tpid       : %i\n", dataPtr->msg_pid);
-    printf5("\tsize      : %i\n", dataPtr->msg_size);
+    printf5("\tsize      : %zi\n", dataPtr->msg_size);
     printf5("\taudit id  : %i\n", dataPtr->msg_audit_id);
     printf5("\tluid      : %i\n", dataPtr->msg_login_uid);
     printf5("\teuid      : %i\n", dataPtr->msg_euid);

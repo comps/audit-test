@@ -125,6 +125,9 @@ Arguments:\n\
 #ifdef __X86_64
      int arch =  AUDIT_ARCH_X86_64;
 #endif
+#ifdef __IA64
+     int arch =  AUDIT_ARCH_IA64;
+#endif
 
      // Clear the audit trail
 // BUGBUG: Stopping and clearing the audit trail seems to detach this process

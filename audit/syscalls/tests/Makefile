@@ -53,6 +53,7 @@ OBJ=	test_access.o \
 	test_chown32.o \
 	test_chroot.o \
 	test_clone.o \
+	test_clone2.o \
 	test_creat.o \
 	test_delete_module.o \
 	test_execve.o \
@@ -143,6 +144,7 @@ OBJ=	test_access.o \
 	test_umask.o \
 	test_unlink.o \
 	test_utime.o \
+	test_utimes.o \
 	test_vfork.o \
 
 

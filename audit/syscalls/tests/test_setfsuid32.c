@@ -64,7 +64,7 @@
  **
  **********************************************************************/
    
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X)
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
 
 #include "includes.h"
    

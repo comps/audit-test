@@ -56,7 +56,7 @@
 #include <sys/ipc.h>
 #if defined(__PPC64)
 #include <asm-ppc64/ipc.h>
-#else
+#elif !defined(__IA64)
 #include <asm/ipc.h>
 #endif
 #include <sys/shm.h>
@@ -109,7 +109,7 @@ int test_shmctl(laus_data* dataPtr) {
   cmd = IPC_RMID;
 #endif
 
-#if defined(__X86_64) && !defined(__MODE_32)
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
   if ( ( rc = auditArg3( dataPtr,
                          AUDIT_ARG_IMMEDIATE, sizeof(int), &shmid,
                          AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd,
@@ -133,7 +133,7 @@ int test_shmctl(laus_data* dataPtr) {
   }
    
   // Execute system call
-#if defined(__X86_64) && !defined(__MODE_32)
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
   dataPtr->laus_var_data.syscallData.result = shmctlrc = syscall( __NR_shmctl,
                                                                   shmid, IPC_RMID, 0, &buf );
 #else

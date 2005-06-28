@@ -165,7 +165,7 @@ get_next_audit_record (struct aud_log * audit_log, struct laus_record_header_on_
 	msg = (struct aud_message_on_disk *) audit_log->p;
 
 	if (audit_log->p + hdr->r_size > audit_log->end) {
-printf(" >>> log pointer (%p) plus header rsize (%x) greater than end of log (%p) <<<\n", audit_log->p, hdr->r_size, audit_log->end);
+printf(" >>> log pointer (%p) plus header rsize (%zx) greater than end of log (%p) <<<\n", audit_log->p, hdr->r_size, audit_log->end);
 		return NULL;
 	}
 

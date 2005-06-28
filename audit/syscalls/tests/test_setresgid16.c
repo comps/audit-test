@@ -59,7 +59,7 @@
     **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
     **
     **********************************************************************/
-#if !defined(__PPC) && !defined(__X86_64)
+#if !defined(__PPC) && !defined(__X86_64)  && !defined(__IA64)
    #include "includes.h"
    #include "syscalls.h"
    

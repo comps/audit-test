@@ -57,7 +57,7 @@
 #include <sys/msg.h>
 #if defined(__PPC64)
 #include <asm-ppc64/ipc.h>
-#else
+#elif !defined(__IA64)
 #include <asm/ipc.h>
 #endif
    
@@ -115,7 +115,7 @@ int test_msgctl(laus_data* dataPtr) {
   }
    
   // Execute system call
-#if defined(__X86_64) && !defined(__MODE_32)
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
   dataPtr->laus_var_data.syscallData.result = syscall( __NR_msgctl,        // syscall
                                                        msgid,           // First
                                                        IPC_RMID,        // Second

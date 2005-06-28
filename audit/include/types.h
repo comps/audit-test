@@ -32,7 +32,11 @@
 #ifndef _TYPES_H
 #define _TYPES_H
 
+#ifdef CONFIG_AUDIT_LAUS
 #include <audit.h>
+#else
+#include "laus_info.h" /* temporarily needed for compilation */
+#endif /* CONFIG_AUDIT_LAUS */
 #include <asm/types.h>
 
 //

@@ -35,9 +35,9 @@
 ** Stop auditing system calls
 **
 */
-int stopAudit() {
+int laus_stop() {
   int rc = 0;
-  printf4("stopAudit\n");
+  printf4("audit_stop()\n");
   system( "/etc/init.d/audit stop" );
   return rc;
 }

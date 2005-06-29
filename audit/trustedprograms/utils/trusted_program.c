@@ -81,9 +81,25 @@ EXIT:
   return rc;
 }
 
-int verifyTrustedProgram( laus_data* dataPtr ) {
-  verifyLog( dataPtr, logOptions[LOGOPTION_INDEX_ALL] );
-  return 0;
+int verifyTrustedProgram(laus_data *dataPtr) {
+    int rc = 0;
+
+    rc = audit_verify_log(dataPtr, logOptions[LOGOPTION_INDEX_ALL]);
+
+    printf2("Verify record\n");
+    if (rc > 0) {
+        pass_testcases++;
+        printf2("AUDIT PASS ");
+    } else {
+        fail_testcases++;
+        debug_expected(dataPtr);
+        printf2("AUDIT FAIL ");
+    }
+    printf2prime(
+        ": '%s' [logSuccess=1, logFailure=1, successCase=%x]\n",
+        dataPtr->testName, dataPtr->successCase);
+
+    return rc;
 }
 
 #undef system

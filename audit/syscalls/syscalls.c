@@ -71,6 +71,8 @@ char* helper;
 int helper_uid;
 char* helper_homedir;
 
+static int verify(int, laus_data *, log_options);
+
 int main(int argc, char **argv)
 {
   int rc = 0;
@@ -129,10 +131,12 @@ Arguments:\n\
      int arch =  AUDIT_ARCH_IA64;
 #endif
 
+     /* Initialize global structures */
+     init_globals();
+
      // Clear the audit trail
 // BUGBUG: Stopping and clearing the audit trail seems to detach this process
 //   from the audit daemon in the 2.6 LAuS implementation
-//     stopClearStartAudit();
 
   // Create helper user
   if ( ( rc = createTempUserName( &helper, &helper_uid, &helper_homedir ) ) == -1 ) {
@@ -245,7 +249,9 @@ Arguments:\n\
   getcwd( cwd, PATH_MAX );
 
   //backup the filter.conf file
+#ifdef CONFIG_AUDIT_LAUS
   backupFile("/etc/audit/filter.conf");
+#endif
 
   // This loop tests all the combinations of logSuccess
   // and logFailure. It is the only type of domain filtering
@@ -255,7 +261,7 @@ Arguments:\n\
     if (fast_mode && logOptionsIndex >0) break;
 	
     // Set the filter domain (logSuccess, logFailure, both, none)
-    if ((rc = setFilterDomain(logOptions[logOptionsIndex])) == -1) {
+    if ((rc = audit_set_filters(logOptions[logOptionsIndex])) == -1) {
       goto EXIT_ERROR;
     }
 
@@ -288,7 +294,8 @@ Arguments:\n\
       verify(failureRC, failureDataPtr, logOptions[logOptionsIndex]);
     }
   }
-  printf2("PASSED = %i, FAILED = %i, SKIPPED = %i\n", pass_testcases, fail_testcases, skip_testcases);
+  printf2("PASSED = %i, FAILED = %i, SKIPPED = %i\n", 
+	  pass_testcases, fail_testcases, skip_testcases);
   goto EXIT;
 
 
@@ -309,9 +316,77 @@ EXIT:
   }
   free( command );
 
+#ifdef CONFIG_AUDIT_LAUS
   restoreFile("/etc/audit/filter.conf");
-  reloadAudit();
+#endif
+  audit_reload();
 
   return rc;
 
+}
+
+static 
+int verify(int return_code, laus_data *dataPtr, log_options logOption) {
+    int rc = 0;
+
+    printf4("verify(return = %d)\n", return_code);
+
+    switch (return_code) {
+    case 0:
+	rc = audit_verify_log(dataPtr, logOption);
+	if (rc < 0) {
+	    goto EXIT_ERROR;
+	}
+
+	if ((dataPtr->successCase && logOption.logSuccess) ||
+	    (!dataPtr->successCase && logOption.logFailure) ) {
+	    printf2("Verify record\n");
+	    if (rc > 0) {
+		pass_testcases++;
+		printf2("AUDIT PASS ");
+	    } else {
+		fail_testcases++;
+		debug_expected(dataPtr);
+		printf2("AUDIT FAIL ");
+	    }
+	} else {
+	    printf2("Verify no record\n");
+	    if (rc == 0) {
+		pass_testcases++;
+		printf2("AUDIT PASS ");
+	    } else {
+		fail_testcases++;
+		printf2("AUDIT FAIL ");
+	    }
+	} 
+	printf2prime(": '%s' [logSuccess=%x, logFailure=%x, successCase=%x]\n", 
+	    dataPtr->testName, logOption.logSuccess,
+	    logOption.logFailure, dataPtr->successCase);
+	break;
+
+    case SKIP_TEST_CASE:
+	skip_testcases++;
+	printf2("%s() test case skipped: [logSuccess=%d, logFailure=%d, successCase=%d]\n", 
+	    dataPtr->testName, logOption.logSuccess,
+	    logOption.logFailure, dataPtr->successCase);
+	break;
+
+    default:
+	fail_testcases++;
+	printf1("ERROR: %s() test invalid: [logSuccess=%d, logFailure=%d, successCase=%d]\n",
+	    dataPtr->testName, logOption.logSuccess,
+	    logOption.logFailure, dataPtr->successCase);
+	printf2("AUDIT FAIL : '%s' test invalid: [%s, logSuccess=%d, logFailure=%d]\n", 
+	    dataPtr->testName, 
+	    dataPtr->successCase ? "successCase" : "failureCase",
+	    logOption.logSuccess, logOption.logFailure);
+	break;
+  }
+
+EXIT_ERROR:
+    if (dataPtr->laus_var_data.syscallData.data) {
+	free(dataPtr->laus_var_data.syscallData.data);
+    }
+  
+    return rc;
 }

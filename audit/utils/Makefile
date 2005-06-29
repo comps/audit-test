@@ -35,24 +35,16 @@
 ##########################################################################
 
 TOPDIR		= ..
-TESTDIR		= .
+UTILSDIR	= .
 CC		= gcc
 FLAGS		+= $(CFLAGS)
-INCLUDES 	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+INCLUDES 	= -I$(TOPDIR)/include -I$(UTILSDIR)/include
 
 AR		= ar
 RANLIB		= ranlib
 
 UTILS_AR	= laus_test_utils.a
-UTILS_OBJS	= audit_args.o			\
-		  audit_clear.o			\
-		  audit_config.o		\
-		  audit_read.o			\
-		  audit_start.o			\
-		  audit_stop.o			\
-		  audit_verify.o		\
-		  audit_reload.o		\
-		  create_dir.o			\
+UTILS_OBJS	= create_dir.o			\
 		  create_file.o			\
 		  create_temp_file.o		\
 		  create_temp_file_name.o	\
@@ -63,10 +55,28 @@ UTILS_OBJS	= audit_args.o			\
 		  get_identifiers.o		\
 		  get_laus_data.o		\
 		  get_login_uid.o		\
+		  init_globals.o		\
 		  mysprintf.o			\
 		  file_utils.o			\
 		  run.o				\
 		  get_pid.o
+
+LAF_OBJS	= laf/laf_clear.o		\
+		  laf/laf_config.o		\
+		  laf/laf_read.o		\
+		  laf/laf_reload.o		\
+		  laf/laf_start.o		\
+		  laf/laf_stop.o		\
+		  laf/laf_verify.o
+
+LAUS_OBJS	= laus/laus_args.o		\
+		  laus/laus_clear.o		\
+		  laus/laus_config.o		\
+		  laus/laus_read.o		\
+		  laus/laus_reload.o		\
+		  laus/laus_start.o		\
+		  laus/laus_stop.o		\
+		  laus/laus_verify.o
 
 SEM_EXE		= semaphore_poster
 SEM_EXE2	= semaphore_poster2
@@ -84,8 +94,8 @@ EXIT_OBJS	= exit_with_pid_status.o
 
 all: deps $(UTILS_AR) $(SEM_EXE) $(RC_EXE) $(PTS_EXE) $(AUDIT_TRAIL_EXE) $(EXIT_EXE)
 
-$(UTILS_AR): $(UTILS_OBJS)
-	$(AR) rc $@ $(UTILS_OBJS)
+$(UTILS_AR): $(UTILS_OBJS) $(LAF_OBJS) $(LAUS_OBJS)
+	$(AR) rc $@ $(UTILS_OBJS) $(LAF_OBJS) $(LAUS_OBJS)
 	$(RANLIB) $@
 
 $(SEM_EXE): $(SEM_OBJS)
@@ -105,7 +115,7 @@ $(PTS_EXE): $(PTS_OBJS)
 
 clean:
 	$(RM) -r .deps
-	$(RM) *.o 
+	$(RM) $(UTILS_OBJS) $(LAF_OBJS) $(LAUS_OBJS)
 
 clobber: clean
 	$(RM) $(UTILS_AR) $(SEM_EXE) $(SEM_EXE2) $(RC_EXE) \

@@ -62,7 +62,15 @@ int pre_failsafe_call(laus_data *ld) {
 	//   - Stop auditd
 	//   - Erase log files
 	//   - Start auditd (now using new config files)
-	stopClearStartAudit();
+	if (audit_stop() < 0) {
+	    printf1( "Error stopping audit daemon\n");
+	}
+	if (audit_clear_logs() < 0) {
+	    printf1( "Error clearing the audit trail\n");
+	}
+	if (audit_start() < 0 ) {
+	    printf1( "Error starting the audit daemon\n");
+	}
 
 EXIT:
 	return rc;

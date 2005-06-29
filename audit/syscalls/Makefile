@@ -68,7 +68,7 @@ all: subdirs deps $(EXE)
 
 run: all
 ifeq ($(shell whoami),root)
-	$(AUDIT_CLEAN_LOG)
+#	$(AUDIT_CLEAN_LOG)
 	./syscalls &> ./syscalls.run.log
 else
 	@echo "You must run this as root"

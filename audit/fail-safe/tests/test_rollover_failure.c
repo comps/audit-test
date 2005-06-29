@@ -106,12 +106,12 @@ void test_rollover_failure_handler(int  i) {
 **         SIGQUIT - an error during test setup
 **         SIGHUP  - rollover failure support failed
 **         SIGINT  - rollover failure support succeeded
-**   MH: TODO: stopAudit() now uses /etc/init.d/audit stop.  If there
+**   MH: TODO: audit_stop() now uses /etc/init.d/audit stop.  If there
 **   are any unexplained test failures here, look into this as one
 **   possible reason.
 **   5) Performs post-processing, including resetting the kernel audit
 **      buffer (max-messages), killing the audit daemon using 'kill -9'
-**      because stopAudit() (which uses killall) won't work if rollover
+**      because audit_stop() (which uses killall) won't work if rollover
 **      failure support worked, resetting the audit configuration and
 **      displaying all output messages from the notification program(s).
 **

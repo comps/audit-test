@@ -158,6 +158,7 @@ int main(int argc, char **argv) {
 
 	laus_data ld;
 
+	init_globals();
 
 	// Iterate through command line options
 	while ((option = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
@@ -286,7 +287,38 @@ printf("USING LUID = %d\n", login_uid);
 			goto EXIT_ERROR;
 		}
 
-		verifyLog(&ld, filterconf_tests[i].expectedLogResult);
+		audit_verify_log(&ld, filterconf_tests[i].expectedLogResult);
+
+		if ((ld.successCase && 
+		     filterconf_tests[i].expectedLogResult.logSuccess) ||
+		    (!ld.successCase && 
+		     filterconf_tests[i].expectedLogResult.logFailure) ) {
+		    printf2("Verify record\n");
+		    if (rc > 0) {
+			pass_testcases++;
+			printf2("AUDIT PASS ");
+		    } else {
+			fail_testcases++;
+			debug_expected(&ld);
+			printf2("AUDIT FAIL ");
+		    }
+		} else {
+		    printf2("Verify no record\n");
+		    if (rc == 0) {
+			pass_testcases++;
+			printf2("AUDIT PASS ");
+		    } else {
+			fail_testcases++;
+			printf2("AUDIT FAIL ");
+		    }
+		}
+
+		printf2prime(
+		    ": '%s' [logSuccess=%x, logFailure=%x, successCase=%x]\n", 
+		    ld.testName,
+		    filterconf_tests[i].expectedLogResult.logSuccess,
+		    filterconf_tests[i].expectedLogResult.logFailure, 
+		    ld.successCase);
 	}
 
 	printf2("PASSED = %i, FAILED = %i\n", pass_testcases, fail_testcases);

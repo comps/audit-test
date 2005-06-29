@@ -190,7 +190,15 @@ int term_audit_conf(void) {
 	//   - Stop auditd
 	//   - Erase log files
 	//   - Start auditd (now using original config files)
-	stopClearStartAudit();
+	if (audit_stop() < 0) {
+	    printf1( "Error stopping audit daemon\n");
+	}
+	if (audit_clear_logs() < 0) {
+	    printf1( "Error clearing the audit trail\n");
+	}
+	if (audit_start() < 0 ) {
+	    printf1( "Error starting the audit daemon\n");
+	}
 
 	init = 0;
 

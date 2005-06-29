@@ -227,7 +227,23 @@ int test_rollover(laus_data *ld, uid_t uid, gid_t gid) {
 			ld->msg_type = AUDIT_MSG_TEXT;
 			ld->laus_var_data.textData.data = mysprintf(AUDIT_USER_MSG, AUDIT_SWITCH_COUNT);
 			// Verify the last message is present
-			verifyLog(ld, log_opt);
+			audit_verify_log(ld, log_opt);
+
+			printf2("Verify record\n");
+			if (rc > 0) {
+			    pass_testcases++;
+			    printf2("AUDIT PASS ");
+			} else {
+			    fail_testcases++;
+			    debug_expected(ld);
+			    printf2("AUDIT FAIL ");
+			}
+
+			printf2prime(
+		    ": '%s' [logSuccess=%x, logFailure=%x, successCase=%x]\n", 
+			    ld->testName, log_opt.logSuccess,
+			    log_opt.logFailure, ld->successCase);
+
 		}
 		else {
 			printf5("Log file rollover not successful\n");

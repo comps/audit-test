@@ -141,6 +141,8 @@ Arguments:\n\
     {&test_usermod, "usermod", NULL}
   };
 
+  init_globals();
+
   // Iterate through command line options
   while (1) {
     int option_index = 0;
@@ -223,7 +225,7 @@ Arguments:\n\
   uid = passwd_data->pw_uid;
   gid = passwd_data->pw_gid;
 
-  // Save the CWD for setFilterDomain
+  // Save the CWD for audit_set_filters()
   getcwd(cwd, PATH_MAX);
 
   /*
@@ -235,7 +237,7 @@ Arguments:\n\
   ** Create a filter.conf file to audit user messages
   */
   system("echo \"event user-message = always;\" >/etc/audit/filter.conf");
-  reloadAudit();
+  audit_reload();
   
   /*
   ** Loop through trustedprograms

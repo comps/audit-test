@@ -361,7 +361,7 @@ int term_audit_conf(void) {
 	printf5("Calling restoreFile for file '%s'\n", FILTER_CONF);
 	restoreFile(FILTER_CONF);
 
-	reloadAudit();
+	audit_reload();
 
 	init = 0;
 

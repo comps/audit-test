@@ -49,7 +49,7 @@
 #define LOG_GOOD "success"
 #define LOG_BAD  "failed"
 
-int setFilterDomain(log_options logOption) {
+int laus_set_filters(log_options logOption) {
 
   int rc = 0;
 
@@ -83,7 +83,7 @@ int setFilterDomain(log_options logOption) {
       goto EXIT;
   }
 
-  printf4("setFilterDomain: success=%i failure=%i\n", 
+  printf4("audit_set_filters(): success=%i failure=%i\n", 
 	 logOption.logSuccess, logOption.logFailure);
 
   if ( logOption.logSuccess && logOption.logFailure ) {
@@ -132,7 +132,7 @@ int setFilterDomain(log_options logOption) {
   }
 
   printf5( "Reloading the audit\n" );
-  if( ( rc = reloadAudit() ) == -1 ) {
+  if( ( rc = audit_reload() ) == -1 ) {
     printf1( "Error reloading the audit : rc=%i\n", rc );
     goto EXIT;
   }

@@ -40,39 +40,13 @@
 ** BUGBUG: This is a brutal way
 ** to wipe the logs.
 */
-int clearAuditTrail() {
+int laus_clear_logs() {
 
   int rc = 0;
 
-  printf4("clearAuditTrail\n");
+  printf4("audit_clear_logs()\n");
   system("rm -f /var/log/audit.d/*");
   system("rm -f /var/log/audit");
 
   return rc;
-}
-
-
-/**
- * Stop the auditing daemon, clear the audit trail, and start the
- * audit daemon.
- */
-/* public */ int
-stopClearStartAudit()
-{
-	int rc;
-	if( ( rc = stopAudit() ) < 0 ) {
-		printf1( "Error stopping audit daemon: [%d]\n", rc );
-		goto EXIT;
-	}
-	if( ( rc = clearAuditTrail() ) < 0 ) {
-		printf1( "Error clearing the audit trail: [%d]\n", rc );
-		goto EXIT;
-	}
-	if( ( rc = startAudit() ) < 0 ) {
-		printf1( "Error starting the audit daemon: [%d]\n", rc );
-		goto EXIT;
-	}
-	
- EXIT:
-	return rc;
 }

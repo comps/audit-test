@@ -205,4 +205,13 @@ typedef struct identifiers_s {
   int fsgid;
 } identifiers_t;
 
+struct audit_utils {
+    int (* audit_start)();
+    int (* audit_stop)();
+    int (* audit_clear_logs)();
+    int (* audit_reload)();
+    int (* audit_set_filters)(log_options);
+    int (* audit_verify_log)(laus_data *, log_options);
+};
+
 #endif

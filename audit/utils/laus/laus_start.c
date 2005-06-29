@@ -37,17 +37,10 @@
 ** Start auditing system calls
 **
 */
-int startAudit() {
+int laus_start() {
 
   int rc = 0;
-  printf4("startAudit\n");
-
-  // Clear the audit logs
-  // MH: Leave it up to the tests to do this
-//  if( rc = clearAuditTrail() ) {
-//    printf1( "ERROR: Problem occurred while clearing the audit trail\n" );
-//    goto EXIT_ERROR;
-//  }
+  printf4("audit_start()\n");
 
   if ( ( rc = system( "/etc/init.d/audit start" ) ) == -1 ) {
       printf1("ERROR: Unable to start auditd; errno=%i\n", errno);
@@ -55,28 +48,6 @@ int startAudit() {
   }
 
   sleep(2);
-
-#if 0
-  if ( (rc = laus_open(NULL)) < 0 ) {
-      printf1("ERROR: Unable to open auditing errno=%d %s\n", errno, laus_strerror(errno));
-      goto EXIT_ERROR;
-  }
-
-  if ( (rc = laus_attach()) < 0 ) {
-      printf1("ERROR: Unable to establish auditing for the current process errno=%d %s\n", errno, laus_strerror(errno));
-      goto EXIT_ERROR;
-  }
-
-  if ( (rc = laus_setauditid()) < 0 ) {
-      printf1("ERROR: Unable to set the audit id for the current process errno=%d %s\n", errno, laus_strerror(errno));
-      goto EXIT_ERROR;
-  }
-
-  if ( (rc = laus_setsession(login_uid, NULL, NULL, ttyname(0))) < 0 ) {
-      printf1("ERROR: Unable to set the session id for the current process errno=%d %s\n", errno, laus_strerror(errno));
-      goto EXIT_ERROR;
-  }
-#endif
 
 EXIT_ERROR:
   return rc;

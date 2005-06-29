@@ -40,8 +40,6 @@ int backupFile(char*);
 int restoreFile(char*);
 int getLAUSData(laus_data*);
 int getLoginUID();
-int clearAuditTrail();
-int setFilterDomain(log_options logOption);
 int createFile(char* fname, mode_t mode, uid_t uid, gid_t gid);
 int createTempFile(char** fname, mode_t mode, uid_t uid, gid_t gid);
 int createTempFileName(char** fname);
@@ -49,12 +47,7 @@ int createTempDir(char** fname, mode_t mode, uid_t uid, gid_t gid);
 int createTempUser(char** user, int* uid, char** homedir);
 int createTempUserName(char** user, int* uid, char** homedir);
 int createTempGroupName( char** user, int* uid );
-int startAudit();
-int stopAudit();
-int reloadAudit();
-int stopClearStartAudit();
-int verifyLog(laus_data* dataPtr, log_options logOption);
-int verify(int return_code, laus_data* dataPtr, log_options logOption);
+void debug_expected(const laus_data* dataPtr);
 int getIdentifiers( identifiers_t* identifiers );
 int getPid(char* executable);
 int preSysCall(laus_data* dataPtr);
@@ -85,5 +78,33 @@ int auditArg5( laus_data* lausDataPtr,
 
 char* mysprintf(char* fmt, ...);
 int run(char* command); 
+
+void init_globals();
+int audit_start();
+int audit_stop();
+int audit_clear_logs();
+int audit_reload();
+int audit_set_filters(log_options);
+int audit_verify_log(laus_data *, log_options);
+
+/*
+ * LAF utility functions
+ */
+int laf_start();
+int laf_stop();
+int laf_clear_logs();
+int laf_reload();
+int laf_set_filters(log_options);
+int laf_verify_log(laus_data *, log_options);
+
+/*
+ * LAuS utility functions
+ */
+int laus_start();
+int laus_stop();
+int laus_clear_logs();
+int laus_reload();
+int laus_set_filters(log_options);
+int laus_verify_log(laus_data *, log_options);
 
 #endif

@@ -128,6 +128,8 @@ Arguments:\n\
     {&test_vsftpd, "vsftpd", NULL}
   };
 
+  init_globals();
+
   backupFile("/etc/audit/filter.conf");
 
   // Iterate through command line options
@@ -212,7 +214,7 @@ Arguments:\n\
   uid = passwd_data->pw_uid;
   gid = passwd_data->pw_gid;
 
-  // Save the CWD for setFilterDomain
+  // Save the CWD for audit_set_filters()
   getcwd(cwd, PATH_MAX);
 
   /*
@@ -223,7 +225,7 @@ Arguments:\n\
     goto EXIT_ERROR;
   }
 
-  if ((rc = reloadAudit()) != 0) {
+  if ((rc = audit_reload()) != 0) {
     goto EXIT_ERROR;
   }
 
@@ -270,7 +272,7 @@ Arguments:\n\
 
 EXIT_HELP:
   restoreFile("/etc/audit/filter.conf");
-  reloadAudit();
+  audit_reload();
   if (testcase != NULL)
     free (testcase);
 
@@ -278,7 +280,7 @@ EXIT_HELP:
 
 EXIT_ERROR:
   restoreFile("/etc/audit/filter.conf");
-  reloadAudit();
+  audit_reload();
   printf1("ERROR: Test aborted: errno = %i\n", errno);
   return rc;
 

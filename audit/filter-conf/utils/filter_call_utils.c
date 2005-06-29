@@ -63,8 +63,8 @@ int pre_filter_call(laus_data *ld) {
 	}
 
 	// Reload the audit configuration
-	if ((rc = reloadAudit()) != 0) {
-		printf1("ERROR: reloadAudit failed - rc=%d\n", rc);
+	if ((rc = audit_reload()) != 0) {
+		printf1("ERROR: audit_reload() failed - rc=%d\n", rc);
 		goto EXIT;
 	}
 

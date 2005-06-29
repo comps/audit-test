@@ -43,12 +43,12 @@
 #define BUFSIZE 1024
 
 //syscall specific functions
-void var_parms (int, int, const char*); 
-int compare_var_parms(const char*, const char*);
-void sycl_info(int, const struct aud_msg_syscall*, const laus_data*);
+static void var_parms (int, int, const char*); 
+static int compare_var_parms(const char*, const char*);
+static void sycl_info(int, const struct aud_msg_syscall*, const laus_data*);
 
 //generic
-void msg_info (int, const struct aud_message_on_disk*, const laus_data*);
+static void msg_info (int, const struct aud_message_on_disk*, const laus_data*);
 void debug_expected( const laus_data*);
 
 /*
@@ -69,7 +69,7 @@ void debug_expected( const laus_data*);
 ** The pass/fail counters are maintained by this function since this
 ** is where the pass/fail check is made.
 */
-int verifyLog(laus_data* dataPtr, log_options logOption) {
+int laus_verify_log(laus_data *dataPtr, log_options logOption) {
 
 #if !defined(__IX86)
 struct aud_msg_exit_on_disk {
@@ -94,7 +94,7 @@ struct aud_msg_exit_on_disk {
     int count = 0;
     time_t r_time;
 	
-    printf4("verifyLog\n");
+    printf4("audit_verify_log()\n");
 
     //debug_expected(dataPtr);
 
@@ -374,46 +374,14 @@ struct aud_msg_exit_on_disk {
 	}
     }
 
-    if ( (dataPtr->successCase && logOption.logSuccess) || 
-	 (!dataPtr->successCase && logOption.logFailure) ) {
-	printf2("Verify record\n");
-	if ( record_found == 1) {
-	    pass_testcases++;
-	    printf2("AUDIT PASS ");
-	}
-	else {
-	    fail_testcases++;
-	    debug_expected(dataPtr);
-	    printf2("AUDIT FAIL ");
-	}
-	
-	printf2prime(": '%s' [logSuccess=%x, logFailure=%x, successCase=%x]\n",
-		     dataPtr->testName, logOption.logSuccess, 
-		     logOption.logFailure, dataPtr->successCase);
-	
-    } else {
-	printf2("Verify no record\n");
-	if ( record_found == 0 ) {
-	    pass_testcases++;
-	    printf2("AUDIT PASS ");
-	}
-	else {
-	    fail_testcases++;
-	    printf2("AUDIT FAIL ");
-	}
-	
-	printf2prime(": '%s' [logSuccess=%x, logFailure=%x, successCase=%x]\n",
-		     dataPtr->testName, logOption.logSuccess, 
-		     logOption.logFailure, dataPtr->successCase);
-    } 
-    
-    
+    rc = record_found;
+
  OUT:
     //REAL AUDIT VERIFY CLEANUP
     close_audit_log(&log);
     
  OUT_NOTOPEN:
-    return 0;
+    return rc;
 }
 
 /**********************
@@ -422,6 +390,7 @@ struct aud_msg_exit_on_disk {
 
 /** OUTPUT TYPE **/
 
+static
 void msg_info (int level, const struct aud_message_on_disk* msg, const laus_data* dataPtr)
 {
   printf_level(level, "\ttype  : %i:%i\n", msg->msg_type, dataPtr->msg_type);
@@ -438,6 +407,7 @@ void msg_info (int level, const struct aud_message_on_disk* msg, const laus_data
   printf_level(level, "\tfsgid : %i:%i\n", msg->msg_fsgid, dataPtr->msg_fsgid);
 }
 
+static
 void sycl_info(int level, const struct aud_msg_syscall * sycl, const laus_data* dataPtr)
 {
     printf_level(level, "\tmajor  : %i:%i\n", sycl->major, 
@@ -448,6 +418,7 @@ void sycl_info(int level, const struct aud_msg_syscall * sycl, const laus_data* 
 		 dataPtr->laus_var_data.syscallData.length);    
 }
 
+static
 void var_parms (int level, int call, const char *src )
 {    
     char* buffer  = NULL;
@@ -605,6 +576,7 @@ void debug_expected( const laus_data* dataPtr)
 
 /** COMPARATOR TYPE **/
 
+static
 int compare_var_parms (const char *actual, const char *expect)
 {    
     char* buffer_a  = NULL;
@@ -695,44 +667,3 @@ int compare_var_parms (const char *actual, const char *expect)
     free(buffer_e);
     return rc;
 }
-
-int verify(int return_code, laus_data* dataPtr, log_options logOption) {
-  int rc = 0;
-
-  switch ( return_code ) {
-    case 0:
-	//verifyLog will update pass and fail testcase count
-      if ((rc = verifyLog(dataPtr, logOption)) != 0) {
-        goto EXIT_ERROR;
-      }
-      break;
-    case SKIP_TEST_CASE:
-	skip_testcases++;
-
-	printf2("%s() test case skipped: [logSuccess=%d, logFailure=%d, successCase=%d]\n", 
-		dataPtr->testName, logOption.logSuccess, 
-		logOption.logFailure, dataPtr->successCase);
-			       
-      break;
-    default:
-	fail_testcases++;
-
-	printf1("ERROR: %s() test invalid: [logSuccess=%d, logFailure=%d, successCase=%d]\n", 
-		dataPtr->testName, logOption.logSuccess, 
-		logOption.logFailure, dataPtr->successCase);
-	printf2("AUDIT FAIL : '%s' test invalid: [%s, logSuccess=%d, logFailure=%d]\n", 
-		dataPtr->testName, dataPtr->successCase ? "successCase" : "failureCase",
-		logOption.logSuccess, logOption.logFailure);
-      break;
-  }
-
- EXIT_ERROR:
-  if (dataPtr->laus_var_data.syscallData.data)
-      free(dataPtr->laus_var_data.syscallData.data);
-  
-  return rc;
-
-}
-
-
- 

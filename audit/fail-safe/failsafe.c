@@ -168,6 +168,7 @@ int failsafe_main(int argc, char **argv) {
 
 	laus_data ld;
 
+	init_globals();
 
 	// Iterate through command line options
 	while ((option = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {

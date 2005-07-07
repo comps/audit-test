@@ -1,5 +1,6 @@
 /**********************************************************************
  **   Copyright (C) International Business Machines  Corp., 2003
+ **   Copyright (C) 2005 Hewlett-Packard Company
  **
  **   This program is free software;  you can redistribute it and/or modify
  **   it under the terms of the GNU General Public License as published by
@@ -15,145 +16,101 @@
  **   along with this program;  if not, write to the Free Software
  **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  **
- **
- **
- **  FILE       : test_delete_module.c
- **
- **  PURPOSE    : To test the delete_module library call auditing.
- **
- **  DESCRIPTION: The test_delete_module() function builds into the
- **  laus_test framework to verify that the Linux Audit System
- **  accurately logs both successful and erroneous execution of the
- **  "delete_module" system call.
- **
- **  In the successful case, this function:
- **   1) Executes create_module() on a unique, nonexistent module name
- **   2) Executes delete_module() on the module name.
- **   3) Tests the result of the syscall against the expected result
- **      for the successful case.
- **
- **  The successful case uses a unique, nonexistent module name to
- **  avoid a naming conflict with another module.  As the superuser,
- **  the delete_module() call should succeed, according to the
- **  information given on the man page for the syscall.
- **  
- **  In the erroneous case, this function:
- **   1) Sets the effective user ID to the test user
- **   2) Executes delete_module() on a unique, nonexistent module name
- **   3) Sets the effective user ID to the superuser
- **   4) Tests the result of the syscall against the expected result
- **      for the erroneous case.
- **      
- **  The erroneous case sets the effective user ID to the test user.
- **  According to the delete_module() man page, the syscall is only
- **  open to the superuser.  We can thus expect an EPERM error code as
- **  a result.
- **
- **  HISTORY    :
- **    06/03 Originated by Michael A. Halcrow <mike@halcrow.us>
- **    06/03 Furthered by Dustin Kirkland (k1rkland@us.ibm.com)
- **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
+ **   Contributors:
+ **   2003  Michael A. Halcrow <mike@halcrow.us>
+ **   2003  Dustin Kirkland <k1rkland@us.ibm.com>
+ **   2004  D. Kent Soper <dksoper@us.ibm.com>
+ **   2005  Amy Griffis <amy.griffis@hp.com>
  **
  **********************************************************************/
 
 #include "includes.h"
 #include "syscalls.h"
+#include <sys/mman.h>
 
-/* <linux/module.h> can't be included in userspace */
-int delete_module(const char *);
+extern long init_module(void *, unsigned long, const char *);
+extern long delete_module(const char *, unsigned int);
 
-int test_delete_module(laus_data* dataPtr) {
+int test_delete_module(laus_data *dataPtr) {
 
+    int rc = 0;
+    int exp_errno = EPERM;
+    char *module_name = "test_module";
+    char *module_path = "/tmp/laus_test/syscalls/kmods/test_module.ko";
+    int flags = 0;
+    int fd;
+    struct stat mstat;
+    void *region = MAP_FAILED;
 
-	int rc = 0;
-	int exp_errno = EPERM;
-        int size;
-	//char resolvedPath [ PATH_MAX ];    // not needed?
-	//int pid, status;  		     // not needed?
-	char *module_name = "binfmt_misc";
-	char test_module_path[PATH_MAX];
-	char cmd[PATH_MAX];
-	FILE *fPtr;
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", 
+	    AUDIT_delete_module);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_delete_module;
 
+    if (dataPtr->successCase) {
+	dataPtr->msg_euid = 0;
+	dataPtr->msg_egid = 0;
+    }
 
-	// Set the syscall-specific data
-	dataPtr->laus_var_data.syscallData.code = AUDIT_delete_module;
+    //load module
+    if ((fd = open(module_path, O_RDONLY)) == -1) {
+	rc = fd;
+	printf1("Error opening %s: %s [%d]\n", module_path,
+		strerror(errno), errno);
+	goto out;
+    }
 
-	if( dataPtr->successCase ) {
-		// only root can delete modules
-		dataPtr->msg_euid = 0;
-		dataPtr->msg_egid = 0;
-		dataPtr->msg_fsuid = 0;
-		dataPtr->msg_fsgid = 0;
-	} 
+    if ((rc = fstat(fd, &mstat)) == -1) {
+	printf1("Error getting module file size: %s [%d]\n",
+		strerror(errno), errno);
+	goto out;
+    }
 
+    region = mmap(NULL, mstat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (region == MAP_FAILED) {
+	printf1("mmap:  %s [%d]\n", strerror(errno), errno);
+	goto out;
+    }
 
-	//load module
-	system( "echo /lib/modules/`uname -r`/kernel/fs/binfmt_misc.ko > /tmp/laus_module" );
-	fPtr = fopen("/tmp/laus_module", "r");
-	fscanf( fPtr, "%s", test_module_path );
-	fclose( fPtr );
-	unlink("/tmp/laus_module");
+    if ((rc = init_module(region, mstat.st_size, "")) == -1) {
+	printf1("Error loading module: %s [%d]\n", strerror(errno), errno);
+	goto out;
+    }
 
-	size = size_of_file(test_module_path);
-	if (size < 0) {
-		printf1( "Error getting module file size\n" );
-		goto EXIT;
-	}
+    // Set up audit argument buffer
+    if ((rc = auditArg2(dataPtr, 
+			AUDIT_ARG_STRING, strlen(module_name), module_name,
+			AUDIT_ARG_IMMEDIATE, sizeof(flags), &flags)) != 0) {
+	printf1( "Error setting up audit argument buffer\n" );
+	goto out;
+    }
 
-	// Execute system call
-	sprintf(cmd, "/sbin/insmod %s", test_module_path);
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto out;
+    }
 
-	// Insmod the module in both cases
-	if ( (system( cmd )) != 0 ) {
-		printf1("system() failed; cannot test init_module: errno=%i\n",
-				errno);
-		goto EXIT;
-	}
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result = 
+	delete_module(module_name, flags);
 
+    // Do post-system call work
+    postSysCall(dataPtr, errno, -1, exp_errno);
 
-	// Set up audit argument buffer
-	if ( dataPtr->successCase ) {
-		if( ( rc = auditArg1( dataPtr,
-						AUDIT_ARG_STRING, strlen( module_name ), 
-						module_name ) ) != 0 ) {
-			printf1( "Error setting up audit argument buffer\n" );
-			goto EXIT_CLEANUP;
-		}
-	} else {
-		if ( ( rc = auditArg1 ( dataPtr, 
-						AUDIT_ARG_NULL, 0, NULL ) ) != 0 ) {
-			printf1( "Error setting up audit argument buffer\n" );
-			goto EXIT_CLEANUP;
-		}
-	}
+out:
+    if ((delete_module(module_name, flags) != 0) && (errno != ENOENT)) {
+	printf1("Error removing module [%s]: %s [%d]\n", module_name,
+		strerror(errno), errno);
+    }
+    if ((region != MAP_FAILED) && (munmap(region, mstat.st_size) != 0)) {
+	printf1("munmap: %s [%d]\n", strerror(errno), errno);
+    }
+    if (fd != -1) {
+	close(fd);
+    }
 
-	// Do pre-system call work
-	if ( (rc = preSysCall( dataPtr )) != 0 ) {
-		printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
+    printf5("Returning from test\n");
 
-	// Execute system call
-	dataPtr->laus_var_data.syscallData.result = syscall( __NR_delete_module, module_name );
-
-	// Do post-system call work
-	if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-		printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-	}
-
-
-EXIT_CLEANUP:
-	//Do cleanup work here
-	if( ! dataPtr->successCase ) {
-		// Clean up from success case setup
-		if( delete_module( module_name ) == -1 ) {
-			printf1( "Error removing module with command [rmmod %s]\n", module_name );
-			goto EXIT;
-		}
-	}
-
-EXIT:
-	sleep(1);
-	return rc;
+    return rc;
 }

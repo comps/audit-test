@@ -59,7 +59,7 @@ SYSCALL_OBJS = syscalls.o
 
 ALL_OBJS = $(SYSCALL_OBJS)
 
-SUB_DIRS = tests utils ../utils
+SUB_DIRS = kmods tests utils ../utils
 
 #LIBS += -llaus
 LIBS +=
@@ -78,6 +78,7 @@ $(EXE): $(ALL_OBJS) $(UTILS_AR) $(TESTS_AR)
 	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) syscalls.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive $(LIBS)
 
 clean:
+	make clean -C kmods
 	make clean -C tests
 	make clean -C utils
 	$(RM) -r .deps

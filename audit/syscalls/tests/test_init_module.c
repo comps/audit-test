@@ -1,5 +1,6 @@
 /**********************************************************************
  **   Copyright (C) International Business Machines  Corp., 2003
+ **   Copyright (C) 2005 Hewlett-Packard Company
  **
  **   This program is free software;  you can redistribute it and/or modify
  **   it under the terms of the GNU General Public License as published by
@@ -15,138 +16,96 @@
  **   along with this program;  if not, write to the Free Software
  **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  **
- **
- **
- **  FILE       : test_init_module.c
- **
- **  PURPOSE    : To test the init_module library call auditing.
- **
- **  DESCRIPTION: The test_init_module() function builds into the
- **  laus_test framework to verify that the Linux Audit System
- **  accurately logs both successful and erroneous execution of the
- **  "init_module" system call.
- **
- **  In the successful case, this function:
- **   1) Runs the ``insmod'' external program with a valid kernel
- **      module
- **   2) Verifies the success result
- **   3) Removes the newly loaded kernel module.
- **
- **  The successful case utilizes the insmod application from the
- **  modutils package to indirectly make the init_module call.  The
- **  process of setting up for this call is complicated and esoteric,
- **  and so we opted to use a previously existing utility that has the
- **  express purpose of making the init_module call.
- **  
- **  In the erroneous case, this function:
- **   1) Runs the ``insmod'' external program with an invalid
- **      (nonexistent) kernel module
- **   2) Verifies the error result.
- **      
- **  The erroneous case calls insmod with a bogus module path.
- **
- **  HISTORY    :
- **    07/03 Originated by Michael A. Halcrow <mike@halcrow.us>
- **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
+ **   Contributors:
+ **   2003  Michael A. Halcrow <mike@halcrow.us>
+ **   2004  D. Kent Soper <dksoper@us.ibm.com>
+ **   2005  Amy Griffis <amy.griffis@hp.com>
  **
  **********************************************************************/
 
 #include "includes.h"
 #include "syscalls.h"
+#include <sys/mman.h>
 
-/* <linux/module.h> can't be included in userspace */
-int delete_module(const char *);
+extern long init_module(void *, unsigned long, const char *);
+extern long delete_module(const char *, unsigned int);
 
-int test_init_module(laus_data* dataPtr) {
+int test_init_module(laus_data *dataPtr) {
 
-	int rc = 0;
-	int exp_errno = EEXIST;
-	char dummy[] = { 0 };
-	int size;
-	char *module_name = "binfmt_misc";
-	char test_module_path[PATH_MAX];
-	char cmd[PATH_MAX];
-	FILE *fPtr;
+    int rc = 0;
+    int exp_errno = EPERM;
+    char *module_name = "test_module";
+    char *module_path = "/tmp/laus_test/syscalls/kmods/test_module.ko";
+    int flags = 0;
+    int fd;
+    struct stat mstat;
+    void *region = MAP_FAILED;
+    char dummy[] = { 0 };
 
-	// Set the syscall-specific data
-	printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_init_module );
-	dataPtr->laus_var_data.syscallData.code = AUDIT_init_module;
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", 
+	    AUDIT_init_module);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_init_module;
 
-	//Do as much setup work as possible right here
+    if (dataPtr->successCase) {
 	dataPtr->msg_euid = 0;
 	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+    }
 
-	// Set up
-	system( "echo /lib/modules/`uname -r`/kernel/fs/binfmt_misc.ko > /tmp/laus_module" );
-	fPtr = fopen("/tmp/laus_module", "r");
-  	fscanf( fPtr, "%s", test_module_path );
-        fclose( fPtr );
-	unlink("/tmp/laus_module");
-		
-	size = size_of_file(test_module_path);
-	if (size < 0) {
-		printf1( "Error getting module file size\n" );
-		goto EXIT;
-	}
+    // Set up
+    if ((fd = open(module_path, O_RDONLY)) == -1) {
+	rc = fd;
+	printf1("Error opening %s: %s [%d]\n", module_path,
+		strerror(errno), errno);
+	goto out;
+    }
 
-	// Set up audit argument buffer
-	if( ( rc = auditArg3( dataPtr,
-					AUDIT_ARG_POINTER, 0, dummy,
-					AUDIT_ARG_IMMEDIATE, sizeof(int), &size,
-					AUDIT_ARG_STRING, 0, "" 
-			    ) ) != 0 ) {
-		printf1( "Error setting up audit argument buffer\n" );
-		goto EXIT;
-	}
+    if ((rc = fstat(fd, &mstat)) == -1) {
+	printf1("Error getting module file size: %s [%d]\n",
+		strerror(errno), errno);
+	goto out;
+    }
 
-	// Do pre-system call work
-	if( ( rc = preSysCall( dataPtr ) ) != 0 ) {
-		printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
+    region = mmap(NULL, mstat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (region == MAP_FAILED) {
+	printf1("mmap:  %s [%d]\n", strerror(errno), errno);
+	goto out;
+    }
 
-	// Execute system call
-	sprintf(cmd, "/sbin/insmod %s", test_module_path);
+    // Set up audit argument buffer
+    if ((rc = auditArg3(dataPtr, 
+			AUDIT_ARG_POINTER, 0, dummy, 
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &mstat.st_size,
+			AUDIT_ARG_STRING, 0, "")) != 0) {
+	printf1( "Error setting up audit argument buffer\n" );
+	goto out;
+    }
 
-	// Insmod the module in both cases
-	if ( (system( cmd )) != 0 ) {
-		printf1("system() failed; cannot test init_module: errno=%i\n",
-				errno);
-		goto EXIT;
-	}
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto out;
+    }
 
-	// In fail case, insmod same module again to cause EEXIST errno
-	if ( !dataPtr->successCase ) {
-		sleep(2);
-		if ( (system( cmd )) != 0 ) {
-			printf("system failed successfully with errno=%i\n", errno);
-		} else {     
-			printf1("system() failed; cannot test init_module for fail case\n");
-			goto EXIT_CLEANUP;
-		}
-	}
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result = 
+	init_module(region, mstat.st_size, "");
 
-	// We must make up these values; auditing will tell us if they really succeeded
-	dataPtr->msg_pid = NO_PID_CHECK;
-	if ( dataPtr->successCase ) {
-		dataPtr->laus_var_data.syscallData.result = 0;
-	} else {
-		dataPtr->laus_var_data.syscallData.result = -1;
-		dataPtr->laus_var_data.syscallData.resultErrno = exp_errno;
-	}
-	postSysCall( dataPtr, exp_errno, -1, exp_errno );
+    postSysCall(dataPtr, errno, -1, exp_errno);
 
-EXIT_CLEANUP:
-	//Do cleanup work here
-	// Clean up in both cases
-	if( delete_module( module_name ) != 0 ) {
-		printf1( "Error removing module [%s]\n", module_name );
-	}
+out:
+    if ((delete_module(module_name, flags) != 0) && (errno != ENOENT)) {
+	printf1("Error removing module [%s]: %s [%d]\n", module_name,
+		strerror(errno), errno);
+    }
+    if ((region != MAP_FAILED) && (munmap(region, mstat.st_size) != 0)) {
+	printf1("munmap: %s [%d]\n", strerror(errno), errno);
+    }
+    if (fd != -1) {
+	close(fd);
+    }
 
-EXIT:
-	printf5( "Returning from test\n" );
+    printf5("Returning from test\n");
 
-	return rc;
+    return rc;
 }

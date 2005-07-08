@@ -56,121 +56,126 @@
     **    05/04 Updates to supress warnings by Kimberly D. Simn <kdsimon@us.ibm.com>
     **
     **********************************************************************/
-   
-   #include "includes.h"
-   #include "syscalls.h"
-   #include <sys/socket.h>
-   #include <netinet/in.h>
-   #include <linux/net.h>
-   
-   int test_bind(laus_data* dataPtr) {
-     
-    
-     int rc = 0;
+
+#include "includes.h"
+#include "syscalls.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <linux/net.h>
+
+int test_bind(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
 #if defined(__S390X) || defined(__PPC64) || defined(__X86_64) || defined(__IA64)
-     __s64 exp_errno = EBADF;
+    __s64 exp_errno = EBADF;
 #else
-     int exp_errno = EBADF;
+    int exp_errno = EBADF;
 #endif
-     int sockfd;
-     struct sockaddr_in my_addr;
-     //struct sockaddr_in* null_ptr = NULL;   // not needed?
-     socklen_t addrlen = 0;
-     int portNum = -1;
-     char SocketPath[19];
-     
-     // Set the syscall-specific data
-     printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_bind );
-     dataPtr->laus_var_data.syscallData.code = AUDIT_bind;
+    int sockfd;
+    struct sockaddr_in my_addr;
+    //struct sockaddr_in* null_ptr = NULL;   // not needed?
+    socklen_t addrlen = 0;
+    int portNum = -1;
+    char SocketPath[19];
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_bind);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_bind;
 
      /**
       * Do as much setup work as possible right here
       */
-     if( dataPtr->successCase ) {
-       my_addr.sin_port = htons( -1 );
-       if( ( sockfd = socket( PF_INET, SOCK_STREAM, 0 ) ) == -1 ) {
-         printf1( "Error creating socket\n" );
-         goto EXIT;
-       }
-       // fill in my_addr
-       my_addr.sin_family = AF_INET;
-       portNum = 54348; // Initial port number to try
-       my_addr.sin_port = htons( portNum );
-       my_addr.sin_addr.s_addr = INADDR_ANY;
-       // set addrlen
-       addrlen = sizeof( struct sockaddr_in );
-   
-       // Now, find a port that works
-       while( bind( sockfd, (struct sockaddr*)&my_addr, addrlen ) == -1 && 
- 	     portNum < 60000 ) {
-         printf3( "Attempt to bind to port %d failed; trying one higher\n", portNum );
-         portNum++;
-         my_addr.sin_port = htons( portNum );
-       }
-       if( portNum == 60000 ) { // Okay, so we *may* have bound to port
-   			     // 60000, but the likelihood of that
-   			     // happening is very small if we were
-   			     // unable to bind to the other 5,651
-   			     // ports, so we ignore that case.
-         printf1( "Failed to bind to any port between 54348 and 60000; something must be wrong\n" );
-         goto EXIT_CLEANUP;
-       } else {
-         // We have successfully ``binded'' to the socket; 
- 	 // OK use current configuration for the audit test
-         close( sockfd );
-         if( ( sockfd = socket( PF_INET, SOCK_STREAM, 0 ) ) == -1 ) {
-   	   printf1( "Error creating socket\n" );
-   	   goto EXIT;
-         }
-	 sprintf(SocketPath, "[sock:af=%d,type=%d]", PF_INET, SOCK_STREAM);
-       }
-     } else {
-       // set up non-success case
-       sockfd = -1;
-     }
-  
-   
-     // Set up audit argument buffer
-     // Since bind() test is called a little differently than the rest of the tests,
-     if( ( rc = auditArg3( dataPtr, 
-			   (dataPtr->successCase ? AUDIT_ARG_PATH : AUDIT_ARG_ERROR ), 
-			   (dataPtr->successCase ? strlen(SocketPath) : sizeof( __u64 )), 
-			   (dataPtr->successCase ? (void*)SocketPath : (void*)&exp_errno),
-			   (dataPtr->successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL),
-			   (dataPtr->successCase ? sizeof(struct sockaddr) : 0),
-			   &my_addr,
-			   AUDIT_ARG_IMMEDIATE, sizeof(socklen_t), &addrlen
-			   ) ) != 0 ) {
-	 printf1( "Error setting up audit argument buffer\n" );
-	 goto EXIT;
-     } 
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     // syscall() does not cooperate with the bind() system call, so call bind() directly
-       dataPtr->laus_var_data.syscallData.result = bind( sockfd, (struct sockaddr*)&my_addr, addrlen );
+    if (dataPtr->successCase) {
+	my_addr.sin_port = htons(-1);
+	if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
+	    printf1("Error creating socket\n");
+	    goto EXIT;
+	}
+	// fill in my_addr
+	my_addr.sin_family = AF_INET;
+	portNum = 54348;	// Initial port number to try
+	my_addr.sin_port = htons(portNum);
+	my_addr.sin_addr.s_addr = INADDR_ANY;
+	// set addrlen
+	addrlen = sizeof(struct sockaddr_in);
 
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-    EXIT_CLEANUP:
+	// Now, find a port that works
+	while (bind(sockfd, (struct sockaddr *)&my_addr, addrlen) == -1 &&
+	       portNum < 60000) {
+	    printf3("Attempt to bind to port %d failed; trying one higher\n",
+		    portNum);
+	    portNum++;
+	    my_addr.sin_port = htons(portNum);
+	}
+	if (portNum == 60000) {	// Okay, so we *may* have bound to port
+	    // 60000, but the likelihood of that
+	    // happening is very small if we were
+	    // unable to bind to the other 5,651
+	    // ports, so we ignore that case.
+	    printf1
+		("Failed to bind to any port between 54348 and 60000; something must be wrong\n");
+	    goto EXIT_CLEANUP;
+	} else {
+	    // We have successfully ``binded'' to the socket; 
+	    // OK use current configuration for the audit test
+	    close(sockfd);
+	    if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
+		printf1("Error creating socket\n");
+		goto EXIT;
+	    }
+	    sprintf(SocketPath, "[sock:af=%d,type=%d]", PF_INET, SOCK_STREAM);
+	}
+    } else {
+	// set up non-success case
+	sockfd = -1;
+    }
+
+
+    // Set up audit argument buffer
+    // Since bind() test is called a little differently than the rest of the tests,
+    if ((rc = auditArg3(dataPtr,
+			(dataPtr->
+			 successCase ? AUDIT_ARG_PATH : AUDIT_ARG_ERROR),
+			(dataPtr->
+			 successCase ? strlen(SocketPath) : sizeof(__u64)),
+			(dataPtr->
+			 successCase ? (void *)SocketPath : (void *)&exp_errno),
+			(dataPtr->
+			 successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL),
+			(dataPtr->successCase ? sizeof(struct sockaddr) : 0),
+			&my_addr, AUDIT_ARG_IMMEDIATE, sizeof(socklen_t),
+			&addrlen)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    // syscall() does not cooperate with the bind() system call, so call bind() directly
+    dataPtr->laus_var_data.syscallData.result =
+	bind(sockfd, (struct sockaddr *)&my_addr, addrlen);
+
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-     if (dataPtr->successCase) {
-	 close( sockfd );
-     }
-   
-    EXIT:
-     printf5( "Returning from test\n" );
-     return rc;
-   }
+    if (dataPtr->successCase) {
+	close(sockfd);
+    }
+
+EXIT:
+    printf5("Returning from test\n");
+    return rc;
+}

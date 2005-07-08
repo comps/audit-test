@@ -54,7 +54,7 @@
  **    05/04 Updates to suppress compile warnings by Kimberlt D. Simon <kdsimon@us.ibm.com>
  **
  **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
@@ -65,85 +65,87 @@
 #endif
 #include <asm/page.h>
 #include <sys/shm.h>
-   
-int test_shmget(laus_data* dataPtr) {
-    
-  int rc = 0;
-  int exp_errno = EACCES;
-  int key = 0;
-  int firstShmid = 0;
-  int secondShmid = 0;
-  //int doNotDeallocate = 0;
-  int mode;
-  static int pageSize;
-   
-  // Set the syscall-specific data
-  dataPtr->laus_var_data.syscallData.code = AUDIT_shmget;
 
-  // Set the mode flags
-  mode = S_IRWXU | S_IRWXG | S_IRWXO;
-   
-  // Set the key value.
-  // If successCase == 0, then we will be double-allocating the memory
-  // to force an error condition. 
-  if( dataPtr->successCase ) {
-    key = IPC_PRIVATE;
-  } else {    
-    mode = 0600 | IPC_CREAT;
-    key = -1;
-    if( ( firstShmid = shmget( key, PAGE_SIZE, mode ) ) == -1 ) {
-      printf1( "Cannot create the shared memory segment with key = -1: errno = [%i]\n", errno );
-      goto EXIT;      
+int test_shmget(laus_data *dataPtr)
+{
+
+    int rc = 0;
+    int exp_errno = EACCES;
+    int key = 0;
+    int firstShmid = 0;
+    int secondShmid = 0;
+    //int doNotDeallocate = 0;
+    int mode;
+    static int pageSize;
+
+    // Set the syscall-specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_shmget;
+
+    // Set the mode flags
+    mode = S_IRWXU | S_IRWXG | S_IRWXO;
+
+    // Set the key value.
+    // If successCase == 0, then we will be double-allocating the memory
+    // to force an error condition. 
+    if (dataPtr->successCase) {
+	key = IPC_PRIVATE;
+    } else {
+	mode = 0600 | IPC_CREAT;
+	key = -1;
+	if ((firstShmid = shmget(key, PAGE_SIZE, mode)) == -1) {
+	    printf1
+		("Cannot create the shared memory segment with key = -1: errno = [%i]\n",
+		 errno);
+	    goto EXIT;
+	}
     }
-  }
-   
-  // Set up audit argument buffer
-  pageSize = PAGE_SIZE; /* macro on IA64 */
-  if( ( rc = auditArg3( dataPtr,
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &key,
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &pageSize,
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &mode ) ) != 0 ) {
-    printf1( "Error setting up audit argument buffer\n" );
-    goto EXIT_CLEANUP;
-  }
-   
-  // Do pre-system call work
-  if ( (rc = preSysCall( dataPtr )) != 0 ) {
-    printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
-  // Execute system call
-  //  dataPtr->laus_var_data.syscallData.result = secondShmid = shmget( key, PAGE_SIZE, mode );
+
+    // Set up audit argument buffer
+    pageSize = PAGE_SIZE;	/* macro on IA64 */
+    if ((rc = auditArg3(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &key,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &pageSize,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &mode)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    //  dataPtr->laus_var_data.syscallData.result = secondShmid = shmget( key, PAGE_SIZE, mode );
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-  dataPtr->laus_var_data.syscallData.result = secondShmid = syscall( __NR_shmget,
-                                                                     key, PAGE_SIZE, mode );
+    dataPtr->laus_var_data.syscallData.result = secondShmid =
+	syscall(__NR_shmget, key, PAGE_SIZE, mode);
 #else
-  dataPtr->laus_var_data.syscallData.result = secondShmid = syscall( __NR_ipc, SHMGET,
-								     key, PAGE_SIZE, mode );
-#endif   
-  // Do post-system call work
-  if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-    printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
- EXIT_CLEANUP:
-  if( firstShmid && ( firstShmid != -1 ) ) {
-    if( ( shmctl( firstShmid, IPC_RMID, 0 ) ) == -1 ) {
-      printf1( "ERROR: Cannot deallocate shared memory with shmid=%d: errno=%i\n", 
-	       firstShmid, errno );
+    dataPtr->laus_var_data.syscallData.result = secondShmid =
+	syscall(__NR_ipc, SHMGET, key, PAGE_SIZE, mode);
+#endif
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
     }
-  }    
-  if( secondShmid && ( secondShmid != -1 ) ) {
-    if( ( shmctl( secondShmid, IPC_RMID, 0 ) ) == -1 ) {
-      printf1( "ERROR: Cannot deallocate shared memory with shmid=%d: errno=%i\n", 
-	       secondShmid, errno );
-      goto EXIT;
+
+EXIT_CLEANUP:
+    if (firstShmid && (firstShmid != -1)) {
+	if ((shmctl(firstShmid, IPC_RMID, 0)) == -1) {
+	    printf1
+		("ERROR: Cannot deallocate shared memory with shmid=%d: errno=%i\n",
+		 firstShmid, errno);
+	}
     }
-  }
-       
- EXIT:
-  return rc;
+    if (secondShmid && (secondShmid != -1)) {
+	if ((shmctl(secondShmid, IPC_RMID, 0)) == -1) {
+	    printf1
+		("ERROR: Cannot deallocate shared memory with shmid=%d: errno=%i\n",
+		 secondShmid, errno);
+	    goto EXIT;
+	}
+    }
+
+EXIT:
+    return rc;
 }
-   

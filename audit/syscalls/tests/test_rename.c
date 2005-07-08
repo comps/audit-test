@@ -46,95 +46,94 @@
    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
    **
    **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <libgen.h>
-   
-int test_rename(laus_data *dataPtr) {
+
+int test_rename(laus_data *dataPtr)
+{
 
     int rc = 0;
     int exp_errno = EACCES;
 
-    char* path = NULL;
-    char* targetPath = NULL;
+    char *path = NULL;
+    char *targetPath = NULL;
 
     // Set the syscall-specific data
     printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_rename);
     dataPtr->laus_var_data.syscallData.code = AUDIT_rename;
-     
+
     if ((rc = createTempFile(&path, S_IRWXU | S_IRWXG | S_IRWXO,
-                              dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
-        printf1("ERROR: Cannot create file %s\n", path);
-        goto EXIT;
+			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	printf1("ERROR: Cannot create file %s\n", path);
+	goto EXIT;
     }
 
     if (dataPtr->successCase) {
-        // dynamically create target temp file name
-        if ((rc = createTempFileName(&targetPath)) == -1) {
-            printf1("ERROR: Cannot create file %s\n", targetPath);
-            strcpy(targetPath, path);
-            goto EXIT_CLEANUP;
-        }
+	// dynamically create target temp file name
+	if ((rc = createTempFileName(&targetPath)) == -1) {
+	    printf1("ERROR: Cannot create file %s\n", targetPath);
+	    strcpy(targetPath, path);
+	    goto EXIT_CLEANUP;
+	}
     } else {
-        targetPath = strdup("/root/");
-        realloc(targetPath, strlen(path));
-        strcat(targetPath, basename(path));
+	targetPath = strdup("/root/");
+	realloc(targetPath, strlen(path));
+	strcat(targetPath, basename(path));
     }
-   
+
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr, AUDIT_ARG_PATH, strlen(path), path, 
-                        dataPtr->successCase ? AUDIT_ARG_PATH : AUDIT_ARG_STRING, 
-                        strlen(targetPath), targetPath)) != 0) {
-        printf1("Error setting up audit argument buffer\n");
-        goto EXIT_CLEANUP;
+    if ((rc = auditArg2(dataPtr, AUDIT_ARG_PATH, strlen(path), path,
+			dataPtr->
+			successCase ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
+			strlen(targetPath), targetPath)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
     }
-     
     // Fill in laus_data structure
     printf5("Calling getLAUSData\n");
-    if ((rc = getLAUSData( dataPtr)) != 0) {
-        printf1("Error returned from getLAUSData( dataPtr ): rc=%i\n", rc);
-        goto EXIT_CLEANUP;
+    if ((rc = getLAUSData(dataPtr)) != 0) {
+	printf1("Error returned from getLAUSData( dataPtr ): rc=%i\n", rc);
+	goto EXIT_CLEANUP;
     }
-
     // Do pre-system call work
     if ((rc = preSysCall(dataPtr)) != 0) {
-        printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-        goto EXIT_CLEANUP;
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
     }
-
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result = 
-        syscall(__NR_rename, path, targetPath);
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_rename, path, targetPath);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0 ) {
-        printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-        goto EXIT_CLEANUP;
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
     }
-   
+
 EXIT_CLEANUP:
     if (dataPtr->successCase) {
-        // remove the target temporary file
-        printf5("Removing file %s\n", targetPath);
-        if (unlink(targetPath) == -1) {
-            printf1("Error removing file %s: errno=%i\n", targetPath, errno);
-            goto EXIT;
-        }
+	// remove the target temporary file
+	printf5("Removing file %s\n", targetPath);
+	if (unlink(targetPath) == -1) {
+	    printf1("Error removing file %s: errno=%i\n", targetPath, errno);
+	    goto EXIT;
+	}
     } else {
-        printf5("Removing file %s\n", path);
-        if( unlink(path) == -1) {
-            printf1("Error removing file %s: errno=%i\n", path, errno);
-            goto EXIT;
-        }
+	printf5("Removing file %s\n", path);
+	if (unlink(path) == -1) {
+	    printf1("Error removing file %s: errno=%i\n", path, errno);
+	    goto EXIT;
+	}
     }
-   
+
 EXIT:
     if (targetPath) {
-        free(targetPath);
+	free(targetPath);
     }
     if (path) {
-        free(path);
+	free(path);
     }
     printf5("Returning from test\n");
     return rc;

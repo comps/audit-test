@@ -57,86 +57,83 @@
 #include <sched.h>
 
 #ifdef __NR_vfork
-int test_vfork(laus_data* dataPtr) {
+int test_vfork(laus_data *dataPtr)
+{
 
-	int rc = 0;
-	int exp_errno = 0;
-	int status;
-	char* fileName = NULL; 
-	pid_t firstPid;
-	int flags = CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|0x11;
+    int rc = 0;
+    int exp_errno = 0;
+    int status;
+    char *fileName = NULL;
+    pid_t firstPid;
+    int flags = CLONE_CHILD_CLEARTID | CLONE_CHILD_SETTID | 0x11;
 
-	// Set the syscall-specific data
-	printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_clone );
-	dataPtr->laus_var_data.syscallData.code = AUDIT_clone;
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_clone);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_clone;
 
-	// Do as much setup work as possible right here
+    // Do as much setup work as possible right here
 
-	if( dataPtr->successCase ) {
-		// Set up for success
-		// Might include: dataPtr->msg_euid = 0; dataPtr->msg_egid = 0;;
-	} else {
-		rc = SKIP_TEST_CASE;
-		goto EXIT;
+    if (dataPtr->successCase) {
+	// Set up for success
+	// Might include: dataPtr->msg_euid = 0; dataPtr->msg_egid = 0;;
+    } else {
+	rc = SKIP_TEST_CASE;
+	goto EXIT;
+    }
+
+    if ((rc = createTempFileName(&fileName) != 0)) {
+	printf1("Error creating temporary pid file\n");
+	goto EXIT;
+    }
+    // Set up audit argument buffer
+    if ((rc = auditArg1(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    if ((firstPid = fork()) == 0) {
+	// In child
+	if (syscall(__NR_vfork) == 0) {
+	    // In grandchild
+	    execve("/bin/true", NULL, NULL);
+	    _exit(0);
 	}
+	_exit(0);
+    }
+    waitpid(firstPid, &status, 0);
+    dataPtr->laus_var_data.syscallData.result = NO_RETURN_CODE;
+    dataPtr->msg_pid = NO_PID_CHECK;
 
-	if (( rc = createTempFileName(&fileName) != 0 )) {
-		printf1( "Error creating temporary pid file\n" );
-		goto EXIT;
-	}
-
-	// Set up audit argument buffer
-	if( ( rc = auditArg1( dataPtr,
-					AUDIT_ARG_IMMEDIATE, sizeof(int), &flags
-			    ) ) != 0 ) {
-		printf1( "Error setting up audit argument buffer\n" );
-		goto EXIT_CLEANUP;
-	}
-
-	// Do pre-system call work
-	if ( (rc = preSysCall( dataPtr )) != 0 ) {
-		printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
-
-	// Execute system call
-	if( ( firstPid = fork() ) == 0 ) {
-		// In child
-		if( syscall( __NR_vfork ) == 0 ) {
-			// In grandchild
-			execve("/bin/true", NULL, NULL);
-			_exit(0);
-		}
-		_exit(0);
-	}
-	waitpid( firstPid, &status, 0 );
-	dataPtr->laus_var_data.syscallData.result = NO_RETURN_CODE;
-	dataPtr->msg_pid = NO_PID_CHECK;
-
-	// Do post-system call work
+    // Do post-system call work
 	/**
 	 * The error conditions for vfork() require that there be
 	 * insufficient memory resources for the requested operation.
 	 * Generating this error would invalidate the test environment, and
 	 * so the error condition is not tested for vfork().
 	 */
-	if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-		printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
 
 EXIT_CLEANUP:
-	if (fileName) 
-		free(fileName);
+    if (fileName)
+	free(fileName);
 
 
-	// Do cleanup work here
-	if( dataPtr->successCase ) {
-		// Clean up from success case setup
-	}
+    // Do cleanup work here
+    if (dataPtr->successCase) {
+	// Clean up from success case setup
+    }
 
 EXIT:
-	printf5( "Returning from test\n" );
-	return rc;
+    printf5("Returning from test\n");
+    return rc;
 }
 #endif // __NR_vfork

@@ -54,80 +54,76 @@
    **    05/04 Updates to supress compiler warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
    **
    **********************************************************************/
-   
-   #include "includes.h"
-   #include "syscalls.h"
-   
-   int test_chdir(laus_data* dataPtr) {
-     
-    
-     int rc = 0;
-     int exp_errno =EACCES;
-     char* path = NULL;
-     
-     // Set the syscall-specific data
-     printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_chdir );
-     dataPtr->laus_var_data.syscallData.code = AUDIT_chdir;
-     
-     // dynamically create test directory
-     if ((rc = (createTempDir(&path, S_IRWXU,
-                              dataPtr->msg_euid, dataPtr->msg_egid)) == -1)) {
-       printf1("ERROR: Cannot create dir %s\n", path);
-       goto EXIT;
-     } 
-  
-     if ( ! dataPtr->successCase ) {
-       dataPtr->msg_ruid = dataPtr->msg_euid = dataPtr->msg_fsuid = helper_uid;
-     }
 
-     printf5( "Generated directory %s\n", path );
-   
-     // Set up audit argument buffer
-     if( ( rc = auditArg1( dataPtr,
- 			  ( AUDIT_ARG_PATH ), 
- 			  ( strlen( path ) ), 
- 			  path ) ) != 0 ) {
-       printf1( "Error setting up audit argument buffer\n" );
-       goto EXIT_CLEANUP;
-   
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_chdir, path );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-   
-    EXIT_CLEANUP:
+#include "includes.h"
+#include "syscalls.h"
+
+int test_chdir(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = EACCES;
+    char *path = NULL;
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_chdir);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_chdir;
+
+    // dynamically create test directory
+    if ((rc = (createTempDir(&path, S_IRWXU,
+			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1)) {
+	printf1("ERROR: Cannot create dir %s\n", path);
+	goto EXIT;
+    }
+
+    if (!dataPtr->successCase) {
+	dataPtr->msg_ruid = dataPtr->msg_euid = dataPtr->msg_fsuid = helper_uid;
+    }
+
+    printf5("Generated directory %s\n", path);
+
+    // Set up audit argument buffer
+    if ((rc = auditArg1(dataPtr, (AUDIT_ARG_PATH), (strlen(path)), path)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
+
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result = syscall(__NR_chdir, path);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+
+EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-     if( dataPtr->successCase ) {
-       // chdir out of the directory we are about to nuke
-       if( chdir( cwd ) == -1 ) {
-         printf1( "Error executing chdir(\"%s\"): errno=%i\n", cwd, errno );
-         goto EXIT;
-       }
-     }
-     // remove the temporary directory
-     if( rmdir( path ) == -1 ) {
-       printf1( "Error removing directory %s: errno=%i\n", path, errno );
-       goto EXIT;
-     }
-   
-    EXIT:
-     if (path) 
-       free (path);
-     printf5( "Returning from test\n" );
-     return rc;
-   }
+    if (dataPtr->successCase) {
+	// chdir out of the directory we are about to nuke
+	if (chdir(cwd) == -1) {
+	    printf1("Error executing chdir(\"%s\"): errno=%i\n", cwd, errno);
+	    goto EXIT;
+	}
+    }
+    // remove the temporary directory
+    if (rmdir(path) == -1) {
+	printf1("Error removing directory %s: errno=%i\n", path, errno);
+	goto EXIT;
+    }
+
+EXIT:
+    if (path)
+	free(path);
+    printf5("Returning from test\n");
+    return rc;
+}

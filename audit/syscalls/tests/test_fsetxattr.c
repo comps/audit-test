@@ -59,84 +59,85 @@
 #include "syscalls.h"
 #include <attr/xattr.h>
 
-int test_fsetxattr(laus_data* dataPtr) {
+int test_fsetxattr(laus_data *dataPtr)
+{
 
-	int rc = 0;
-	int exp_errno = ENOATTR;
-	char* path = NULL;
+    int rc = 0;
+    int exp_errno = ENOATTR;
+    char *path = NULL;
 
-	int filedes;
-	char* name = "user.mime_type";
-	char value[ sizeof( XATTR_TEST_VALUE ) ];
-	size_t size;
-	int flags;
+    int filedes;
+    char *name = "user.mime_type";
+    char value[sizeof(XATTR_TEST_VALUE)];
+    size_t size;
+    int flags;
 
-	// Set the syscall-specific data
-	printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_fsetxattr );
-	dataPtr->laus_var_data.syscallData.code = AUDIT_fsetxattr;
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_fsetxattr);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_fsetxattr;
 
 	/**
 	 * Do as much setup work as possible right here
 	 */
-	bzero( value, sizeof( XATTR_TEST_VALUE ) );
-	size = sizeof( XATTR_TEST_VALUE );
+    bzero(value, sizeof(XATTR_TEST_VALUE));
+    size = sizeof(XATTR_TEST_VALUE);
 
-	// Create the target file
-	if( ( rc = createTempFile( &path, ( S_IRWXU | S_IRWXG | S_IRWXO ),
-					dataPtr->msg_euid, dataPtr->msg_egid ) ) == -1 ) {
-		printf1( "ERROR: Cannot create file %s\n", path );
-		goto EXIT;
-	}
-	// Open the target file
-	if( ( filedes = rc = open( path, O_RDWR ) ) == -1 ) {
-		printf1( "Error opening file [%s] for read/write access: errno=%i\n", path, errno );
-		goto EXIT_CLEANUP_UNLINK;
-	}
+    // Create the target file
+    if ((rc = createTempFile(&path, (S_IRWXU | S_IRWXG | S_IRWXO),
+			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	printf1("ERROR: Cannot create file %s\n", path);
+	goto EXIT;
+    }
+    // Open the target file
+    if ((filedes = rc = open(path, O_RDWR)) == -1) {
+	printf1("Error opening file [%s] for read/write access: errno=%i\n",
+		path, errno);
+	goto EXIT_CLEANUP_UNLINK;
+    }
 
-	if( dataPtr->successCase ) {     // Set up for success
-		flags = XATTR_CREATE;
-		strcpy( value, XATTR_TEST_VALUE );
-	} else {        // Set up for error
-		flags = XATTR_REPLACE;
-	}
+    if (dataPtr->successCase) {	// Set up for success
+	flags = XATTR_CREATE;
+	strcpy(value, XATTR_TEST_VALUE);
+    } else {			// Set up for error
+	flags = XATTR_REPLACE;
+    }
 
-	// Set up audit argument buffer
-	if( ( rc = auditArg5( dataPtr,
-					AUDIT_ARG_PATH, strlen( path ), path,
-					AUDIT_ARG_STRING, strlen( name ), name,
-					AUDIT_ARG_POINTER, size, value,
-					AUDIT_ARG_IMMEDIATE, sizeof( size_t ), &size,
-					AUDIT_ARG_IMMEDIATE, sizeof( int ), &flags ) ) != 0 ) {
-		printf1( "Error setting up audit argument buffer\n" );
-		goto EXIT_CLEANUP_CLOSE;
-	}
+    // Set up audit argument buffer
+    if ((rc = auditArg5(dataPtr,
+			AUDIT_ARG_PATH, strlen(path), path,
+			AUDIT_ARG_STRING, strlen(name), name,
+			AUDIT_ARG_POINTER, size, value,
+			AUDIT_ARG_IMMEDIATE, sizeof(size_t), &size,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP_CLOSE;
+    }
+    // Do pre-system call work
+    preSysCall(dataPtr);
 
-	// Do pre-system call work
-	preSysCall( dataPtr );
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_fsetxattr, filedes, name, value, size, flags);
 
-	// Execute system call
-	dataPtr->laus_var_data.syscallData.result = syscall( __NR_fsetxattr, filedes, name, value, size, flags );
-
-	// Do post-system call work
-	postSysCall( dataPtr, errno, -1, exp_errno );
+    // Do post-system call work
+    postSysCall(dataPtr, errno, -1, exp_errno);
 
 EXIT_CLEANUP_CLOSE:
-	if( (  close( filedes ) ) == -1 ) {
-		printf1( "Error closing filehandle %d\n", filedes );
-		goto EXIT_CLEANUP_UNLINK;
-	}    
+    if ((close(filedes)) == -1) {
+	printf1("Error closing filehandle %d\n", filedes);
+	goto EXIT_CLEANUP_UNLINK;
+    }
 
 EXIT_CLEANUP_UNLINK:
-	// Clean up from success case setup
-	if( (  unlink( path ) ) == -1 ) {
-		printf1( "Error unlinking file %s\n", path );
-		goto EXIT;
-	}
+    // Clean up from success case setup
+    if ((unlink(path)) == -1) {
+	printf1("Error unlinking file %s\n", path);
+	goto EXIT;
+    }
 
 EXIT:
-	if ( path )
-		free( path );
-	printf5( "Returning from test\n" );
-	return rc;
+    if (path)
+	free(path);
+    printf5("Returning from test\n");
+    return rc;
 }
-

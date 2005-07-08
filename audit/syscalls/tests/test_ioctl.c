@@ -45,75 +45,73 @@
 #include <termio.h>
 #include <sys/ioctl.h>
 
-int test_ioctl(laus_data* dataPtr) {
+int test_ioctl(laus_data *dataPtr)
+{
 
 
-	int rc = 0;
-	int exp_errno = ENOTTY;
-	int fd = 0;
-	char* dev = "/dev/tty";
-        char* notty = "/tmp/notty";
-	char* path;
-	char dummy[] = { 0 };
-	int tcgeta = TCGETA;
-	struct termio tio;
+    int rc = 0;
+    int exp_errno = ENOTTY;
+    int fd = 0;
+    char *dev = "/dev/tty";
+    char *notty = "/tmp/notty";
+    char *path;
+    char dummy[] = { 0 };
+    int tcgeta = TCGETA;
+    struct termio tio;
 
-	// Set the syscall specific data
-	dataPtr->laus_var_data.syscallData.code = AUDIT_ioctl;
+    // Set the syscall specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_ioctl;
 
-	if (dataPtr->successCase) {
-	  // Create a file readable by test user if testing success case
-	  if ((fd = open(dev, O_RDWR, 0777)) == -1) {
+    if (dataPtr->successCase) {
+	// Create a file readable by test user if testing success case
+	if ((fd = open(dev, O_RDWR, 0777)) == -1) {
 	    printf1("ERROR: Cannot open tty device %s\n", dev);
 	    goto EXIT;
-	  }
-	  path = dev;
-	} else {
-          // Create a file readable by test user if testing success case
-          if ((fd = open(notty, O_CREAT, 0777)) == -1) {
-            printf1("ERROR: Cannot create test file %s\n", notty);
-            goto EXIT;
-          }
-	  path = notty;
-	} 
-	
-	// Set up audit argument buffer
-	if( ( rc = auditArg3( dataPtr,
-			      AUDIT_ARG_PATH, strlen(path), path,
-			      AUDIT_ARG_IMMEDIATE, sizeof(int), &tcgeta,
-			      AUDIT_ARG_POINTER, 0, dummy
-			      ) ) != 0 ) {
-	  printf1( "Error setting up audit argument buffer\n" );
-	  goto EXIT;
 	}
-	
-	// Do pre-system call work
-	if ( (rc = preSysCall( dataPtr )) != 0 ) {
-	  printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-	  goto EXIT;
+	path = dev;
+    } else {
+	// Create a file readable by test user if testing success case
+	if ((fd = open(notty, O_CREAT, 0777)) == -1) {
+	    printf1("ERROR: Cannot create test file %s\n", notty);
+	    goto EXIT;
 	}
-	
-	// Execute system call
-	rc = dataPtr->laus_var_data.syscallData.result = syscall( __NR_ioctl, fd, TCGETA, &tio );
-	
-	// Do post-system call work
-	if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-	  printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-	  goto EXIT;
-	}
-	
-	
-	
- EXIT:    
+	path = notty;
+    }
 
-	close(fd);
+    // Set up audit argument buffer
+    if ((rc = auditArg3(dataPtr,
+			AUDIT_ARG_PATH, strlen(path), path,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &tcgeta,
+			AUDIT_ARG_POINTER, 0, dummy)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT;
+    }
+    // Execute system call
+    rc = dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_ioctl, fd, TCGETA, &tio);
 
-	// cleanup
-	if (!dataPtr->successCase) {
-	  // close dev for success case
-	  unlink(notty);
-	}
-	
-	return rc;
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT;
+    }
+
+
+
+EXIT:
+
+    close(fd);
+
+    // cleanup
+    if (!dataPtr->successCase) {
+	// close dev for success case
+	unlink(notty);
+    }
+
+    return rc;
 }
-

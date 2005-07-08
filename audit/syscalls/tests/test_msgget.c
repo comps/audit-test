@@ -55,7 +55,7 @@
  **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
  **
  **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
@@ -65,81 +65,86 @@
 #include <asm/ipc.h>
 #endif
 #include <sys/msg.h>
-   
-int test_msgget(laus_data* dataPtr) {
-    
-  int rc = 0;
-  int exp_errno = EACCES;
-  int key = 0;
-  int firstMsgid = 0;
-  int secondMsgid = 0;
-  //int doNotDeallocate = 0;   // not needed?
-  int mode;
-   
-  // Set the syscall-specific data
-  dataPtr->laus_var_data.syscallData.code = AUDIT_msgget;
 
-  // Set the mode flags
-  mode = S_IRWXU | S_IRWXG | S_IRWXO;
-   
-  // Set the key value.
-  // If successCase == 0, then we will be double-allocating the memory
-  // to force an error condition. 
-  if( dataPtr->successCase ) {
-    key = IPC_PRIVATE;
-  } else {    
-    mode = 0600 | IPC_CREAT;
-    key = -1;
-    if( ( firstMsgid = msgget( key, mode ) ) == -1 ) {
-      printf1( "Cannot create the message queue with key = -1: errno = [%i]\n", errno );
-      goto EXIT;
+int test_msgget(laus_data *dataPtr)
+{
+
+    int rc = 0;
+    int exp_errno = EACCES;
+    int key = 0;
+    int firstMsgid = 0;
+    int secondMsgid = 0;
+    //int doNotDeallocate = 0;   // not needed?
+    int mode;
+
+    // Set the syscall-specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_msgget;
+
+    // Set the mode flags
+    mode = S_IRWXU | S_IRWXG | S_IRWXO;
+
+    // Set the key value.
+    // If successCase == 0, then we will be double-allocating the memory
+    // to force an error condition. 
+    if (dataPtr->successCase) {
+	key = IPC_PRIVATE;
+    } else {
+	mode = 0600 | IPC_CREAT;
+	key = -1;
+	if ((firstMsgid = msgget(key, mode)) == -1) {
+	    printf1
+		("Cannot create the message queue with key = -1: errno = [%i]\n",
+		 errno);
+	    goto EXIT;
+	}
     }
-  } 
-   
-  // Set up audit argument buffer
-  if( ( rc = auditArg2( dataPtr,
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &key,
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &mode ) ) != 0 ) {
-    printf1( "Error setting up audit argument buffer\n" );
-    goto EXIT_CLEANUP;
-  }
 
-   
-  // Do pre-system call work
-  if ( (rc = preSysCall( dataPtr )) != 0 ) {
-    printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
-  // Execute system call
-  //     dataPtr->laus_var_data.syscallData.result = secondMsgid = msgget( key, mode );
+    // Set up audit argument buffer
+    if ((rc = auditArg2(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &key,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &mode)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
+    }
+
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    //     dataPtr->laus_var_data.syscallData.result = secondMsgid = msgget( key, mode );
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-  dataPtr->laus_var_data.syscallData.result = secondMsgid = syscall( __NR_msgget, key, mode );
+    dataPtr->laus_var_data.syscallData.result = secondMsgid =
+	syscall(__NR_msgget, key, mode);
 #else
-  dataPtr->laus_var_data.syscallData.result = secondMsgid = syscall( __NR_ipc, MSGGET, key, mode );
-#endif   
-  // Do post-system call work
-  if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-    printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  } 
-   
- EXIT_CLEANUP:
+    dataPtr->laus_var_data.syscallData.result = secondMsgid =
+	syscall(__NR_ipc, MSGGET, key, mode);
+#endif
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
 
-  if( firstMsgid && ( firstMsgid != -1 ) ) {
-    if( ( msgctl( firstMsgid, IPC_RMID, 0 ) ) == -1 ) {
-      printf1( "ERROR: Cannot deallocate message memory with msgid=%d: errno=%i\n", 
-	       firstMsgid, errno );
+EXIT_CLEANUP:
+
+    if (firstMsgid && (firstMsgid != -1)) {
+	if ((msgctl(firstMsgid, IPC_RMID, 0)) == -1) {
+	    printf1
+		("ERROR: Cannot deallocate message memory with msgid=%d: errno=%i\n",
+		 firstMsgid, errno);
+	}
     }
-  }    
-  if( secondMsgid && ( secondMsgid != -1 ) ) {
-    if( ( msgctl( secondMsgid, IPC_RMID, 0 ) ) == -1 ) {
-      printf1( "ERROR: Cannot deallocate message memory with msgid=%d: errno=%i\n", 
-	       secondMsgid, errno );
-      goto EXIT;
+    if (secondMsgid && (secondMsgid != -1)) {
+	if ((msgctl(secondMsgid, IPC_RMID, 0)) == -1) {
+	    printf1
+		("ERROR: Cannot deallocate message memory with msgid=%d: errno=%i\n",
+		 secondMsgid, errno);
+	    goto EXIT;
+	}
     }
-  }
-         
- EXIT:
-  return rc;
+
+EXIT:
+    return rc;
 }

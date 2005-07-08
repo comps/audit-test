@@ -54,71 +54,70 @@
     **********************************************************************/
 
 #ifdef __IX86
-   
-   #include "includes.h"
-   #include "syscalls.h"
-   #include <sys/io.h>
-   
-   int test_iopl(laus_data* dataPtr) {
-     
-    
-     int rc = 0;
-     int exp_errno = EINVAL;
-   
-     int level;
-     
-     
-     // Set the syscall-specific data
-     printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_iopl );
-     dataPtr->laus_var_data.syscallData.code = AUDIT_iopl;
-     
+
+#include "includes.h"
+#include "syscalls.h"
+#include <sys/io.h>
+
+int test_iopl(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = EINVAL;
+
+    int level;
+
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_iopl);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_iopl;
+
      /**
       * Do as much setup work as possible right here
       */
-     dataPtr->msg_euid = 0;
-     dataPtr->msg_egid = 0;
-     dataPtr->msg_fsuid = 0;
-     dataPtr->msg_fsgid = 0;
-     if( dataPtr->successCase ) {
-       level = 1;
-     } else {
-       level = 42;
-     }
-   
-     // Set up audit argument buffer
-     if( ( rc = auditArg1( dataPtr,
-                    AUDIT_ARG_IMMEDIATE, sizeof( int ), &level ) ) != 0 ) {
-       printf1( "Error setting up audit argument buffer\n" );
-       goto EXIT;
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_iopl, level );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-   
-    EXIT_CLEANUP:
+    dataPtr->msg_euid = 0;
+    dataPtr->msg_egid = 0;
+    dataPtr->msg_fsuid = 0;
+    dataPtr->msg_fsgid = 0;
+    if (dataPtr->successCase) {
+	level = 1;
+    } else {
+	level = 42;
+    }
+
+    // Set up audit argument buffer
+    if ((rc = auditArg1(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &level)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result = syscall(__NR_iopl, level);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+
+EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-     if( dataPtr->successCase ) {
-       iopl( 0 );
-     }
-   
-    EXIT:
-     printf5( "Returning from test\n" );
-     return rc;
-   }
+    if (dataPtr->successCase) {
+	iopl(0);
+    }
+
+EXIT:
+    printf5("Returning from test\n");
+    return rc;
+}
 
 #endif

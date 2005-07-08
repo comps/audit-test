@@ -53,76 +53,72 @@
    **********************************************************************/
 
 #if !defined(__PPC) && !defined(__X86_64)  && !defined(__S390X) && !defined(__IA64)
-   #include "includes.h"
-   #include "syscalls.h"
-   
+#include "includes.h"
+#include "syscalls.h"
+
    /*
-   ** execute a truncate64 operation
-   */
-   int test_truncate64(laus_data* dataPtr) {
-     
-   
-     int rc = 0;
-     int exp_errno = EACCES;
-     long long length = 1;
-     //size_t count = 80;    // not needed?
-     char* fileName = NULL;
-   
-   
-     // Set the syscall specific data
-     dataPtr->laus_var_data.syscallData.code = AUDIT_truncate;
-     // BUGBUG: Need to understand how to set up syscall parameters
-   
-     // dynamically create temp file name
-     if ((rc = createTempFile(&fileName, S_IRWXU,
-                          dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
-       printf1("ERROR: Cannot create file %s\n", fileName);
-       goto EXIT;
-     }
-   
-     if ( !dataPtr->successCase) {
-	 dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
-     }
-   
-     // Set up audit argument buffer
-     //64 bit numbers logged as 2 longs, low and high, high is always 0 in our test case
-     if( ( rc = auditArg2( dataPtr,
-			   AUDIT_ARG_PATH, strlen(fileName), fileName,
-			   AUDIT_ARG_IMMEDIATE, sizeof(length), &length
-			   ) ) != 0 ) {
-	 printf1( "Error setting up audit argument buffer\n" );
-	 goto EXIT;
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_truncate64, fileName, length );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-   
-   EXIT_CLEANUP:  
-     // truncate64 cleanup
-     if ((rc = unlink(fileName)) != 0) {
-       printf1("ERROR: Unable to remove file %s: errno=%i\n", 
-   	   fileName, errno);
-       goto EXIT;
-     }
-     
-   EXIT:
-     if (fileName)
-       free(fileName);
-     return rc;
-   }
+    ** execute a truncate64 operation
+    */
+int test_truncate64(laus_data *dataPtr)
+{
 
-#endif   
 
+    int rc = 0;
+    int exp_errno = EACCES;
+    long long length = 1;
+    //size_t count = 80;    // not needed?
+    char *fileName = NULL;
+
+
+    // Set the syscall specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_truncate;
+    // BUGBUG: Need to understand how to set up syscall parameters
+
+    // dynamically create temp file name
+    if ((rc = createTempFile(&fileName, S_IRWXU,
+			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	printf1("ERROR: Cannot create file %s\n", fileName);
+	goto EXIT;
+    }
+
+    if (!dataPtr->successCase) {
+	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
+    }
+    // Set up audit argument buffer
+    //64 bit numbers logged as 2 longs, low and high, high is always 0 in our test case
+    if ((rc = auditArg2(dataPtr,
+			AUDIT_ARG_PATH, strlen(fileName), fileName,
+			AUDIT_ARG_IMMEDIATE, sizeof(length), &length)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_truncate64, fileName, length);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+
+EXIT_CLEANUP:
+    // truncate64 cleanup
+    if ((rc = unlink(fileName)) != 0) {
+	printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
+	goto EXIT;
+    }
+
+EXIT:
+    if (fileName)
+	free(fileName);
+    return rc;
+}
+
+#endif

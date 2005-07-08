@@ -50,7 +50,7 @@
  **    10/04 Added special case for s390x in 31 bit mode by Loulwa Salem <loulwa@us.ibm.com>
  **
  **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
@@ -61,101 +61,103 @@
 #endif
 #include <sys/shm.h>
 #include <asm/page.h>
-   
-int test_shmctl(laus_data* dataPtr) {
-    
-  int rc = 0;
-  int exp_errno = EPERM;
-  int shmctlrc = 0;
-  int shmid = 0;
-  //int third_arg = 0;
-  //key_t key;
-  int mode;
-  static int cmd;
-  struct shmid_ds buf;
-   
-  // Set the syscall-specific data
-  printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_shmctl );
-  dataPtr->laus_var_data.syscallData.code = AUDIT_shmctl;   
+
+int test_shmctl(laus_data *dataPtr)
+{
+
+    int rc = 0;
+    int exp_errno = EPERM;
+    int shmctlrc = 0;
+    int shmid = 0;
+    //int third_arg = 0;
+    //key_t key;
+    int mode;
+    static int cmd;
+    struct shmid_ds buf;
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_shmctl);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_shmctl;
 
   /**
    * Do as much setup work as possible right here
    */
 
-  memset(&buf, 0, sizeof(buf));
+    memset(&buf, 0, sizeof(buf));
 
-  mode = S_IRWXU;
-  // Allocate shared memory space so that we can test deallocation via shmct
-  if( ( shmid = shmget( IPC_PRIVATE, PAGE_SIZE, mode ) ) == -1 ) {
-    printf1( "ERROR: Unable to allocate new shared memory segment: errno=%i\n", errno );
-    goto EXIT;
-  }
-  
-  if( dataPtr->successCase ) {
-    dataPtr->msg_euid = 0;
-    dataPtr->msg_egid = 0;
-    dataPtr->msg_fsuid = 0;
-    dataPtr->msg_fsgid = 0;
-  } else {
-  }
+    mode = S_IRWXU;
+    // Allocate shared memory space so that we can test deallocation via shmct
+    if ((shmid = shmget(IPC_PRIVATE, PAGE_SIZE, mode)) == -1) {
+	printf1
+	    ("ERROR: Unable to allocate new shared memory segment: errno=%i\n",
+	     errno);
+	goto EXIT;
+    }
 
-  // Set up audit argument buffer
+    if (dataPtr->successCase) {
+	dataPtr->msg_euid = 0;
+	dataPtr->msg_egid = 0;
+	dataPtr->msg_fsuid = 0;
+	dataPtr->msg_fsgid = 0;
+    } else {
+    }
+
+    // Set up audit argument buffer
 
 // Handle special case on zSeries in 31 bit mode.
 // IPC_RMID needs to be ored with IPC_64 flag to get the correct value
 #if defined(__S390X) && defined(__MODE_32)
-  cmd = IPC_RMID | 0x0100;	// Value of IPC_64 as defined in /usr/include/linux/ipc.h
+    cmd = IPC_RMID | 0x0100;	// Value of IPC_64 as defined in /usr/include/linux/ipc.h
 #else
-  cmd = IPC_RMID;
+    cmd = IPC_RMID;
 #endif
 
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-  if ( ( rc = auditArg3( dataPtr,
-                         AUDIT_ARG_IMMEDIATE, sizeof(int), &shmid,
-                         AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd,
-                         AUDIT_ARG_NULL, 0, NULL
-                         ) ) != 0 ) {
+    if ((rc = auditArg3(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &shmid,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd,
+			AUDIT_ARG_NULL, 0, NULL)) != 0) {
 #else
-  if( ( rc = auditArg3( dataPtr,
-			AUDIT_ARG_IMMEDIATE, sizeof( int ), &shmid,
-			AUDIT_ARG_IMMEDIATE, sizeof( int ), &cmd,
-			AUDIT_ARG_POINTER, 0, &buf
-		) ) != 0 ) {
+    if ((rc = auditArg3(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &shmid,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd,
+			AUDIT_ARG_POINTER, 0, &buf)) != 0) {
 #endif
-    printf1( "Error setting up audit argument buffer\n" );
-    goto EXIT;
-  }
-   
-  // Do pre-system call work
-  if ( (rc = preSysCall( dataPtr )) != 0 ) {
-    printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
-  // Execute system call
-#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-  dataPtr->laus_var_data.syscallData.result = shmctlrc = syscall( __NR_shmctl,
-                                                                  shmid, IPC_RMID, 0, &buf );
-#else
-  dataPtr->laus_var_data.syscallData.result = shmctlrc = syscall( __NR_ipc, SHMCTL,
-								  shmid, IPC_RMID, 0, &buf );
-#endif
-   
-  // Do post-system call work
-  if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-    printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
- EXIT_CLEANUP:
-  if( !dataPtr->successCase && shmid && ( shmid != -1 ) ) {
-    if( ( rc = shmctl( shmid, IPC_RMID, 0 ) ) == -1 ) {
-      printf1( "Error removind shared memory with ID = [%d]: errno = [%i]\n", shmid, errno );
-      goto EXIT;
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
     }
-  }
-   
- EXIT:
-  return rc;
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
+    dataPtr->laus_var_data.syscallData.result = shmctlrc = syscall(__NR_shmctl,
+								   shmid,
+								   IPC_RMID, 0,
+								   &buf);
+#else
+    dataPtr->laus_var_data.syscallData.result = shmctlrc =
+	syscall(__NR_ipc, SHMCTL, shmid, IPC_RMID, 0, &buf);
+#endif
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+EXIT_CLEANUP:
+    if (!dataPtr->successCase && shmid && (shmid != -1)) {
+	if ((rc = shmctl(shmid, IPC_RMID, 0)) == -1) {
+	    printf1
+		("Error removind shared memory with ID = [%d]: errno = [%i]\n",
+		 shmid, errno);
+	    goto EXIT;
+	}
+    }
+
+EXIT:
+    return rc;
 }
-   

@@ -53,7 +53,7 @@
  **    05/04 Updates to suppress compiler warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
  **
  **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
@@ -61,147 +61,151 @@
 #include <sys/wait.h>
 
 typedef struct errnoAndReturnValue_s {
-  int returnValue;
-  int savedErrno;
+    int returnValue;
+    int savedErrno;
 } errnoAndReturnValue_t;
-   
-int test_chroot(laus_data* dataPtr) {
-     
-  int rc = 0;
-  int exp_errno = EPERM;
-  int mode;
-  //int pid;     // variables not needed?
-  //key_t shmkey;
-  //int shmsize;
-  //int shmflg;
-  int shmid;
 
-  errnoAndReturnValue_t* earv;
-  int savedErrno;
-   
-  char* path = NULL;
-  char* tempPath = "/tmp";
-     
-  // Set the syscall-specific data
-  printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_chroot );
-  dataPtr->laus_var_data.syscallData.code = AUDIT_chroot;
-     
-  // Do as much setup work as possible right here
+int test_chroot(laus_data *dataPtr)
+{
 
-  // Initialize IPC
-  // Shared memory
-  if( ( shmid = shmget( IPC_PRIVATE, sizeof( errnoAndReturnValue_t ), 
-			IPC_CREAT ) ) == -1 ) {
-    printf1( "Error getting shared memory: errno=%i\n", errno );
-    goto EXIT; // TODO: Explicitely account for the fact that the semaphore has been created at this point
-  }
-  if( dataPtr->successCase ) {
-   // Set up for success
-    dataPtr->msg_euid = 0;
-    dataPtr->msg_egid = 0;
-    dataPtr->msg_fsuid = 0;
-    dataPtr->msg_fsgid = 0;
-    mode = S_IRWXU | S_IRWXG | S_IRWXO;
-    if( ( rc = createTempFile( &path, mode,
-   			       dataPtr->msg_euid, dataPtr->msg_egid ) ) == -1 ) {
-      printf1("ERROR: Cannot create file %s\n", path);
-      goto EXIT;
-    }
-    if( ( rc = unlink( path ) ) != 0 ) {
-      printf1("ERROR: Unable to remove file %s: errno=%i\n", path, errno);
-      goto EXIT;
-    }
-    printf5( "Generated directory name %s\n", path );
-    if( mkdir( path, mode ) == -1 ) {
-      printf1( "Cannot create directory %s\n", path );
-      goto EXIT;
-    }
-  } else {
-    // Set up for error
-    path = tempPath; // Just so it points somewhere; we want an EPERM errno though
-  }
-   
-  // Set up audit argument buffer
-  if (( rc = auditArg1( dataPtr,
-		      AUDIT_ARG_PATH,
-		      strlen(path), 
-		      path ) != 0 )) {
-    printf1( "Error setting up audit argument buffer\n" );
-      goto EXIT;
-  }
+    int rc = 0;
+    int exp_errno = EPERM;
+    int mode;
+    //int pid;     // variables not needed?
+    //key_t shmkey;
+    //int shmsize;
+    //int shmflg;
+    int shmid;
 
-  // Do pre-system call work
-  if ( (rc = preSysCall( dataPtr )) != 0 ) {
-    printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
-  // Execute system call
-  if( dataPtr->successCase ) {
-    int pid;
-    pid = fork();
-    if( pid == 0 ) {
-      errnoAndReturnValue_t* childEarv;
-      if( ( (long)( childEarv = shmat( shmid, NULL, 0 ) ) ) == -1 ) {
-      printf1( "Error attaching to shared memory segment with id %d: errno=%d\n", shmid, errno );
-      // TODO: Something a bit more drastic should happen at this point
-      _exit( 0 );
-      }
-      childEarv->returnValue = syscall( __NR_chroot, path );
-      childEarv->savedErrno = errno;
-      if( shmdt( childEarv ) == -1 ) {
-	printf1( "Error detaching from shared memory segment at address 0x%p: errno=%i\n",childEarv, errno );
-	_exit( 0 );
-      }
-      _exit( 0 );
+    errnoAndReturnValue_t *earv;
+    int savedErrno;
+
+    char *path = NULL;
+    char *tempPath = "/tmp";
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_chroot);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_chroot;
+
+    // Do as much setup work as possible right here
+
+    // Initialize IPC
+    // Shared memory
+    if ((shmid = shmget(IPC_PRIVATE, sizeof(errnoAndReturnValue_t),
+			IPC_CREAT)) == -1) {
+	printf1("Error getting shared memory: errno=%i\n", errno);
+	goto EXIT;		// TODO: Explicitely account for the fact that the semaphore has been created at this point
+    }
+    if (dataPtr->successCase) {
+	// Set up for success
+	dataPtr->msg_euid = 0;
+	dataPtr->msg_egid = 0;
+	dataPtr->msg_fsuid = 0;
+	dataPtr->msg_fsgid = 0;
+	mode = S_IRWXU | S_IRWXG | S_IRWXO;
+	if ((rc = createTempFile(&path, mode,
+				 dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	    printf1("ERROR: Cannot create file %s\n", path);
+	    goto EXIT;
+	}
+	if ((rc = unlink(path)) != 0) {
+	    printf1("ERROR: Unable to remove file %s: errno=%i\n", path, errno);
+	    goto EXIT;
+	}
+	printf5("Generated directory name %s\n", path);
+	if (mkdir(path, mode) == -1) {
+	    printf1("Cannot create directory %s\n", path);
+	    goto EXIT;
+	}
     } else {
-      dataPtr->msg_pid = pid;
-      if( waitpid( pid, NULL, 0 ) == -1 ) {
-	printf1( "Error waiting on pid %d: errno=%i\n", pid, errno );
-	goto EXIT_CLEANUP;
-      }
-      if( ( (long)( earv = shmat( shmid, NULL, 0 ) ) ) == -1 ) {
-	printf1( "Error attaching to shared memory segment with id %d: errno=%i\n", shmid, errno );
-	goto EXIT_CLEANUP;
-      }
-      dataPtr->laus_var_data.syscallData.result = earv->returnValue;
-      savedErrno = earv->savedErrno;
-      if( shmdt( earv ) == -1 ) {
-	printf1( "Error detaching from shared memory segment at address 0x%p: errno=%i\n", earv, errno );
-	goto EXIT_CLEANUP;
-      }      
+	// Set up for error
+	path = tempPath;	// Just so it points somewhere; we want an EPERM errno though
     }
 
-  } else {
-    dataPtr->laus_var_data.syscallData.result = syscall( __NR_chroot, path );
-    savedErrno = errno;
-  }
-   
-  // Do post-system call work
-  if ( (rc = postSysCall(  dataPtr, savedErrno, -1, exp_errno  )) != 0 ) {
-    printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
- EXIT_CLEANUP:
+    // Set up audit argument buffer
+    if ((rc = auditArg1(dataPtr, AUDIT_ARG_PATH, strlen(path), path) != 0)) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    if (dataPtr->successCase) {
+	int pid;
+	pid = fork();
+	if (pid == 0) {
+	    errnoAndReturnValue_t *childEarv;
+	    if (((long)(childEarv = shmat(shmid, NULL, 0))) == -1) {
+		printf1
+		    ("Error attaching to shared memory segment with id %d: errno=%d\n",
+		     shmid, errno);
+		// TODO: Something a bit more drastic should happen at this point
+		_exit(0);
+	    }
+	    childEarv->returnValue = syscall(__NR_chroot, path);
+	    childEarv->savedErrno = errno;
+	    if (shmdt(childEarv) == -1) {
+		printf1
+		    ("Error detaching from shared memory segment at address 0x%p: errno=%i\n",
+		     childEarv, errno);
+		_exit(0);
+	    }
+	    _exit(0);
+	} else {
+	    dataPtr->msg_pid = pid;
+	    if (waitpid(pid, NULL, 0) == -1) {
+		printf1("Error waiting on pid %d: errno=%i\n", pid, errno);
+		goto EXIT_CLEANUP;
+	    }
+	    if (((long)(earv = shmat(shmid, NULL, 0))) == -1) {
+		printf1
+		    ("Error attaching to shared memory segment with id %d: errno=%i\n",
+		     shmid, errno);
+		goto EXIT_CLEANUP;
+	    }
+	    dataPtr->laus_var_data.syscallData.result = earv->returnValue;
+	    savedErrno = earv->savedErrno;
+	    if (shmdt(earv) == -1) {
+		printf1
+		    ("Error detaching from shared memory segment at address 0x%p: errno=%i\n",
+		     earv, errno);
+		goto EXIT_CLEANUP;
+	    }
+	}
+
+    } else {
+	dataPtr->laus_var_data.syscallData.result = syscall(__NR_chroot, path);
+	savedErrno = errno;
+    }
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, savedErrno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+EXIT_CLEANUP:
   /**
    * Do cleanup work here
    */
-  if( dataPtr->successCase ) {
-    // Clean up from success case setup
-    // Delete the temporary directory
-    if( rmdir( path ) == -1 ) {
-      printf1( "Cannot remove directory %s: errno=%i\n", path, errno );
-      printf1( "ENOENT = %d\n", ENOENT );
-      goto EXIT;
+    if (dataPtr->successCase) {
+	// Clean up from success case setup
+	// Delete the temporary directory
+	if (rmdir(path) == -1) {
+	    printf1("Cannot remove directory %s: errno=%i\n", path, errno);
+	    printf1("ENOENT = %d\n", ENOENT);
+	    goto EXIT;
+	}
     }
-  }
-   
- EXIT:
-  if( dataPtr->successCase ) {
-    if (path)
-      free( path );
-  }
-  printf5( "Returning from test\n" );
-  return rc;
+
+EXIT:
+    if (dataPtr->successCase) {
+	if (path)
+	    free(path);
+    }
+    printf5("Returning from test\n");
+    return rc;
 }

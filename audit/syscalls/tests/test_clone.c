@@ -56,81 +56,82 @@
 #include <sched.h>
 
 #ifndef __IA64
-int fn(void *x) {
-	sleep(1);
-	return 0;
+int fn(void *x)
+{
+    sleep(1);
+    return 0;
 }
 #endif
 
-int test_clone(laus_data* dataPtr) {
+int test_clone(laus_data *dataPtr)
+{
 
 
-	int rc = 0;
-	int exp_errno = EPERM;
-	int flags = CLONE_VFORK;
-	// int flags = CLONE_FS|CLONE_VFORK|CLONE_PARENT|CLONE_SYSVSEM|0x8000068;
-	pid_t pid;
+    int rc = 0;
+    int exp_errno = EPERM;
+    int flags = CLONE_VFORK;
+    // int flags = CLONE_FS|CLONE_VFORK|CLONE_PARENT|CLONE_SYSVSEM|0x8000068;
+    pid_t pid;
 
-	// Set the syscall-specific data
-	printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_clone );
-	dataPtr->laus_var_data.syscallData.code = AUDIT_clone;
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_clone);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_clone;
 
-	// Do as much setup work as possible right here
-	if( dataPtr->successCase ) {     // Set up for success
+    // Do as much setup work as possible right here
+    if (dataPtr->successCase) {	// Set up for success
 
-	} else {	// Set up for error
+    } else {			// Set up for error
 
-		// BUGBUG: For some reason, we are not able to fail the the clone() syscall
-		//   in the 2.6 kernel.
-//		flags |= CLONE_NEWNS;
-		rc = SKIP_TEST_CASE;
-		goto EXIT;
+	// BUGBUG: For some reason, we are not able to fail the the clone() syscall
+	//   in the 2.6 kernel.
+//              flags |= CLONE_NEWNS;
+	rc = SKIP_TEST_CASE;
+	goto EXIT;
 
-	}
+    }
 
-	// Set up audit argument buffer
-	// Only save off first argument to assist log verification
-	if( ( rc = auditArg1( dataPtr, AUDIT_ARG_IMMEDIATE, sizeof(int), &flags) ) != 0 ) {
-		printf1( "Error setting up audit argument buffer\n" );
-		goto EXIT_CLEANUP;
-	}
-
-	// Do pre-system call work
-	if ( (rc = preSysCall( dataPtr )) != 0 ) {
-		printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
-
-	// Execute system call--parent waits b/c of CLONE_VFORK flag
+    // Set up audit argument buffer
+    // Only save off first argument to assist log verification
+    if ((rc =
+	 auditArg1(dataPtr, AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call--parent waits b/c of CLONE_VFORK flag
 #ifdef __IA64
-	// ia64 glibc doesn't have a symbol for clone
-	pid = syscall( __NR_clone, flags, NULL );
+    // ia64 glibc doesn't have a symbol for clone
+    pid = syscall(__NR_clone, flags, NULL);
 #else
-	char* stack = malloc(65536);
-	pid = clone( fn, (void*)(stack+32768), flags, NULL );
+    char *stack = malloc(65536);
+    pid = clone(fn, (void *)(stack + 32768), flags, NULL);
 #endif
-	switch (pid) {
-		case -1:
-			printf1("ERROR: clone failed (%d)\n", pid);
-			goto EXIT_CLEANUP;
-		case 0:
-			//In child
-			_exit(0);	    
-		default:
-			//In parent
-			dataPtr->laus_var_data.syscallData.result = pid;
-	}
+    switch (pid) {
+	case -1:
+	    printf1("ERROR: clone failed (%d)\n", pid);
+	    goto EXIT_CLEANUP;
+	case 0:
+	    //In child
+	    _exit(0);
+	default:
+	    //In parent
+	    dataPtr->laus_var_data.syscallData.result = pid;
+    }
 
-	// Do post-system call work
-	if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-		printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
 
 
 EXIT_CLEANUP:
 
 EXIT:
-	printf5( "Returning from test\n" );
-	return rc;
+    printf5("Returning from test\n");
+    return rc;
 }

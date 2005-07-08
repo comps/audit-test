@@ -52,12 +52,13 @@
    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
    **
    **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <libgen.h>
 
-int test_link(laus_data *dataPtr) {
+int test_link(laus_data *dataPtr)
+{
 
     int rc = 0;
     int exp_errno = EACCES;
@@ -68,80 +69,78 @@ int test_link(laus_data *dataPtr) {
     // Set the syscall-specific data
     printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_link);
     dataPtr->laus_var_data.syscallData.code = AUDIT_link;
-  
+
     if ((rc = createTempFile(&source, S_IRWXU | S_IRWXG | S_IRWXO,
-                             dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
-        printf1("ERROR: Cannot create file %s\n", source);
-        goto EXIT;
+			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	printf1("ERROR: Cannot create file %s\n", source);
+	goto EXIT;
     }
 
     if (dataPtr->successCase) {
-        // In success case, create file name to guarantee uniqueness, then delete it
-        if ((rc = createTempFile(&destination, S_IRWXU | S_IRWXG |
-                                 S_IRWXO, dataPtr->msg_euid,
-                                 dataPtr->msg_egid)) == -1) {
-            printf1("ERROR: Cannot create file %s\n", destination);
-            goto EXIT;
-        }
-        if ((rc = unlink(destination)) != 0) {
-            printf1("ERROR: Unable to remove file %s: errno=%i\n",
-                    destination, errno);
-            goto EXIT;
-        }
+	// In success case, create file name to guarantee uniqueness, then delete it
+	if ((rc = createTempFile(&destination, S_IRWXU | S_IRWXG |
+				 S_IRWXO, dataPtr->msg_euid,
+				 dataPtr->msg_egid)) == -1) {
+	    printf1("ERROR: Cannot create file %s\n", destination);
+	    goto EXIT;
+	}
+	if ((rc = unlink(destination)) != 0) {
+	    printf1("ERROR: Unable to remove file %s: errno=%i\n",
+		    destination, errno);
+	    goto EXIT;
+	}
     } else {
-        // Fail case, so try to create link in /root as non-root user
+	// Fail case, so try to create link in /root as non-root user
 
-        /* ignore leading directories on tempfile path */
-        destination = strdup("/root/");
-        realloc(destination, strlen(source));
-        strcat(destination, basename(source));
-        dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid; 
+	/* ignore leading directories on tempfile path */
+	destination = strdup("/root/");
+	realloc(destination, strlen(source));
+	strcat(destination, basename(source));
+	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
     }
 
     // Set up audit argument buffer
-    if((rc = auditArg2(dataPtr, AUDIT_ARG_PATH, strlen(source), source,
-                       dataPtr->successCase ?  AUDIT_ARG_PATH : AUDIT_ARG_STRING,
-                       strlen(destination), destination)) != 0 ) {
-        printf1( "Error setting up audit argument buffer\n" );
-        goto EXIT;
+    if ((rc = auditArg2(dataPtr, AUDIT_ARG_PATH, strlen(source), source,
+			dataPtr->
+			successCase ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
+			strlen(destination), destination)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
     }
-
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0 ) {
-        printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-        goto EXIT_CLEANUP;
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
     }
-
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result = 
-        syscall(__NR_link, source, destination);
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_link, source, destination);
 
     // Do post-system call work
     if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
-        printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-        goto EXIT_CLEANUP;
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
     }
 
 EXIT_CLEANUP:
     if ((unlink(source)) != 0) {
-        printf1("ERROR: Unable to remove file %s: errno=%i\n", source,
-                errno);
-        goto EXIT;
+	printf1("ERROR: Unable to remove file %s: errno=%i\n", source, errno);
+	goto EXIT;
     }
-    if ( dataPtr->successCase ) {
-        if (( unlink(destination)) != 0) {
-            printf1("ERROR: Unable to remove file %s: errno=%i\n",
-                    destination, errno);
-            goto EXIT;
-        }
+    if (dataPtr->successCase) {
+	if ((unlink(destination)) != 0) {
+	    printf1("ERROR: Unable to remove file %s: errno=%i\n",
+		    destination, errno);
+	    goto EXIT;
+	}
     }
 
 EXIT:
     if (source) {
-        free(source);
+	free(source);
     }
     if (destination) {
-        free(destination);
+	free(destination);
     }
     printf5("Returning from test\n");
 

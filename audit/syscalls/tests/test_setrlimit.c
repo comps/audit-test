@@ -65,81 +65,83 @@ typedef long __my64;
 //   is compiled in 31/32bit mode but running on a 64bit kernel (emulation).
 //   auditd is running in 64bit mode but compilation of the test suite yields
 //   data structures whose sizes are different.
-struct rlimit_on_disk {   // edited from /usr/include/bits/resource.h
-	/* The current (soft) limit.  */
-	__my64 rlim_cur;
-	/* The hard limit.  */
-	__my64 rlim_max;
+struct rlimit_on_disk {		// edited from /usr/include/bits/resource.h
+    /* The current (soft) limit.  */
+    __my64 rlim_cur;
+    /* The hard limit.  */
+    __my64 rlim_max;
 };
-#else 
+#else
 #define rlimit_on_disk rlimit
 #endif
 
-int test_setrlimit(laus_data* dataPtr) {
+int test_setrlimit(laus_data *dataPtr)
+{
 
 
-	int rc = 0;
-	int exp_errno = EINVAL; 
+    int rc = 0;
+    int exp_errno = EINVAL;
 
-	int resource;
-	struct rlimit_on_disk rlim;
-	struct rlimit syscall_rlim;
+    int resource;
+    struct rlimit_on_disk rlim;
+    struct rlimit syscall_rlim;
 
-	// Set the syscall-specific data
-	printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_setrlimit );
-	dataPtr->laus_var_data.syscallData.code = AUDIT_setrlimit;
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_setrlimit);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_setrlimit;
 
 	/**
 	 * Do as much setup work as possible right here
 	 */
-	if( dataPtr->successCase ) {
-		resource = RLIMIT_CPU;
+    if (dataPtr->successCase) {
+	resource = RLIMIT_CPU;
 
-		getrlimit(resource, &syscall_rlim);
-		rlim.rlim_cur = (__s32)(syscall_rlim.rlim_cur);
-		rlim.rlim_max = (__s32)(syscall_rlim.rlim_max);
+	getrlimit(resource, &syscall_rlim);
+	rlim.rlim_cur = (__s32)(syscall_rlim.rlim_cur);
+	rlim.rlim_max = (__s32)(syscall_rlim.rlim_max);
 
-		// Set up for success
-		// Might include: dataPtr->msg_euid = 0; dataPtr->msg_egid = 0;
-	} else {
-		// Set up for error
-		resource = -1;
-	}
+	// Set up for success
+	// Might include: dataPtr->msg_euid = 0; dataPtr->msg_egid = 0;
+    } else {
+	// Set up for error
+	resource = -1;
+    }
 
-	// Set up audit argument buffer
-	if( ( rc = auditArg2( dataPtr,
-					AUDIT_ARG_IMMEDIATE_u, sizeof( int ), &resource,
-					dataPtr->successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL, 
-					dataPtr->successCase ? sizeof( struct rlimit_on_disk ) : 0, 
-					&rlim ) ) != 0 ) {
-		printf1( "Error setting up audit argument buffer\n" );
-		goto EXIT;
-	}
+    // Set up audit argument buffer
+    if ((rc = auditArg2(dataPtr,
+			AUDIT_ARG_IMMEDIATE_u, sizeof(int), &resource,
+			dataPtr->
+			successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL,
+			dataPtr->
+			successCase ? sizeof(struct rlimit_on_disk) : 0,
+			&rlim)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_setrlimit, resource, &syscall_rlim);
 
-	// Do pre-system call work
-	if ( (rc = preSysCall( dataPtr )) != 0 ) {
-		printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
-
-	// Execute system call
-	dataPtr->laus_var_data.syscallData.result = syscall( __NR_setrlimit, resource, &syscall_rlim );
-
-	// Do post-system call work
-	if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-		printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
 
 EXIT_CLEANUP:
 	/**
 	 * Do cleanup work here
 	 */
-	if( dataPtr->successCase ) {
-		// Clean up from success case setup
-	}
+    if (dataPtr->successCase) {
+	// Clean up from success case setup
+    }
 
 EXIT:
-	printf5( "Returning from test\n" );
-	return rc;
+    printf5("Returning from test\n");
+    return rc;
 }

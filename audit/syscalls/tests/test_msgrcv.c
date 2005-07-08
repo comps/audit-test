@@ -47,7 +47,7 @@
  **    04/04 Modified size of AUDIT_ARG_POINTER by Kimberly D. Simon <kdsimon@.us.ibm.com>
  **
  **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
@@ -72,105 +72,107 @@ _syscall6(int, ipc, int, minor, int, msgqid, size_t, msgsz, int, msgflg, struct 
 #endif
 */
 
-int test_msgrcv(laus_data* dataPtr) {
-    
-    
-  int rc = 0;
-  int exp_errno = EACCES;
-  int msgid;
-  int msgsz;
-  int msgflg;
-  long msgtyp;
-  int mode;
-  struct msgbuf {
-    long mtype;
-    char mtext[1];
-  } buf1, buf2;
+int test_msgrcv(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = EACCES;
+    int msgid;
+    int msgsz;
+    int msgflg;
+    long msgtyp;
+    int mode;
+    struct msgbuf {
+	long mtype;
+	char mtext[1];
+    } buf1, buf2;
 #ifdef TEST_MSGRCV_VER0
-  struct ipc_kludge kludge;
+    struct ipc_kludge kludge;
 #endif
 
 
 
-  // Set the syscall-specific data
-  dataPtr->laus_var_data.syscallData.code = AUDIT_msgrcv;
+    // Set the syscall-specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_msgrcv;
 
-  mode = S_IRWXU;
-  //msgsz = 1;
-  msgsz = 3;
+    mode = S_IRWXU;
+    //msgsz = 1;
+    msgsz = 3;
 //Specifying MSG_EXCEPT and a type of 1 means get me all messages except those of
 //type 1. As the only msg in the queue _has_ type 1 we get -ENOMSG;
 //msgflg = IPC_NOWAIT | MSG_NOERROR | MSG_EXCEPT;
-  msgflg = IPC_NOWAIT | MSG_NOERROR;
-  msgtyp = 1;
-  buf1.mtype = 1;
-  buf1.mtext[0] = 'a';
-  buf1.mtext[1] = 'b';
-  buf1.mtext[2] = 'c';
+    msgflg = IPC_NOWAIT | MSG_NOERROR;
+    msgtyp = 1;
+    buf1.mtype = 1;
+    buf1.mtext[0] = 'a';
+    buf1.mtext[1] = 'b';
+    buf1.mtext[2] = 'c';
 
-  if( ( msgid = msgget( IPC_PRIVATE, mode ) ) == -1 ) {
-    printf1( "ERROR: Unable to allocate new message queue: errno=%i\n", errno );
-    goto EXIT;
-  }
-
-  if ( msgsnd( msgid, &buf1, msgsz, msgflg ) == -1 ) {
-    printf1( "ERROR: Unable to add a message to the message queue: errno=%i\n", errno );
-    goto EXIT_CLEANUP;
-  }
-
-  if( dataPtr->successCase ) {
-    dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = 0;
-  } 
-   
-  // Set up audit argument buffer
-  if( ( rc = auditArg5( dataPtr,
-			AUDIT_ARG_IMMEDIATE, sizeof( int ), &msgid,
-                        AUDIT_ARG_POINTER, 0, &buf2,
-                        AUDIT_ARG_IMMEDIATE, sizeof( int ), &msgsz,
-                        AUDIT_ARG_IMMEDIATE, sizeof( long ), &msgtyp,
-                        AUDIT_ARG_IMMEDIATE, sizeof( int ), &msgflg
-			) ) != 0 ) {
-    printf1( "Error setting up audit argument buffer\n" );
-    goto EXIT_CLEANUP;
-  }
-   
-  // Do pre-system call work
-  if ( (rc = preSysCall( dataPtr )) != 0 ) {
-    printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
-  // Execute system call
-  dataPtr->laus_var_data.syscallData.result = msgrcv( msgid, &buf2, msgsz, msgtyp, msgflg ); 
-  /*
-#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-  dataPtr->laus_var_data.syscallData.result = syscall( __NR_msgrcv, msgid, msgsz, msgflg, &buf2, msgtyp ); 
-#elif defined(TEST_MSGRCV_VER0)
-	kludge.msgp = &buf2;
-	kludge.msgtyp = msgtyp;
-	dataPtr->laus_var_data.syscallData.result = syscall( __NR_ipc, MSGRCV, msgid, msgsz, msgflg, &kludge ); 
-#else
-	dataPtr->laus_var_data.syscallData.result = syscall( __NR_ipc, 0x10000|MSGRCV, msgid, msgsz, 
-							     msgflg, &buf2, msgtyp ); 
-#endif
-  */
-  // Do post-system call work
-  if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno )) != 0 ) {
-    printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
-  
- EXIT_CLEANUP:
-
-  if( msgid && ( msgid != -1 ) ) {
-    if( ( rc = msgctl( msgid, IPC_RMID, 0 ) ) == -1 ) {
-      printf1( "Error removing message queue with ID = [%d]: errno = [%i]\n", msgid, errno );
-      goto EXIT;
+    if ((msgid = msgget(IPC_PRIVATE, mode)) == -1) {
+	printf1("ERROR: Unable to allocate new message queue: errno=%i\n",
+		errno);
+	goto EXIT;
     }
-  }
-   
- EXIT:
-  return rc;
+
+    if (msgsnd(msgid, &buf1, msgsz, msgflg) == -1) {
+	printf1
+	    ("ERROR: Unable to add a message to the message queue: errno=%i\n",
+	     errno);
+	goto EXIT_CLEANUP;
+    }
+
+    if (dataPtr->successCase) {
+	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = 0;
+    }
+    // Set up audit argument buffer
+    if ((rc = auditArg5(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgid,
+			AUDIT_ARG_POINTER, 0, &buf2,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgsz,
+			AUDIT_ARG_IMMEDIATE, sizeof(long), &msgtyp,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgflg)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	msgrcv(msgid, &buf2, msgsz, msgtyp, msgflg);
+    /*
+       #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
+       dataPtr->laus_var_data.syscallData.result = syscall( __NR_msgrcv, msgid, msgsz, msgflg, &buf2, msgtyp ); 
+       #elif defined(TEST_MSGRCV_VER0)
+       kludge.msgp = &buf2;
+       kludge.msgtyp = msgtyp;
+       dataPtr->laus_var_data.syscallData.result = syscall( __NR_ipc, MSGRCV, msgid, msgsz, msgflg, &kludge ); 
+       #else
+       dataPtr->laus_var_data.syscallData.result = syscall( __NR_ipc, 0x10000|MSGRCV, msgid, msgsz, 
+       msgflg, &buf2, msgtyp ); 
+       #endif
+     */
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+
+EXIT_CLEANUP:
+
+    if (msgid && (msgid != -1)) {
+	if ((rc = msgctl(msgid, IPC_RMID, 0)) == -1) {
+	    printf1
+		("Error removing message queue with ID = [%d]: errno = [%i]\n",
+		 msgid, errno);
+	    goto EXIT;
+	}
+    }
+
+EXIT:
+    return rc;
 }
-   

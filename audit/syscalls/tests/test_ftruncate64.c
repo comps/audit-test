@@ -51,84 +51,83 @@
    **********************************************************************/
 
 #if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
-  
-   #include "includes.h"
-   #include "syscalls.h"
-   
+
+#include "includes.h"
+#include "syscalls.h"
+
    /*
-   ** execute a ftruncate64 operation
-   */
-   int test_ftruncate64(laus_data* dataPtr) {
-     
-   
-     int rc = 0;
-     int exp_errno = EINVAL;
-     long long length;
-     char* fileName = NULL;
-     int fd;
-   
-     // Set the syscall specific data
-     dataPtr->laus_var_data.syscallData.code = AUDIT_ftruncate;
-     // BUGBUG: Need to understand how to set up syscall parameters
-   
-     // dynamically create temp file name
-     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-                          dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
-       printf1("ERROR: Cannot create file %s\n", fileName);
-       goto EXIT;
-     }
-   
-     if ((fd = open(fileName, O_WRONLY)) == -1) {
-       printf1("ERROR: Unable to open %s write only: errno=%i\n",
-              fileName, errno);
-       rc = fd;
-       goto EXIT_CLEANUP;
-     }
-   
-     if (dataPtr->successCase) {
-       // if testing success case, set valid length
-       length = 1;
-     } else {
-       // else set negative length
-       length = -1;
-     }
-   
-     // Set up audit argument buffer
-     if( ( rc = auditArg2( dataPtr,
-			   AUDIT_ARG_PATH, strlen( fileName ), fileName,
-			   AUDIT_ARG_IMMEDIATE, sizeof(u_int64_t), &length )
-	   ) != 0 ) {
-	 printf1( "Error setting up audit argument buffer\n" );
-	 goto EXIT;
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_ftruncate64, fd, length );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-   
-   EXIT_CLEANUP:  
-     // ftruncate64 cleanup
-     if ((rc = unlink(fileName)) != 0) {
-       printf1("ERROR: Unable to remove file %s: errno=%i\n", 
-   	   fileName, errno);
-       goto EXIT;
-     }
-     
-   EXIT:
-     if ( fileName )
-       free( fileName );
-     return rc;
-   }
-#endif   
+    ** execute a ftruncate64 operation
+    */
+int test_ftruncate64(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = EINVAL;
+    long long length;
+    char *fileName = NULL;
+    int fd;
+
+    // Set the syscall specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_ftruncate;
+    // BUGBUG: Need to understand how to set up syscall parameters
+
+    // dynamically create temp file name
+    if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
+			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	printf1("ERROR: Cannot create file %s\n", fileName);
+	goto EXIT;
+    }
+
+    if ((fd = open(fileName, O_WRONLY)) == -1) {
+	printf1("ERROR: Unable to open %s write only: errno=%i\n",
+		fileName, errno);
+	rc = fd;
+	goto EXIT_CLEANUP;
+    }
+
+    if (dataPtr->successCase) {
+	// if testing success case, set valid length
+	length = 1;
+    } else {
+	// else set negative length
+	length = -1;
+    }
+
+    // Set up audit argument buffer
+    if ((rc = auditArg2(dataPtr,
+			AUDIT_ARG_PATH, strlen(fileName), fileName,
+			AUDIT_ARG_IMMEDIATE, sizeof(u_int64_t), &length)
+	) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_ftruncate64, fd, length);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+
+EXIT_CLEANUP:
+    // ftruncate64 cleanup
+    if ((rc = unlink(fileName)) != 0) {
+	printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
+	goto EXIT;
+    }
+
+EXIT:
+    if (fileName)
+	free(fileName);
+    return rc;
+}
+#endif

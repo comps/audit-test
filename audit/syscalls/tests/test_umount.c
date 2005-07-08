@@ -53,89 +53,87 @@
    **********************************************************************/
 #ifndef __X86_64
 
-   #include "includes.h"
-   #include "syscalls.h"
-   #include <sys/mount.h>
-   
-   int test_umount(laus_data* dataPtr) {
-     
-    
-     int rc = 0;
-     int exp_errno = EPERM;
-     char* target = NULL;
-     int dummy = 0;
-     
-     printf4( "Performing test_umount\n" );
-     
-     // Set the syscall-specific data
-     printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_umount );
-     dataPtr->laus_var_data.syscallData.code = AUDIT_umount;
-   
-     // dynamically create test directory
-     if (rc = (createTempDir(&target, S_IRWXU | S_IRWXG | S_IRWXO,
-		dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+#include "includes.h"
+#include "syscalls.h"
+#include <sys/mount.h>
+
+int test_umount(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = EPERM;
+    char *target = NULL;
+    int dummy = 0;
+
+    printf4("Performing test_umount\n");
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_umount);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_umount;
+
+    // dynamically create test directory
+    if (rc = (createTempDir(&target, S_IRWXU | S_IRWXG | S_IRWXO,
+			    dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
 	printf1("ERROR: Cannot create dir %s\n", target);
 	goto EXIT;
-     }
-     printf5("Genereated target directory %s\n", target);
-         
-     if (rc = (mount( "none", target, "proc", 0, NULL) ) == -1) {
+    }
+    printf5("Genereated target directory %s\n", target);
+
+    if (rc = (mount("none", target, "proc", 0, NULL)) == -1) {
 	printf1("ERROR: Cannot mount dir %s\n", target);
 	goto EXIT_CLEANUP;
-     }
-     printf5("Mounted source directory \"none\" to "
-	     "target directory %s\n", target);
+    }
+    printf5("Mounted source directory \"none\" to "
+	    "target directory %s\n", target);
 
-     if (dataPtr->successCase ) {
+    if (dataPtr->successCase) {
 	// must run as root
 	dataPtr->msg_euid = 0;
 	dataPtr->msg_egid = 0;
 	dataPtr->msg_fsuid = 0;
 	dataPtr->msg_fsgid = 0;
-     }
+    }
+    // Set up audit argument buffer
+    if ((rc = auditArg2(dataPtr,
+			AUDIT_ARG_PATH, strlen(target), target,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &dummy)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result = syscall(__NR_umount, target);
 
-     // Set up audit argument buffer
-     if( ( rc = auditArg2( dataPtr,
-   		    AUDIT_ARG_PATH, strlen( target ), target,
-		    AUDIT_ARG_IMMEDIATE, sizeof( int), &dummy ) ) != 0 ) {
-         printf1( "Error setting up audit argument buffer\n");
-         goto EXIT_CLEANUP;
-     }
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
 
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = syscall ( __NR_umount, target );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-    EXIT_CLEANUP:
+EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-     if ( ! dataPtr->successCase ) {
-	if ( umount( target ) == -1 ) {
-		printf1( "Error umounting target directory [%s] for deletion."
-			 "  Errno: %i\n", target, errno );
+    if (!dataPtr->successCase) {
+	if (umount(target) == -1) {
+	    printf1("Error umounting target directory [%s] for deletion."
+		    "  Errno: %i\n", target, errno);
 	}
-     }
-     if (  rmdir( target ) == -1 ) {
-	printf1( "Error removing target directory %s: errno%i\n", target, errno );
-     }
+    }
+    if (rmdir(target) == -1) {
+	printf1("Error removing target directory %s: errno%i\n", target, errno);
+    }
 
-    EXIT:
-     if (target) {
+EXIT:
+    if (target) {
 	free(target);
-     }
-     printf5( "Returning from test\n" );
-     return rc;
-   }
+    }
+    printf5("Returning from test\n");
+    return rc;
+}
 #endif

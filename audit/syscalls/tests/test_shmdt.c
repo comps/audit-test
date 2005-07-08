@@ -54,7 +54,7 @@
    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
    **
    **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/shm.h>
@@ -64,96 +64,92 @@
 #elif !defined(__IA64)
 #include <asm/ipc.h>
 #endif
- 
-   int test_shmdt(laus_data* dataPtr) {
-    
-     int rc = 0;
-     int exp_errno = EINVAL;
-     int shmid = 0;
-     void* shmptr = NULL;
-     int dtrc = 0;
-     int mode;
-   
-     // Set the syscall-specific data
-     printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_shmdt );
-     dataPtr->laus_var_data.syscallData.code = AUDIT_shmdt;
+
+int test_shmdt(laus_data *dataPtr)
+{
+
+    int rc = 0;
+    int exp_errno = EINVAL;
+    int shmid = 0;
+    void *shmptr = NULL;
+    int dtrc = 0;
+    int mode;
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_shmdt);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_shmdt;
 
      /**
       * Do as much setup work as possible right here
       */
-     // Create the shared memory segment
-     if( dataPtr->successCase ) {
-       mode = S_IRWXU | S_IRWXG | S_IRWXO;
-       if( ( shmid = shmget( IPC_PRIVATE, PAGE_SIZE, mode ) ) == -1 ) {
-         printf1( "ERROR: Unable to create shared memory segment\n" );
-       goto EXIT;
-       }
-     } else {
-       shmid = -1;
-     }
-   
-     // su to test user
-     printf5( "seteuid to %i\n", dataPtr->msg_euid );
-     if( ( rc = seteuid( dataPtr->msg_euid ) ) != 0 ) {
-       printf1( "ERROR: Unable to seteuid to %i: errno=%i\n", 
-   	   dataPtr->msg_euid, errno );
-       goto EXIT_FREE_SHM;
-     }
-   
-     // Attach to the shared memory
-     if( dataPtr->successCase ) {
-       if( (long)( shmptr = shmat( shmid, NULL, 0 ) ) == -1 ) {
-         printf1( "ERROR: Unable to attach to shared memory with shmid %d: errno=%i\n", 
-   	      shmid, errno );
-         goto EXIT_FREE_SHM;
-       }
-     }
-   
-     // su back to root
-     printf5( "seteuid to root\n" );
-     if ( ( rc = seteuid( 0 ) ) != 0 ) {
-       printf1( "ERROR: Unable to seteuid to root: errno=%i\n", errno );
-       goto EXIT_FREE_SHM;
-     }
-   
-     // Set up audit argument buffer
-     if( ( rc = auditArg1( dataPtr,
-			   ( shmptr == NULL ? AUDIT_ARG_NULL : AUDIT_ARG_POINTER ),
-			   0, shmptr 
-			   ) ) != 0 ) {
-       printf1( "Error setting up audit argument buffer\n" );
-       goto EXIT;
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = dtrc = shmdt( shmptr );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-  
-    EXIT_CLEANUP:
-   
-    EXIT_FREE_SHM:
-     // shared memory cleanup
-     if( dataPtr->successCase ) { // Shared memory is only allocated in the success case
-       if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
-         printf1("ERROR: Unable to free shared memory with shmid %d: errno=%i\n", 
-   	     shmid, errno);
-         goto EXIT;
-       }
-     }
-     
-    EXIT:
-     return rc;
-   }
-   
+    // Create the shared memory segment
+    if (dataPtr->successCase) {
+	mode = S_IRWXU | S_IRWXG | S_IRWXO;
+	if ((shmid = shmget(IPC_PRIVATE, PAGE_SIZE, mode)) == -1) {
+	    printf1("ERROR: Unable to create shared memory segment\n");
+	    goto EXIT;
+	}
+    } else {
+	shmid = -1;
+    }
+
+    // su to test user
+    printf5("seteuid to %i\n", dataPtr->msg_euid);
+    if ((rc = seteuid(dataPtr->msg_euid)) != 0) {
+	printf1("ERROR: Unable to seteuid to %i: errno=%i\n",
+		dataPtr->msg_euid, errno);
+	goto EXIT_FREE_SHM;
+    }
+    // Attach to the shared memory
+    if (dataPtr->successCase) {
+	if ((long)(shmptr = shmat(shmid, NULL, 0)) == -1) {
+	    printf1
+		("ERROR: Unable to attach to shared memory with shmid %d: errno=%i\n",
+		 shmid, errno);
+	    goto EXIT_FREE_SHM;
+	}
+    }
+    // su back to root
+    printf5("seteuid to root\n");
+    if ((rc = seteuid(0)) != 0) {
+	printf1("ERROR: Unable to seteuid to root: errno=%i\n", errno);
+	goto EXIT_FREE_SHM;
+    }
+    // Set up audit argument buffer
+    if ((rc = auditArg1(dataPtr,
+			(shmptr == NULL ? AUDIT_ARG_NULL : AUDIT_ARG_POINTER),
+			0, shmptr)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result = dtrc = shmdt(shmptr);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+
+EXIT_CLEANUP:
+
+EXIT_FREE_SHM:
+    // shared memory cleanup
+    if (dataPtr->successCase) {	// Shared memory is only allocated in the success case
+	if (shmctl(shmid, IPC_RMID, 0) == -1) {
+	    printf1
+		("ERROR: Unable to free shared memory with shmid %d: errno=%i\n",
+		 shmid, errno);
+	    goto EXIT;
+	}
+    }
+
+EXIT:
+    return rc;
+}

@@ -49,83 +49,82 @@
  **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
  **
  **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <signal.h>
-   
-int test_tkill(laus_data* dataPtr) {
-     
-  int rc = 0;
-  int exp_errno = EINVAL;
-  int pid = 0;
-  int sig = -1;
-     
-  // Set the syscall-specific data
-  printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_tkill );
-  dataPtr->laus_var_data.syscallData.code = AUDIT_tkill;
-     
+
+int test_tkill(laus_data *dataPtr)
+{
+
+    int rc = 0;
+    int exp_errno = EINVAL;
+    int pid = 0;
+    int sig = -1;
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_tkill);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_tkill;
+
   /**
    * Do as much setup work as possible right here
    */
-  if( dataPtr->successCase ) {
-    // Set up for success
-    dataPtr->msg_euid = 0;
-    dataPtr->msg_egid = 0;
-    dataPtr->msg_fsuid = 0;
-    dataPtr->msg_fsgid = 0;
-    // Spawn the child process
-    printf5( "Spawning the child\n" );
-    if( ( pid = fork() ) == 0 ) {
-      printf5( "I am the child!\n" );
-      // This is the child
-      while( 1 ) {
-	sleep( 1 );
-      }
+    if (dataPtr->successCase) {
+	// Set up for success
+	dataPtr->msg_euid = 0;
+	dataPtr->msg_egid = 0;
+	dataPtr->msg_fsuid = 0;
+	dataPtr->msg_fsgid = 0;
+	// Spawn the child process
+	printf5("Spawning the child\n");
+	if ((pid = fork()) == 0) {
+	    printf5("I am the child!\n");
+	    // This is the child
+	    while (1) {
+		sleep(1);
+	    }
+	}
+	printf5("I am the parent!\n");
+	sig = SIGKILL;
+    } else {
+	// Set up for error
     }
-    printf5( "I am the parent!\n" );
-    sig = SIGKILL;
-  } else {
-    // Set up for error
-  }
-   
-  // Set up audit argument buffer
-  if( ( rc = auditArg2( dataPtr, 
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &pid,
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &sig ) ) != 0 ) {
-    printf1( "Error setting up audit argument buffer\n" );
-    goto EXIT_CLEANUP;
-  }
-   
-  // Do pre-system call work
-  if ( (rc = preSysCall( dataPtr )) != 0 ) {
-    printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
-  // Execute system call
-  dataPtr->laus_var_data.syscallData.result = syscall( __NR_tkill, pid, sig );
-   
-  // Do post-system call work
-  if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-    printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
- EXIT:
-  printf5( "Returning from test\n" );
-  return rc;
-   
- EXIT_CLEANUP:
+
+    // Set up audit argument buffer
+    if ((rc = auditArg2(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &pid,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &sig)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result = syscall(__NR_tkill, pid, sig);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+EXIT:
+    printf5("Returning from test\n");
+    return rc;
+
+EXIT_CLEANUP:
   /**
    * Do cleanup work here
    */
-  if( dataPtr->successCase ) {
-    // Clean up from success case setup
-    if( kill( pid, SIGKILL ) == -1 ) {
-      printf( "Error killing process %d\n", pid );
-      goto EXIT;
+    if (dataPtr->successCase) {
+	// Clean up from success case setup
+	if (kill(pid, SIGKILL) == -1) {
+	    printf("Error killing process %d\n", pid);
+	    goto EXIT;
+	}
     }
-  }
-  goto EXIT;
+    goto EXIT;
 }

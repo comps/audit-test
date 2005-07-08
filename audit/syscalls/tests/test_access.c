@@ -55,77 +55,78 @@
    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
    **
    **********************************************************************/
-   
-   #include "includes.h"
-   #include "syscalls.h"
-   
-   int test_access(laus_data* dataPtr) {
-     
-    
-     int rc = 0;
-     int exp_errno = EACCES;
-     char* fileName = NULL;
-     int mode;
- 
-     // Set the syscall-specific data
-     printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_access );
-     dataPtr->laus_var_data.syscallData.code = AUDIT_access;
-     
+
+#include "includes.h"
+#include "syscalls.h"
+
+int test_access(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = EACCES;
+    char *fileName = NULL;
+    int mode;
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_access);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_access;
+
      /**
       * Do as much setup work as possible right here
       */
-     // Generate unique filename
-   
-     if ((rc = createTempFile(&fileName, S_IRUSR ,
-                          dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
-       printf1("ERROR: Cannot create file %s\n", fileName);
-       goto EXIT;
-     }
+    // Generate unique filename
 
-     dataPtr->msg_ruid = dataPtr->msg_euid;
- 
-     if ( dataPtr->successCase ) {
-       mode = R_OK;
-     } else {
-       mode = W_OK;
-     }
-   
-     // Set up audit argument buffer
-     if( ( rc = auditArg2( dataPtr, 
-   		 AUDIT_ARG_PATH, strlen( fileName ), fileName,
-   		 AUDIT_ARG_IMMEDIATE, sizeof( mode ), &mode ) ) != 0 ) {
-       printf1( "Error setting up audit argument buffer\n" );
-       goto EXIT;
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_access, fileName, mode );
- 
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     
-   
-    EXIT_CLEANUP:
+    if ((rc = createTempFile(&fileName, S_IRUSR,
+			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	printf1("ERROR: Cannot create file %s\n", fileName);
+	goto EXIT;
+    }
+
+    dataPtr->msg_ruid = dataPtr->msg_euid;
+
+    if (dataPtr->successCase) {
+	mode = R_OK;
+    } else {
+	mode = W_OK;
+    }
+
+    // Set up audit argument buffer
+    if ((rc = auditArg2(dataPtr,
+			AUDIT_ARG_PATH, strlen(fileName), fileName,
+			AUDIT_ARG_IMMEDIATE, sizeof(mode), &mode)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_access, fileName, mode);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+
+
+EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-     if (( unlink(fileName)) != 0) {
-       printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
-       goto EXIT;
-     }
-   
-    EXIT:
-     if (fileName)
-       free( fileName );
-     printf5( "Returning from test\n" );
-     return rc;
-   }
+    if ((unlink(fileName)) != 0) {
+	printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
+	goto EXIT;
+    }
+
+EXIT:
+    if (fileName)
+	free(fileName);
+    printf5("Returning from test\n");
+    return rc;
+}

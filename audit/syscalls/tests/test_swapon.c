@@ -49,110 +49,112 @@
    **    05/04 Updates to suppress warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
    **
    **********************************************************************/
-   
-   #include "includes.h"
-   #include "syscalls.h"
-   #include <asm/page.h>
-   #include <sys/swap.h>
-   
+
+#include "includes.h"
+#include "syscalls.h"
+#include <asm/page.h>
+#include <sys/swap.h>
+
    /*
-   ** execute a swapon operation
-   */
-   int test_swapon(laus_data* dataPtr) {
-   
-   
-     int rc = 0;
-     int exp_errno = EPERM;
-     //int length;           // variables not needed?
-     //size_t count = 80;
-     char* fileName = NULL;
-     int swapflags = SWAP_FLAG_PREFER;
-   
-     char* cmd;
-   
-   
-     // Set the syscall specific data
-     dataPtr->laus_var_data.syscallData.code = AUDIT_swapon;
-     // BUGBUG: Need to understand how to set up syscall parameters
-   
-     // dynamically create temp file name
-     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-                          dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
-       printf1("ERROR: Cannot create file %s\n", fileName);
-       goto EXIT;
-     }
-   
-     // swapon setup
-   
-     // TODO: Do we want to keep this dependency on external
-     // executables?  If so, we need to assert prerequisites about the
-     // path settings of the calling environment (and/or check them
-     // explicitely).
-     cmd = (char *)malloc(strlen("dd if=/dev/zero of= bs=1024 count=1024 > /dev/null 2>&1") + strlen(fileName) + 1);
-     sprintf(cmd, "dd if=/dev/zero of=%s bs=1024 count=1024 > /dev/null 2>&1", fileName);
-     if ( system(cmd) ) {
-       printf1("Could not create file %s\n", fileName);
-       goto EXIT;
-     }
-     free(cmd);
+    ** execute a swapon operation
+    */
+int test_swapon(laus_data *dataPtr)
+{
 
-     cmd = (char *)malloc(strlen("mkswap > /dev/null 2>&1") + strlen(fileName) + 1);
-     sprintf(cmd, "mkswap %s > /dev/null 2>&1", fileName);
-     if ( system(cmd) != 0 ) {
-       printf1("Could not mkswap %s\n", fileName);
-       goto EXIT_CLEANUP;
-     }
-     free(cmd);
 
-     // if testing success case, create the file, and mkswap
-     if (dataPtr->successCase) {
-       // must be root to swapon()
-       dataPtr->msg_euid = 0;
-       dataPtr->msg_egid = 0;
-       dataPtr->msg_fsuid = 0;
-       dataPtr->msg_fsgid = 0;
-     }
-   
-     // Set up audit argument buffer
-     if( ( rc = auditArg2( dataPtr,
-                    dataPtr->successCase ? AUDIT_ARG_PATH : AUDIT_ARG_NULL, 
-		    dataPtr->successCase ? strlen(fileName) : 0, fileName,
-                    AUDIT_ARG_IMMEDIATE, sizeof(swapflags), &swapflags ) ) != 0 ) {
-       printf1( "Error setting up audit argument buffer\n" );
-       goto EXIT;
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = swapon( fileName, swapflags );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-   EXIT_CLEANUP:  
-     // swapon cleanup
-     if( dataPtr->successCase ) {
-       if ((swapoff(fileName)) != 0) {
-         printf1("ERROR: Unable to swapoff file %s: errno=%i\n",
-                 fileName, errno);
-       }
-     }
-     if ((unlink(fileName)) != 0) {
-       printf1("ERROR: Unable to remove file %s: errno=%i\n", 
-   	      fileName, errno);
-     }  
-     
-   EXIT:
-     if (fileName)
-       free(fileName);
-     return rc;
-   }
-   
+    int rc = 0;
+    int exp_errno = EPERM;
+    //int length;           // variables not needed?
+    //size_t count = 80;
+    char *fileName = NULL;
+    int swapflags = SWAP_FLAG_PREFER;
+
+    char *cmd;
+
+
+    // Set the syscall specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_swapon;
+    // BUGBUG: Need to understand how to set up syscall parameters
+
+    // dynamically create temp file name
+    if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
+			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	printf1("ERROR: Cannot create file %s\n", fileName);
+	goto EXIT;
+    }
+    // swapon setup
+
+    // TODO: Do we want to keep this dependency on external
+    // executables?  If so, we need to assert prerequisites about the
+    // path settings of the calling environment (and/or check them
+    // explicitely).
+    cmd =
+	(char *)
+	malloc(strlen("dd if=/dev/zero of= bs=1024 count=1024 > /dev/null 2>&1")
+	       + strlen(fileName) + 1);
+    sprintf(cmd, "dd if=/dev/zero of=%s bs=1024 count=1024 > /dev/null 2>&1",
+	    fileName);
+    if (system(cmd)) {
+	printf1("Could not create file %s\n", fileName);
+	goto EXIT;
+    }
+    free(cmd);
+
+    cmd =
+	(char *)malloc(strlen("mkswap > /dev/null 2>&1") + strlen(fileName) +
+		       1);
+    sprintf(cmd, "mkswap %s > /dev/null 2>&1", fileName);
+    if (system(cmd) != 0) {
+	printf1("Could not mkswap %s\n", fileName);
+	goto EXIT_CLEANUP;
+    }
+    free(cmd);
+
+    // if testing success case, create the file, and mkswap
+    if (dataPtr->successCase) {
+	// must be root to swapon()
+	dataPtr->msg_euid = 0;
+	dataPtr->msg_egid = 0;
+	dataPtr->msg_fsuid = 0;
+	dataPtr->msg_fsgid = 0;
+    }
+    // Set up audit argument buffer
+    if ((rc = auditArg2(dataPtr,
+			dataPtr->successCase ? AUDIT_ARG_PATH : AUDIT_ARG_NULL,
+			dataPtr->successCase ? strlen(fileName) : 0, fileName,
+			AUDIT_ARG_IMMEDIATE, sizeof(swapflags),
+			&swapflags)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result = swapon(fileName, swapflags);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+EXIT_CLEANUP:
+    // swapon cleanup
+    if (dataPtr->successCase) {
+	if ((swapoff(fileName)) != 0) {
+	    printf1("ERROR: Unable to swapoff file %s: errno=%i\n",
+		    fileName, errno);
+	}
+    }
+    if ((unlink(fileName)) != 0) {
+	printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
+    }
+
+EXIT:
+    if (fileName)
+	free(fileName);
+    return rc;
+}

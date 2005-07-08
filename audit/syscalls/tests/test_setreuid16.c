@@ -59,36 +59,37 @@
     **
     **********************************************************************/
 #if !defined(__PPC) && !defined(__X86_64) && !defined(__IA64)
-  
-   #include "includes.h"
-   #include "syscalls.h"
-   
-   int test_setreuid16(laus_data* dataPtr) {
-     
-    
-     int rc = 0;
-     int exp_errno = EPERM;
-   
-     int rgid, egid;
-     
-     
-     // Set the syscall-specific data
-     printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_setreuid );
-     dataPtr->laus_var_data.syscallData.code = AUDIT_setreuid  ;
-     
+
+#include "includes.h"
+#include "syscalls.h"
+
+int test_setreuid16(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = EPERM;
+
+    int rgid, egid;
+
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_setreuid);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_setreuid;
+
      /**
       * Do as much setup work as possible right here
       */
-     if( dataPtr->successCase ) {
-       egid = -1;
-       rgid = -1;
-       dataPtr->msg_euid = 0;
-       dataPtr->msg_egid = 0;
-       dataPtr->msg_fsuid = 0;
-       dataPtr->msg_fsgid = 0;
-       printf5( "Target egid=%d and rgid=%d in success case\n", egid, rgid );
-     } else {
-       identifiers_t identifiers;
+    if (dataPtr->successCase) {
+	egid = -1;
+	rgid = -1;
+	dataPtr->msg_euid = 0;
+	dataPtr->msg_egid = 0;
+	dataPtr->msg_fsuid = 0;
+	dataPtr->msg_fsgid = 0;
+	printf5("Target egid=%d and rgid=%d in success case\n", egid, rgid);
+    } else {
+	identifiers_t identifiers;
        /**
         * To test the failure case, the following conditions must apply:
         *  - I am not the superuser
@@ -98,66 +99,66 @@
         *   - saved set-group-ID
         *   - current value of fsgid
         */
-       // Pick a nice round ID, test it, and increment it on every
-       // sequential failure until we find something that works
-       egid = 42;
-       rgid = -1; // Just leave this unchanged
-   
-       // su to test user
-       printf5( "seteuid to %i\n", dataPtr->msg_euid );
-       if( ( rc = seteuid( dataPtr->msg_euid ) ) != 0 ) {
-         printf1( "Unable to seteuid to %i: errno=%i\n", 
-   	       dataPtr->msg_euid, errno );
-         goto EXIT; // Or possibly EXIT_CLEANUP
-       }
-   
-       if(( rc = getIdentifiers( &identifiers ) != 0 )) {  
-         printf1( "Utility getIdentifiers failed\n" );
-         goto EXIT;
-       }
-       while( egid == identifiers.rgid || egid == identifiers.egid || 
-   	   egid == identifiers.sgid ) {
-         egid++;
-       }
-   
-       // su to superuser
-       printf5( "seteuid to root\n" );
-       if ( ( rc = seteuid( 0 ) ) != 0 ) {
-         printf1( "Unable to seteuid to root: errno=%i\n", errno );
-         goto EXIT_CLEANUP; // Or possibly EXIT_CLEANUP
-       }
-       
-     }
-   
-     // Set up audit argument buffer
-     if( ( rc = auditArg2( dataPtr,
-                    AUDIT_ARG_IMMEDIATE_u, sizeof( rgid ), &rgid,
-                    AUDIT_ARG_IMMEDIATE_u, sizeof( egid ), &egid ) ) != 0 ) {
-       printf1( "Error setting up audit argument buffer\n" );
-       goto EXIT;
-     }
-     
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_setreuid16, rgid, egid );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-    EXIT_CLEANUP:
+	// Pick a nice round ID, test it, and increment it on every
+	// sequential failure until we find something that works
+	egid = 42;
+	rgid = -1;		// Just leave this unchanged
+
+	// su to test user
+	printf5("seteuid to %i\n", dataPtr->msg_euid);
+	if ((rc = seteuid(dataPtr->msg_euid)) != 0) {
+	    printf1("Unable to seteuid to %i: errno=%i\n",
+		    dataPtr->msg_euid, errno);
+	    goto EXIT;		// Or possibly EXIT_CLEANUP
+	}
+
+	if ((rc = getIdentifiers(&identifiers) != 0)) {
+	    printf1("Utility getIdentifiers failed\n");
+	    goto EXIT;
+	}
+	while (egid == identifiers.rgid || egid == identifiers.egid ||
+	       egid == identifiers.sgid) {
+	    egid++;
+	}
+
+	// su to superuser
+	printf5("seteuid to root\n");
+	if ((rc = seteuid(0)) != 0) {
+	    printf1("Unable to seteuid to root: errno=%i\n", errno);
+	    goto EXIT_CLEANUP;	// Or possibly EXIT_CLEANUP
+	}
+
+    }
+
+    // Set up audit argument buffer
+    if ((rc = auditArg2(dataPtr,
+			AUDIT_ARG_IMMEDIATE_u, sizeof(rgid), &rgid,
+			AUDIT_ARG_IMMEDIATE_u, sizeof(egid), &egid)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_setreuid16, rgid, egid);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-   
-    EXIT:
-     printf5( "Returning from test\n" );
-     return rc;
-   }
+
+EXIT:
+    printf5("Returning from test\n");
+    return rc;
+}
 #endif

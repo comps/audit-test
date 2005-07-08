@@ -51,75 +51,75 @@
  **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
  **
  **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <linux/reboot.h>
-   
-int test_reboot(laus_data* dataPtr) {
-     
-  int rc = 0;
-  int exp_errno = EPERM; 
-  //     int flag = RB_ENABLE_CAD;
-  int flag = LINUX_REBOOT_CMD_CAD_ON;
-  int magic1 = LINUX_REBOOT_MAGIC1;
-  int magic2 = LINUX_REBOOT_MAGIC2;
-  void* arg = NULL;
-     
-  // Set the syscall-specific data
-  printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_reboot );
-  dataPtr->laus_var_data.syscallData.code = AUDIT_reboot;
-     
+
+int test_reboot(laus_data *dataPtr)
+{
+
+    int rc = 0;
+    int exp_errno = EPERM;
+    //     int flag = RB_ENABLE_CAD;
+    int flag = LINUX_REBOOT_CMD_CAD_ON;
+    int magic1 = LINUX_REBOOT_MAGIC1;
+    int magic2 = LINUX_REBOOT_MAGIC2;
+    void *arg = NULL;
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_reboot);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_reboot;
+
   /**
    * Do as much setup work as possible right here
    */
-  if( dataPtr->successCase ) {
-    // Set up for success
-    dataPtr->msg_euid = 0;
-    dataPtr->msg_egid = 0;
-    dataPtr->msg_fsuid = 0;
-    dataPtr->msg_fsgid = 0;
-    // TODO: Save the current flag value?
-  } else {
-    // Set up for error
-  }
-   
-  // Set up audit argument buffer
-  if( ( rc = auditArg4( dataPtr,
-			AUDIT_ARG_IMMEDIATE, sizeof( int ), &magic1,
-			AUDIT_ARG_IMMEDIATE, sizeof( int ), &magic2,
-			AUDIT_ARG_IMMEDIATE_u, sizeof( int ), &flag,
-			AUDIT_ARG_NULL, 0, arg ) ) != 0 ) {
-    printf1( "Error setting up audit argument buffer\n" );
-    goto EXIT;
-  }
-   
-  // Do pre-system call work
-  if ( (rc = preSysCall( dataPtr )) != 0 ) {
-    printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
-  // Execute system call
-  //     dataPtr->laus_var_data.syscallData.result = syscall( __NR_reboot, flag );
-  dataPtr->laus_var_data.syscallData.result = syscall( __NR_reboot, magic1, magic2, flag, arg );
+    if (dataPtr->successCase) {
+	// Set up for success
+	dataPtr->msg_euid = 0;
+	dataPtr->msg_egid = 0;
+	dataPtr->msg_fsuid = 0;
+	dataPtr->msg_fsgid = 0;
+	// TODO: Save the current flag value?
+    } else {
+	// Set up for error
+    }
 
-   
-  // Do post-system call work
-  if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-    printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
- EXIT_CLEANUP:
+    // Set up audit argument buffer
+    if ((rc = auditArg4(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &magic1,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &magic2,
+			AUDIT_ARG_IMMEDIATE_u, sizeof(int), &flag,
+			AUDIT_ARG_NULL, 0, arg)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    //     dataPtr->laus_var_data.syscallData.result = syscall( __NR_reboot, flag );
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_reboot, magic1, magic2, flag, arg);
+
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+EXIT_CLEANUP:
   /**
    * Do cleanup work here
    */
-  if( dataPtr->successCase ) {
-    // Clean up from success case setup
-  }
-   
- EXIT:
-  printf5( "Returning from test\n" );
-  return rc;
+    if (dataPtr->successCase) {
+	// Clean up from success case setup
+    }
+
+EXIT:
+    printf5("Returning from test\n");
+    return rc;
 }

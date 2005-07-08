@@ -58,7 +58,7 @@
  **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
  **
  **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
@@ -70,75 +70,80 @@
 #endif
 
 
-   
-int test_semop(laus_data* dataPtr) {    
-    
-  int rc = 0;
-  int exp_errno = EACCES;
-  int semid = -1;
-  int mode;
-  int nsems = 1;
-  struct sembuf s;
-  unsigned int nsops = 1;
-   
-  // Set the syscall-specific data
-  dataPtr->laus_var_data.syscallData.code = AUDIT_semop;
 
-  // Set the key value.
-  // If successCase == 0, then we will be creating a semaphore set
-  // under the permissions of root, which the test user will not have
-  // permission to access.
-  if( dataPtr->successCase ) {
-    mode = (IPC_CREAT | IPC_EXCL) | 0666;
-    if( ( semid = semget( IPC_PRIVATE, 1, mode ) ) == -1 ) {
-      printf1( "Error creating semaphore: errno=%i\n", errno );
-      goto EXIT_CLEANUP;
+int test_semop(laus_data *dataPtr)
+{
+
+    int rc = 0;
+    int exp_errno = EACCES;
+    int semid = -1;
+    int mode;
+    int nsems = 1;
+    struct sembuf s;
+    unsigned int nsops = 1;
+
+    // Set the syscall-specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_semop;
+
+    // Set the key value.
+    // If successCase == 0, then we will be creating a semaphore set
+    // under the permissions of root, which the test user will not have
+    // permission to access.
+    if (dataPtr->successCase) {
+	mode = (IPC_CREAT | IPC_EXCL) | 0666;
+	if ((semid = semget(IPC_PRIVATE, 1, mode)) == -1) {
+	    printf1("Error creating semaphore: errno=%i\n", errno);
+	    goto EXIT_CLEANUP;
+	}
+    } else {
+	mode = 0000 | IPC_CREAT;
+	if ((semid = semget(semid, nsems, mode)) == -1) {
+	    printf1
+		("Cannot create the semaphore set with key = -1: errno = [%i]\n",
+		 errno);
+	    goto EXIT;
+	}
     }
-  } else {    
-    mode = 0000 | IPC_CREAT;
-    if( ( semid = semget( semid, nsems, mode ) ) == -1 ) {
-      printf1( "Cannot create the semaphore set with key = -1: errno = [%i]\n", errno );
-      goto EXIT;
+
+    s.sem_num = 0;
+    s.sem_op = 1;
+    s.sem_flg = 0;
+
+
+    // Set up audit argument buffer
+    if ((rc = auditArg3(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &semid,
+			AUDIT_ARG_POINTER, sizeof(s), &s,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &nsops)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
     }
-  }
+    // Do pre-system call work   
+    preSysCall(dataPtr);
 
-  s.sem_num = 0;
-  s.sem_op = 1;
-  s.sem_flg = 0;
-  
-
-  // Set up audit argument buffer
-  if( ( rc = auditArg3( dataPtr,
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &semid,
-		      AUDIT_ARG_POINTER, sizeof( s ), &s,
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &nsops ) ) != 0 ) {
-    printf1( "Error setting up audit argument buffer\n" );
-    goto EXIT;
-  }
-
-  // Do pre-system call work   
-  preSysCall( dataPtr );
-   
-  // Execute the semop system call
+    // Execute the semop system call
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-  dataPtr->laus_var_data.syscallData.result = syscall( __NR_semop, semid, &s, 1 );
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_semop, semid, &s, 1);
 #else
-  dataPtr->laus_var_data.syscallData.result = syscall( __NR_ipc, SEMOP, semid, 1, 0, &s );
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_ipc, SEMOP, semid, 1, 0, &s);
 //  dataPtr->laus_var_data.syscallData.result = semop( semid, &s, 1 );
 #endif
 
-  // Do post-system call work
-  postSysCall( dataPtr, errno, -1, exp_errno );
-  
- EXIT_CLEANUP:
+    // Do post-system call work
+    postSysCall(dataPtr, errno, -1, exp_errno);
 
-  if( semid && ( semid != -1 ) ) {
-    if( ( semctl( semid, 0, IPC_RMID ) ) == -1 ) {
-      printf1( "ERROR: Cannot deallocate message memory with semid=[%d]: errno=[%i]\n", 
-	       semid, errno );
+EXIT_CLEANUP:
+
+    if (semid && (semid != -1)) {
+	if ((semctl(semid, 0, IPC_RMID)) == -1) {
+	    printf1
+		("ERROR: Cannot deallocate message memory with semid=[%d]: errno=[%i]\n",
+		 semid, errno);
+	}
     }
-  }    
-  
- EXIT:
-  return rc;
+
+EXIT:
+    return rc;
 }

@@ -63,85 +63,83 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_open(laus_data* dataPtr) {
+int test_open(laus_data *dataPtr)
+{
 
 
-	int rc = 0;
-	int exp_errno = EACCES;
-	int fd = 0;
+    int rc = 0;
+    int exp_errno = EACCES;
+    int fd = 0;
 #if defined(__X86_64) || defined(__PPC64) || defined(__S390X)
-     int flags = O_RDONLY | O_LARGEFILE;
+    int flags = O_RDONLY | O_LARGEFILE;
 #else
-     int flags = O_RDONLY;
+    int flags = O_RDONLY;
 #endif
-	int mode = S_IRWXU;       // mode is ignored in this test case
-	char* fileName = NULL;
+    int mode = S_IRWXU;		// mode is ignored in this test case
+    char *fileName = NULL;
 
-	// Set the syscall specific data
-	dataPtr->laus_var_data.syscallData.code = AUDIT_open;
+    // Set the syscall specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_open;
 
-	if (dataPtr->successCase) {
-		// Create a file readable by test user if testing success case
-		if ((rc = createTempFile(&fileName, mode,
-						dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
-			printf1("ERROR: Cannot create file %s\n", fileName);
-			goto EXIT;
-		}
-	} else {
-		// Create a file not readable by test user if testing failure case
-		if ((rc = createTempFile(&fileName, mode,
-						0, 0)) == -1) {
-			printf1("ERROR: Cannot create file %s\n", fileName);
-			goto EXIT;
-		}
+    if (dataPtr->successCase) {
+	// Create a file readable by test user if testing success case
+	if ((rc = createTempFile(&fileName, mode,
+				 dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	    printf1("ERROR: Cannot create file %s\n", fileName);
+	    goto EXIT;
 	}
-
-	// Set up audit argument buffer
-	if( ( rc = auditArg3( dataPtr,
-					AUDIT_ARG_PATH, 
-					strlen(fileName), 
-					fileName,
-					AUDIT_ARG_IMMEDIATE, sizeof(flags), &flags,
-					AUDIT_ARG_IMMEDIATE, sizeof(mode), &mode
-			    ) ) != 0 ) {
-		printf1( "Error setting up audit argument buffer\n" );
-		goto EXIT;
+    } else {
+	// Create a file not readable by test user if testing failure case
+	if ((rc = createTempFile(&fileName, mode, 0, 0)) == -1) {
+	    printf1("ERROR: Cannot create file %s\n", fileName);
+	    goto EXIT;
 	}
+    }
 
-	// Do pre-system call work
-	if ( (rc = preSysCall( dataPtr )) != 0 ) {
-		printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
+    // Set up audit argument buffer
+    if ((rc = auditArg3(dataPtr,
+			AUDIT_ARG_PATH,
+			strlen(fileName),
+			fileName,
+			AUDIT_ARG_IMMEDIATE, sizeof(flags), &flags,
+			AUDIT_ARG_IMMEDIATE, sizeof(mode), &mode)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    fd = dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_open, fileName, flags, mode);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+
+
+EXIT_CLEANUP:
+    // open cleanup
+    if (dataPtr->successCase) {
+	// close file if successfully opened
+	if ((rc = close(fd)) != 0) {
+	    printf1("ERROR: Unable to close file %s: errno=%i\n", fileName,
+		    errno);
+	    goto EXIT;
 	}
-
-	// Execute system call
-	fd = dataPtr->laus_var_data.syscallData.result = syscall( __NR_open, fileName, flags, mode );
-
-	// Do post-system call work
-	if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-		printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
-
-
-
-EXIT_CLEANUP:    
-	// open cleanup
-	if (dataPtr->successCase) {
-		// close file if successfully opened
-		if ((rc = close(fd)) != 0) {
-			printf1("ERROR: Unable to close file %s: errno=%i\n", fileName, errno);
-			goto EXIT;
-		}
-	}
-	if ((rc = unlink(fileName)) != 0) {
-		printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
-		goto EXIT;
-	}
+    }
+    if ((rc = unlink(fileName)) != 0) {
+	printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
+	goto EXIT;
+    }
 
 EXIT:
-	if (fileName)
-		free(fileName);
-	return rc;
+    if (fileName)
+	free(fileName);
+    return rc;
 }
-

@@ -51,74 +51,77 @@
    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
    **
    **********************************************************************/
-   
-  #include "includes.h"
-  #include "syscalls.h"
-   
-  int test_sethostname(laus_data* dataPtr) {
-     
+
+#include "includes.h"
+#include "syscalls.h"
+
+int test_sethostname(laus_data *dataPtr)
+{
+
     int rc = 0;
     int exp_errno = EPERM;
-   
-    char name[ HOST_NAME_MAX ];
+
+    char name[HOST_NAME_MAX];
     size_t len = HOST_NAME_MAX;
-     
+
     // Set the syscall-specific data
-    printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_sethostname );
+    printf5("Setting laus_var_data.syscallData.code to %d\n",
+	    AUDIT_sethostname);
     dataPtr->laus_var_data.syscallData.code = AUDIT_sethostname;
-     
+
     //Do as much setup work as possible right here
     // Get the current hostname
-    if( gethostname( name, len ) == -1 ) {
-        printf1( "Cannot get current hostname\n" );
-        goto EXIT;
+    if (gethostname(name, len) == -1) {
+	printf1("Cannot get current hostname\n");
+	goto EXIT;
     }
-    printf4( "Current hostname = [%s]\n", name );
-    len = strlen( name );
+    printf4("Current hostname = [%s]\n", name);
+    len = strlen(name);
 
-    if( dataPtr->successCase ) {
+    if (dataPtr->successCase) {
 	// Set up for success
 	dataPtr->msg_euid = 0;
 	dataPtr->msg_egid = 0;
 	dataPtr->msg_fsuid = 0;
 	dataPtr->msg_fsgid = 0;
     } else {
-      // Set up for error
+	// Set up for error
 	//      strcpy( name, "laus_error_case" );
 	//      len = -1;
     }
-   
+
     // Set up audit argument buffer
-    if( ( rc = auditArg2( dataPtr,
-			  dataPtr->successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL, 
-			  dataPtr->successCase ? strlen( name ) : 0, 
-			  dataPtr->successCase ? &name : NULL,
-			  AUDIT_ARG_IMMEDIATE, sizeof( size_t ), &len ) ) != 0 ) {
-      printf1( "Error setting up audit argument buffer\n" );
-      goto EXIT;
+    if ((rc = auditArg2(dataPtr,
+			dataPtr->
+			successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL,
+			dataPtr->successCase ? strlen(name) : 0,
+			dataPtr->successCase ? &name : NULL,
+			AUDIT_ARG_IMMEDIATE, sizeof(size_t), &len)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
     }
-   
     // Do pre-system call work
-    preSysCall( dataPtr );
-   
+    preSysCall(dataPtr);
+
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result = syscall( __NR_sethostname, name, len );
-   
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_sethostname, name, len);
+
     // Do post-system call work
-    if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-      printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-      goto EXIT_CLEANUP;
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
     }
-   
-   EXIT_CLEANUP:
+
+EXIT_CLEANUP:
     /**
      * Do cleanup work here
      */
-    if( dataPtr->successCase ) {
-      // Clean up from success case setup
+    if (dataPtr->successCase) {
+	// Clean up from success case setup
     }
-   
-   EXIT:
-    printf5( "Returning from test\n" );
+
+EXIT:
+    printf5("Returning from test\n");
     return rc;
-  }
+}

@@ -63,33 +63,34 @@
  **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
  **
  **********************************************************************/
-   
+
 #if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
 
 #include "includes.h"
-   
-int test_setfsuid32(laus_data* dataPtr) {
 
-  int rc = 0;
-  int exp_errno = EPERM;
-   
-  int secondFsuid;
+int test_setfsuid32(laus_data *dataPtr)
+{
 
-  //int failureRc;    //not needed?
-   
-  // Set the syscall-specific data
-  printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_setfsuid );
-  dataPtr->laus_var_data.syscallData.code = AUDIT_setfsuid;
-     
+    int rc = 0;
+    int exp_errno = EPERM;
+
+    int secondFsuid;
+
+    //int failureRc;    //not needed?
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_setfsuid);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_setfsuid;
+
   /**
    * Do as much setup work as possible right here
    */
-  if( dataPtr->successCase ) {
-    secondFsuid = dataPtr->msg_euid;
-    dataPtr->msg_euid = 0;
-  } else {
-    int nonexistentFsuid;
-    identifiers_t identifiers;
+    if (dataPtr->successCase) {
+	secondFsuid = dataPtr->msg_euid;
+	dataPtr->msg_euid = 0;
+    } else {
+	int nonexistentFsuid;
+	identifiers_t identifiers;
     /**
      * To test the failure case, the following conditions must apply:
      *  - I am not the superuser
@@ -99,77 +100,76 @@ int test_setfsuid32(laus_data* dataPtr) {
      *   - saved set-group-ID
      *   - current value of fsuid
      */
-    // Pick a nice round ID, test it, and increment it on every
-    // sequential failure until we find something that works
-    nonexistentFsuid = 42;
-   
-    // su to test user
-    printf5( "seteuid to %i\n", dataPtr->msg_euid );
-    if( ( rc = seteuid( dataPtr->msg_euid ) ) != 0 ) {
-      printf1( "Unable to seteuid to %i: errno=%i\n", 
-   	       dataPtr->msg_euid, errno );
-      goto EXIT; // Or possibly EXIT_CLEANUP
-    }
-   
-    if(( rc = getIdentifiers( &identifiers ) != 0 )) {
-      printf1( "Utility getIdentifiers failed\n" );
-      goto EXIT;
+	// Pick a nice round ID, test it, and increment it on every
+	// sequential failure until we find something that works
+	nonexistentFsuid = 42;
+
+	// su to test user
+	printf5("seteuid to %i\n", dataPtr->msg_euid);
+	if ((rc = seteuid(dataPtr->msg_euid)) != 0) {
+	    printf1("Unable to seteuid to %i: errno=%i\n",
+		    dataPtr->msg_euid, errno);
+	    goto EXIT;		// Or possibly EXIT_CLEANUP
+	}
+
+	if ((rc = getIdentifiers(&identifiers) != 0)) {
+	    printf1("Utility getIdentifiers failed\n");
+	    goto EXIT;
+	}
+
+	while (nonexistentFsuid == identifiers.ruid ||
+	       nonexistentFsuid == identifiers.euid ||
+	       nonexistentFsuid == identifiers.suid ||
+	       nonexistentFsuid == identifiers.fsuid) {
+	    nonexistentFsuid++;
+	}
+
+	// su to superuser
+	printf5("seteuid to root\n");
+	if ((rc = seteuid(0)) != 0) {
+	    printf1("Unable to seteuid to root: errno=%i\n", errno);
+	    goto EXIT_CLEANUP;	// Or possibly EXIT_CLEANUP
+	}
+
+	secondFsuid = nonexistentFsuid;	// Both attempts will return msg_euid
     }
 
-    while( nonexistentFsuid == identifiers.ruid ||
-	   nonexistentFsuid == identifiers.euid ||
-	   nonexistentFsuid == identifiers.suid ||
-	   nonexistentFsuid == identifiers.fsuid ) {
-      nonexistentFsuid++;
+    // Set up audit argument buffer
+    if ((rc = auditArg1(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &secondFsuid)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
     }
-       
-    // su to superuser
-    printf5( "seteuid to root\n" );
-    if ( ( rc = seteuid( 0 ) ) != 0 ) {
-      printf1( "Unable to seteuid to root: errno=%i\n", errno );
-      goto EXIT_CLEANUP; // Or possibly EXIT_CLEANUP
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_setfsuid32, secondFsuid);
+
+    // Do post-system call work
+    if (!dataPtr->successCase) {
+	dataPtr->laus_var_data.syscallData.result = -1;
+	errno = exp_errno;
+    }
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
     }
 
-    secondFsuid = nonexistentFsuid; // Both attempts will return msg_euid
-  }
-   
-  // Set up audit argument buffer
-  if( ( rc = auditArg1( dataPtr,
-			AUDIT_ARG_IMMEDIATE, sizeof( int ), &secondFsuid ) ) != 0 ) {
-    printf1( "Error setting up audit argument buffer\n" );
-    goto EXIT;
-  }
-   
-  // Do pre-system call work
-  if ( (rc = preSysCall( dataPtr )) != 0 ) {
-    printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
-  // Execute system call
-  dataPtr->laus_var_data.syscallData.result = syscall( __NR_setfsuid32, secondFsuid );
-   
-  // Do post-system call work
-  if ( ! dataPtr->successCase ) {
-    dataPtr->laus_var_data.syscallData.result = -1;
-    errno = exp_errno;
-  }
-  if( ( rc = postSysCall( dataPtr, errno, -1, exp_errno ) ) != 0 ) {
-    printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-   
- EXIT_CLEANUP:
+EXIT_CLEANUP:
   /**
    * Do cleanup work here
    */
-  if( dataPtr->successCase ) {
-    setfsuid( 0 );
-  }
-   
- EXIT:
-  printf5( "Returning from test\n" );
-  return rc;
+    if (dataPtr->successCase) {
+	setfsuid(0);
+    }
+
+EXIT:
+    printf5("Returning from test\n");
+    return rc;
 }
 
 #endif

@@ -30,7 +30,8 @@
 extern long init_module(void *, unsigned long, const char *);
 extern long delete_module(const char *, unsigned int);
 
-int test_init_module(laus_data *dataPtr) {
+int test_init_module(laus_data *dataPtr)
+{
 
     int rc = 0;
     int exp_errno = EPERM;
@@ -43,7 +44,7 @@ int test_init_module(laus_data *dataPtr) {
     char dummy[] = { 0 };
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", 
+    printf5("Setting laus_var_data.syscallData.code to %d\n",
 	    AUDIT_init_module);
     dataPtr->laus_var_data.syscallData.code = AUDIT_init_module;
 
@@ -51,7 +52,6 @@ int test_init_module(laus_data *dataPtr) {
 	dataPtr->msg_euid = 0;
 	dataPtr->msg_egid = 0;
     }
-
     // Set up
     if ((fd = open(module_path, O_RDONLY)) == -1) {
 	rc = fd;
@@ -71,24 +71,21 @@ int test_init_module(laus_data *dataPtr) {
 	printf1("mmap:  %s [%d]\n", strerror(errno), errno);
 	goto out;
     }
-
     // Set up audit argument buffer
-    if ((rc = auditArg3(dataPtr, 
-			AUDIT_ARG_POINTER, 0, dummy, 
+    if ((rc = auditArg3(dataPtr,
+			AUDIT_ARG_POINTER, 0, dummy,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &mstat.st_size,
 			AUDIT_ARG_STRING, 0, "")) != 0) {
-	printf1( "Error setting up audit argument buffer\n" );
+	printf1("Error setting up audit argument buffer\n");
 	goto out;
     }
-
     // Do pre-system call work
     if ((rc = preSysCall(dataPtr)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto out;
     }
-
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result = 
+    dataPtr->laus_var_data.syscallData.result =
 	init_module(region, mstat.st_size, "");
 
     postSysCall(dataPtr, errno, -1, exp_errno);

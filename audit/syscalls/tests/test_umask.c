@@ -41,56 +41,54 @@
     **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
     **
     **********************************************************************/
-   
-   #include "includes.h"
-   #include "syscalls.h"
-   
-   int test_umask(laus_data* dataPtr) {
-     
-    
-     int rc = 0;
-     int exp_errno = 0;
-   
-     int mask;
-     
-     if ( ! dataPtr->successCase ) { //umask never fails
-	 rc = SKIP_TEST_CASE;
-	 goto EXIT;
-     }
 
-     // Set the syscall-specific data
-     printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_umask );
-     dataPtr->laus_var_data.syscallData.code = AUDIT_umask;
-     
-     
-     //Do as much setup work as possible right here
-     mask = 000;
-     umask( mask );
-     // Set up audit argument buffer
-     if( ( rc = auditArg1( dataPtr, AUDIT_ARG_IMMEDIATE, sizeof( int ), &mask ) ) != 0 ) {
-       printf1( "Error setting up audit argument buffer\n" );
-       goto EXIT;
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_umask, mask );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-	 printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-	 goto EXIT_CLEANUP;
-     }
-   
-   EXIT_CLEANUP:
-     // Do cleanup work here
-   
-    EXIT:
-     printf5( "Returning from test\n" );
-     return rc;
-   }
+#include "includes.h"
+#include "syscalls.h"
+
+int test_umask(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = 0;
+
+    int mask;
+
+    if (!dataPtr->successCase) {	//umask never fails
+	rc = SKIP_TEST_CASE;
+	goto EXIT;
+    }
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_umask);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_umask;
+
+
+    //Do as much setup work as possible right here
+    mask = 000;
+    umask(mask);
+    // Set up audit argument buffer
+    if ((rc = auditArg1(dataPtr, AUDIT_ARG_IMMEDIATE, sizeof(int), &mask)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result = syscall(__NR_umask, mask);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+EXIT_CLEANUP:
+    // Do cleanup work here
+
+EXIT:
+    printf5("Returning from test\n");
+    return rc;
+}

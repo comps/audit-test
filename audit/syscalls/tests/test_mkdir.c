@@ -49,85 +49,85 @@
    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
    **
    **********************************************************************/
-   
-   #include "includes.h"
-   #include "syscalls.h"
-   
-   int test_mkdir(laus_data* dataPtr) {
-     
-    
-     int rc = 0;
-     int exp_errno = EACCES;
-   
-     char* path = NULL;
-     int mode;
-     
-     
-     // Set the syscall-specific data
-     printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_mkdir );
-     dataPtr->laus_var_data.syscallData.code = AUDIT_mkdir;
-     
+
+#include "includes.h"
+#include "syscalls.h"
+
+int test_mkdir(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = EACCES;
+
+    char *path = NULL;
+    int mode;
+
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_mkdir);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_mkdir;
+
      /**
       * Do as much setup work as possible right here
       */
-     // set the mode
-     mode = S_IRWXU | S_IRWXG | S_IRWXO;
-     if( dataPtr->successCase ) {
-       // dynamically create temp file, and delete it real quick
-       if ((rc = createTempFile(&path, S_IRWXU | S_IRWXG | S_IRWXO,
-                                dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
-         printf1("ERROR: Cannot create file %s\n", path);
-         goto EXIT;
-       }
-       if ((rc = unlink(path)) != 0) {
-         printf1("ERROR: Unable to remove file %s: errno=%i\n", path, errno);
-         goto EXIT;
-       }
-       printf5( "Generated directory name %s\n", path );
-     } else {
-       path = mysprintf("/root/tmp");
-       unlink(path);
-       dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
-     }
-     
-     if( ( rc = auditArg2( dataPtr,
-                    dataPtr->successCase ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
-   		    strlen( path ), path,
-                    AUDIT_ARG_IMMEDIATE, sizeof( int ), &mode ) ) != 0 ) {
-       printf1( "Error setting up audit argument buffer\n" );
-       goto EXIT;
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_mkdir, path, mode );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-   
-    EXIT_CLEANUP:
+    // set the mode
+    mode = S_IRWXU | S_IRWXG | S_IRWXO;
+    if (dataPtr->successCase) {
+	// dynamically create temp file, and delete it real quick
+	if ((rc = createTempFile(&path, S_IRWXU | S_IRWXG | S_IRWXO,
+				 dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	    printf1("ERROR: Cannot create file %s\n", path);
+	    goto EXIT;
+	}
+	if ((rc = unlink(path)) != 0) {
+	    printf1("ERROR: Unable to remove file %s: errno=%i\n", path, errno);
+	    goto EXIT;
+	}
+	printf5("Generated directory name %s\n", path);
+    } else {
+	path = mysprintf("/root/tmp");
+	unlink(path);
+	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
+    }
+
+    if ((rc = auditArg2(dataPtr,
+			dataPtr->
+			successCase ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
+			strlen(path), path, AUDIT_ARG_IMMEDIATE, sizeof(int),
+			&mode)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result = syscall(__NR_mkdir, path, mode);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+
+EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-     if( dataPtr->successCase ) {
-       if( rmdir( path ) == -1 ) {
-         printf1( "Error removing directory %s during cleanup\n", path );
-         goto EXIT;
-       }
-     }
-   
-    EXIT:
-     if ( path )
-       free( path );
-     printf5( "Returning from test\n" );
-     return rc;
-   }
+    if (dataPtr->successCase) {
+	if (rmdir(path) == -1) {
+	    printf1("Error removing directory %s during cleanup\n", path);
+	    goto EXIT;
+	}
+    }
+
+EXIT:
+    if (path)
+	free(path);
+    printf5("Returning from test\n");
+    return rc;
+}

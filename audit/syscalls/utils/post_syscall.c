@@ -33,59 +33,68 @@
 #include "includes.h"
 #include <time.h>
 
-int postSysCall(laus_data* dataPtr, int resultErrno, int errorRC, int expectedErrno) {
-  int rc = 0;
+int postSysCall(laus_data *dataPtr, int resultErrno, int errorRC,
+		int expectedErrno)
+{
+    int rc = 0;
 
-  printf5( "Setting end timestamp\n" );
-  dataPtr->end_r_time = time( NULL )+2; // MH: 2 seconds past current
-					// time
+    printf5("Setting end timestamp\n");
+    dataPtr->end_r_time = time(NULL) + 2;	// MH: 2 seconds past current
+    // time
 
-  // su back to root
-  printf5( "setresuid to root\n" );
-  if ( ( rc = setresuid( 0, 0, 0 ) ) != 0 ) {
-    printf1( "Unable to setresuid to root: errno=%i\n", errno );
-    goto EXIT;
-  }
+    // su back to root
+    printf5("setresuid to root\n");
+    if ((rc = setresuid(0, 0, 0)) != 0) {
+	printf1("Unable to setresuid to root: errno=%i\n", errno);
+	goto EXIT;
+    }
 
-  printf5( "setresgid to root\n" );
-  if ( ( rc = setresgid( 0, 0, 0 ) ) != 0 ) {
-    printf1( "Unable to setresgid to root: errno=%i\n", errno );
-    goto EXIT;
-  }
-
-  // Save resulting errno into data structure
-  if (dataPtr->laus_var_data.syscallData.result == -1) {
+    printf5("setresgid to root\n");
+    if ((rc = setresgid(0, 0, 0)) != 0) {
+	printf1("Unable to setresgid to root: errno=%i\n", errno);
+	goto EXIT;
+    }
+    // Save resulting errno into data structure
+    if (dataPtr->laus_var_data.syscallData.result == -1) {
 	dataPtr->laus_var_data.syscallData.resultErrno = resultErrno;
-  } else {
+    } else {
 	dataPtr->laus_var_data.syscallData.resultErrno = 0;
-  }
-
-  // Check if the syscall executed as expected.
-  printf5( "Checking to see if the system call executed as expected\n" );
-  if( dataPtr->laus_var_data.syscallData.result == errorRC ) {
-    if( dataPtr->successCase ) {
-      printf2( "SYSCALL ERROR: %s unsuccessful in successful case:", dataPtr->testName );
-      rc = 1;
-    } else {
-      if( resultErrno == expectedErrno ) {
-        printf2( "SYSCALL SUCCESS: %s unsuccessful in unsuccessful case:", dataPtr->testName );
-      } else {
-        printf2( "SYSCALL ERROR: %s unsuccessful, but errno is different than expected (%i):", dataPtr->testName, expectedErrno );
-        rc = 1;
-      }
     }
-  } else {
-    if( dataPtr->successCase ) {
-      printf2( "SYSCALL SUCCESS: %s successful in successful case:", dataPtr->testName );
+
+    // Check if the syscall executed as expected.
+    printf5("Checking to see if the system call executed as expected\n");
+    if (dataPtr->laus_var_data.syscallData.result == errorRC) {
+	if (dataPtr->successCase) {
+	    printf2("SYSCALL ERROR: %s unsuccessful in successful case:",
+		    dataPtr->testName);
+	    rc = 1;
+	} else {
+	    if (resultErrno == expectedErrno) {
+		printf2
+		    ("SYSCALL SUCCESS: %s unsuccessful in unsuccessful case:",
+		     dataPtr->testName);
+	    } else {
+		printf2
+		    ("SYSCALL ERROR: %s unsuccessful, but errno is different than expected (%i):",
+		     dataPtr->testName, expectedErrno);
+		rc = 1;
+	    }
+	}
     } else {
-      printf2( "SYSCALL ERROR: %s successful in unsuccessful case:", dataPtr->testName);
-      rc = 1;
+	if (dataPtr->successCase) {
+	    printf2("SYSCALL SUCCESS: %s successful in successful case:",
+		    dataPtr->testName);
+	} else {
+	    printf2("SYSCALL ERROR: %s successful in unsuccessful case:",
+		    dataPtr->testName);
+	    rc = 1;
+	}
     }
-  }
 
-  printf( " rc=%i, errno=%i\n", dataPtr->laus_var_data.syscallData.result, dataPtr->laus_var_data.syscallData.resultErrno );
+    printf(" rc=%i, errno=%i\n", dataPtr->laus_var_data.syscallData.result,
+	   dataPtr->laus_var_data.syscallData.resultErrno);
 
- EXIT:
-  return rc;
+EXIT:
+    return rc;
 
 }

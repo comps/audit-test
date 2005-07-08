@@ -60,94 +60,97 @@
 //   is compiled in 31/32bit mode but running on a 64bit kernel (emulation).
 //   auditd is running in 64bit mode but compilation of the test suite yields
 //   data structures whose sizes are different.
-struct timeval_on_disk {   // edited from /usr/include/bits/time.h
-	__laus_int64 tv_sec;       /* Seconds.  */
-	__laus_int64 tv_usec;      /* Microseconds.  */
+struct timeval_on_disk {	// edited from /usr/include/bits/time.h
+    __laus_int64 tv_sec;	/* Seconds.  */
+    __laus_int64 tv_usec;	/* Microseconds.  */
 };
 #else
 #define timeval_on_disk timeval
 #endif
 
-int test_settimeofday(laus_data* dataPtr) {
+int test_settimeofday(laus_data *dataPtr)
+{
 
-	int rc = 0;
-	int exp_errno = EPERM;
-	struct timeval *tv = NULL;
-	struct timeval_on_disk *tv_on_disk = NULL;
-	struct timezone *tz = NULL;
+    int rc = 0;
+    int exp_errno = EPERM;
+    struct timeval *tv = NULL;
+    struct timeval_on_disk *tv_on_disk = NULL;
+    struct timezone *tz = NULL;
 
-	// Set the syscall-specific data
-	printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_settimeofday );
-	dataPtr->laus_var_data.syscallData.code = AUDIT_settimeofday;
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n",
+	    AUDIT_settimeofday);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_settimeofday;
 
-	// Do as much setup work as possible right here
-	if( dataPtr->successCase ) { // Set up for success
-		dataPtr->msg_euid = 0; 
-		dataPtr->msg_egid = 0;
-		dataPtr->msg_fsuid = 0;
-		dataPtr->msg_fsgid = 0;
+    // Do as much setup work as possible right here
+    if (dataPtr->successCase) {	// Set up for success
+	dataPtr->msg_euid = 0;
+	dataPtr->msg_egid = 0;
+	dataPtr->msg_fsuid = 0;
+	dataPtr->msg_fsgid = 0;
 
-		tv = (struct timeval*) malloc( sizeof(struct timeval));
-		memset(tv, '\0', sizeof(tv));
-		tv_on_disk = (struct timeval_on_disk*) malloc( sizeof(struct timeval_on_disk));
-		memset(tv_on_disk, '\0', sizeof(tv_on_disk));
-		tz = (struct timezone*) malloc( sizeof(struct timezone));
-		memset(tz, '\0', sizeof(tz));
+	tv = (struct timeval *)malloc(sizeof(struct timeval));
+	memset(tv, '\0', sizeof(tv));
+	tv_on_disk =
+	    (struct timeval_on_disk *)malloc(sizeof(struct timeval_on_disk));
+	memset(tv_on_disk, '\0', sizeof(tv_on_disk));
+	tz = (struct timezone *)malloc(sizeof(struct timezone));
+	memset(tz, '\0', sizeof(tz));
 
-		if ( (rc = gettimeofday(tv, tz)) < 0 ) {
-			printf1("Unable to get time of day\n");
-			goto EXIT;
-		}
-		// We have to create the second (almost identical structure) which is the way
-		// this data is actually written to the disk.
-		// This is need for zSeries compatibility when running in 31bit mode on a 
-		// 64bit kernel.
-		tv_on_disk->tv_sec = tv->tv_sec;
-		//BUGBUG: The audit record appears to contain
-		//	nanoseconds instead of microseconds.
-		//	aucat/augrep report values correctly.
-		tv_on_disk->tv_usec = tv->tv_usec*1000;
-	} else { // Set up for error
-
+	if ((rc = gettimeofday(tv, tz)) < 0) {
+	    printf1("Unable to get time of day\n");
+	    goto EXIT;
 	}
-	printf5("time value and time zone structures initialized\n");
+	// We have to create the second (almost identical structure) which is the way
+	// this data is actually written to the disk.
+	// This is need for zSeries compatibility when running in 31bit mode on a 
+	// 64bit kernel.
+	tv_on_disk->tv_sec = tv->tv_sec;
+	//BUGBUG: The audit record appears to contain
+	//      nanoseconds instead of microseconds.
+	//      aucat/augrep report values correctly.
+	tv_on_disk->tv_usec = tv->tv_usec * 1000;
+    } else {			// Set up for error
 
-	// Set up audit argument buffer
-	if( (rc = auditArg2( dataPtr, 
-					( dataPtr->successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL),
-					( dataPtr->successCase ? sizeof( struct timeval_on_disk) : 0), 
-					tv_on_disk,
-					( dataPtr->successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL),
-					( dataPtr->successCase ? sizeof( struct timezone) : 0),
-					tz 
-			   ) 
-	    ) != 0 ) {
-		printf1( "Error setting up audit argument buffer\n" );
-		goto EXIT;
-	}
+    }
+    printf5("time value and time zone structures initialized\n");
 
-	// Do pre-system call work
-	if ( ( rc = preSysCall( dataPtr ) ) != 0 ) {
-		printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-		goto EXIT;
-	}
+    // Set up audit argument buffer
+    if ((rc = auditArg2(dataPtr,
+			(dataPtr->
+			 successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL),
+			(dataPtr->
+			 successCase ? sizeof(struct timeval_on_disk) : 0),
+			tv_on_disk,
+			(dataPtr->
+			 successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL),
+			(dataPtr->successCase ? sizeof(struct timezone) : 0),
+			tz)
+	) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_settimeofday, tv, tz);
 
-	// Execute system call
-	dataPtr->laus_var_data.syscallData.result = syscall( __NR_settimeofday, tv, tz );
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall failed (%d)\n", rc);
+    }
+    //EXIT_CLEANUP:     // not needed?
+    //Do cleanup work here
+    if (dataPtr->successCase) {	// Clean up from success case setup
+	free(tv);
+	free(tz);
 
-	// Do post-system call work
-	if ( (rc = postSysCall( dataPtr, errno, -1, exp_errno )) != 0 ) {
-		printf1("ERROR: post-syscall failed (%d)\n", rc);
-	}
-
-	//EXIT_CLEANUP:     // not needed?
-	//Do cleanup work here
-	if( dataPtr->successCase ) {	// Clean up from success case setup
-		free(tv);
-		free(tz);
-
-	}
+    }
 EXIT:
-	printf5( "Returning from test\n" );
-	return rc;
+    printf5("Returning from test\n");
+    return rc;
 }

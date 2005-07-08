@@ -48,7 +48,7 @@
  **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
  **
  **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
@@ -58,87 +58,87 @@
 #include <asm/ipc.h>
 #endif
 #include <sys/sem.h>
-   
-int test_semctl(laus_data* dataPtr) {
-    
-    
-  int rc = 0;
-  int exp_errno = EPERM;
-  int semctlrc = 0;
-  int semid = 0;
-  int mode;
-  int semnum = 0; // this is ignored by semctl when we remove
-  static int cmd = IPC_RMID;
+
+int test_semctl(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = EPERM;
+    int semctlrc = 0;
+    int semid = 0;
+    int mode;
+    int semnum = 0;		// this is ignored by semctl when we remove
+    static int cmd = IPC_RMID;
 #if defined(__S390X) && defined(__MODE_32)
-  static int cmd_on_disk = IPC_RMID | 256;    // IPC_64 = 256 in the kernel
+    static int cmd_on_disk = IPC_RMID | 256;	// IPC_64 = 256 in the kernel
 #else
-  static int cmd_on_disk = IPC_RMID;
+    static int cmd_on_disk = IPC_RMID;
 #endif
-  char *buf = NULL;
-   
-  //syscall_data* syscallData = (syscall_data*)dataPtr;   // not needed?
-   
-  // Set the syscall-specific data
-  dataPtr->laus_var_data.syscallData.code = AUDIT_semctl;
-   
-  // Allocate shared memory space so that we can test deallocation via
-  // semctl
-  mode = S_IRWXU;
-  if( ( semid = semget( IPC_PRIVATE, 1, mode ) ) == -1 ) {
-    printf1( "ERROR: Unable to allocate new semaphore: errno=%i\n", errno );
-    goto EXIT;
-  }
-  if( dataPtr->successCase ) {
-    dataPtr->msg_euid = 0;
-    dataPtr->msg_egid = 0;
-    dataPtr->msg_fsuid = 0;
-    dataPtr->msg_fsgid = 0;
-  }
-   
-  // Set up audit argument buffer
-  if( ( rc = auditArg4( dataPtr,
-			AUDIT_ARG_IMMEDIATE, sizeof( int ), &semid,
-			AUDIT_ARG_IMMEDIATE, sizeof( int ), &semnum,
-			AUDIT_ARG_IMMEDIATE, sizeof( int ), &cmd_on_disk,
+    char *buf = NULL;
+
+    //syscall_data* syscallData = (syscall_data*)dataPtr;   // not needed?
+
+    // Set the syscall-specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_semctl;
+
+    // Allocate shared memory space so that we can test deallocation via
+    // semctl
+    mode = S_IRWXU;
+    if ((semid = semget(IPC_PRIVATE, 1, mode)) == -1) {
+	printf1("ERROR: Unable to allocate new semaphore: errno=%i\n", errno);
+	goto EXIT;
+    }
+    if (dataPtr->successCase) {
+	dataPtr->msg_euid = 0;
+	dataPtr->msg_egid = 0;
+	dataPtr->msg_fsuid = 0;
+	dataPtr->msg_fsgid = 0;
+    }
+    // Set up audit argument buffer
+    if ((rc = auditArg4(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &semid,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &semnum,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd_on_disk,
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-                        AUDIT_ARG_POINTER, 0, &buf
+			AUDIT_ARG_POINTER, 0, &buf
 #else
 			AUDIT_ARG_NULL, 0, NULL
 #endif
-			) ) != 0 ) {
-    printf1( "Error setting up audit argument buffer\n" );
-    goto EXIT_CLEANUP;
-  }
-   
-  // Do pre-system call work
-  if ( ( rc = preSysCall( dataPtr ) ) != 0 ) {
-    printf1( "ERROR: pre-syscall setup failed (%d)\n", rc );
-    goto EXIT_CLEANUP;
-  }
-   
-  // Execute system call
-#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-  dataPtr->laus_var_data.syscallData.result = semctlrc = syscall( __NR_semctl, semid, 0, cmd, &buf );
-#else
-  dataPtr->laus_var_data.syscallData.result = semctlrc = syscall( __NR_ipc, SEMCTL, semid, 0, cmd, &buf );
-#endif
-  // Do post-system call work
-  if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-    printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-    goto EXIT_CLEANUP;
-  }
-  
- EXIT_CLEANUP:
-  
-  if( !dataPtr->successCase && semid && ( semid != -1 ) ) {
-    if( ( rc = semctl( semid, 0, IPC_RMID ) ) == -1 ) {
-      printf1( "Error removing semaphore set with ID = [%d]: errno = [%i]\n", semid, errno );
-      goto EXIT;
+	 )) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
     }
-  }
-   
- EXIT:
-  return rc;
-}
-   
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
+    dataPtr->laus_var_data.syscallData.result = semctlrc =
+	syscall(__NR_semctl, semid, 0, cmd, &buf);
+#else
+    dataPtr->laus_var_data.syscallData.result = semctlrc =
+	syscall(__NR_ipc, SEMCTL, semid, 0, cmd, &buf);
+#endif
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
 
+EXIT_CLEANUP:
+
+    if (!dataPtr->successCase && semid && (semid != -1)) {
+	if ((rc = semctl(semid, 0, IPC_RMID)) == -1) {
+	    printf1
+		("Error removing semaphore set with ID = [%d]: errno = [%i]\n",
+		 semid, errno);
+	    goto EXIT;
+	}
+    }
+
+EXIT:
+    return rc;
+}

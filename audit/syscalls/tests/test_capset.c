@@ -54,86 +54,87 @@
     **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
     **
     **********************************************************************/
-   
-   #include "includes.h"
-   #include "syscalls.h"
-#ifdef CONFIG_AUDIT_LAUS
-   #undef _POSIX_SOURCE
-   #include <sys/capability.h>
-#else
-   #include <linux/capability.h>
-   extern int capget(cap_user_header_t header, const cap_user_data_t data);
-#endif
-   
-   int test_capset(laus_data* dataPtr) {
-     
-     int rc = 0;
-     int exp_errno = EPERM;
-     __u64 version, pid;
 
-     cap_user_header_t header = (cap_user_header_t)malloc( sizeof( struct __user_cap_header_struct ) );
-     cap_user_data_t data = (cap_user_data_t)malloc( sizeof( struct __user_cap_data_struct ) );
-     
-     // Set the syscall-specific data
-     printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_capset );
-     dataPtr->laus_var_data.syscallData.code = AUDIT_capset;
-     
+#include "includes.h"
+#include "syscalls.h"
+#ifdef CONFIG_AUDIT_LAUS
+#undef _POSIX_SOURCE
+#include <sys/capability.h>
+#else
+#include <linux/capability.h>
+extern int capget(cap_user_header_t header, const cap_user_data_t data);
+#endif
+
+int test_capset(laus_data *dataPtr)
+{
+
+    int rc = 0;
+    int exp_errno = EPERM;
+    __u64 version, pid;
+
+    cap_user_header_t header =
+	(cap_user_header_t) malloc(sizeof(struct __user_cap_header_struct));
+    cap_user_data_t data =
+	(cap_user_data_t) malloc(sizeof(struct __user_cap_data_struct));
+
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_capset);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_capset;
+
      /**
       * Do as much setup work as possible right here
       */
-     version = header->version = _LINUX_CAPABILITY_VERSION;
-     pid = header->pid = 0;
-     if( capget( header, data ) == -1 ) {
-       printf1( "Error calling capget: errno=%i\n", errno );
-       goto EXIT;
-     }
+    version = header->version = _LINUX_CAPABILITY_VERSION;
+    pid = header->pid = 0;
+    if (capget(header, data) == -1) {
+	printf1("Error calling capget: errno=%i\n", errno);
+	goto EXIT;
+    }
 
-     /*
+    /*
      ** Enable capset for this process
      */
-     data->effective = data->effective | CAP_SETPCAP;
-     if ((rc = syscall( __NR_capset, header, data )) == -1) {
-       printf1( "Error initializing effective capabilities\n" );
-       goto EXIT_CLEANUP;
-     }
+    data->effective = data->effective | CAP_SETPCAP;
+    if ((rc = syscall(__NR_capset, header, data)) == -1) {
+	printf1("Error initializing effective capabilities\n");
+	goto EXIT_CLEANUP;
+    }
 
-     if( !dataPtr->successCase ) {
-       data->permitted = ~data->permitted;
-     }
-   
-     // Set up audit argument buffer
-     if( ( rc = auditArg5( dataPtr,
-		AUDIT_ARG_IMMEDIATE, sizeof( __u64 ), &version,
-		AUDIT_ARG_IMMEDIATE, sizeof( __u64 ), &pid,
-		AUDIT_ARG_POINTER, sizeof( __u32 ), &data->effective,
-		AUDIT_ARG_POINTER, sizeof( __u32 ), &data->inheritable,
- 		AUDIT_ARG_POINTER, sizeof( __u32 ), &data->permitted ) ) != 0 ) {
-       printf1( "Error setting up audit argument buffer\n" );
-       printf1( "Error setting up audit argument buffer\n" );
-       goto EXIT;
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_capset, header, data );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-   
-    EXIT_CLEANUP:
-   
-    EXIT:
-     free( header );
-     free( data );
-     printf5( "Returning from test\n" );
-     return rc;
-   }
+    if (!dataPtr->successCase) {
+	data->permitted = ~data->permitted;
+    }
+    // Set up audit argument buffer
+    if ((rc = auditArg5(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(__u64), &version,
+			AUDIT_ARG_IMMEDIATE, sizeof(__u64), &pid,
+			AUDIT_ARG_POINTER, sizeof(__u32), &data->effective,
+			AUDIT_ARG_POINTER, sizeof(__u32), &data->inheritable,
+			AUDIT_ARG_POINTER, sizeof(__u32),
+			&data->permitted)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_capset, header, data);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+EXIT_CLEANUP:
+
+EXIT:
+    free(header);
+    free(data);
+    printf5("Returning from test\n");
+    return rc;
+}

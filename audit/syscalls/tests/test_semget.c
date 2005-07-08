@@ -56,7 +56,7 @@
  **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
  **
  **********************************************************************/
-   
+
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
@@ -66,82 +66,86 @@
 #include <asm/ipc.h>
 #endif
 #include <sys/sem.h>
-   
-int test_semget(laus_data* dataPtr) {    
-    
-  int rc = 0;
-  int exp_errno = EACCES;
-  int key = 0;
-  int firstSemid = 0;
-  int secondSemid = 0;
-  //int doNotDeallocate = 0;   // not needed?
-  int mode;
-  int nsems = 1;
-   
-  // Set the syscall-specific data
-  dataPtr->laus_var_data.syscallData.code = AUDIT_semget;
-   
-  // Set the mode flags
-  mode = S_IRWXU | S_IRWXG | S_IRWXO;
-   
-  // Set the number of semaphores for the identifier
-  nsems = 1;
-   
-  // Set the key value.
-  // If successCase == 0, then we will be creating a semaphore set
-  // under the permissions of root, which the test user will not have
-  // permission to access.
-  if( dataPtr->successCase ) {
-    key = IPC_PRIVATE;
-  } else {    
-    mode = 0600 | IPC_CREAT;
-    key = -1;
-    if( ( firstSemid = semget( key, nsems, mode ) ) == -1 ) {
-      printf1( "Cannot create the semaphore set with key = -1: errno = [%i]\n", errno );
-      goto EXIT;
+
+int test_semget(laus_data *dataPtr)
+{
+
+    int rc = 0;
+    int exp_errno = EACCES;
+    int key = 0;
+    int firstSemid = 0;
+    int secondSemid = 0;
+    //int doNotDeallocate = 0;   // not needed?
+    int mode;
+    int nsems = 1;
+
+    // Set the syscall-specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_semget;
+
+    // Set the mode flags
+    mode = S_IRWXU | S_IRWXG | S_IRWXO;
+
+    // Set the number of semaphores for the identifier
+    nsems = 1;
+
+    // Set the key value.
+    // If successCase == 0, then we will be creating a semaphore set
+    // under the permissions of root, which the test user will not have
+    // permission to access.
+    if (dataPtr->successCase) {
+	key = IPC_PRIVATE;
+    } else {
+	mode = 0600 | IPC_CREAT;
+	key = -1;
+	if ((firstSemid = semget(key, nsems, mode)) == -1) {
+	    printf1
+		("Cannot create the semaphore set with key = -1: errno = [%i]\n",
+		 errno);
+	    goto EXIT;
+	}
     }
-  }
 
-  // Set up audit argument buffer
-  if( ( rc = auditArg3( dataPtr,
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &key,
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &nsems,
-		      AUDIT_ARG_IMMEDIATE, sizeof( int ), &mode ) ) != 0 ) {
-    printf1( "Error setting up audit argument buffer\n" );
-    goto EXIT;
-  }
+    // Set up audit argument buffer
+    if ((rc = auditArg3(dataPtr,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &key,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &nsems,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &mode)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work   
+    preSysCall(dataPtr);
 
-  // Do pre-system call work   
-  preSysCall( dataPtr );
-   
-  // Execute the semget system call
+    // Execute the semget system call
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-  dataPtr->laus_var_data.syscallData.result = secondSemid = syscall( __NR_semget,
-                                                                     key, nsems, mode );
+    dataPtr->laus_var_data.syscallData.result = secondSemid =
+	syscall(__NR_semget, key, nsems, mode);
 #else
-  dataPtr->laus_var_data.syscallData.result = secondSemid = syscall( __NR_ipc, SEMGET,
-								     key, nsems, mode );
+    dataPtr->laus_var_data.syscallData.result = secondSemid =
+	syscall(__NR_ipc, SEMGET, key, nsems, mode);
 #endif
 
-  // Do post-system call work
-  postSysCall( dataPtr, errno, -1, exp_errno );
-  
- //EXIT_FREE_SEM:   // not needed?
+    // Do post-system call work
+    postSysCall(dataPtr, errno, -1, exp_errno);
 
-  if( firstSemid && ( firstSemid != -1 ) ) {
-    if( ( semctl( firstSemid, 0, IPC_RMID ) ) == -1 ) {
-      printf1( "ERROR: Cannot deallocate message memory with semid=[%d]: errno=[%i]\n", 
-	       firstSemid, errno );
+    //EXIT_FREE_SEM:   // not needed?
+
+    if (firstSemid && (firstSemid != -1)) {
+	if ((semctl(firstSemid, 0, IPC_RMID)) == -1) {
+	    printf1
+		("ERROR: Cannot deallocate message memory with semid=[%d]: errno=[%i]\n",
+		 firstSemid, errno);
+	}
     }
-  }    
-  if( secondSemid && ( secondSemid != -1 ) ) {
-    if( ( semctl( secondSemid, 0, IPC_RMID ) ) == -1 ) {
-      printf1( "ERROR: Cannot deallocate message memory with semid=[%d]: errno=[%i]\n", 
-	       secondSemid, errno );
-      goto EXIT;
+    if (secondSemid && (secondSemid != -1)) {
+	if ((semctl(secondSemid, 0, IPC_RMID)) == -1) {
+	    printf1
+		("ERROR: Cannot deallocate message memory with semid=[%d]: errno=[%i]\n",
+		 secondSemid, errno);
+	    goto EXIT;
+	}
     }
-  }
-  
- EXIT:
-  return rc;
+
+EXIT:
+    return rc;
 }

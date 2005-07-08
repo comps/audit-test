@@ -34,36 +34,38 @@
 #include "includes.h"
 #include <time.h>
 
-int preSysCall(laus_data* dataPtr) {
-  int rc = 0;
+int preSysCall(laus_data *dataPtr)
+{
+    int rc = 0;
 
-  // su to test user
-  printf5( "setresgid to %i, %i, %i\n", dataPtr->msg_rgid, dataPtr->msg_egid, 0 );
-  if( ( rc = setresgid( dataPtr->msg_rgid, dataPtr->msg_egid, 0 ) ) != 0 ) {
-    printf1( "Unable to setresgid to %i, %i, %i: errno=%i\n",
-            dataPtr->msg_rgid, dataPtr->msg_egid, 0, errno );
-    goto EXIT;
-  }
-  printf5( "setresuid to %i, %i, %i\n", dataPtr->msg_ruid, dataPtr->msg_euid, 0 );
-  if( ( rc = setresuid( dataPtr->msg_ruid, dataPtr->msg_euid, 0 ) ) != 0 ) {
-    printf1( "Unable to setresuid to %i, %i, %i: errno=%i\n",
-            dataPtr->msg_ruid, dataPtr->msg_euid, 0, errno );
-    goto EXIT;
-  }
+    // su to test user
+    printf5("setresgid to %i, %i, %i\n", dataPtr->msg_rgid, dataPtr->msg_egid,
+	    0);
+    if ((rc = setresgid(dataPtr->msg_rgid, dataPtr->msg_egid, 0)) != 0) {
+	printf1("Unable to setresgid to %i, %i, %i: errno=%i\n",
+		dataPtr->msg_rgid, dataPtr->msg_egid, 0, errno);
+	goto EXIT;
+    }
+    printf5("setresuid to %i, %i, %i\n", dataPtr->msg_ruid, dataPtr->msg_euid,
+	    0);
+    if ((rc = setresuid(dataPtr->msg_ruid, dataPtr->msg_euid, 0)) != 0) {
+	printf1("Unable to setresuid to %i, %i, %i: errno=%i\n",
+		dataPtr->msg_ruid, dataPtr->msg_euid, 0, errno);
+	goto EXIT;
+    }
+    // Fill in laus_data structure
+    printf5("Calling getLAUSData\n");
+    if ((rc = getLAUSData(dataPtr)) != 0) {
+	printf1("Error returned from getLAUSData( dataPtr ): rc=%i\n", rc);
+	goto EXIT;
+    }
 
-  // Fill in laus_data structure
-  printf5( "Calling getLAUSData\n" );
-  if( ( rc = getLAUSData( dataPtr ) ) != 0 ) {
-    printf1( "Error returned from getLAUSData( dataPtr ): rc=%i\n", rc );
-    goto EXIT;
-  }
+    printf5("Setting begin timestamp\n");
+    dataPtr->begin_r_time = time(NULL) - 2;	// MH: Start two seconds
+    // before current time
+    printf5("Performing system call\n");
 
-  printf5( "Setting begin timestamp\n" );
-  dataPtr->begin_r_time = time( NULL )-2; // MH: Start two seconds
-					  // before current time
-  printf5( "Performing system call\n" );
-
- EXIT:
-  return rc;
+EXIT:
+    return rc;
 
 }

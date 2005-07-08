@@ -53,108 +53,118 @@
 #include <sys/timex.h>
 
 #if !defined(__IX86)
-struct timeval_on_disk {    // edited from /usr/include/bits/time.h
-    __laus_int64 tv_sec;    /* Seconds.  */
-    __laus_int64 tv_usec;   /* Microseconds.  */
+struct timeval_on_disk {	// edited from /usr/include/bits/time.h
+    __laus_int64 tv_sec;	/* Seconds.  */
+    __laus_int64 tv_usec;	/* Microseconds.  */
 };
-struct timex_on_disk {      // edited from /usr/include/sys/timex.h
-  __laus_int32 modes;              /* mode selector */
-  __laus_int32 padding_1;	    /* PADDING */
-  __laus_int64 offset;      /* time offset (usec) */
-  __laus_int64 freq;        /* frequency offset (scaled ppm) */
-  __laus_int64 maxerror;    /* maximum error (usec) */
-  __laus_int64 esterror;    /* estimated error (usec) */
-  __laus_int32 status;             /* clock command/status */
-  __laus_int32 padding_2;	    /* PADDING */
-  __laus_int64 constant;    /* pll time constant */
-  __laus_int64 precision;   /* clock precision (usec) (read only) */
-  __laus_int64 tolerance;   /* clock frequency tolerance (ppm) (read only) */
+struct timex_on_disk {		// edited from /usr/include/sys/timex.h
+    __laus_int32 modes;		/* mode selector */
+    __laus_int32 padding_1;	/* PADDING */
+    __laus_int64 offset;	/* time offset (usec) */
+    __laus_int64 freq;		/* frequency offset (scaled ppm) */
+    __laus_int64 maxerror;	/* maximum error (usec) */
+    __laus_int64 esterror;	/* estimated error (usec) */
+    __laus_int32 status;	/* clock command/status */
+    __laus_int32 padding_2;	/* PADDING */
+    __laus_int64 constant;	/* pll time constant */
+    __laus_int64 precision;	/* clock precision (usec) (read only) */
+    __laus_int64 tolerance;	/* clock frequency tolerance (ppm) (read only) */
 
-  struct timeval_on_disk time;  /* (read only) */
-  __laus_int64 tick;        /* (modified) usecs between clock ticks */
-  __laus_int64 ppsfreq;     /* pps frequency (scaled ppm) (ro) */
-  __laus_int64 jitter;      /* pps jitter (us) (ro) */
-  __laus_int32 shift;              /* interval duration (s) (shift) (ro) */
-  __laus_int32 padding_3;          /* PADDING */
-  __laus_int64 stabil;      /* pps stability (scaled ppm) (ro) */
-  __laus_int64 jitcnt;      /* jitter limit exceeded (ro) */
-  __laus_int64 calcnt;      /* calibration intervals (ro) */
-  __laus_int64 errcnt;      /* calibration errors (ro) */
-  __laus_int64 stbcnt;      /* stability limit exceeded (ro) */
+    struct timeval_on_disk time;	/* (read only) */
+    __laus_int64 tick;		/* (modified) usecs between clock ticks */
+    __laus_int64 ppsfreq;	/* pps frequency (scaled ppm) (ro) */
+    __laus_int64 jitter;	/* pps jitter (us) (ro) */
+    __laus_int32 shift;		/* interval duration (s) (shift) (ro) */
+    __laus_int32 padding_3;	/* PADDING */
+    __laus_int64 stabil;	/* pps stability (scaled ppm) (ro) */
+    __laus_int64 jitcnt;	/* jitter limit exceeded (ro) */
+    __laus_int64 calcnt;	/* calibration intervals (ro) */
+    __laus_int64 errcnt;	/* calibration errors (ro) */
+    __laus_int64 stbcnt;	/* stability limit exceeded (ro) */
 
-  /* ??? */
-  int  :32; int  :32; int  :32; int  :32;
-  int  :32; int  :32; int  :32; int  :32;
-  int  :32; int  :32; int  :32; int  :32;
+    /* ??? */
+    int:32;
+    int:32;
+    int:32;
+    int:32;
+    int:32;
+    int:32;
+    int:32;
+    int:32;
+    int:32;
+    int:32;
+    int:32;
+    int:32;
 };
 #else
 #define timeval_on_disk timeval
 #define timex_on_disk   timex
 #endif
 
-int test_adjtimex(laus_data* dataPtr) {
+int test_adjtimex(laus_data *dataPtr)
+{
 
 
-	int rc = 0;
-	int exp_errno = EPERM;
+    int rc = 0;
+    int exp_errno = EPERM;
 
-	struct timex_on_disk buf;
-	struct timex syscall_buf;
+    struct timex_on_disk buf;
+    struct timex syscall_buf;
 
-	memset((char*)&buf, '\0', sizeof(buf));
-	memset((char*)&syscall_buf, '\0', sizeof(syscall_buf));
+    memset((char *)&buf, '\0', sizeof(buf));
+    memset((char *)&syscall_buf, '\0', sizeof(syscall_buf));
 
-	// Set the syscall-specific data
-	printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_adjtimex );
-	dataPtr->laus_var_data.syscallData.code = AUDIT_adjtimex;
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_adjtimex);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_adjtimex;
 
 	/**
 	 * Do as much setup work as possible right here
 	 */
-	// Make sure that we don't get an EPERM in either case
-	if( dataPtr->successCase ) {
-		// Set up for success
-		//    dataPtr->msg_euid = 0;
-		//    dataPtr->msg_egid = 0;
-		syscall_buf.modes = buf.modes = 0;
-	} else {
-		// Set up for error
-		syscall_buf.modes = buf.modes = ADJ_STATUS;
-		syscall_buf.status = buf.status = 42; // EPERM should hit before EINVAL, but just in case...
-	}
+    // Make sure that we don't get an EPERM in either case
+    if (dataPtr->successCase) {
+	// Set up for success
+	//    dataPtr->msg_euid = 0;
+	//    dataPtr->msg_egid = 0;
+	syscall_buf.modes = buf.modes = 0;
+    } else {
+	// Set up for error
+	syscall_buf.modes = buf.modes = ADJ_STATUS;
+	syscall_buf.status = buf.status = 42;	// EPERM should hit before EINVAL, but just in case...
+    }
 
-	// Set up audit argument buffer
-	if( ( rc = auditArg1( dataPtr,
-					AUDIT_ARG_POINTER, sizeof( struct timex_on_disk ), &buf ) ) != 0 ) {
-		printf1( "Error setting up audit argument buffer\n" );
-		goto EXIT;
-	}
+    // Set up audit argument buffer
+    if ((rc = auditArg1(dataPtr,
+			AUDIT_ARG_POINTER, sizeof(struct timex_on_disk),
+			&buf)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_adjtimex, &syscall_buf);
 
-	// Do pre-system call work
-	if ( (rc = preSysCall( dataPtr )) != 0 ) {
-		printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
 
-	// Execute system call
-	dataPtr->laus_var_data.syscallData.result = syscall( __NR_adjtimex, &syscall_buf );
-
-
-	// Do post-system call work
-	if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-		printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
 
 EXIT_CLEANUP:
 	/**
 	 * Do cleanup work here
 	 */
-	if( dataPtr->successCase ) {
-		// Clean up from success case setup
-	}
+    if (dataPtr->successCase) {
+	// Clean up from success case setup
+    }
 
 EXIT:
-	printf5( "Returning from test\n" );
-	return rc;
+    printf5("Returning from test\n");
+    return rc;
 }

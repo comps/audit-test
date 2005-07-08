@@ -59,95 +59,96 @@
 #include <asm/ipc.h>
 #endif
 
-int test_msgsnd(laus_data* dataPtr) {
+int test_msgsnd(laus_data *dataPtr)
+{
 
-	int rc = 0;
-	int exp_errno = EACCES;
-	int msgid = 0;
-	int msgsz;
-	int msgflg;
-	int mode;
-	struct msgbuf {
-		long mtype;
-		char mtext[10];
-	}buf;
-	struct msgbuf_on_disk {
-		__laus_int64 mtype;
-		char mtext[10];
-	}buf_on_disk;
-
-
-	// Set the syscall-specific data
-	dataPtr->laus_var_data.syscallData.code = AUDIT_msgsnd;
-
-	mode = S_IRWXU;
-	if( ( msgid = msgget( IPC_PRIVATE, mode ) ) == -1 ) {
-		printf1( "ERROR: Unable to allocate new message queue: errno=%i\n", errno );
-		goto EXIT;
-	}
-
-	msgsz = 3;   // Determines how much data will actually be in the msgbuf structure
-	msgflg = IPC_NOWAIT;
-	buf.mtype = buf_on_disk.mtype = 1;
-	memset(buf.mtext, '\0', sizeof(buf.mtext));
-	memset(buf_on_disk.mtext, '\0', sizeof(buf_on_disk.mtext));
-	buf.mtext[0] = buf_on_disk.mtext[0] = 'a';
-	buf.mtext[1] = buf_on_disk.mtext[1] = 'b';
-	buf.mtext[2] = buf_on_disk.mtext[2] = 'c';
+    int rc = 0;
+    int exp_errno = EACCES;
+    int msgid = 0;
+    int msgsz;
+    int msgflg;
+    int mode;
+    struct msgbuf {
+	long mtype;
+	char mtext[10];
+    } buf;
+    struct msgbuf_on_disk {
+	__laus_int64 mtype;
+	char mtext[10];
+    } buf_on_disk;
 
 
-	printf(" >>> buf address: %p <<< \n", &buf);
-	if( dataPtr->successCase ) {
-		dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = 0;
-	} else {
-	}
-	// Set up audit argument buffer
-	if( ( rc = auditArg4( dataPtr,
-					AUDIT_ARG_IMMEDIATE, sizeof( int ), &msgid,
+    // Set the syscall-specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_msgsnd;
+
+    mode = S_IRWXU;
+    if ((msgid = msgget(IPC_PRIVATE, mode)) == -1) {
+	printf1("ERROR: Unable to allocate new message queue: errno=%i\n",
+		errno);
+	goto EXIT;
+    }
+
+    msgsz = 3;			// Determines how much data will actually be in the msgbuf structure
+    msgflg = IPC_NOWAIT;
+    buf.mtype = buf_on_disk.mtype = 1;
+    memset(buf.mtext, '\0', sizeof(buf.mtext));
+    memset(buf_on_disk.mtext, '\0', sizeof(buf_on_disk.mtext));
+    buf.mtext[0] = buf_on_disk.mtext[0] = 'a';
+    buf.mtext[1] = buf_on_disk.mtext[1] = 'b';
+    buf.mtext[2] = buf_on_disk.mtext[2] = 'c';
+
+
+    printf(" >>> buf address: %p <<< \n", &buf);
+    if (dataPtr->successCase) {
+	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = 0;
+    } else {
+    }
+    // Set up audit argument buffer
+    if ((rc = auditArg4(dataPtr, AUDIT_ARG_IMMEDIATE, sizeof(int), &msgid,
 #if defined(__IX86)
-					AUDIT_ARG_POINTER, sizeof(__u32) + msgsz , &buf, 
+			AUDIT_ARG_POINTER, sizeof(__u32) + msgsz, &buf,
 #else
-					AUDIT_ARG_POINTER, sizeof(__u64) + msgsz , &buf_on_disk, 
+			AUDIT_ARG_POINTER, sizeof(__u64) + msgsz, &buf_on_disk,
 #endif
-					AUDIT_ARG_IMMEDIATE, sizeof( int ), &msgsz,
-					AUDIT_ARG_IMMEDIATE, sizeof( int ), &msgflg
-			    ) ) != 0 ) {
-		printf1( "Error setting up audit argument buffer\n" );
-		goto EXIT_CLEANUP;
-	}
-
-	// Do pre-system call work
-	if ( (rc = preSysCall( dataPtr )) != 0 ) {
-		printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
-
-	// Execute system call
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgsz,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgflg)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-	dataPtr->laus_var_data.syscallData.result = syscall( __NR_msgsnd, msgid, &buf, msgsz, msgflg );
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_msgsnd, msgid, &buf, msgsz, msgflg);
 #else
-	dataPtr->laus_var_data.syscallData.result = syscall( __NR_ipc, MSGSND, msgid, msgsz, msgflg, &buf ); 
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_ipc, MSGSND, msgid, msgsz, msgflg, &buf);
 #endif
 
-	//  dataPtr->laus_var_data.syscallData.result = msgsnd( msgid, &buf, msgsz, msgflg ); 
+    //  dataPtr->laus_var_data.syscallData.result = msgsnd( msgid, &buf, msgsz, msgflg ); 
 
-	// Do post-system call work
-	if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno )) != 0 ) {
-		printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
 
 
 EXIT_CLEANUP:
 
-	if( !dataPtr->successCase && msgid && ( msgid != -1 ) ) {
-		if( ( rc = msgctl( msgid, IPC_RMID, 0 ) ) == -1 ) {
-			printf1( "Error removing message queue with ID = [%d]: errno = [%i]\n", msgid, errno );
-			goto EXIT;
-		}
+    if (!dataPtr->successCase && msgid && (msgid != -1)) {
+	if ((rc = msgctl(msgid, IPC_RMID, 0)) == -1) {
+	    printf1
+		("Error removing message queue with ID = [%d]: errno = [%i]\n",
+		 msgid, errno);
+	    goto EXIT;
 	}
+    }
 
 EXIT:
-	return rc;
+    return rc;
 }
-

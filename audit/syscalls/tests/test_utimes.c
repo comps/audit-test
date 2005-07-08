@@ -66,9 +66,9 @@
 //   is compiled in 31/32bit mode but running on a 64bit kernel (emulation).
 //   auditd is running in 64bit mode but compilation of the test suite yields
 //   data structures whose sizes are different.
-struct timespec_on_disk {   // edited from /usr/include/time.h
-	__u64 tv_sec;            /* Seconds.  */
-	__u64 tv_nsec;           /* Nanoseconds.  */
+struct timespec_on_disk {	// edited from /usr/include/time.h
+    __u64 tv_sec;		/* Seconds.  */
+    __u64 tv_nsec;		/* Nanoseconds.  */
 };
 #else
 #define timespec_on_disk timespec
@@ -77,75 +77,71 @@ struct timespec_on_disk {   // edited from /usr/include/time.h
 /*
  ** execute a utimes operation
  */
-int test_utimes(laus_data* dataPtr) {
+int test_utimes(laus_data *dataPtr)
+{
 
-	int rc = 0;
-	int exp_errno = EPERM;
-	char* fileName = NULL;
-	struct timespec_on_disk mod_time, acc_time;  
-	struct timeval utbuf[2];
-
-
-	// Set the syscall specific data
-	dataPtr->laus_var_data.syscallData.code = AUDIT_utimes;
-
-	// Create the file 
-	if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-					dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
-		printf1("ERROR: Cannot create file %s\n", fileName);
-		goto EXIT;
-	}
-
-	// utimes setup
-	acc_time.tv_sec = 30;
-	acc_time.tv_nsec = 0;
-	mod_time.tv_sec = 10;
-	mod_time.tv_nsec = 0;
-	memcpy(&(utbuf[0].tv_sec), &acc_time, sizeof(acc_time));
-	memcpy(&(utbuf[1].tv_sec), &mod_time, sizeof(mod_time));
-
-	if ( !dataPtr->successCase ) {
-		dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
-	}
+    int rc = 0;
+    int exp_errno = EPERM;
+    char *fileName = NULL;
+    struct timespec_on_disk mod_time, acc_time;
+    struct timeval utbuf[2];
 
 
-	// Set up audit argument buffer
-	if( ( rc = auditArg3( dataPtr,
-			      AUDIT_ARG_PATH, strlen(fileName), fileName,
-			      AUDIT_ARG_POINTER, sizeof(struct timespec_on_disk), &acc_time,
-			      AUDIT_ARG_POINTER, sizeof(struct timespec_on_disk), &mod_time
-			    ) ) != 0 ) {
-		printf1( "Error setting up audit argument buffer\n" );
-		goto EXIT;
-	}
+    // Set the syscall specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_utimes;
 
-	// Do pre-system call work
-	if ( (rc = preSysCall( dataPtr )) != 0 ) {
-		printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
+    // Create the file 
+    if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
+			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	printf1("ERROR: Cannot create file %s\n", fileName);
+	goto EXIT;
+    }
+    // utimes setup
+    acc_time.tv_sec = 30;
+    acc_time.tv_nsec = 0;
+    mod_time.tv_sec = 10;
+    mod_time.tv_nsec = 0;
+    memcpy(&(utbuf[0].tv_sec), &acc_time, sizeof(acc_time));
+    memcpy(&(utbuf[1].tv_sec), &mod_time, sizeof(mod_time));
 
-	// Execute system call
-	dataPtr->laus_var_data.syscallData.result = utimes( fileName, utbuf );
+    if (!dataPtr->successCase) {
+	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
+    }
 
-	// Do post-system call work
-	if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-		printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-		goto EXIT_CLEANUP;
-	}
+    // Set up audit argument buffer
+    if ((rc = auditArg3(dataPtr,
+			AUDIT_ARG_PATH, strlen(fileName), fileName,
+			AUDIT_ARG_POINTER, sizeof(struct timespec_on_disk),
+			&acc_time, AUDIT_ARG_POINTER,
+			sizeof(struct timespec_on_disk), &mod_time)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result = utimes(fileName, utbuf);
 
-EXIT_CLEANUP:  
-	// utimes cleanup
-	if ((rc = unlink(fileName)) != 0) {
-		printf1("ERROR: Unable to remove file %s: errno=%i\n", 
-				fileName, errno);
-		goto EXIT;
-	}
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+EXIT_CLEANUP:
+    // utimes cleanup
+    if ((rc = unlink(fileName)) != 0) {
+	printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
+	goto EXIT;
+    }
 
 EXIT:
-	if (fileName)
-		free(fileName);
-	return rc;
+    if (fileName)
+	free(fileName);
+    return rc;
 }
 
 #endif /* __NR_utimes */

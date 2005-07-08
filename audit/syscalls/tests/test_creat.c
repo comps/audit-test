@@ -55,93 +55,90 @@
    **    05/05 Updates to suppress compiler warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
    **
    **********************************************************************/
-   
-   #include "includes.h"
-   #include "syscalls.h"
-   
-   int test_creat(laus_data* dataPtr) {
-    
-     int rc = 0;
-     int exp_errno = EACCES;
-     int mode = S_IRWXO;
+
+#include "includes.h"
+#include "syscalls.h"
+
+int test_creat(laus_data *dataPtr)
+{
+
+    int rc = 0;
+    int exp_errno = EACCES;
+    int mode = S_IRWXO;
 #if defined(__PPC64) || defined(__X86_64) || defined(__S390X)
-     int flags = O_WRONLY | O_CREAT | O_TRUNC | O_LARGEFILE;
+    int flags = O_WRONLY | O_CREAT | O_TRUNC | O_LARGEFILE;
 #else
-     int flags = O_WRONLY | O_CREAT | O_TRUNC;
+    int flags = O_WRONLY | O_CREAT | O_TRUNC;
 #endif
-     char* fileName = NULL;
-     //char* fileName2 = NULL;
+    char *fileName = NULL;
+    //char* fileName2 = NULL;
 
-   
-     // Set the syscall specific data
-     // The creat() system call is actually an open() system call with the
-     //  O_CREAT flag set
-     dataPtr->laus_var_data.syscallData.code = AUDIT_open;
-   
-     // create file to choose a filename
-     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-                              dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
-       printf1("ERROR: Cannot create file %s\n", fileName);
-       goto EXIT;
-     }
-     // delete file just created so that the syscall can use the temp name
-     if ((rc = unlink(fileName)) != 0) {
-       printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
-       goto EXIT;
-     }
 
-     if ( ! dataPtr->successCase ) {
-       dataPtr->msg_ruid = dataPtr->msg_euid = dataPtr->msg_fsuid = helper_uid;
-       printf5("Free file name\n");
-       free( fileName );
-       fileName = mysprintf( "/root/lausXXXXXX" );
-       printf("Set temp file name mask: %s\n", fileName);
-       close( mkstemp( fileName ) );
-       printf5("Not success case, so changing filename to %s\n", fileName);
-     }
+    // Set the syscall specific data
+    // The creat() system call is actually an open() system call with the
+    //  O_CREAT flag set
+    dataPtr->laus_var_data.syscallData.code = AUDIT_open;
 
-   
-     // Set up audit argument buffer
-     // The creat() system call is actually an open() system call with the
-     //  O_CREAT flag set
-     if( ( rc = auditArg3( dataPtr,
-                         dataPtr->successCase ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
-                         strlen(fileName),
-                         fileName,
-                         AUDIT_ARG_IMMEDIATE, sizeof(flags), &flags,
-                         AUDIT_ARG_IMMEDIATE, sizeof(mode), &mode
-                       ) ) != 0 ) {
-       printf1( "Error setting up audit argument buffer\n" );
-       goto EXIT;
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_creat, fileName, mode );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-   
-   EXIT_CLEANUP:
-     // creat cleanup
-     // close file is successfully created
-     if (( unlink(fileName)) != 0) {
-       printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
-       goto EXIT;
-     }
-     
-   EXIT:
-     if (fileName)
-       free( fileName );
-     return rc;
-   }
-   
+    // create file to choose a filename
+    if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
+			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	printf1("ERROR: Cannot create file %s\n", fileName);
+	goto EXIT;
+    }
+    // delete file just created so that the syscall can use the temp name
+    if ((rc = unlink(fileName)) != 0) {
+	printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
+	goto EXIT;
+    }
+
+    if (!dataPtr->successCase) {
+	dataPtr->msg_ruid = dataPtr->msg_euid = dataPtr->msg_fsuid = helper_uid;
+	printf5("Free file name\n");
+	free(fileName);
+	fileName = mysprintf("/root/lausXXXXXX");
+	printf("Set temp file name mask: %s\n", fileName);
+	close(mkstemp(fileName));
+	printf5("Not success case, so changing filename to %s\n", fileName);
+    }
+
+    // Set up audit argument buffer
+    // The creat() system call is actually an open() system call with the
+    //  O_CREAT flag set
+    if ((rc = auditArg3(dataPtr,
+			dataPtr->
+			successCase ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
+			strlen(fileName), fileName, AUDIT_ARG_IMMEDIATE,
+			sizeof(flags), &flags, AUDIT_ARG_IMMEDIATE,
+			sizeof(mode), &mode)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_creat, fileName, mode);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+
+EXIT_CLEANUP:
+    // creat cleanup
+    // close file is successfully created
+    if ((unlink(fileName)) != 0) {
+	printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
+	goto EXIT;
+    }
+
+EXIT:
+    if (fileName)
+	free(fileName);
+    return rc;
+}

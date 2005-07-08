@@ -51,81 +51,83 @@
    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
    **
    **********************************************************************/
-   
-   #include "includes.h"
-   #include "syscalls.h"
-   
-   int test_mknod(laus_data* dataPtr) {
-    
-    
-     int rc = 0;
-     int exp_errno = EACCES;
-     mode_t mode = S_IRWXO | S_IFIFO;
-     dev_t dev = 0;
-     char* fileName = NULL;
-   
-   
-   
-     // Set the syscall specific data
-     dataPtr->laus_var_data.syscallData.code = AUDIT_mknod;
-   
-     if (dataPtr->successCase) {
-       // dynamically create temp file, and delete it real quick
-       if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-                                dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
-         printf1("ERROR: Cannot create file %s\n", fileName);
-         goto EXIT;
-       }
-       if ((rc = unlink(fileName)) != 0) {
-         printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
-         goto EXIT;
-       }
-     } else {
-       fileName = mysprintf("/root/tmp");
-       unlink(fileName);
-       dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
-     }
-   
-     // Set up audit argument buffer
 
-     //hard code the size of dev because dev_t in the kernel is different
-     if( ( rc = auditArg3( dataPtr,
-                    dataPtr->successCase ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
-                    strlen( fileName ), fileName,
-                    AUDIT_ARG_IMMEDIATE, sizeof(mode), &mode,
-                    AUDIT_ARG_IMMEDIATE, 4, &dev ) ) != 0 ) {
-       printf1( "Error setting up audit argument buffer\n" );
-       goto EXIT;
-     }
-   
-     // Do pre-system call work
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-     // Execute system call
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_mknod, fileName, mode, dev );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT_CLEANUP;
-     }
-   
-   
-   EXIT_CLEANUP:
-     // mknod cleanup
-     if (dataPtr->successCase) {
-       if (( unlink(fileName)) != 0) {
-         printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
-         goto EXIT;
-       }
-     }
-     
-   EXIT:
-     if ( fileName )
-       free( fileName );
-     return rc;
-   }
-   
+#include "includes.h"
+#include "syscalls.h"
+
+int test_mknod(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = EACCES;
+    mode_t mode = S_IRWXO | S_IFIFO;
+    dev_t dev = 0;
+    char *fileName = NULL;
+
+
+
+    // Set the syscall specific data
+    dataPtr->laus_var_data.syscallData.code = AUDIT_mknod;
+
+    if (dataPtr->successCase) {
+	// dynamically create temp file, and delete it real quick
+	if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
+				 dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	    printf1("ERROR: Cannot create file %s\n", fileName);
+	    goto EXIT;
+	}
+	if ((rc = unlink(fileName)) != 0) {
+	    printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName,
+		    errno);
+	    goto EXIT;
+	}
+    } else {
+	fileName = mysprintf("/root/tmp");
+	unlink(fileName);
+	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
+    }
+
+    // Set up audit argument buffer
+
+    //hard code the size of dev because dev_t in the kernel is different
+    if ((rc = auditArg3(dataPtr,
+			dataPtr->
+			successCase ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
+			strlen(fileName), fileName, AUDIT_ARG_IMMEDIATE,
+			sizeof(mode), &mode, AUDIT_ARG_IMMEDIATE, 4,
+			&dev)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT;
+    }
+    // Do pre-system call work
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_mknod, fileName, mode, dev);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT_CLEANUP;
+    }
+
+
+EXIT_CLEANUP:
+    // mknod cleanup
+    if (dataPtr->successCase) {
+	if ((unlink(fileName)) != 0) {
+	    printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName,
+		    errno);
+	    goto EXIT;
+	}
+    }
+
+EXIT:
+    if (fileName)
+	free(fileName);
+    return rc;
+}

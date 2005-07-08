@@ -55,20 +55,21 @@
     **
     **********************************************************************/
 #if !defined(__PPC) && !defined(__X86_64) && !defined(__IA64)
-   
-   #include "includes.h"
-   #include "syscalls.h"
-   #include <grp.h>
-   
-   int test_setgroups16(laus_data* dataPtr) {
-     
-    
-     int rc = 0;
-     int exp_errno = EPERM;
 
-     size_t size = 1;
-     u_int16_t list[1] = { 0 };
-     gid_t list_hack[1] = { 0 };
+#include "includes.h"
+#include "syscalls.h"
+#include <grp.h>
+
+int test_setgroups16(laus_data *dataPtr)
+{
+
+
+    int rc = 0;
+    int exp_errno = EPERM;
+
+    size_t size = 1;
+    u_int16_t list[1] = { 0 };
+    gid_t list_hack[1] = { 0 };
 
     // BUGBUG:
     // The variable list[] is an array of 16 bit values, and it is passed to the setgroups() call.
@@ -76,51 +77,50 @@
     //   list[], and it is passed to the verification function.  This is ugly, but the workaround
     //   is needed due to audit's rigid variable sizes.
 
-     // Set the syscall-specific data
-     printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_setgroups );
-     dataPtr->laus_var_data.syscallData.code = AUDIT_setgroups;
-     
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_setgroups);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_setgroups;
+
      /**
       * Do as much setup work as possible right here
       */
-     if( dataPtr->successCase ) {
-       dataPtr->msg_euid = 0;
-       dataPtr->msg_egid = 0;
-       dataPtr->msg_fsuid = 0;
-       dataPtr->msg_fsgid = 0;
-  // Set up audit argument buffer for success case
-       if( ( rc = auditArg1( dataPtr,
-                           AUDIT_ARG_POINTER, sizeof( gid_t ), list_hack
-                           ) ) != 0 ) {
-         printf1( "Error setting up audit argument buffer\n" );
-         goto EXIT;
-       }
-     } else {
-       // Set up audit argument buffer for fail case
-       if( ( rc = auditArg1( dataPtr,
-                           AUDIT_ARG_NULL, 0 , NULL
-                           ) ) != 0 ) {
-         printf1( "Error setting up audit argument buffer\n" );
-         goto EXIT;
-       }
-      } 
-   
-     // Do pre-system call work  
-     if ( (rc = preSysCall( dataPtr )) != 0 ) {
-       printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
-       goto EXIT;
-     }
-  
-     dataPtr->laus_var_data.syscallData.result = syscall( __NR_setgroups16, size, list );
-   
-     // Do post-system call work
-     if ( (rc = postSysCall(  dataPtr, errno, -1, exp_errno  )) != 0 ) {
-       printf1("ERROR: post-syscall setup failed (%d)\n", rc);
-       goto EXIT;
-     }
-   
-    EXIT:
-     printf5( "Returning from test\n" );
-     return rc;
-   }
+    if (dataPtr->successCase) {
+	dataPtr->msg_euid = 0;
+	dataPtr->msg_egid = 0;
+	dataPtr->msg_fsuid = 0;
+	dataPtr->msg_fsgid = 0;
+	// Set up audit argument buffer for success case
+	if ((rc = auditArg1(dataPtr,
+			    AUDIT_ARG_POINTER, sizeof(gid_t),
+			    list_hack)) != 0) {
+	    printf1("Error setting up audit argument buffer\n");
+	    goto EXIT;
+	}
+    } else {
+	// Set up audit argument buffer for fail case
+	if ((rc = auditArg1(dataPtr, AUDIT_ARG_NULL, 0, NULL)) != 0) {
+	    printf1("Error setting up audit argument buffer\n");
+	    goto EXIT;
+	}
+    }
+
+    // Do pre-system call work  
+    if ((rc = preSysCall(dataPtr)) != 0) {
+	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	goto EXIT;
+    }
+
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_setgroups16, size, list);
+
+    // Do post-system call work
+    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	goto EXIT;
+    }
+
+EXIT:
+    printf5("Returning from test\n");
+    return rc;
+}
 #endif

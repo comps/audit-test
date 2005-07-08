@@ -55,72 +55,74 @@
 #include "syscalls.h"
 #include <attr/xattr.h>
 
-int test_lremovexattr(laus_data* dataPtr) {
+int test_lremovexattr(laus_data *dataPtr)
+{
 
-	int rc = 0;
-	int exp_errno = EACCES;
-	size_t size;
+    int rc = 0;
+    int exp_errno = EACCES;
+    size_t size;
 
-	char* path = NULL;
-	char* name = "user.mime_type";
+    char *path = NULL;
+    char *name = "user.mime_type";
 
-	// Set the syscall-specific data
-	printf5( "Setting laus_var_data.syscallData.code to %d\n", AUDIT_lremovexattr );
-	dataPtr->laus_var_data.syscallData.code = AUDIT_lremovexattr;
+    // Set the syscall-specific data
+    printf5("Setting laus_var_data.syscallData.code to %d\n",
+	    AUDIT_lremovexattr);
+    dataPtr->laus_var_data.syscallData.code = AUDIT_lremovexattr;
 
 	/**
 	 * Do as much setup work as possible right here
 	 */
-	size = sizeof( XATTR_TEST_VALUE );
-	// Create the target file
-	if( ( rc = createTempFile( &path, S_IRWXU,
-					dataPtr->msg_euid, dataPtr->msg_egid ) ) == -1 ) {
-		printf1( "ERROR: Cannot create file %s\n", path );
-		goto EXIT;
-	}
-	if( ( rc = setxattr( path, name, "test/plain", strlen( XATTR_TEST_VALUE ), XATTR_CREATE ) ) == -1 ) {
-		printf(" Error setting attribute [%s]: errno=%i\n", name, errno );
-		goto EXIT_CLEANUP;
-	}
-	if( dataPtr->successCase ) {     // Set up for success
-		// Nothing to do for success case
-	} else {// Set up for error       
-		dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
-	}
+    size = sizeof(XATTR_TEST_VALUE);
+    // Create the target file
+    if ((rc = createTempFile(&path, S_IRWXU,
+			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+	printf1("ERROR: Cannot create file %s\n", path);
+	goto EXIT;
+    }
+    if ((rc =
+	 setxattr(path, name, "test/plain", strlen(XATTR_TEST_VALUE),
+		  XATTR_CREATE)) == -1) {
+	printf(" Error setting attribute [%s]: errno=%i\n", name, errno);
+	goto EXIT_CLEANUP;
+    }
+    if (dataPtr->successCase) {	// Set up for success
+	// Nothing to do for success case
+    } else {			// Set up for error       
+	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
+    }
 
-	// Set up audit argument buffer
-	if( ( rc = auditArg2( dataPtr,
-					AUDIT_ARG_PATH,
-					strlen( path ), path,
-					AUDIT_ARG_STRING, strlen( name ), name ) ) != 0 ) {
-		printf1( "Error setting up audit argument buffer\n" );
-		goto EXIT_CLEANUP;
-	}
+    // Set up audit argument buffer
+    if ((rc = auditArg2(dataPtr,
+			AUDIT_ARG_PATH,
+			strlen(path), path,
+			AUDIT_ARG_STRING, strlen(name), name)) != 0) {
+	printf1("Error setting up audit argument buffer\n");
+	goto EXIT_CLEANUP;
+    }
+    // Do pre-system call work
+    preSysCall(dataPtr);
 
-	// Do pre-system call work
-	preSysCall( dataPtr );
+    // Execute system call
+    dataPtr->laus_var_data.syscallData.result =
+	syscall(__NR_lremovexattr, path, name);
 
-	// Execute system call
-	dataPtr->laus_var_data.syscallData.result = syscall( __NR_lremovexattr, path, name );
-
-	// Do post-system call work
-	postSysCall( dataPtr, errno, -1, exp_errno );
+    // Do post-system call work
+    postSysCall(dataPtr, errno, -1, exp_errno);
 
 EXIT_CLEANUP:
 	/**
 	 * Do cleanup work here
 	 */
-	// Clean up
-	if( (  unlink( path ) ) == -1 ) {
-		printf1( "Error unlinking file %s\n", path );
-		goto EXIT;
-	}
+    // Clean up
+    if ((unlink(path)) == -1) {
+	printf1("Error unlinking file %s\n", path);
+	goto EXIT;
+    }
 
 EXIT:
-	if ( path )
-		free( path );
-	printf5( "Returning from test\n" );
-	return rc;
+    if (path)
+	free(path);
+    printf5("Returning from test\n");
+    return rc;
 }
-
-

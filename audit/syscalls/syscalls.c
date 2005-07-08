@@ -79,10 +79,9 @@ int main(int argc, char **argv)
     int j, k = 0;
     uid_t uid = 0;
     gid_t gid = 0;
-    laus_data *successDataPtr = NULL;
-    laus_data *failureDataPtr = NULL;
-    int successRC;
-    int failureRC;
+    laus_data test_data;
+    int test_rc;
+    Boolean success;
     char *command;
     char *testcase = NULL;
     char *defaultUser = DEFAULT_TEST_USER;	// defined in include/globals.h
@@ -247,8 +246,6 @@ Arguments:\n\
 
     uid = passwd_data->pw_uid;
     gid = passwd_data->pw_gid;
-    successDataPtr = (laus_data *) malloc(sizeof(laus_data));
-    failureDataPtr = (laus_data *) malloc(sizeof(laus_data));
 
     // Save the CWD for those tests that require it (i.e., test_execve)
     getcwd(cwd, PATH_MAX);
@@ -280,38 +277,38 @@ Arguments:\n\
 		continue;
 	    }
 
-	    memset(successDataPtr, '\0', sizeof(laus_data));
-	    memset(failureDataPtr, '\0', sizeof(laus_data));
-	    successDataPtr->msg_arch = failureDataPtr->msg_arch = arch;
-	    successDataPtr->msg_type = failureDataPtr->msg_type =
-		AUDIT_MSG_SYSCALL;
-	    successDataPtr->msg_euid = failureDataPtr->msg_euid = uid;
-	    successDataPtr->msg_egid = failureDataPtr->msg_egid = gid;
-	    successDataPtr->msg_fsuid = failureDataPtr->msg_fsuid = uid;
-	    successDataPtr->msg_fsgid = failureDataPtr->msg_fsgid = gid;
-	    successDataPtr->testName = failureDataPtr->testName =
-		syscallTests[j].testName;
-	    successDataPtr->successCase = TRUE;
-	    failureDataPtr->successCase = FALSE;
+	    success = TRUE;
+	    while ((success == TRUE) || (success == FALSE)) {
 
-	    printf2
-		("Performing test on %s() [logSuccess=%d, logFailure=%d, successCase=%d]\n",
-		 syscallTests[j].testName,
-		 logOptions[logOptionsIndex].logSuccess,
-		 logOptions[logOptionsIndex].logFailure,
-		 successDataPtr->successCase);
-	    successRC = syscallTests[j].testPtr(successDataPtr);
+		/* initialize test data per iteration */
+		memset(&test_data, '\0', sizeof(laus_data));
+		test_data.msg_arch = arch;
+		test_data.msg_type = AUDIT_MSG_SYSCALL;
+		test_data.msg_euid = uid;
+		test_data.msg_egid = gid;
+		test_data.msg_fsuid = uid;
+		test_data.msg_fsgid = gid;
+		test_data.testName = syscallTests[j].testName;
+		test_data.successCase = success;
 
-	    printf2
-		("Performing test on %s() [logSuccess=%d, logFailure=%d, successCase=%d]\n",
-		 syscallTests[j].testName,
-		 logOptions[logOptionsIndex].logSuccess,
-		 logOptions[logOptionsIndex].logFailure,
-		 failureDataPtr->successCase);
-	    failureRC = syscallTests[j].testPtr(failureDataPtr);
+		printf2(
+		    "Performing test on %s() [logSuccess=%d, logFailure=%d, successCase=%d]\n",
+		    syscallTests[j].testName,
+		    logOptions[logOptionsIndex].logSuccess,
+		    logOptions[logOptionsIndex].logFailure,
+		    test_data.successCase);
+		test_rc = syscallTests[j].testPtr(&test_data);
+		verify(test_rc, &test_data, logOptions[logOptionsIndex]);
+		/* 
+		 * syscallData.data is allocated during each test run,
+		 * and must be freed per iteration.
+		 */
+		if (test_data.laus_var_data.syscallData.data) {
+		    free(test_data.laus_var_data.syscallData.data);
+		}
 
-	    verify(successRC, successDataPtr, logOptions[logOptionsIndex]);
-	    verify(failureRC, failureDataPtr, logOptions[logOptionsIndex]);
+		success--;
+	    }
 	}
     }
     printf2("PASSED = %i, FAILED = %i, SKIPPED = %i\n",
@@ -325,10 +322,6 @@ EXIT_ERROR:
 EXIT:
     if (testcase != NULL)
 	free(testcase);
-    if (successDataPtr != NULL)
-	free(successDataPtr);
-    if (failureDataPtr != NULL)
-	free(failureDataPtr);
 
     command = mysprintf("/usr/sbin/userdel -r %s", helper);
     if ((rc = system(command)) == -1) {
@@ -409,9 +402,5 @@ int verify(int return_code, laus_data *dataPtr, log_options logOption)
     }
 
 EXIT_ERROR:
-    if (dataPtr->laus_var_data.syscallData.data) {
-	free(dataPtr->laus_var_data.syscallData.data);
-    }
-
     return rc;
 }

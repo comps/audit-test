@@ -48,33 +48,33 @@
 /*
 ** Create a test file
 */
-int createTempFileName(char** fname) {
+int createTempFileName(char **fname)
+{
 
-  int rc = 0;
-  int fd = 0;
+    int rc = 0;
+    int fd = 0;
 
-  *fname = (char *) malloc(strlen(tempname) + 1);
-  strcpy(*fname, tempname);  
+    *fname = (char *)malloc(strlen(tempname) + 1);
+    strcpy(*fname, tempname);
 
-  printf5("createTempFileName: %s\n", *fname);
+    printf5("createTempFileName: %s\n", *fname);
 
-  if ((fd = mkstemp(*fname)) == -1) {
-    printf1("ERROR: Unable to create %s: errno=%i\n", *fname, errno);
-    rc = fd;
-    goto EXIT;
-  }
-  printf5("temp file name: %s\n", *fname);
-  if ((rc = close(fd)) == -1) {
-    printf1("ERROR: Unable to close file %s: errno=%i\n", *fname, errno);
-    goto EXIT;
-  }
-  if ((rc = unlink(*fname)) == -1) {
-    printf1("ERROR: Unable to remove file %s: errno=%i\n", *fname, errno);
-    goto EXIT;
-  }
+    if ((fd = mkstemp(*fname)) == -1) {
+	printf1("ERROR: Unable to create %s: errno=%i\n", *fname, errno);
+	rc = fd;
+	goto EXIT;
+    }
+    printf5("temp file name: %s\n", *fname);
+    if ((rc = close(fd)) == -1) {
+	printf1("ERROR: Unable to close file %s: errno=%i\n", *fname, errno);
+	goto EXIT;
+    }
+    if ((rc = unlink(*fname)) == -1) {
+	printf1("ERROR: Unable to remove file %s: errno=%i\n", *fname, errno);
+	goto EXIT;
+    }
 
 EXIT:
-  return rc;
+    return rc;
 
 }
-

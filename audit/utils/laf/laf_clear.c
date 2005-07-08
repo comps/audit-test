@@ -20,51 +20,52 @@
 
 #include "includes.h"
 
-int laf_clear_logs() {
+int laf_clear_logs()
+{
 
     int rc = 0;
     int i, fd;
-    int num_logs = 99; // max according to manpage
+    int num_logs = 99;		// max according to manpage
     char *log_file = "/var/log/audit/audit.log";
     char *log_name;
 
     /* TODO: get log_file and num_logs from /etc/auditd.conf */
 
-    if ((fd = open(log_file, O_WRONLY|O_TRUNC)) == -1) {
-        rc = -1;
-        goto exit_error;
+    if ((fd = open(log_file, O_WRONLY | O_TRUNC)) == -1) {
+	rc = -1;
+	goto exit_error;
     }
     if (close(fd) == -1) {
-        rc = -1;
-        goto exit_error;
+	rc = -1;
+	goto exit_error;
     }
 
     /* add room for a 2-digit log file extension */
-    if ((log_name = (char *)malloc(strlen(log_file)+4)) == NULL) {
-        rc = -1;
-        goto exit_error;
+    if ((log_name = (char *)malloc(strlen(log_file) + 4)) == NULL) {
+	rc = -1;
+	goto exit_error;
     }
 
     for (i = 1; i < num_logs; i++) {
 
-        if (sprintf(log_name, "%s.%d", log_file, i) < 0) {
-            rc = -1;
-            goto exit_error;
-        }
+	if (sprintf(log_name, "%s.%d", log_file, i) < 0) {
+	    rc = -1;
+	    goto exit_error;
+	}
 
-        if ((fd = open(log_name, O_WRONLY|O_TRUNC)) == -1) {
-            rc = (errno == ENOENT ? 0 : -1);
-            goto exit_error;
-        }
-        if (close(fd) == -1) {
-            rc = -1;
-            goto exit_error;
-        }
+	if ((fd = open(log_name, O_WRONLY | O_TRUNC)) == -1) {
+	    rc = (errno == ENOENT ? 0 : -1);
+	    goto exit_error;
+	}
+	if (close(fd) == -1) {
+	    rc = -1;
+	    goto exit_error;
+	}
     }
 
 exit_error:
     if (rc < 0) {
-        printf1("ERROR: Unable to clear audit logs: %s\n", strerror(errno));
+	printf1("ERROR: Unable to clear audit logs: %s\n", strerror(errno));
     }
 
     return rc;

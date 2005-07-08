@@ -22,6 +22,7 @@
 
 /* XXX temporarily using routines from laus/laus_args.c */
 
-void dummy() {
+void dummy()
+{
     return;
 }

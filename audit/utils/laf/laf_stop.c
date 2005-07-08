@@ -20,13 +20,14 @@
 
 #include "includes.h"
 
-int laf_stop() {
+int laf_stop()
+{
 
     int rc = 0;
 
     rc = system("/etc/init.d/auditd stop");
     if (rc == -1) {
-        printf1("ERROR: Unable to stop auditd: %s\n", strerror(errno));
+	printf1("ERROR: Unable to stop auditd: %s\n", strerror(errno));
     }
 
     return rc;

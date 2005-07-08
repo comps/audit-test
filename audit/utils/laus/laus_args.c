@@ -45,44 +45,56 @@
 ** adjust the size accordingly.
 */
 
-int arg_put( laus_data* lausDataPtr, ARG_TYPE type, const int size, char* src) {
+int arg_put(laus_data *lausDataPtr, ARG_TYPE type, const int size, char *src)
+{
 
     int newsize = size;
-    char*newsrc = src;
+    char *newsrc = src;
     __laus_int64 recast64;
 
     if ((type == AUDIT_ARG_IMMEDIATE) && (size != sizeof(__laus_int64))) {
 	// sign extend 32bit signed int to signed 64bit
 	// Example: ffffffff => ffffffffffffffff
-	recast64 = *(__s32 *)src;
+	recast64 = *(__s32 *) src;
 	newsize = sizeof(recast64);
-	newsrc = (char*)&recast64;
-    } else if ((type == AUDIT_ARG_IMMEDIATE_u) && (size != sizeof(__laus_int64))) {
-        // convert unsigned 32bit to signed 64bit
-        // Example: ffffffff => 00000000ffffffff
-        recast64 = *(__u32 *)src;
-        newsize = sizeof(recast64);
-        newsrc = (char*)&recast64;
-        type = AUDIT_ARG_IMMEDIATE;
+	newsrc = (char *)&recast64;
+    } else if ((type == AUDIT_ARG_IMMEDIATE_u)
+	       && (size != sizeof(__laus_int64))) {
+	// convert unsigned 32bit to signed 64bit
+	// Example: ffffffff => 00000000ffffffff
+	recast64 = *(__u32 *) src;
+	newsize = sizeof(recast64);
+	newsrc = (char *)&recast64;
+	type = AUDIT_ARG_IMMEDIATE;
     }
 
-    lausDataPtr->laus_var_data.syscallData.data = 
-      realloc(lausDataPtr->laus_var_data.syscallData.data, lausDataPtr->laus_var_data.syscallData.length + sizeof(type));
-    memcpy(lausDataPtr->laus_var_data.syscallData.data + lausDataPtr->laus_var_data.syscallData.length, &type, sizeof(type));
+    lausDataPtr->laus_var_data.syscallData.data =
+	realloc(lausDataPtr->laus_var_data.syscallData.data,
+		lausDataPtr->laus_var_data.syscallData.length + sizeof(type));
+    memcpy(lausDataPtr->laus_var_data.syscallData.data +
+	   lausDataPtr->laus_var_data.syscallData.length, &type, sizeof(type));
     lausDataPtr->laus_var_data.syscallData.length += sizeof(type);
-    
-    if (type != AUDIT_ARG_END){
-	
-        lausDataPtr->laus_var_data.syscallData.data = 
-	  realloc(lausDataPtr->laus_var_data.syscallData.data, lausDataPtr->laus_var_data.syscallData.length + sizeof(newsize));
-	memcpy(lausDataPtr->laus_var_data.syscallData.data + lausDataPtr->laus_var_data.syscallData.length, &newsize, sizeof(newsize));
+
+    if (type != AUDIT_ARG_END) {
+
+	lausDataPtr->laus_var_data.syscallData.data =
+	    realloc(lausDataPtr->laus_var_data.syscallData.data,
+		    lausDataPtr->laus_var_data.syscallData.length +
+		    sizeof(newsize));
+	memcpy(lausDataPtr->laus_var_data.syscallData.data +
+	       lausDataPtr->laus_var_data.syscallData.length, &newsize,
+	       sizeof(newsize));
 	lausDataPtr->laus_var_data.syscallData.length += sizeof(newsize);
-	
+
 	if (size != 0) {
-            
-	    lausDataPtr->laus_var_data.syscallData.data = 
-	      realloc(lausDataPtr->laus_var_data.syscallData.data, lausDataPtr->laus_var_data.syscallData.length + newsize);
-	    memcpy(lausDataPtr->laus_var_data.syscallData.data + lausDataPtr->laus_var_data.syscallData.length, newsrc, newsize);
+
+	    lausDataPtr->laus_var_data.syscallData.data =
+		realloc(lausDataPtr->laus_var_data.syscallData.data,
+			lausDataPtr->laus_var_data.syscallData.length +
+			newsize);
+	    memcpy(lausDataPtr->laus_var_data.syscallData.data +
+		   lausDataPtr->laus_var_data.syscallData.length, newsrc,
+		   newsize);
 	    lausDataPtr->laus_var_data.syscallData.length += newsize;
 	}
     }
@@ -94,10 +106,12 @@ int arg_put( laus_data* lausDataPtr, ARG_TYPE type, const int size, char* src) {
 ** return the new buffer length.
 */
 
-int arg_vector( char** vector, int vector_size, const ARG_TYPE type, const int size, const char* src) {
+int arg_vector(char **vector, int vector_size, const ARG_TYPE type,
+	       const int size, const char *src)
+{
 
     int new_length = vector_size + sizeof(type) + sizeof(size) + size;
-    char * vector_index;
+    char *vector_index;
 
     *vector = realloc(*vector, new_length);
     vector_index = *vector + vector_size;
@@ -115,145 +129,204 @@ int arg_vector( char** vector, int vector_size, const ARG_TYPE type, const int s
 ** from the source buffer and reset the source buffer pointer
 ** to the next position.
 */
-int arg_get(ARG_TYPE* ptype, int* psize, char* dest, const char** src) {
-  int rc = 0;
-  memcpy(ptype, *src, sizeof(*ptype));
-  *src += sizeof(*ptype);
-  if (*ptype == AUDIT_ARG_END) {
-    rc = -1;
-    goto EXIT;
-  }
-  memcpy(psize, *src, sizeof(*psize));
-  *src += sizeof(*psize);
-  
-  if (!(*ptype == AUDIT_ARG_NULL)) {
-      memcpy(dest, *src, *psize);
-      *src += *psize;
-  }
- EXIT:
-  return rc;
+int arg_get(ARG_TYPE *ptype, int *psize, char *dest, const char **src)
+{
+    int rc = 0;
+    memcpy(ptype, *src, sizeof(*ptype));
+    *src += sizeof(*ptype);
+    if (*ptype == AUDIT_ARG_END) {
+	rc = -1;
+	goto EXIT;
+    }
+    memcpy(psize, *src, sizeof(*psize));
+    *src += sizeof(*psize);
+
+    if (!(*ptype == AUDIT_ARG_NULL)) {
+	memcpy(dest, *src, *psize);
+	*src += *psize;
+    }
+  EXIT:
+    return rc;
 }
 
-int auditArgNil( laus_data* lausDataPtr ) {
+int auditArgNil(laus_data *lausDataPtr)
+{
 
-  lausDataPtr->laus_var_data.syscallData.personality = NO_CHECK_SYSCALL_DATA;
-  lausDataPtr->laus_var_data.syscallData.data = NULL;
-  lausDataPtr->laus_var_data.syscallData.length = 0;
-  arg_put( lausDataPtr, AUDIT_ARG_END, 0, NULL );    
-  //lausDataPtr->laus_var_data.syscallData.length += sizeof(char *);
-  return 0;
+    lausDataPtr->laus_var_data.syscallData.personality = NO_CHECK_SYSCALL_DATA;
+    lausDataPtr->laus_var_data.syscallData.data = NULL;
+    lausDataPtr->laus_var_data.syscallData.length = 0;
+    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
+    //lausDataPtr->laus_var_data.syscallData.length += sizeof(char *);
+    return 0;
 }
 
-int auditArg0( laus_data* lausDataPtr ) {
+int auditArg0(laus_data *lausDataPtr)
+{
 
-  lausDataPtr->laus_var_data.syscallData.data = NULL;
-  lausDataPtr->laus_var_data.syscallData.length = 0;
-  arg_put( lausDataPtr, AUDIT_ARG_END, 0, NULL );    
-  lausDataPtr->laus_var_data.syscallData.length += 4;
-  return 0;
+    lausDataPtr->laus_var_data.syscallData.data = NULL;
+    lausDataPtr->laus_var_data.syscallData.length = 0;
+    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
+    lausDataPtr->laus_var_data.syscallData.length += 4;
+    return 0;
 }
 
-int auditArg1( laus_data* lausDataPtr, 
-	       const int auditArgType, const int size, void* dataPtr ) {
+int auditArg1(laus_data *lausDataPtr,
+	      const int auditArgType, const int size, void *dataPtr)
+{
 
-  if( (dataPtr == NULL) && ((auditArgType != AUDIT_ARG_NULL) && (auditArgType != AUDIT_ARG_VECTOR)) ) {
-    printf1( "Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n" );
-    return 1;
-  }
-  lausDataPtr->laus_var_data.syscallData.data = NULL;
-  lausDataPtr->laus_var_data.syscallData.length = 0;
-  arg_put( lausDataPtr, auditArgType, size, dataPtr );
-  arg_put( lausDataPtr, AUDIT_ARG_END, 0, NULL );    
-  lausDataPtr->laus_var_data.syscallData.length += 4;
-  return 0;
+    if ((dataPtr == NULL)
+	&& ((auditArgType != AUDIT_ARG_NULL)
+	    && (auditArgType != AUDIT_ARG_VECTOR))) {
+	printf1
+	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
+	return 1;
+    }
+    lausDataPtr->laus_var_data.syscallData.data = NULL;
+    lausDataPtr->laus_var_data.syscallData.length = 0;
+    arg_put(lausDataPtr, auditArgType, size, dataPtr);
+    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
+    lausDataPtr->laus_var_data.syscallData.length += 4;
+    return 0;
 }
 
-int auditArg2( laus_data* lausDataPtr,
-	       const int auditArgType1, const int size1, void* dataPtr1,
-	       const int auditArgType2, const int size2, void* dataPtr2 ) {
+int auditArg2(laus_data *lausDataPtr,
+	      const int auditArgType1, const int size1, void *dataPtr1,
+	      const int auditArgType2, const int size2, void *dataPtr2)
+{
 
-  if( ( (dataPtr1 == NULL) && ((auditArgType1 != AUDIT_ARG_NULL) && (auditArgType1 != AUDIT_ARG_VECTOR)) ) || 
-      ( (dataPtr2 == NULL) && ((auditArgType2 != AUDIT_ARG_NULL) && (auditArgType2 != AUDIT_ARG_VECTOR)) ) ) {
-    printf1( "Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n" );
-    return 1;
-  }
-  lausDataPtr->laus_var_data.syscallData.data = NULL;
-  lausDataPtr->laus_var_data.syscallData.length = 0;
-  arg_put( lausDataPtr, auditArgType1, size1, dataPtr1 );
-  arg_put( lausDataPtr, auditArgType2, size2, dataPtr2 );
-  arg_put( lausDataPtr, AUDIT_ARG_END, 0, NULL );    
-  lausDataPtr->laus_var_data.syscallData.length += 4;
-  return 0;
+    if (((dataPtr1 == NULL)
+	 && ((auditArgType1 != AUDIT_ARG_NULL)
+	     && (auditArgType1 != AUDIT_ARG_VECTOR))) || ((dataPtr2 == NULL)
+							  &&
+							  ((auditArgType2 !=
+							    AUDIT_ARG_NULL)
+							   && (auditArgType2 !=
+							       AUDIT_ARG_VECTOR))))
+    {
+	printf1
+	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
+	return 1;
+    }
+    lausDataPtr->laus_var_data.syscallData.data = NULL;
+    lausDataPtr->laus_var_data.syscallData.length = 0;
+    arg_put(lausDataPtr, auditArgType1, size1, dataPtr1);
+    arg_put(lausDataPtr, auditArgType2, size2, dataPtr2);
+    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
+    lausDataPtr->laus_var_data.syscallData.length += 4;
+    return 0;
 }
 
-int auditArg3( laus_data* lausDataPtr,
-	       const int auditArgType1, const int size1, void* dataPtr1,
-	       const int auditArgType2, const int size2, void* dataPtr2,
-	       const int auditArgType3, const int size3, void* dataPtr3 ) {
+int auditArg3(laus_data *lausDataPtr,
+	      const int auditArgType1, const int size1, void *dataPtr1,
+	      const int auditArgType2, const int size2, void *dataPtr2,
+	      const int auditArgType3, const int size3, void *dataPtr3)
+{
 
-  if( ( (dataPtr1 == NULL) && ((auditArgType1 != AUDIT_ARG_NULL) && (auditArgType1 != AUDIT_ARG_VECTOR)) ) || 
-      ( (dataPtr2 == NULL) && ((auditArgType2 != AUDIT_ARG_NULL) && (auditArgType2 != AUDIT_ARG_VECTOR)) ) ||
-      ( (dataPtr3 == NULL) && ((auditArgType3 != AUDIT_ARG_NULL) && (auditArgType3 != AUDIT_ARG_VECTOR)) ) ) {
-    printf1( "Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n" );
-    return 1;
-  }
-  lausDataPtr->laus_var_data.syscallData.data = NULL;
-  lausDataPtr->laus_var_data.syscallData.length = 0;
-  arg_put( lausDataPtr, auditArgType1, size1, dataPtr1 );
-  arg_put( lausDataPtr, auditArgType2, size2, dataPtr2 );
-  arg_put( lausDataPtr, auditArgType3, size3, dataPtr3 );
-  arg_put( lausDataPtr, AUDIT_ARG_END, 0, NULL );    
-  lausDataPtr->laus_var_data.syscallData.length += 4;
-  return 0;
+    if (((dataPtr1 == NULL)
+	 && ((auditArgType1 != AUDIT_ARG_NULL)
+	     && (auditArgType1 != AUDIT_ARG_VECTOR))) || ((dataPtr2 == NULL)
+							  &&
+							  ((auditArgType2 !=
+							    AUDIT_ARG_NULL)
+							   && (auditArgType2 !=
+							       AUDIT_ARG_VECTOR)))
+	|| ((dataPtr3 == NULL)
+	    && ((auditArgType3 != AUDIT_ARG_NULL)
+		&& (auditArgType3 != AUDIT_ARG_VECTOR)))) {
+	printf1
+	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
+	return 1;
+    }
+    lausDataPtr->laus_var_data.syscallData.data = NULL;
+    lausDataPtr->laus_var_data.syscallData.length = 0;
+    arg_put(lausDataPtr, auditArgType1, size1, dataPtr1);
+    arg_put(lausDataPtr, auditArgType2, size2, dataPtr2);
+    arg_put(lausDataPtr, auditArgType3, size3, dataPtr3);
+    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
+    lausDataPtr->laus_var_data.syscallData.length += 4;
+    return 0;
 }
 
-int auditArg4( laus_data* lausDataPtr,
-	       const int auditArgType1, const int size1, void* dataPtr1,
-	       const int auditArgType2, const int size2, void* dataPtr2,
-	       const int auditArgType3, const int size3, void* dataPtr3,
-	       const int auditArgType4, const int size4, void* dataPtr4 ) {
+int auditArg4(laus_data *lausDataPtr,
+	      const int auditArgType1, const int size1, void *dataPtr1,
+	      const int auditArgType2, const int size2, void *dataPtr2,
+	      const int auditArgType3, const int size3, void *dataPtr3,
+	      const int auditArgType4, const int size4, void *dataPtr4)
+{
 
-  if( ( (dataPtr1 == NULL) && ((auditArgType1 != AUDIT_ARG_NULL) && (auditArgType1 != AUDIT_ARG_VECTOR)) ) || 
-      ( (dataPtr2 == NULL) && ((auditArgType2 != AUDIT_ARG_NULL) && (auditArgType2 != AUDIT_ARG_VECTOR)) ) ||
-      ( (dataPtr3 == NULL) && ((auditArgType3 != AUDIT_ARG_NULL) && (auditArgType3 != AUDIT_ARG_VECTOR)) ) ||
-      ( (dataPtr4 == NULL) && ((auditArgType4 != AUDIT_ARG_NULL) && (auditArgType4 != AUDIT_ARG_VECTOR)) ) ) {
-    printf1( "Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n" );
-    return 1;
-  }
-  lausDataPtr->laus_var_data.syscallData.data = NULL;
-  lausDataPtr->laus_var_data.syscallData.length = 0;
-  arg_put( lausDataPtr, auditArgType1, size1, dataPtr1 );
-  arg_put( lausDataPtr, auditArgType2, size2, dataPtr2 );
-  arg_put( lausDataPtr, auditArgType3, size3, dataPtr3 );
-  arg_put( lausDataPtr, auditArgType4, size4, dataPtr4 );
-  arg_put( lausDataPtr, AUDIT_ARG_END, 0, NULL );    
-  lausDataPtr->laus_var_data.syscallData.length += 4;
-  return 0;
+    if (((dataPtr1 == NULL)
+	 && ((auditArgType1 != AUDIT_ARG_NULL)
+	     && (auditArgType1 != AUDIT_ARG_VECTOR))) || ((dataPtr2 == NULL)
+							  &&
+							  ((auditArgType2 !=
+							    AUDIT_ARG_NULL)
+							   && (auditArgType2 !=
+							       AUDIT_ARG_VECTOR)))
+	|| ((dataPtr3 == NULL)
+	    && ((auditArgType3 != AUDIT_ARG_NULL)
+		&& (auditArgType3 != AUDIT_ARG_VECTOR))) || ((dataPtr4 == NULL)
+							     &&
+							     ((auditArgType4 !=
+							       AUDIT_ARG_NULL)
+							      && (auditArgType4
+								  !=
+								  AUDIT_ARG_VECTOR))))
+    {
+	printf1
+	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
+	return 1;
+    }
+    lausDataPtr->laus_var_data.syscallData.data = NULL;
+    lausDataPtr->laus_var_data.syscallData.length = 0;
+    arg_put(lausDataPtr, auditArgType1, size1, dataPtr1);
+    arg_put(lausDataPtr, auditArgType2, size2, dataPtr2);
+    arg_put(lausDataPtr, auditArgType3, size3, dataPtr3);
+    arg_put(lausDataPtr, auditArgType4, size4, dataPtr4);
+    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
+    lausDataPtr->laus_var_data.syscallData.length += 4;
+    return 0;
 }
 
-int auditArg5( laus_data* lausDataPtr,
-	       const int auditArgType1, const int size1, void* dataPtr1,
-	       const int auditArgType2, const int size2, void* dataPtr2,
-	       const int auditArgType3, const int size3, void* dataPtr3,
-	       const int auditArgType4, const int size4, void* dataPtr4,
-	       const int auditArgType5, const int size5, void* dataPtr5 ) {
+int auditArg5(laus_data *lausDataPtr,
+	      const int auditArgType1, const int size1, void *dataPtr1,
+	      const int auditArgType2, const int size2, void *dataPtr2,
+	      const int auditArgType3, const int size3, void *dataPtr3,
+	      const int auditArgType4, const int size4, void *dataPtr4,
+	      const int auditArgType5, const int size5, void *dataPtr5)
+{
 
-  if( ( (dataPtr1 == NULL) && ((auditArgType1 != AUDIT_ARG_NULL) && (auditArgType1 != AUDIT_ARG_VECTOR)) ) || 
-      ( (dataPtr2 == NULL) && ((auditArgType2 != AUDIT_ARG_NULL) && (auditArgType2 != AUDIT_ARG_VECTOR)) ) ||
-      ( (dataPtr3 == NULL) && ((auditArgType3 != AUDIT_ARG_NULL) && (auditArgType3 != AUDIT_ARG_VECTOR)) ) ||
-      ( (dataPtr4 == NULL) && ((auditArgType4 != AUDIT_ARG_NULL) && (auditArgType4 != AUDIT_ARG_VECTOR)) ) ||
-      ( (dataPtr5 == NULL) && ((auditArgType5 != AUDIT_ARG_NULL) && (auditArgType5 != AUDIT_ARG_VECTOR)) ) ) {
-    printf1( "Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n" );
-    return 1;
-  }
-  lausDataPtr->laus_var_data.syscallData.data = NULL;
-  lausDataPtr->laus_var_data.syscallData.length = 0;
-  arg_put( lausDataPtr, auditArgType1, size1, dataPtr1 );
-  arg_put( lausDataPtr, auditArgType2, size2, dataPtr2 );
-  arg_put( lausDataPtr, auditArgType3, size3, dataPtr3 );
-  arg_put( lausDataPtr, auditArgType4, size4, dataPtr4 );
-  arg_put( lausDataPtr, auditArgType5, size5, dataPtr5 );
-  arg_put( lausDataPtr, AUDIT_ARG_END, 0, NULL );    
-  lausDataPtr->laus_var_data.syscallData.length += 4;
-  return 0;
+    if (((dataPtr1 == NULL)
+	 && ((auditArgType1 != AUDIT_ARG_NULL)
+	     && (auditArgType1 != AUDIT_ARG_VECTOR))) || ((dataPtr2 == NULL)
+							  &&
+							  ((auditArgType2 !=
+							    AUDIT_ARG_NULL)
+							   && (auditArgType2 !=
+							       AUDIT_ARG_VECTOR)))
+	|| ((dataPtr3 == NULL)
+	    && ((auditArgType3 != AUDIT_ARG_NULL)
+		&& (auditArgType3 != AUDIT_ARG_VECTOR))) || ((dataPtr4 == NULL)
+							     &&
+							     ((auditArgType4 !=
+							       AUDIT_ARG_NULL)
+							      && (auditArgType4
+								  !=
+								  AUDIT_ARG_VECTOR)))
+	|| ((dataPtr5 == NULL)
+	    && ((auditArgType5 != AUDIT_ARG_NULL)
+		&& (auditArgType5 != AUDIT_ARG_VECTOR)))) {
+	printf1
+	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
+	return 1;
+    }
+    lausDataPtr->laus_var_data.syscallData.data = NULL;
+    lausDataPtr->laus_var_data.syscallData.length = 0;
+    arg_put(lausDataPtr, auditArgType1, size1, dataPtr1);
+    arg_put(lausDataPtr, auditArgType2, size2, dataPtr2);
+    arg_put(lausDataPtr, auditArgType3, size3, dataPtr3);
+    arg_put(lausDataPtr, auditArgType4, size4, dataPtr4);
+    arg_put(lausDataPtr, auditArgType5, size5, dataPtr5);
+    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
+    lausDataPtr->laus_var_data.syscallData.length += 4;
+    return 0;
 }

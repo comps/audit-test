@@ -37,18 +37,19 @@
 ** Start auditing system calls
 **
 */
-int laus_start() {
+int laus_start()
+{
 
-  int rc = 0;
-  printf4("audit_start()\n");
+    int rc = 0;
+    printf4("audit_start()\n");
 
-  if ( ( rc = system( "/etc/init.d/audit start" ) ) == -1 ) {
-      printf1("ERROR: Unable to start auditd; errno=%i\n", errno);
-      goto EXIT_ERROR;
-  }
+    if ((rc = system("/etc/init.d/audit start")) == -1) {
+	printf1("ERROR: Unable to start auditd; errno=%i\n", errno);
+	goto EXIT_ERROR;
+    }
 
-  sleep(2);
+    sleep(2);
 
 EXIT_ERROR:
-  return rc;
+    return rc;
 }

@@ -36,33 +36,33 @@
 /*
 ** Create a temporary directory
 */
-int createTempDir(char** dname, mode_t mode, uid_t uid, gid_t gid) {
+int createTempDir(char **dname, mode_t mode, uid_t uid, gid_t gid)
+{
 
-  int rc = -1;
-  char* dirname;
-  *dname = (char *) malloc(strlen(tempname) + 1);
-  dirname = (char *) malloc(strlen(tempname) + 1);
-  strcpy(*dname, tempname);  
+    int rc = -1;
+    char *dirname;
+    *dname = (char *)malloc(strlen(tempname) + 1);
+    dirname = (char *)malloc(strlen(tempname) + 1);
+    strcpy(*dname, tempname);
 
-  printf5("createTempDir: %s\n", *dname);
+    printf5("createTempDir: %s\n", *dname);
 
-  if ((dirname = mkdtemp(*dname)) == NULL) {
-    printf1("ERROR: Unable to create %s: errno=%i\n", *dname, errno);
-    goto EXIT;
-  }
-  rc = 0;
-  printf5("temp dir name: %s\n", *dname);
-  if ((rc = chmod(*dname, mode)) == -1) {
-    printf1("ERROR: Unable to chmod dir %s: errno=%i\n", *dname, errno);
-    goto EXIT;
-  }
-  if ((rc = chown(*dname, uid, gid)) == -1) {
-    printf1("ERROR: Unable to chown dir %s: errno=%i\n", *dname, errno);
-    goto EXIT;
-  }
+    if ((dirname = mkdtemp(*dname)) == NULL) {
+	printf1("ERROR: Unable to create %s: errno=%i\n", *dname, errno);
+	goto EXIT;
+    }
+    rc = 0;
+    printf5("temp dir name: %s\n", *dname);
+    if ((rc = chmod(*dname, mode)) == -1) {
+	printf1("ERROR: Unable to chmod dir %s: errno=%i\n", *dname, errno);
+	goto EXIT;
+    }
+    if ((rc = chown(*dname, uid, gid)) == -1) {
+	printf1("ERROR: Unable to chown dir %s: errno=%i\n", *dname, errno);
+	goto EXIT;
+    }
 
 EXIT:
-  return rc;
+    return rc;
 
 }
-

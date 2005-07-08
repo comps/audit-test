@@ -1,20 +1,21 @@
 #include "includes.h"
 
-int main( int argc, char** argv ) {
+int main(int argc, char **argv)
+{
 
-	FILE* fd = NULL;
+    FILE *fd = NULL;
 
-	if ( argc < 2 )
-		return -1;
-	fd = fopen(argv[1], "w+");
+    if (argc < 2)
+	return -1;
+    fd = fopen(argv[1], "w+");
 
-	if ( fd == NULL )  
-		return -errno;
+    if (fd == NULL)
+	return -errno;
 
-	fprintf(fd, "%d", getpid());
+    fprintf(fd, "%d", getpid());
 
-	fclose(fd);
-	
-	return 0;
+    fclose(fd);
+
+    return 0;
 
 }

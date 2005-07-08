@@ -20,15 +20,16 @@
 
 #include "includes.h"
 
-int laf_start() {
+int laf_start()
+{
 
     int rc = 0;
 
     rc = system("/etc/init.d/auditd start");
     if (rc == -1) {
-        printf1("ERROR: Unable to start auditd: %s\n", strerror(errno));
+	printf1("ERROR: Unable to start auditd: %s\n", strerror(errno));
     } else {
-        sleep(2);
+	sleep(2);
     }
 
     return rc;

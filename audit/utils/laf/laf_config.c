@@ -20,15 +20,16 @@
 
 #include "includes.h"
 
-int laf_set_filters(log_options logOption) {
+int laf_set_filters(log_options logOption)
+{
     int rc = 0;
 
     /*
-    rc = system("/sbin/auditctl -R /tmp/rules_suite.txt > /dev/null");
-    if (rc == -1) {
-	printf1("ERROR: Unable to load audit filters: %s\n", strerror(errno));
-    }
-    */
+       rc = system("/sbin/auditctl -R /tmp/rules_suite.txt > /dev/null");
+       if (rc == -1) {
+       printf1("ERROR: Unable to load audit filters: %s\n", strerror(errno));
+       }
+     */
 
     return rc;
 }

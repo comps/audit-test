@@ -38,23 +38,24 @@
 /*
 ** Create a test directory
 */
-int createDir(char* dname, mode_t mode, uid_t uid, gid_t gid) {
+int createDir(char *dname, mode_t mode, uid_t uid, gid_t gid)
+{
 
-  int rc = 0;
+    int rc = 0;
 
-  printf5("createDir %s\n", dname);
+    printf5("createDir %s\n", dname);
 
-  if( ( rc = mkdir( dname, mode ) ) == -1 ) {
-    printf1("ERROR: Unable to create %s: errno=%i\n", dname, errno);
-    goto EXIT;
-  }
-  if( ( rc = chown( dname, uid, gid ) ) == -1 ) {
-    printf1("ERROR: Unable to chown directory %s: errno=%i\n", dname, errno);
-    goto EXIT;
-  }
+    if ((rc = mkdir(dname, mode)) == -1) {
+	printf1("ERROR: Unable to create %s: errno=%i\n", dname, errno);
+	goto EXIT;
+    }
+    if ((rc = chown(dname, uid, gid)) == -1) {
+	printf1("ERROR: Unable to chown directory %s: errno=%i\n", dname,
+		errno);
+	goto EXIT;
+    }
 
 EXIT:
-  return rc;
+    return rc;
 
 }
-

@@ -38,68 +38,66 @@
 **
 ** This function returns the pid of the exec'd process
 */
-int run(char* string) {
-  
-  int pid = 0;
-  int index;
-  int x;
-  char* argv[64];
-  char* envp[1] = {NULL};
-  char* command = NULL;
-  char* tmp;
+int run(char *string)
+{
 
-  printf5("Executing: [%s]\n", string);
+    int pid = 0;
+    int index;
+    int x;
+    char *argv[64];
+    char *envp[1] = { NULL };
+    char *command = NULL;
+    char *tmp;
 
-  // Copy command to non-static buffer
-  command = (char*)malloc(strlen(string) + 1);
-  strncpy(command, string, strlen(string)+1);
+    printf5("Executing: [%s]\n", string);
 
-  // Contruct arg vector
-  index = 0;
-  argv[ index ] = NULL;
-  if( ( tmp = strtok( command, " " ) ) != NULL ) {
-    argv[ index ] = (char*)malloc( strlen( tmp ) + 1 );
-    strcpy( argv[ index ], tmp );
-    index++;
-    argv[ index ] = NULL;
-    while( ( tmp = strtok( NULL, " " ) ) != NULL ) {
-      argv[ index ] = (char*)malloc( strlen( tmp ) + 1 );
-      strcpy( argv[ index ], tmp );
-      index++;
-      argv[ index ] = NULL;
-      if( index > 63 ) {
-	printf2( "Too many arguments\n" );
-	break;
-      }
+    // Copy command to non-static buffer
+    command = (char *)malloc(strlen(string) + 1);
+    strncpy(command, string, strlen(string) + 1);
+
+    // Contruct arg vector
+    index = 0;
+    argv[index] = NULL;
+    if ((tmp = strtok(command, " ")) != NULL) {
+	argv[index] = (char *)malloc(strlen(tmp) + 1);
+	strcpy(argv[index], tmp);
+	index++;
+	argv[index] = NULL;
+	while ((tmp = strtok(NULL, " ")) != NULL) {
+	    argv[index] = (char *)malloc(strlen(tmp) + 1);
+	    strcpy(argv[index], tmp);
+	    index++;
+	    argv[index] = NULL;
+	    if (index > 63) {
+		printf2("Too many arguments\n");
+		break;
+	    }
+	}
     }
-  }
-
-  // Debug info
-  index = 0;
-  while (argv[index] != NULL) {
-    printf5("arg %i = %s\n", index, argv[index]);
-    index++;
-  }
-
-  // Run it ...
-  if( ( pid = fork() ) == 0 ) {
-    // We are in the child
-    if( execve( argv[0], argv, envp ) == -1 ) {
-      printf1( "execve() error: errno=%i\n", errno );
-      exit( -1 );
+    // Debug info
+    index = 0;
+    while (argv[index] != NULL) {
+	printf5("arg %i = %s\n", index, argv[index]);
+	index++;
     }
-  } else {
-    // We are in the parent
-    waitpid(pid, NULL, 0);
-  }
+
+    // Run it ...
+    if ((pid = fork()) == 0) {
+	// We are in the child
+	if (execve(argv[0], argv, envp) == -1) {
+	    printf1("execve() error: errno=%i\n", errno);
+	    exit(-1);
+	}
+    } else {
+	// We are in the parent
+	waitpid(pid, NULL, 0);
+    }
 
 // EXIT:         // not needed?
 
-  for( x = 0; x < index; x++ ) {
-    free( argv[ x ] );
-  }
+    for (x = 0; x < index; x++) {
+	free(argv[x]);
+    }
 
-  return pid;
+    return pid;
 }
-
-

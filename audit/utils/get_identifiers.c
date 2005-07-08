@@ -32,59 +32,60 @@
 
 #include "includes.h"
 
-int getIdentifiers( identifiers_t* identifiers ) {
-  int fd;
-  char data[ 2048 ];
-  if( ( fd = open( "/proc/self/status", O_RDONLY ) ) == -1 ) {
-    printf( "Error opening '/proc/self/status' for read access\n" );
-    return -1;
-  }
-  if( read( fd, data, 2048 ) ) {
-    char* next;
-    //char temp[10];
-    close( fd );
-    next = strtok( data, "\t" );
-    if( strlen( next ) > 5 ) {
-      next += ( strlen( next ) - 5 );
+int getIdentifiers(identifiers_t *identifiers)
+{
+    int fd;
+    char data[2048];
+    if ((fd = open("/proc/self/status", O_RDONLY)) == -1) {
+	printf("Error opening '/proc/self/status' for read access\n");
+	return -1;
     }
-    while( next && strncmp( next, "\nUid:", 5 ) ) {
-      next = strtok( NULL, "\t" );
-      if( strlen( next ) > 5 ) {
-	next += ( strlen( next ) - 5 );
-      }
+    if (read(fd, data, 2048)) {
+	char *next;
+	//char temp[10];
+	close(fd);
+	next = strtok(data, "\t");
+	if (strlen(next) > 5) {
+	    next += (strlen(next) - 5);
+	}
+	while (next && strncmp(next, "\nUid:", 5)) {
+	    next = strtok(NULL, "\t");
+	    if (strlen(next) > 5) {
+		next += (strlen(next) - 5);
+	    }
+	}
+	if (!next) {
+	    printf("Error tokenizing /proc/self/status\n");
+	    return -1;
+	}
+	next = strtok(NULL, "\t");
+	if (next)
+	    identifiers->ruid = atoi(next);	// TODO: Make sure these are in the right order
+	next = strtok(NULL, "\t");
+	if (next)
+	    identifiers->euid = atoi(next);
+	next = strtok(NULL, "\t");
+	if (next)
+	    identifiers->suid = atoi(next);
+	next = strtok(NULL, "\n");
+	if (next)
+	    identifiers->fsuid = atoi(next);
+	next = strtok(NULL, "\t");
+	next = strtok(NULL, "\t");
+	if (next)
+	    identifiers->rgid = atoi(next);
+	next = strtok(NULL, "\t");
+	if (next)
+	    identifiers->egid = atoi(next);
+	next = strtok(NULL, "\t");
+	if (next)
+	    identifiers->sgid = atoi(next);
+	next = strtok(NULL, "\n");
+	if (next)
+	    identifiers->fsgid = atoi(next);
+	return 0;
+    } else {
+	close(fd);
     }
-    if( !next ) {
-      printf( "Error tokenizing /proc/self/status\n" );
-      return -1;
-    }
-    next = strtok( NULL, "\t" );
-    if( next )
-      identifiers->ruid = atoi( next );  // TODO: Make sure these are in the right order
-    next = strtok( NULL, "\t" );
-    if( next )
-      identifiers->euid = atoi( next );
-    next = strtok( NULL, "\t" );
-    if( next )
-      identifiers->suid = atoi( next );
-    next = strtok( NULL, "\n" );
-    if( next )
-      identifiers->fsuid = atoi( next );
-    next = strtok( NULL, "\t" );
-    next = strtok( NULL, "\t" );
-    if( next )
-      identifiers->rgid = atoi( next );
-    next = strtok( NULL, "\t" );
-    if( next )
-      identifiers->egid = atoi( next );
-    next = strtok( NULL, "\t" );
-    if( next )
-      identifiers->sgid = atoi( next );
-    next = strtok( NULL, "\n" );
-    if( next )
-      identifiers->fsgid = atoi( next );
     return 0;
-  } else {
-    close( fd );
-  }
-  return 0;
 }

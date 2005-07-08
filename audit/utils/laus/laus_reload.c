@@ -34,15 +34,17 @@
 ** Reload the auditing configuration
 **
 */
-int laus_reload() {
+int laus_reload()
+{
 
-	int rc = 0;
+    int rc = 0;
 
 
-	printf4("audit_reload()\n");
-	if ((rc = system("/sbin/auditd -r")) == -1) {
-		printf1("ERROR: Unable to reload audit configuration errno=%d\n", errno);
-	}
+    printf4("audit_reload()\n");
+    if ((rc = system("/sbin/auditd -r")) == -1) {
+	printf1("ERROR: Unable to reload audit configuration errno=%d\n",
+		errno);
+    }
 
-	return rc;
+    return rc;
 }

@@ -29,15 +29,16 @@
 **********************************************************************/
 #include <stdlib.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
-	int rc;
+    int rc;
 
 
-	if (argc < 2)
-		return -1;
+    if (argc < 2)
+	return -1;
 
-	rc = atoi(argv[1]);
+    rc = atoi(argv[1]);
 
-	return rc;
+    return rc;
 }

@@ -29,26 +29,28 @@
 
 #include "includes.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
-	int rc = 0;
-	int fd;
-	char* fd0 = "/proc/self/fd/0";
-	char pts[40];
+    int rc = 0;
+    int fd;
+    char *fd0 = "/proc/self/fd/0";
+    char pts[40];
 
-	memset(pts, '\0', sizeof(pts));
-	if ((rc = readlink(fd0, pts, sizeof(pts))) == -1) {
-		goto EXIT;
-	}
+    memset(pts, '\0', sizeof(pts));
+    if ((rc = readlink(fd0, pts, sizeof(pts))) == -1) {
+	goto EXIT;
+    }
 
-	if ((fd = open(argv[1], O_CREAT | O_TRUNC | O_WRONLY, 
-		S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) == -1) {
-		rc = fd;
-		goto EXIT;
-	}
+    if ((fd = open(argv[1], O_CREAT | O_TRUNC | O_WRONLY,
+		   S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH))
+	== -1) {
+	rc = fd;
+	goto EXIT;
+    }
 
-	rc = write(fd, pts, strlen(pts));
-	close(fd);
+    rc = write(fd, pts, strlen(pts));
+    close(fd);
 EXIT:
-	return rc;
+    return rc;
 }

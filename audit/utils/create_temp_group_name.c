@@ -40,39 +40,39 @@
 /*
 ** Generate unique group name and gid
 */
-int createTempGroupName(char** group, int* gid ) {
+int createTempGroupName(char **group, int *gid)
+{
 
-  int rc = 0;
-  //int fd;         // not needed
-  char* groupmask = "lausg_";
-  char c = 'a';
+    int rc = 0;
+    //int fd;         // not needed
+    char *groupmask = "lausg_";
+    char c = 'a';
 
-  // Malloc memory for data to be returned to the caller
-  // NOTE: Caller must free() this memory
-  *group = (char*)malloc( strlen( groupmask ) + 2 );
+    // Malloc memory for data to be returned to the caller
+    // NOTE: Caller must free() this memory
+    *group = (char *)malloc(strlen(groupmask) + 2);
 
-  // Construct group name from mask
-  do {
-    sprintf( *group, "%s%c", groupmask, c );
-    c++;
-  } while( ( getgrnam( *group ) != NULL) && ( c <= 'z' ) );
+    // Construct group name from mask
+    do {
+	sprintf(*group, "%s%c", groupmask, c);
+	c++;
+    } while ((getgrnam(*group) != NULL) && (c <= 'z'));
 
-  // Got groupname; must get unique gid
-  (*gid) = 600;
+    // Got groupname; must get unique gid
+    (*gid) = 600;
 
-  // Look for a unique gid, such that 600<gid<1000
-  while( ( getgrgid( *gid ) != NULL ) && ( (*gid) < 1000 ) ) {
-    (*gid)++;
-  }
+    // Look for a unique gid, such that 600<gid<1000
+    while ((getgrgid(*gid) != NULL) && ((*gid) < 1000)) {
+	(*gid)++;
+    }
 
-  if( ( (*gid) >= 1000 ) || ( c >= 'z' ) ) {
-    rc = -1;
-    (*group) = NULL;
-    goto EXIT;
-  }
+    if (((*gid) >= 1000) || (c >= 'z')) {
+	rc = -1;
+	(*group) = NULL;
+	goto EXIT;
+    }
 
- EXIT:
-  return rc;
+  EXIT:
+    return rc;
 
 }
-

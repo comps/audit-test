@@ -40,13 +40,14 @@
 ** BUGBUG: This is a brutal way
 ** to wipe the logs.
 */
-int laus_clear_logs() {
+int laus_clear_logs()
+{
 
-  int rc = 0;
+    int rc = 0;
 
-  printf4("audit_clear_logs()\n");
-  system("rm -f /var/log/audit.d/*");
-  system("rm -f /var/log/audit");
+    printf4("audit_clear_logs()\n");
+    system("rm -f /var/log/audit.d/*");
+    system("rm -f /var/log/audit");
 
-  return rc;
+    return rc;
 }

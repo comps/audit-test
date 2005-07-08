@@ -32,34 +32,34 @@
 
 #include "includes.h"
 
-int getLoginUID() {
-  int rc = -1;
-  FILE* fPtr;
-  char* luid_filename;
-  char* command;
-  
-  createTempFileName(&luid_filename);
+int getLoginUID()
+{
+    int rc = -1;
+    FILE *fPtr;
+    char *luid_filename;
+    char *command;
+
+    createTempFileName(&luid_filename);
 //  command = mysprintf( "/usr/bin/who -m | /usr/bin/awk -F! '{print $2}' | /usr/bin/awk -F\" \" '{print $1}' | /usr/bin/xargs -i id -u {} > %s", luid_filename); 
-  command = mysprintf( "who -m | awk -F\" \" '{print $1}' | xargs id -u > %s", luid_filename); 
-  if ( ( rc = system( command ) ) == -1 ) {
-    printf1("ERROR: Get login uid failed\n");
-    goto EXIT;
-  }
+    command =
+	mysprintf("who -m | awk -F\" \" '{print $1}' | xargs id -u > %s",
+		  luid_filename);
+    if ((rc = system(command)) == -1) {
+	printf1("ERROR: Get login uid failed\n");
+	goto EXIT;
+    }
+    // Get the pts used
+    if ((fPtr = fopen(luid_filename, "r")) == NULL) {
+	printf1("Error opening file [%s] for read access\n", luid_filename);
+	goto EXIT;
+    }
+    fscanf(fPtr, "%d", &rc);
+    fclose(fPtr);
 
-  // Get the pts used
-  if( ( fPtr = fopen(luid_filename, "r") ) == NULL ) {
-    printf1( "Error opening file [%s] for read access\n", luid_filename );
-    goto EXIT;
-  }
-  fscanf( fPtr, "%d", &rc );
-  fclose( fPtr );
+  EXIT:
+    unlink(luid_filename);
+    free(luid_filename);
+    free(command);
 
- EXIT:
-  unlink( luid_filename );
-  free( luid_filename );
-  free( command );
-
-  return rc;
+    return rc;
 }
-
-

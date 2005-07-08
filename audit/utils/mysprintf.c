@@ -42,86 +42,85 @@
 #include "includes.h"
 #include <stdarg.h>
 
-char* mysprintf(char* fmt, ...) {
-  char* str;
-  char* hold;
-  va_list ap;
-  char *p, *sval;
-  int ival;
-  //int i;     // not needed?
-  int strlength = strlen(fmt);
+char *mysprintf(char *fmt, ...)
+{
+    char *str;
+    char *hold;
+    va_list ap;
+    char *p, *sval;
+    int ival;
+    //int i;     // not needed?
+    int strlength = strlen(fmt);
 
-  // Scroll through the format string stopping at %d and %s
-  // When you encounter a %s, get the next argument from the list
-  //  and add the length of the string to the total string length
-  //  that will be allocated.
-  // When you encounter a %d, get the next argument from the list,
-  //  allocate an arbitrarily large buffer (1024 bytes), sprintf the
-  //  integer argument to the buffer, and add the length of that string
-  //  to the total string length to be allocated.
-  va_start(ap, fmt);
-  for (p=fmt; *p; p++) {
-    if ((*p == '%') && (*(p+1) == 's')) {
-      sval = va_arg(ap, char*);
-      strlength += strlen(sval) - 2;
-      p++;
-      continue;
+    // Scroll through the format string stopping at %d and %s
+    // When you encounter a %s, get the next argument from the list
+    //  and add the length of the string to the total string length
+    //  that will be allocated.
+    // When you encounter a %d, get the next argument from the list,
+    //  allocate an arbitrarily large buffer (1024 bytes), sprintf the
+    //  integer argument to the buffer, and add the length of that string
+    //  to the total string length to be allocated.
+    va_start(ap, fmt);
+    for (p = fmt; *p; p++) {
+	if ((*p == '%') && (*(p + 1) == 's')) {
+	    sval = va_arg(ap, char *);
+	    strlength += strlen(sval) - 2;
+	    p++;
+	    continue;
+	}
+	if ((*p == '%') && (*(p + 1) == 'd')) {
+	    ival = va_arg(ap, int);
+	    sval = (char *)malloc(1024);
+	    sprintf(sval, "%d", ival);
+	    strlength += strlen(sval) - 2;
+	    free(sval);
+	    p++;
+	    continue;
+	}
     }
-    if ((*p == '%') && (*(p+1) == 'd')) {
-      ival = va_arg(ap, int);
-      sval = (char*)malloc(1024);
-      sprintf(sval, "%d", ival);
-      strlength += strlen(sval) - 2;
-      free(sval);
-      p++;
-      continue;
-    }
-  }
-  va_end(ap);
+    va_end(ap);
 
-  // Malloc memory for string to be returned.
-  // NOTE: the caller must free() this pointer to avoid a memory leak.
-  // The str variable will move around, while hold will not.  So hold will 
-  //  be returned at end of function.
-  str = hold = (char*)malloc(strlength+1);
-  memset(str, '\0', strlength+1);
+    // Malloc memory for string to be returned.
+    // NOTE: the caller must free() this pointer to avoid a memory leak.
+    // The str variable will move around, while hold will not.  So hold will 
+    //  be returned at end of function.
+    str = hold = (char *)malloc(strlength + 1);
+    memset(str, '\0', strlength + 1);
 
-  va_start(ap, fmt);
-  for (p=fmt; *p; p++) {
-    if (*p != '%') {
-      // As long as no % found, just print character for character to string buffer
-      strncpy(str, p, 1);
-      str++;
-      continue;
+    va_start(ap, fmt);
+    for (p = fmt; *p; p++) {
+	if (*p != '%') {
+	    // As long as no % found, just print character for character to string buffer
+	    strncpy(str, p, 1);
+	    str++;
+	    continue;
+	}
+	// Else, % was found, so determine if its a %s or %d or just a %
+	switch (*++p) {
+	    case 's':
+		// %s, so get argument and print each character to string buffer
+		for (sval = va_arg(ap, char *); *sval; sval++) {
+		    strncpy(str, sval, 1);
+		    str++;
+		}
+		break;
+	    case 'd':
+		// %d, so get argument, convert to string, and print to string buffer
+		ival = va_arg(ap, int);
+		sval = (char *)malloc(1024);
+		sprintf(sval, "%d", ival);
+		strncpy(str, sval, strlen(sval));
+		str += strlen(sval);
+		free(sval);
+		break;
+	    default:
+		// else, just print the character to the string buffer
+		strncpy(str, p, 1);
+		str++;
+		break;
+	}
     }
-    // Else, % was found, so determine if its a %s or %d or just a %
-    switch (*++p) {
-      case 's':
-        // %s, so get argument and print each character to string buffer
-        for (sval = va_arg(ap, char*); *sval; sval++) {
-          strncpy(str, sval, 1);
-          str++;
-        }
-        break;
-      case 'd':
-        // %d, so get argument, convert to string, and print to string buffer
-        ival = va_arg(ap, int);
-        sval = (char*)malloc(1024);
-        sprintf(sval, "%d", ival);
-        strncpy(str, sval, strlen(sval));
-        str += strlen(sval);
-        free(sval);
-        break;
-      default:
-        // else, just print the character to the string buffer
-        strncpy(str, p, 1);
-        str++;
-        break;
-    }
-  }
-  va_end(ap);
+    va_end(ap);
 
-  return hold;
+    return hold;
 }
-
-

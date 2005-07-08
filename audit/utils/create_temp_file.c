@@ -38,42 +38,43 @@
 /*
 ** Create a test file
 */
-int createTempFile(char** fname, mode_t mode, uid_t uid, gid_t gid) {
+int createTempFile(char **fname, mode_t mode, uid_t uid, gid_t gid)
+{
 
-  int rc = 0;
-  int fd = 0;
+    int rc = 0;
+    int fd = 0;
 
-  char* writedata = "This is bogus test file content\n";
-  *fname = (char *) malloc(strlen(tempname) + 1);
-  strcpy(*fname, tempname);  
+    char *writedata = "This is bogus test file content\n";
+    *fname = (char *)malloc(strlen(tempname) + 1);
+    strcpy(*fname, tempname);
 
-  printf5("createTempFile: %s\n", *fname);
+    printf5("createTempFile: %s\n", *fname);
 
-  if ((fd = mkstemp(*fname)) == -1) {
-    printf1("ERROR: Unable to create %s: errno=%i\n", *fname, errno);
-    rc = fd;
-    goto EXIT;
-  }
-  printf5("temp file name: %s\n", *fname);
-  if ((rc = write(fd, writedata, strlen(writedata))) == -1) {
-    printf1("ERROR: Unable to write data to file %s: errno=%i\n", *fname, errno);
-    goto EXIT;
-  }
-  if ((rc = close(fd)) == -1) {
-    printf1("ERROR: Unable to close file %s: errno=%i\n", *fname, errno);
-    goto EXIT;
-  }
-  if ((rc = chmod(*fname, mode)) == -1) {
-    printf1("ERROR: Unable to chmod file %s: errno=%i\n", *fname, errno);
-    goto EXIT;
-  }
-  if ((rc = chown(*fname, uid, gid)) == -1) {
-    printf1("ERROR: Unable to chown file %s: errno=%i\n", *fname, errno);
-    goto EXIT;
-  }
+    if ((fd = mkstemp(*fname)) == -1) {
+	printf1("ERROR: Unable to create %s: errno=%i\n", *fname, errno);
+	rc = fd;
+	goto EXIT;
+    }
+    printf5("temp file name: %s\n", *fname);
+    if ((rc = write(fd, writedata, strlen(writedata))) == -1) {
+	printf1("ERROR: Unable to write data to file %s: errno=%i\n", *fname,
+		errno);
+	goto EXIT;
+    }
+    if ((rc = close(fd)) == -1) {
+	printf1("ERROR: Unable to close file %s: errno=%i\n", *fname, errno);
+	goto EXIT;
+    }
+    if ((rc = chmod(*fname, mode)) == -1) {
+	printf1("ERROR: Unable to chmod file %s: errno=%i\n", *fname, errno);
+	goto EXIT;
+    }
+    if ((rc = chown(*fname, uid, gid)) == -1) {
+	printf1("ERROR: Unable to chown file %s: errno=%i\n", *fname, errno);
+	goto EXIT;
+    }
 
 EXIT:
-  return rc;
+    return rc;
 
 }
-

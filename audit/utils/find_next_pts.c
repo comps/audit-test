@@ -28,30 +28,32 @@
 
 #define MAX_PTS_CHARACTERS 10
 
-int find_next_pts() {
-  FILE* fPtr;
-  char* ptsData;
-  int pts = 0;
-  system( "/usr/bin/perl -e '@files = `ls /dev/pts`; $free_pts = 0; for( $x = 0; $x < 42; $x += 1 ) { foreach $file ( <@files> ) { if( \"$x\" eq $file ) { goto NEXT; } } $free_pts = \"$x\"; goto FOUND; NEXT: } FOUND: print $free_pts.\"\n\";' > /tmp/nextPts.txt" );
-  if( ( fPtr = fopen( "/tmp/nextPts.txt", "r" ) ) == NULL ) {
-    printf1( "Error opening pts file: [%s]\n", "/tmp/nextPts.txt" );
-    return -1;
-  }
-  ptsData = (char*)malloc( MAX_PTS_CHARACTERS );
-  if( fread( (void*)ptsData, 1, ( MAX_PTS_CHARACTERS-1 ), fPtr ) == 0 ) {
-    printf1( "Error reading pts value\n" );
-    return -1;
-  }
-  fclose( fPtr );
-  if( unlink( "/tmp/nextPts.txt" ) != 0 ) {
-    printf1( "Error unlinking /tmp/nextPts.txt\n" );
-    return -1;
-  }
-  ptsData[ ( MAX_PTS_CHARACTERS-1 ) ] = '\0';
-  if( ( strlen( ptsData ) > 0 ) && ( ptsData[ strlen( ptsData )-1 ] == '\n' ) ) {
-    ptsData[ strlen( ptsData )-1 ] = '\0';
-  }
-  pts = atoi( ptsData );
-  free( ptsData );
-  return pts;
+int find_next_pts()
+{
+    FILE *fPtr;
+    char *ptsData;
+    int pts = 0;
+    system
+	("/usr/bin/perl -e '@files = `ls /dev/pts`; $free_pts = 0; for( $x = 0; $x < 42; $x += 1 ) { foreach $file ( <@files> ) { if( \"$x\" eq $file ) { goto NEXT; } } $free_pts = \"$x\"; goto FOUND; NEXT: } FOUND: print $free_pts.\"\n\";' > /tmp/nextPts.txt");
+    if ((fPtr = fopen("/tmp/nextPts.txt", "r")) == NULL) {
+	printf1("Error opening pts file: [%s]\n", "/tmp/nextPts.txt");
+	return -1;
+    }
+    ptsData = (char *)malloc(MAX_PTS_CHARACTERS);
+    if (fread((void *)ptsData, 1, (MAX_PTS_CHARACTERS - 1), fPtr) == 0) {
+	printf1("Error reading pts value\n");
+	return -1;
+    }
+    fclose(fPtr);
+    if (unlink("/tmp/nextPts.txt") != 0) {
+	printf1("Error unlinking /tmp/nextPts.txt\n");
+	return -1;
+    }
+    ptsData[(MAX_PTS_CHARACTERS - 1)] = '\0';
+    if ((strlen(ptsData) > 0) && (ptsData[strlen(ptsData) - 1] == '\n')) {
+	ptsData[strlen(ptsData) - 1] = '\0';
+    }
+    pts = atoi(ptsData);
+    free(ptsData);
+    return pts;
 }

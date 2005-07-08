@@ -20,46 +20,53 @@
 
 #include "includes.h"
 
-void init_globals() {
+void init_globals()
+{
 
 #ifdef CONFIG_AUDIT_LAUS
-    audit_ops.audit_start       = &laus_start;
-    audit_ops.audit_stop        = &laus_stop;
-    audit_ops.audit_clear_logs  = &laus_clear_logs;
-    audit_ops.audit_reload      = &laus_reload;
+    audit_ops.audit_start = &laus_start;
+    audit_ops.audit_stop = &laus_stop;
+    audit_ops.audit_clear_logs = &laus_clear_logs;
+    audit_ops.audit_reload = &laus_reload;
     audit_ops.audit_set_filters = &laus_set_filters;
-    audit_ops.audit_verify_log  = &laus_verify_log;
+    audit_ops.audit_verify_log = &laus_verify_log;
 #else
-    audit_ops.audit_start       = &laf_start;
-    audit_ops.audit_stop        = &laf_stop;
-    audit_ops.audit_clear_logs  = &laf_clear_logs;
-    audit_ops.audit_reload      = &laf_reload;
+    audit_ops.audit_start = &laf_start;
+    audit_ops.audit_stop = &laf_stop;
+    audit_ops.audit_clear_logs = &laf_clear_logs;
+    audit_ops.audit_reload = &laf_reload;
     audit_ops.audit_set_filters = &laf_set_filters;
-    audit_ops.audit_verify_log  = &laf_verify_log;
+    audit_ops.audit_verify_log = &laf_verify_log;
 #endif
 
 }
 
-int audit_start() {
+int audit_start()
+{
     return (audit_ops.audit_start)();
 };
 
-int audit_stop() {
+int audit_stop()
+{
     return (audit_ops.audit_stop)();
 };
 
-int audit_clear_logs() {
+int audit_clear_logs()
+{
     return (audit_ops.audit_clear_logs)();
 };
 
-int audit_reload() {
+int audit_reload()
+{
     return (audit_ops.audit_reload)();
 };
 
-int audit_set_filters(log_options logOption) {
+int audit_set_filters(log_options logOption)
+{
     return (audit_ops.audit_set_filters)(logOption);
 };
 
-int audit_verify_log(laus_data *dataPtr, log_options logOption) {
+int audit_verify_log(laus_data *dataPtr, log_options logOption)
+{
     return (audit_ops.audit_verify_log)(dataPtr, logOption);
 };

@@ -37,45 +37,44 @@
 /*
 ** Generate unique user name, uid, homedir
 */
-int createTempUserName(char** user, int* uid, char** homedir) {
+int createTempUserName(char **user, int *uid, char **homedir)
+{
 
-  int rc = 0;
-  //int fd;   //not needed?
-  char* base = "/home";
-  char* usermask = "laus_";
-  char c = 'a';
-  
-
-  // Malloc memory for data to be returned to the caller
-  // NOTE: Caller must free() this memory!!!
-  *homedir = (char*)malloc(strlen(base)+strlen(usermask)+3);
-  *user = (char*)malloc(strlen(usermask)+2);
-
-  do {
-    // Construct home directory mask
-    sprintf(*user, "%s%c", usermask, c);
-    sprintf(*homedir, "%s/%s%c", base, usermask, c);
-    c++;
-  } while ((getpwnam(*user) != NULL) && (c <= 'z'));
-
-  // Got username, and home directory, must get unique uid
-  *uid = 700;
-
-  // Look for a unique uid, such that 700<uid<1000
-  do {
-    (*uid)++;
-  } while ((getpwuid(*uid) != NULL) && (*uid < 1000));
-
-  if ((*uid >= 1000) || (c > 'z')){
-    rc = -1;
-    *user = NULL;
-    *uid = -1;
-    *homedir = NULL;
-  }
+    int rc = 0;
+    //int fd;   //not needed?
+    char *base = "/home";
+    char *usermask = "laus_";
+    char c = 'a';
 
 
- //EXIT:  // not needed?
-  return rc;
+    // Malloc memory for data to be returned to the caller
+    // NOTE: Caller must free() this memory!!!
+    *homedir = (char *)malloc(strlen(base) + strlen(usermask) + 3);
+    *user = (char *)malloc(strlen(usermask) + 2);
+
+    do {
+	// Construct home directory mask
+	sprintf(*user, "%s%c", usermask, c);
+	sprintf(*homedir, "%s/%s%c", base, usermask, c);
+	c++;
+    } while ((getpwnam(*user) != NULL) && (c <= 'z'));
+
+    // Got username, and home directory, must get unique uid
+    *uid = 700;
+
+    // Look for a unique uid, such that 700<uid<1000
+    do {
+	(*uid)++;
+    } while ((getpwuid(*uid) != NULL) && (*uid < 1000));
+
+    if ((*uid >= 1000) || (c > 'z')) {
+	rc = -1;
+	*user = NULL;
+	*uid = -1;
+	*homedir = NULL;
+    }
+
+    //EXIT:  // not needed?
+    return rc;
 
 }
-

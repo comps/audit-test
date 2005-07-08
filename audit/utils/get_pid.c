@@ -27,24 +27,29 @@
 
 #include "includes.h"
 
-int getPid( char* executable ) {
-  char pidFilename[ 255 ];
-  FILE* fPtr;
-  char buf[11];
+int getPid(char *executable)
+{
+    char pidFilename[255];
+    FILE *fPtr;
+    char buf[11];
 
-  snprintf( pidFilename, 255, "/var/run/%s.pid", executable );
+    snprintf(pidFilename, 255, "/var/run/%s.pid", executable);
 
-  if( ( fPtr = fopen( pidFilename, "r" ) ) == NULL ) {
-    printf1( "Cannot open %s to get the process ID of the currently running instance of %s\n", pidFilename, executable );
-    return -1;
-  }
+    if ((fPtr = fopen(pidFilename, "r")) == NULL) {
+	printf1
+	    ("Cannot open %s to get the process ID of the currently running instance of %s\n",
+	     pidFilename, executable);
+	return -1;
+    }
 
-  if( fgets( buf, 10, fPtr ) == NULL ) {
-    printf1( "Cannot read %s to get the process ID of the currently running instance of %s\n", pidFilename, executable );
-    return -1;
-  }
+    if (fgets(buf, 10, fPtr) == NULL) {
+	printf1
+	    ("Cannot read %s to get the process ID of the currently running instance of %s\n",
+	     pidFilename, executable);
+	return -1;
+    }
 
-  fclose( fPtr );
+    fclose(fPtr);
 
-  return atoi( buf );
+    return atoi(buf);
 }

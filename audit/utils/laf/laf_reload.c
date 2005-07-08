@@ -20,17 +20,18 @@
 
 #include "includes.h"
 
-int laf_reload() {
+int laf_reload()
+{
     int rc = 0;
 
     /*
-    rc = system("/etc/init.d/auditd reload");
-    if (rc == -1) {
-        printf1("ERROR: Unable to reload auditd config: %s\n", strerror(errno));
-    } else {
-        sleep(2);
-    }
-    */
+       rc = system("/etc/init.d/auditd reload");
+       if (rc == -1) {
+       printf1("ERROR: Unable to reload auditd config: %s\n", strerror(errno));
+       } else {
+       sleep(2);
+       }
+     */
 
     return rc;
 }

@@ -143,14 +143,18 @@ int test_settimeofday(laus_data *dataPtr)
     if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall failed (%d)\n", rc);
     }
-    //EXIT_CLEANUP:     // not needed?
-    //Do cleanup work here
-    if (dataPtr->successCase) {	// Clean up from success case setup
-	free(tv);
-	free(tz);
 
-    }
 EXIT:
+	if (tv) {
+		free(tv);
+	}
+	if (tz) {
+		free(tz);
+	}
+	if (tv_on_disk) {
+		free(tv_on_disk);
+	}
+
     printf5("Returning from test\n");
     return rc;
 }

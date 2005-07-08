@@ -470,6 +470,7 @@ void var_parms(int level, int call, const char *src)
 				     arg_type, arg_size, vector_buffer);
 			buffer_index += arg_size;
 		    }
+		    free(vector_buffer);
 		    break;
 		case AUDIT_ARG_NULL:
 		    printf_level(level,
@@ -698,7 +699,7 @@ int compare_var_parms(const char *actual, const char *expect)
 	memset(buffer_e, '\0', BUFSIZE);
     }
 
-  out:
+out:
     free(buffer_a);
     free(buffer_e);
     return rc;

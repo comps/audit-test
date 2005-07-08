@@ -72,6 +72,7 @@ int test_clone(laus_data *dataPtr)
     int flags = CLONE_VFORK;
     // int flags = CLONE_FS|CLONE_VFORK|CLONE_PARENT|CLONE_SYSVSEM|0x8000068;
     pid_t pid;
+    char *stack = NULL;
 
     // Set the syscall-specific data
     printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_clone);
@@ -107,7 +108,7 @@ int test_clone(laus_data *dataPtr)
     // ia64 glibc doesn't have a symbol for clone
     pid = syscall(__NR_clone, flags, NULL);
 #else
-    char *stack = malloc(65536);
+    stack = malloc(65536);
     pid = clone(fn, (void *)(stack + 32768), flags, NULL);
 #endif
     switch (pid) {
@@ -132,6 +133,10 @@ int test_clone(laus_data *dataPtr)
 EXIT_CLEANUP:
 
 EXIT:
+    if (stack) {
+	free(stack);
+    }
+
     printf5("Returning from test\n");
     return rc;
 }

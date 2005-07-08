@@ -22,16 +22,15 @@
 
 int laf_clear_logs()
 {
-
     int rc = 0;
     int i, fd;
     int num_logs = 99;		// max according to manpage
     char *log_file = "/var/log/audit/audit.log";
-    char *log_name;
+    char *log_name = NULL;
 
     /* TODO: get log_file and num_logs from /etc/auditd.conf */
 
-    if ((fd = open(log_file, O_WRONLY | O_TRUNC)) == -1) {
+    if ((fd = open(log_file, O_WRONLY|O_TRUNC)) == -1) {
 	rc = -1;
 	goto exit_error;
     }
@@ -53,7 +52,7 @@ int laf_clear_logs()
 	    goto exit_error;
 	}
 
-	if ((fd = open(log_name, O_WRONLY | O_TRUNC)) == -1) {
+	if ((fd = open(log_name, O_WRONLY|O_TRUNC)) == -1) {
 	    rc = (errno == ENOENT ? 0 : -1);
 	    goto exit_error;
 	}
@@ -64,6 +63,9 @@ int laf_clear_logs()
     }
 
 exit_error:
+    if (log_name) {
+	free(log_name);
+    }
     if (rc < 0) {
 	printf1("ERROR: Unable to clear audit logs: %s\n", strerror(errno));
     }

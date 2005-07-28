@@ -85,64 +85,18 @@ char *helper_homedir;
 
 int main(int argc, char **argv)
 {
-    int rc = 0;
-    struct syscall_opts options;
-    int j, k = 0;
-    uid_t uid = 0;
-    gid_t gid = 0;
-    laus_data test_data;
-    int test_rc;
-    Boolean success;
-    char *command;
-    char test_user[LOGIN_NAME_MAX + 1];
-    struct passwd *passwd_data = NULL;
-
-#ifdef __IX86
-    int arch = AUDIT_ARCH_I386;
-#endif
-#ifdef __PPC32
-    int arch = AUDIT_ARCH_PPC;
-#endif
-#ifdef __PPC64
-    int arch = AUDIT_ARCH_PPC64;
-#endif
-#ifdef __S390X
-    int arch = AUDIT_ARCH_S390X;
-#endif
-#ifdef __S390
-    int arch = AUDIT_ARCH_S390;
-#endif
-#ifdef __X86_64
-    int arch = AUDIT_ARCH_X86_64;
-#endif
-#ifdef __IA64
-    int arch = AUDIT_ARCH_IA64;
-#endif
-
-    /* Initialize global structures */
-    init_globals();
-
-    // Clear the audit trail
-// BUGBUG: Stopping and clearing the audit trail seems to detach this process
-//   from the audit daemon in the 2.6 LAuS implementation
-
-    // Create helper user
-    if ((rc = createTempUserName(&helper, &helper_uid, &helper_homedir)) == -1) {
-	printf1("Out of temp user names\n");
-	goto EXIT;
-    }
-    // Create user
-    command =
-	mysprintf("/usr/sbin/useradd -u %d -d %s -m %s", helper_uid,
-		  helper_homedir, helper);
-    if ((rc = system(command)) == -1) {
-	printf1("Error creating user [%s]\n", helper);
-	goto EXIT;
-    }
-    free(command);
+    int rc = 0;				// main return code
+    struct syscall_opts options;	// CLI options
+    int i;				// loop counter
+    Boolean success;			// loop counter
+    char test_user[LOGIN_NAME_MAX + 1];	// test user
+    struct passwd *test_user_pw = NULL;	// test user's /etc/passwd data
+    laus_data test_data;		// expected log data
+    int test_rc;			// testcase return code
+    char *command = NULL;		// command string
 
     /* 
-     * Parse & check command line options
+     * Parse and check command line options
      */
     rc = parse_command_line(argc, argv, &options);
     if ((rc == -1) || (options.help)) {
@@ -155,16 +109,16 @@ int main(int argc, char **argv)
     }
 
     if (strcmp(options.testcase,"") != 0) {
-	for (k = 0; k < sizeof(syscallTests) / sizeof(syscall_data); k++) {
+	for (i = 0; i < sizeof(syscallTests) / sizeof(syscall_data); i++) {
 	    if ((rc = strcmp(options.testcase,
-			     syscallTests[k].testName)) == 0) {
+			     syscallTests[i].testName)) == 0) {
 		break;
 	    }
 	}
 	if (rc != 0) {
 	    printf1("ERROR: System call '%s' not tested by laustest\n", 
 		    options.testcase);
-	    goto EXIT_ERROR;
+	    goto EXIT;
 	}
     }
 
@@ -173,30 +127,61 @@ int main(int argc, char **argv)
     } else {
 	strcpy(test_user, DEFAULT_TEST_USER);
     }
-    if ((passwd_data = getpwnam(test_user)) == NULL) {
+    if ((test_user_pw = getpwnam(test_user)) == NULL) {
 	printf1("ERROR: Unable to get passwd info for [%s]\n", test_user);
-	goto EXIT_ERROR;
+	rc = -1;
+	goto EXIT;
     }
-    uid = passwd_data->pw_uid;
-    gid = passwd_data->pw_gid;
 
-    login_uid = getLoginUID();
-    if (login_uid == -1) {
+    /*
+     * Initialize test suite configuration
+     */
+    init_globals();
+
+    /*
+     * Get system info
+     */
+    if (getcwd(cwd, PATH_MAX) == NULL) {
+	printf1("ERROR: Unable to get current working directory\n");
+	rc = -1;
+	goto EXIT;
+    }
+
+    if ((login_uid = getLoginUID()) == -1) {
 	printf1("ERROR: Unable to get login uid\n");
-	goto EXIT_ERROR;
+	rc = -1;
+	goto EXIT;
     }
 
-    // Save the CWD for those tests that require it (i.e., test_execve)
-    getcwd(cwd, PATH_MAX);
+    if ((rc = createTempUserName(&helper, &helper_uid, &helper_homedir)) == -1) {
+	printf1("Out of temp user names\n");
+	goto EXIT;
+    }
+    command = mysprintf("/usr/sbin/useradd -u %d -d %s -m %s",
+			helper_uid, helper_homedir, helper);
+    if ((rc = system(command)) == -1) {
+	printf1("Error creating user [%s]\n", helper);
+	goto EXIT;
+    }
+    free(command);
 
-    //backup the filter.conf file
+    /*
+     * Initialize audit subsystem
+     *
+     * XXX stopping and clearing the audit trail seems to detach this
+     * process from the audit daemon in the 2.6 LAuS implementation
+     */
 #ifdef CONFIG_AUDIT_LAUS
     backupFile("/etc/audit/filter.conf");
 #endif
 
-    // This loop tests all the combinations of logSuccess
-    // and logFailure. It is the only type of domain filtering
-    // performed within this set of tests.
+    /*
+     * Variations on logging directives
+     * - both sucess and failure (fast mode)
+     * - success only
+     * - failure only
+     * - none
+     */
     for (logOptionsIndex = 0;
 	 logOptionsIndex < sizeof(logOptions) / sizeof(log_options);
 	 logOptionsIndex++) {
@@ -204,40 +189,55 @@ int main(int argc, char **argv)
 	if (options.fast_mode && logOptionsIndex > 0)
 	    break;
 
-	// Set the filter domain (logSuccess, logFailure, both, none)
 	if ((rc = audit_set_filters(logOptions[logOptionsIndex])) == -1) {
-	    goto EXIT_ERROR;
+	    printf1("ERROR: Test aborted: errno = %i\n", errno);
+	    goto EXIT_CLEANUP;
 	}
-	// Loop through syscalls
-	for (j = 0; j < sizeof(syscallTests) / sizeof(syscall_data); j++) {
+
+	/*
+	 * System call testcases
+	 */
+	for (i = 0; i < sizeof(syscallTests) / sizeof(syscall_data); i++) {
 
 	    if ((strcmp(options.testcase, "") != 0) &&
-		(strcmp(options.testcase, syscallTests[j].testName) != 0)) {
+		(strcmp(options.testcase, syscallTests[i].testName) != 0)) {
 		continue;
 	    }
 
+	    /*
+	     * Sucess, failure testcases
+	     */
 	    success = TRUE;
 	    while ((success == TRUE) || (success == FALSE)) {
-
-		/* initialize test data per iteration */
+		/*
+		 * Initialize expected record
+		 */
 		memset(&test_data, '\0', sizeof(laus_data));
-		test_data.msg_arch = arch;
+		test_data.msg_arch = AUDIT_ARCH;
 		test_data.msg_type = AUDIT_MSG_SYSCALL;
-		test_data.msg_euid = uid;
-		test_data.msg_egid = gid;
-		test_data.msg_fsuid = uid;
-		test_data.msg_fsgid = gid;
-		test_data.testName = syscallTests[j].testName;
+		test_data.msg_euid = test_user_pw->pw_uid;
+		test_data.msg_egid = test_user_pw->pw_gid;
+		test_data.msg_fsuid = test_user_pw->pw_uid;
+		test_data.msg_fsgid = test_user_pw->pw_gid;
+		test_data.testName = syscallTests[i].testName;
 		test_data.successCase = success;
 
+		/*
+		 * Perform test
+		 */
 		printf2(
 		    "Performing test on %s() [logSuccess=%d, logFailure=%d, successCase=%d]\n",
-		    syscallTests[j].testName,
+		    syscallTests[i].testName,
 		    logOptions[logOptionsIndex].logSuccess,
 		    logOptions[logOptionsIndex].logFailure,
 		    test_data.successCase);
-		test_rc = syscallTests[j].testPtr(&test_data);
+		test_rc = syscallTests[i].testPtr(&test_data);
+
+		/*
+		 * Determine results
+		 */
 		verify(test_rc, &test_data, logOptions[logOptionsIndex]);
+
 		/* 
 		 * syscallData.data is allocated during each test run,
 		 * and must be freed per iteration.
@@ -252,26 +252,23 @@ int main(int argc, char **argv)
     }
     printf2("PASSED = %i, FAILED = %i, SKIPPED = %i\n",
 	    pass_testcases, fail_testcases, skip_testcases);
-    goto EXIT;
 
-
-EXIT_ERROR:
-    printf1("ERROR: Test aborted: errno = %i\n", errno);
-
-EXIT:
+EXIT_CLEANUP:
+    /* System cleanup */
     command = mysprintf("/usr/sbin/userdel -r %s", helper);
     if ((rc = system(command)) == -1) {
 	printf1("Error deleting user [%s]\n", helper);
     }
     free(command);
 
+    /* Audit cleanup */
 #ifdef CONFIG_AUDIT_LAUS
     restoreFile("/etc/audit/filter.conf");
 #endif
     audit_reload();
 
+EXIT:
     return rc;
-
 }
 
 static

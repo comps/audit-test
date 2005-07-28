@@ -37,6 +37,24 @@
 #define DEFAULT_TEST_USER "nobody"
 #define TESTCASE_NAME_MAX 25
 
+#if defined(__IX86)
+#define AUDIT_ARCH  AUDIT_ARCH_I386
+#elif defined(__PPC32)
+#define AUDIT_ARCH  AUDIT_ARCH_PPC
+#elif defined(__PPC64)
+#define AUDIT_ARCH  AUDIT_ARCH_PPC64
+#elif defined(__S390X)
+#define AUDIT_ARCH  AUDIT_ARCH_S390X
+#elif defined(__S390)
+#define AUDIT_ARCH  AUDIT_ARCH_S390
+#elif defined(__X86_64)
+#define AUDIT_ARCH  AUDIT_ARCH_X86_64
+#elif defined(__IA64)
+#define AUDIT_ARCH  AUDIT_ARCH_IA64
+#else
+#define AUDIT_ARCH  -1
+#endif
+
 // For syscalls/tests/test_execve.c
 #define MAX_ARG_SIZE 30
 #define MAX_WAIT_TIME_FOR_CHILD 60

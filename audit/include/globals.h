@@ -35,6 +35,7 @@
 #define _GLOBALS_H
 
 #define DEFAULT_TEST_USER "nobody"
+#define TESTCASE_NAME_MAX 25
 
 // For syscalls/tests/test_execve.c
 #define MAX_ARG_SIZE 30

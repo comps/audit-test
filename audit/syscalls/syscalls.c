@@ -53,11 +53,23 @@
 
 #include "includes.h"
 #include "syscalls.h"
-#include "syscalls_array.h"
+#include "syscalls_array.h"	// global syscallTests[] array
+
 #include "logoptions.h"
 
 #include <pwd.h>
-#include <getopt.h>
+
+struct syscall_opts {
+    char user[LOGIN_NAME_MAX + 1];
+    char testcase[TESTCASE_NAME_MAX + 1];
+    int debug_mode;
+    int fast_mode;
+    int help;
+};
+
+static int parse_command_line(int, char **, struct syscall_opts *);
+static void usage();
+static int verify(int, laus_data *, log_options);
 
 char cwd[PATH_MAX];
 
@@ -71,11 +83,10 @@ char *helper;
 int helper_uid;
 char *helper_homedir;
 
-static int verify(int, laus_data *, log_options);
-
 int main(int argc, char **argv)
 {
     int rc = 0;
+    struct syscall_opts options;
     int j, k = 0;
     uid_t uid = 0;
     gid_t gid = 0;
@@ -83,30 +94,8 @@ int main(int argc, char **argv)
     int test_rc;
     Boolean success;
     char *command;
-    char *testcase = NULL;
-    char *defaultUser = DEFAULT_TEST_USER;	// defined in include/globals.h
-    char *usage = "Usage:\n\
-  laustest [-u $TESTUSER] [-t $SYSCALL] [-d $DEBUG]\n\n\
-Arguments:\n\
-  -u $TESTUSER:  Specify the user to run the tests as $TESTUSER.\n\
-                 This user must actually exist on the system.\n\
-                 By default, this is 'nobody'\n\
-  -t $SYSCALL:   Optionally specify a single test case to run.\n\
-                 $SYSCALL is the name of the system call to test.\n\
-                 By default, all test cases are executed.\n\
-  -f             Fast mode, test (logSuccess=1, logFailure=1) only\n\
-  -d $DEBUG:     Optionally specify the debug level 0-5.\n\
-                 0  No messages\n\
-                 1  + Environment messages\n\
-                 2  + Test messages (Default)\n\
-                 3  + Warning messages\n\
-                 4  + Info messages\n\
-                 5  + Full debug messages\n\n";
-
-
+    char test_user[LOGIN_NAME_MAX + 1];
     struct passwd *passwd_data = NULL;
-    struct passwd *login_uid_data = NULL;
-    int fast_mode = 0;
 
 #ifdef __IX86
     int arch = AUDIT_ARCH_I386;
@@ -152,100 +141,50 @@ Arguments:\n\
     }
     free(command);
 
+    /* 
+     * Parse & check command line options
+     */
+    rc = parse_command_line(argc, argv, &options);
+    if ((rc == -1) || (options.help)) {
+	usage();
+	goto EXIT;
+    }
 
-    // syscallTests[] array globally defined in ../include/syscalls_array.h, included above
+    if (options.debug_mode != -1) {
+	debug = options.debug_mode;
+    }
 
-    // Iterate through command line options
-    while (1) {
-	int option_index = 0;
-	static struct option long_options[] = {
-	    {"user", 1, 0, 0},
-	    {"testcase", 1, 0, 0},
-	    {"debug", 1, 0, 0},
-	    {"login", 1, 0, 0},
-	    {0, 0, 0, 0}
-	};
-	int c = getopt_long(argc, argv, "u:t:d:l:f",
-			    long_options, &option_index);
-	if (c == -1)
-	    break;
-	switch (c) {
-	    case 'u':
-		// User option specified, try to get passwd info, exit if none
-
-		if ((passwd_data = getpwnam(optarg)) == NULL) {
-		    printf1("ERROR: Unable to get %s passwd info.\n", optarg);
-		    goto EXIT_ERROR;
-		}
-		login_uid = passwd_data->pw_uid;
-
-		printf("uid = [%d]\n", login_uid);
-
+    if (strcmp(options.testcase,"") != 0) {
+	for (k = 0; k < sizeof(syscallTests) / sizeof(syscall_data); k++) {
+	    if ((rc = strcmp(options.testcase,
+			     syscallTests[k].testName)) == 0) {
 		break;
-	    case 'l':
-		// login uid specified, try to get passwd info, exit if none
-		if ((login_uid_data = getpwnam(optarg)) == NULL) {
-		    printf1("ERROR: Unable to get %s passwd info.\n", optarg);
-		    goto EXIT_ERROR;
-		}
-		login_uid = login_uid_data->pw_uid;
-		break;
-	    case 't':
-		// Individual test case specified, exit if invalid value
-		testcase = (char *)malloc(strlen(optarg) + 2);
-		sprintf(testcase, "%s", optarg);
-		for (k = 0; k < sizeof(syscallTests) / sizeof(syscall_data);
-		     k++) {
-		    if ((rc = strcmp(testcase, syscallTests[k].testName)) == 0) {
-			break;
-		    }
-		}
-		if (rc != 0) {
-		    printf1("ERROR: System call '%s' not tested by laustest\n",
-			    testcase);
-		    goto EXIT_ERROR;
-		}
-		break;
-	    case 'd':
-		// Debug level specified
-		debug = atoi(optarg);
-		// BUGBUG: This if statement needs to be modified to handle
-		// non-numeric input correctly.
-		if ((debug < 0) || (debug > 9)) {
-		    printf1("ERROR: Debug level %s is invalid\n", optarg);
-		    goto EXIT_ERROR;
-		}
-		break;
-	    case 'f':
-		// fast mode, test only (logFailure=1, logSuccess=1)
-		fast_mode = 1;
-		break;
-	    default:
-		// Help option or unhandled option specified, display usage text and exit
-		printf("%s", usage);
-		rc = 1;
-		goto EXIT;
-		break;
+	    }
+	}
+	if (rc != 0) {
+	    printf1("ERROR: System call '%s' not tested by laustest\n", 
+		    options.testcase);
+	    goto EXIT_ERROR;
 	}
     }
-    if (passwd_data == NULL) {
-	// If no user specified, try defaultUser
-	passwd_data = (struct passwd *)getpwnam(defaultUser);	// calling free() on this pointer seg faults
-    }
 
-    if (passwd_data == NULL) {
-	// Must enter a valid user to run tests as
-	printf1("ERROR: Please enter a test user name with the -u option.\n");
+    if (strcmp(options.user, "") != 0) {
+	strcpy(test_user, options.user);
+    } else {
+	strcpy(test_user, DEFAULT_TEST_USER);
+    }
+    if ((passwd_data = getpwnam(test_user)) == NULL) {
+	printf1("ERROR: Unable to get passwd info for [%s]\n", test_user);
 	goto EXIT_ERROR;
     }
-
-    if (login_uid_data == NULL) {
-	// Get login uid from system
-	login_uid = getLoginUID();
-    }
-
     uid = passwd_data->pw_uid;
     gid = passwd_data->pw_gid;
+
+    login_uid = getLoginUID();
+    if (login_uid == -1) {
+	printf1("ERROR: Unable to get login uid\n");
+	goto EXIT_ERROR;
+    }
 
     // Save the CWD for those tests that require it (i.e., test_execve)
     getcwd(cwd, PATH_MAX);
@@ -262,7 +201,7 @@ Arguments:\n\
 	 logOptionsIndex < sizeof(logOptions) / sizeof(log_options);
 	 logOptionsIndex++) {
 
-	if (fast_mode && logOptionsIndex > 0)
+	if (options.fast_mode && logOptionsIndex > 0)
 	    break;
 
 	// Set the filter domain (logSuccess, logFailure, both, none)
@@ -271,9 +210,9 @@ Arguments:\n\
 	}
 	// Loop through syscalls
 	for (j = 0; j < sizeof(syscallTests) / sizeof(syscall_data); j++) {
-	    // Run exactly one test case?
-	    if ((testcase != NULL)
-		&& (strcmp(testcase, syscallTests[j].testName) != 0)) {
+
+	    if ((strcmp(options.testcase, "") != 0) &&
+		(strcmp(options.testcase, syscallTests[j].testName) != 0)) {
 		continue;
 	    }
 
@@ -320,9 +259,6 @@ EXIT_ERROR:
     printf1("ERROR: Test aborted: errno = %i\n", errno);
 
 EXIT:
-    if (testcase != NULL)
-	free(testcase);
-
     command = mysprintf("/usr/sbin/userdel -r %s", helper);
     if ((rc = system(command)) == -1) {
 	printf1("Error deleting user [%s]\n", helper);
@@ -403,4 +339,72 @@ int verify(int return_code, laus_data *dataPtr, log_options logOption)
 
 EXIT_ERROR:
     return rc;
+}
+
+static int parse_command_line(int argc, char **argv, 
+			      struct syscall_opts *options)
+{
+    int opt;
+    int rc = 0;
+
+    /* option defaults */
+    strcpy(options->user, "");
+    strcpy(options->testcase, "");
+    options->debug_mode = -1;
+    options->fast_mode = 0;
+    options->help = 0;
+
+    while ((opt = getopt(argc, argv, "u:t:d:fh")) != -1) {
+	switch(opt) {
+	    case 'u':
+		strncpy(options->user, optarg, LOGIN_NAME_MAX);
+		break;
+		break;
+	    case 't':
+		strncpy(options->testcase, optarg, TESTCASE_NAME_MAX);
+		break;
+	    case 'd':
+		if ((strlen(optarg) > 1) ||
+		    (optarg[0] < '0') ||
+		    (optarg[0] > '9')) {
+		    rc = -1;
+		} else {
+		    options->debug_mode = atoi(optarg);
+		}
+		break;
+	    case 'f':
+		options->fast_mode = 1;
+		break;
+	    case 'h':
+		options->help = 1;
+		break;
+	    default:
+		rc = -1;
+	}
+    }
+
+    return rc;
+}
+
+static void usage()
+{
+    char *usage = "Usage:\n\
+  laustest [-u $TESTUSER] [-t $SYSCALL] [-d $DEBUG]\n\n\
+Arguments:\n\
+  -u $TESTUSER:  Specify the user to run the tests as $TESTUSER.\n\
+                 This user must actually exist on the system.\n\
+                 By default, this is 'nobody'\n\
+  -t $SYSCALL:   Optionally specify a single test case to run.\n\
+                 $SYSCALL is the name of the system call to test.\n\
+                 By default, all test cases are executed.\n\
+  -f             Fast mode, test (logSuccess=1, logFailure=1) only\n\
+  -d $DEBUG:     Optionally specify the debug level 0-5.\n\
+                 0  No messages\n\
+                 1  + Environment messages\n\
+                 2  + Test messages (Default)\n\
+                 3  + Warning messages\n\
+                 4  + Info messages\n\
+                 5  + Full debug messages\n\n";
+
+    printf("%s\n", usage);
 }

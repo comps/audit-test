@@ -45,7 +45,7 @@ int getLoginUID()
 	mysprintf("who -m | awk -F\" \" '{print $1}' | xargs id -u > %s",
 		  luid_filename);
     if ((rc = system(command)) == -1) {
-	printf1("ERROR: Get login uid failed\n");
+	printf1("ERROR: %s\n", command);
 	goto EXIT;
     }
     // Get the pts used

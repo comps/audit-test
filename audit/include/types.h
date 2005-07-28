@@ -205,6 +205,12 @@ typedef struct identifiers_s {
   int fsgid;
 } identifiers_t;
 
+struct test_counters {
+    int passed;
+    int failed;
+    int skipped;
+};
+
 struct audit_utils {
     int (* audit_start)();
     int (* audit_stop)();

@@ -69,13 +69,9 @@ struct syscall_opts {
 
 static int parse_command_line(int, char **, struct syscall_opts *);
 static void usage();
-static int verify(int, laus_data *, log_options);
+static int verify(int, laus_data *, log_options, struct test_counters *);
 
 char cwd[PATH_MAX];
-
-int pass_testcases = 0;
-int fail_testcases = 0;
-int skip_testcases = 0;
 int logOptionsIndex = 0;
 int debug = 2;
 uid_t login_uid = 0;
@@ -93,6 +89,7 @@ int main(int argc, char **argv)
     struct passwd *test_user_pw = NULL;	// test user's /etc/passwd data
     laus_data test_data;		// expected log data
     int test_rc;			// testcase return code
+    struct test_counters count = { 0, 0, 0 }; // aggregate results
     char *command = NULL;		// command string
 
     /* 
@@ -236,7 +233,7 @@ int main(int argc, char **argv)
 		/*
 		 * Determine results
 		 */
-		verify(test_rc, &test_data, logOptions[logOptionsIndex]);
+		verify(test_rc, &test_data, logOptions[logOptionsIndex], &count);
 
 		/* 
 		 * syscallData.data is allocated during each test run,
@@ -251,7 +248,7 @@ int main(int argc, char **argv)
 	}
     }
     printf2("PASSED = %i, FAILED = %i, SKIPPED = %i\n",
-	    pass_testcases, fail_testcases, skip_testcases);
+	    count.passed, count.failed, count.skipped);
 
 EXIT_CLEANUP:
     /* System cleanup */
@@ -272,7 +269,8 @@ EXIT:
 }
 
 static
-int verify(int return_code, laus_data *dataPtr, log_options logOption)
+int verify(int return_code, laus_data *dataPtr, log_options logOption,
+	   struct test_counters *count)
 {
     int rc = 0;
 
@@ -289,20 +287,20 @@ int verify(int return_code, laus_data *dataPtr, log_options logOption)
 		(!dataPtr->successCase && logOption.logFailure)) {
 		printf2("Verify record\n");
 		if (rc > 0) {
-		    pass_testcases++;
+		    count->passed++;
 		    printf2("AUDIT PASS ");
 		} else {
-		    fail_testcases++;
+		    count->failed++;
 		    debug_expected(dataPtr);
 		    printf2("AUDIT FAIL ");
 		}
 	    } else {
 		printf2("Verify no record\n");
 		if (rc == 0) {
-		    pass_testcases++;
+		    count->passed++;
 		    printf2("AUDIT PASS ");
 		} else {
-		    fail_testcases++;
+		    count->failed++;
 		    printf2("AUDIT FAIL ");
 		}
 	    }
@@ -313,7 +311,7 @@ int verify(int return_code, laus_data *dataPtr, log_options logOption)
 	    break;
 
 	case SKIP_TEST_CASE:
-	    skip_testcases++;
+	    count->skipped++;
 	    printf2
 		("%s() test case skipped: [logSuccess=%d, logFailure=%d, successCase=%d]\n",
 		 dataPtr->testName, logOption.logSuccess, logOption.logFailure,
@@ -321,7 +319,7 @@ int verify(int return_code, laus_data *dataPtr, log_options logOption)
 	    break;
 
 	default:
-	    fail_testcases++;
+	    count->failed++;
 	    printf1
 		("ERROR: %s() test invalid: [logSuccess=%d, logFailure=%d, successCase=%d]\n",
 		 dataPtr->testName, logOption.logSuccess, logOption.logFailure,

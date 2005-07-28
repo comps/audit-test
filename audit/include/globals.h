@@ -89,9 +89,6 @@
 //
 // Global variables
 //
-extern int pass_testcases;
-extern int fail_testcases;
-extern int skip_testcases;
 extern int logOptionsIndex;
 //
 // If an error is detected with the syscall being tested, an ERROR

@@ -38,7 +38,6 @@
 #include "includes.h"
 #include <linux/audit.h>
 #include <time.h>
-#include "audit_read.h"
 
 #define BUFSIZE 1024
 

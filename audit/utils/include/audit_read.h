@@ -73,12 +73,4 @@ struct aud_log {
 	char *filename;
 };
 
-
-/* Function Prototypes */
-void initialize_aud_log (struct aud_log *log);
-int open_audit_log (struct aud_log *audit_log, char *filename);
-int close_audit_log (struct aud_log *audit_log);
-int rewind_audit_log (struct aud_log *audit_log);
-struct aud_message_on_disk *get_next_audit_record (struct aud_log *audit_log, struct laus_record_header_on_disk *hdr);
-
 #endif

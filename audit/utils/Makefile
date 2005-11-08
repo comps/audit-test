@@ -70,12 +70,6 @@ LAF_OBJS	= laf/laf_clear.o		\
 		  laf/laf_verify.o
 
 LAUS_OBJS	= laus/laus_args.o		\
-		  laus/laus_clear.o		\
-		  laus/laus_config.o		\
-		  laus/laus_read.o		\
-		  laus/laus_reload.o		\
-		  laus/laus_start.o		\
-		  laus/laus_stop.o		\
 		  laus/laus_verify.o
 
 SEM_EXE		= semaphore_poster

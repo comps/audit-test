@@ -97,14 +97,4 @@ int laf_reload();
 int laf_set_filters(log_options);
 int laf_verify_log(laus_data *, log_options);
 
-/*
- * LAuS utility functions
- */
-int laus_start();
-int laus_stop();
-int laus_clear_logs();
-int laus_reload();
-int laus_set_filters(log_options);
-int laus_verify_log(laus_data *, log_options);
-
 #endif

@@ -57,13 +57,8 @@
 
 #include "includes.h"
 #include "syscalls.h"
-#ifdef CONFIG_AUDIT_LAUS
-#undef _POSIX_SOURCE
-#include <sys/capability.h>
-#else
 #include <linux/capability.h>
 extern int capget(cap_user_header_t header, const cap_user_data_t data);
-#endif
 
 int test_capset(laus_data *dataPtr)
 {

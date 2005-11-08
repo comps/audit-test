@@ -168,9 +168,6 @@ int main(int argc, char **argv)
      * XXX stopping and clearing the audit trail seems to detach this
      * process from the audit daemon in the 2.6 LAuS implementation
      */
-#ifdef CONFIG_AUDIT_LAUS
-    backupFile("/etc/audit/filter.conf");
-#endif
 
     /*
      * Variations on logging directives
@@ -259,9 +256,6 @@ EXIT_CLEANUP:
     free(command);
 
     /* Audit cleanup */
-#ifdef CONFIG_AUDIT_LAUS
-    restoreFile("/etc/audit/filter.conf");
-#endif
     audit_reload();
 
 EXIT:

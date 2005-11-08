@@ -33,12 +33,7 @@
 #define _AUDIT_READ_H
 
 #include <asm/param.h>
-#ifdef CONFIG_AUDIT_LAUS
-#include <laus.h>
-#include <linux/audit.h>
-#else
 #include "laus_info.h"
-#endif
         
 #if (defined(__S390X) || defined(__X86_64) || defined(__PPC64)) && defined(__MODE_32)
 // This is needed for accurate processing of headers on 64bit platforms when test suite

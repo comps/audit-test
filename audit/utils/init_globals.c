@@ -22,23 +22,12 @@
 
 void init_globals()
 {
-
-#ifdef CONFIG_AUDIT_LAUS
-    audit_ops.audit_start = &laus_start;
-    audit_ops.audit_stop = &laus_stop;
-    audit_ops.audit_clear_logs = &laus_clear_logs;
-    audit_ops.audit_reload = &laus_reload;
-    audit_ops.audit_set_filters = &laus_set_filters;
-    audit_ops.audit_verify_log = &laus_verify_log;
-#else
     audit_ops.audit_start = &laf_start;
     audit_ops.audit_stop = &laf_stop;
     audit_ops.audit_clear_logs = &laf_clear_logs;
     audit_ops.audit_reload = &laf_reload;
     audit_ops.audit_set_filters = &laf_set_filters;
     audit_ops.audit_verify_log = &laf_verify_log;
-#endif
-
 }
 
 int audit_start()

@@ -1,0 +1,226 @@
+#!/usr/bin/perl
+# Copyright (C) International Business Machines Corp., 2003
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details. 
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+# USA 
+#
+# FILE: au_syscalls
+#
+# PURPOSE: test for aucat/augrep utilities on "SYSCALL" audit records
+#
+# DESCRIPTION:    This test uses the test_setxattr and test_bind in the same directory
+#                 to generate SYSCALL audit records of all types (with the local filter.conf in place).
+#                 The Event flags are tested with the SYSCALL type.
+#                 The SYSCALL type specific flags are tested.
+#
+#                 Then this script runs the following scenarios: (the data is only a sample the 
+#                 test actually pulls it from the aucat record found).
+#
+# aucat | grep bind
+# augrep -e SYSCALL | grep bind
+# augrep --event=SYSCALL | grep bind
+# augrep -e SYSCALL -S bind
+# augrep -e SYSCALL --syscall=bind
+# augrep -e SYSCALL -M 102
+# augrep -e SYSCALL --major=102
+# augrep -e SYSCALL -N 2 | grep bind
+# augrep -e SYSCALL --minor=2 | grep bind
+# augrep -e SYSCALL -R 0 |  grep bind
+# augrep -e SYSCALL --sysresult=0 |  grep bind
+# augrep -e SYSCALL -D [sock:af=2,type=1]
+# augrep -e SYSCALL --sysdata=[sock:af=2,type=1]
+#
+#
+# HISTORY:
+#       08/2003 Originated by Niki A. Rahimi <narahimi@us.ibm.com>
+#       08/2003 Reviewed and revised by Michael A. Halcrow <mike@halcrow.us>
+#       09/2003 Furthered by Kylene J. Smith <kylene@us.ibm.com>
+
+use strict;
+require au_params;
+require au_utils;
+
+my $filter_dot_conf_fullpath = au_params::filter_dot_conf_fullpath();
+my $filter_dot_conf_backup_fullpath = au_params::filter_dot_conf_backup_fullpath();
+my $aucat_executable = au_params::aucat_executable();
+my $augrep_executable = au_params::augrep_executable();
+my $audit_log_fullpath = au_params::audit_log_fullpath();
+my $audit_logs_fullpath = au_params::audit_logs_fullpath();
+my $audit_log_link_fullpath = au_params::audit_log_link_fullpath();
+my $auditd_executable = au_params::auditd_executable();
+
+my $tmp_user = "au_sys_tmp_user";
+my @test;
+
+#format: name, major, minor
+
+@test = ( [ "setxattr", "63", "0", ],
+	     [ "bind", "4", "0" ] );
+
+my $aucat_failcount = 0;
+my $aucat_successcount = 0;
+my $augrep_failcount = 0;
+my $augrep_successcount = 0;
+
+my $au_cmd = "";
+
+sub augrep_results ( \@$) {
+
+    my @cat_record = @{$_[0]};
+    my $num_recs = $_[1];
+
+    open(HSI, "$au_cmd |")
+	or die "TEST ERROR: Cannot open augrep";
+
+    my @grep_record = <HSI>;
+    close(HSI);
+
+    if ( @grep_record == $num_recs && @grep_record == @cat_record ) {
+	print "TEST PASS: $au_cmd\n";
+	$augrep_successcount++;
+    }
+    else {
+	print "TEST FAIL: $au_cmd\n";
+	$augrep_failcount++;
+    }    
+}
+
+sub aucat_results ( $ ) {
+
+    my $test_number = $_[0];
+    $au_cmd = "$aucat_executable | grep $test[$test_number][0]";
+
+    # wait for the record to get to the log
+
+    open(HSI, "$au_cmd |")
+	or die "TEST ERROR: Cannot open aucat";
+
+    my @cat_record = <HSI>;
+    close(HSI);
+
+
+    if ( @cat_record == 2 ) {
+	print "TEST PASS: $au_cmd\n";
+	$aucat_successcount++;
+    }
+    else {
+	print "TEST FAIL: $au_cmd\n";
+	$aucat_failcount++;
+	#goto EXIT;
+    }
+
+    return @cat_record;
+}
+
+au_utils::preTestSetup();
+
+#Run command to create temporary user
+my $tmp_usr_cmd = "/usr/sbin/useradd";
+system( "$tmp_usr_cmd $tmp_user");
+
+#Run the actual test to generate record we will look for
+my $test_number = 0;
+my $cmd = "";
+
+for ($test_number=0; $test_number < @test; $test_number++ ) {
+
+if ( $test[$test_number][0] eq "setxattr" )
+{
+    $cmd = "./test_$test[$test_number][0] $tmp_user";
+}
+else
+{
+    $cmd = "./test_$test[$test_number][0]";
+}
+
+system($cmd);
+print "\n";
+sleep(5);
+
+#Find the record with aucat
+my @aucat_records = aucat_results( $test_number );
+
+my($timestamp, $seqnr, $pid, $login, $data ) = split(/\s+/, $aucat_records[0], 5);
+my($tmp1, $params, $tmp2) = split(/\"/, $data, 3);
+
+#Testing the EVENT  flags with the SYSCALL type
+
+$au_cmd = "$augrep_executable -e SYSCALL | grep $test[$test_number][0] ";
+augrep_results( @aucat_records, 2 );
+
+$au_cmd = "$augrep_executable --event=SYSCALL | grep $test[$test_number][0] ";
+augrep_results( @aucat_records, 2 );
+
+#Test SYSCALL specific flags 
+
+#Syscall name flags
+
+$au_cmd="$augrep_executable -e SYSCALL -S $test[$test_number][0]";
+augrep_results( @aucat_records, 2 );
+
+$au_cmd="$augrep_executable -e SYSCALL --syscall=$test[$test_number][0]";
+augrep_results( @aucat_records, 2 );
+
+#Major number flags
+$au_cmd="$augrep_executable -e SYSCALL -M $test[$test_number][1]";
+augrep_results( @aucat_records, 2 );
+
+$au_cmd="$augrep_executable -e SYSCALL --major=$test[$test_number][1]";
+augrep_results( @aucat_records, 2 );
+
+#Minor number flags
+$au_cmd="$augrep_executable -e SYSCALL -N $test[$test_number][2] | grep $test[$test_number][0]";
+augrep_results( @aucat_records, 2 );
+
+$au_cmd="$augrep_executable -e SYSCALL --minor=$test[$test_number][2] | grep $test[$test_number][0] ";
+augrep_results( @aucat_records, 2 );
+
+my @success_records = ($aucat_records[0]);
+
+#Result flags
+$au_cmd="$augrep_executable -e SYSCALL -R 0 |  grep $test[$test_number][0]";
+augrep_results( @success_records, 1);
+
+$au_cmd="$augrep_executable -e SYSCALL --sysresult=0 |  grep $test[$test_number][0]";
+augrep_results( @success_records, 1);
+
+#Data flags
+$au_cmd="$augrep_executable -e SYSCALL -D $params";
+augrep_results( @success_records, 1);
+
+$au_cmd="$augrep_executable -e SYSCALL --sysdata=$params";
+augrep_results( @success_records, 1);
+
+}
+
+EXIT:
+
+#Delete temp user
+my $tmp_usr_rm_cmd = "/usr/sbin/userdel";
+system( "$tmp_usr_rm_cmd $tmp_user");
+
+#Final Printout
+print ("\n\taucat  syscalls results");
+print ("\tsuccess count: $aucat_successcount");
+print ("\tfail count: $aucat_failcount\n");
+
+print ("\n\taugrep syscalls results");
+print ("\tsuccess count: $augrep_successcount");
+print ("\tfail count: $augrep_failcount\n\n");
+
+print ("TEST PASSED = " . ($aucat_successcount + $augrep_successcount) . ", FAILED = " . ($aucat_failcount + $augrep_failcount) . "\n");
+
+#Final Cleanup
+au_utils::postTestCleanup();

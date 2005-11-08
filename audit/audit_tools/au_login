@@ -1,0 +1,188 @@
+#!/usr/bin/perl
+# Copyright (C) International Business Machines Corp., 2003
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details. 
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+# USA 
+#
+# FILE: au_login
+#
+# PURPOSE: test for aucat/augrep utilities on "LOGIN" audit records
+#
+# DESCRIPTION:    This test uses ssh01 and ssh01_s1 in this same directory to generate
+#                 an LOGIN audit records (with the local filter.conf in place).
+#                 The Event flags are tested with the LOGIN type.
+#                 The Login type specific flags are tested.
+#
+#                 Then this script runs the following scenarios: (the data is only a sample the
+#                 test actually pulls it from the aucat record found).
+# aucat | grep sshd
+# augrep -e LOGIN
+# augrep --event=LOGIN
+# augrep -e LOGIN -A 127.0.0.1
+# augrep -e LOGIN --address=127.0.0.1
+# augrep -e LOGIN -E /usr/sbin/sshd
+# augrep -e LOGIN --execute=/usr/sbin/sshd
+# augrep -e LOGIN -H localhost
+# augrep -e LOGIN --hostname=localhost
+# augrep -e LOGIN -T NODEVssh
+# augrep -e LOGIN --terminal=NODEVssh
+#
+# HISTORY:
+#       08/2003 Originated by Niki A. Rahimi <narahimi@us.ibm.com>
+#       08/2003 Reviewed and revised by Michael A. Halcrow <mike@halcrow.us>
+#       09/2003 Furthered by Kylene J. Smith <kylene@us.ibm.com>
+#	10/2003 Revised by Dustin Kirkland <k1rkland@us.ibm.com>
+
+use strict;
+require au_params;
+require au_utils;
+
+my $filter_dot_conf_fullpath = au_params::filter_dot_conf_fullpath();
+my $filter_dot_conf_backup_fullpath = au_params::filter_dot_conf_backup_fullpath();
+my $aucat_executable = au_params::aucat_executable();
+my $augrep_executable = au_params::augrep_executable();
+my $audit_log_fullpath = au_params::audit_log_fullpath();
+my $audit_logs_fullpath = au_params::audit_logs_fullpath();
+my $audit_log_link_fullpath = au_params::audit_log_link_fullpath();
+my $auditd_executable = au_params::auditd_executable();
+
+my $test = "ssh01";
+
+my $aucat_failcount = 0;
+my $aucat_successcount = 0;
+my $augrep_failcount = 0;
+my $augrep_successcount = 0;
+
+my $au_cmd = "";
+my $id_cmd = "";
+my $user_uid = 0;
+
+sub augrep_results ( \@) {
+
+    my @cat_record = @{$_[0]};
+
+    open(HSI, "$au_cmd |")
+	or die "TEST ERROR: Cannot open augrep";
+
+    my @grep_record = <HSI>;
+    close(HSI);
+
+    if ( @grep_record == 1  && @grep_record == @cat_record ) {
+	print "TEST PASS: $au_cmd\n";
+	$augrep_successcount++;
+    }
+    else {
+	print "TEST FAIL: $au_cmd\n";
+	$augrep_failcount++;
+    }    
+}
+
+au_utils::preTestSetup();
+
+# Back up and ensure that sshd is logging.
+# MH: This isn't the test's job.
+#system("cp /etc/pam.d/sshd /etc/pam.d/sshd.bak");
+#system("cat /etc/pam.d/sshd | grep -v pam_laus.so > /etc/pam.d/sshd; echo \"account required pam_laus.so detach\" >>/etc/pam.d/sshd");
+
+
+#Run the actual test to generate record we will look for
+my $cmd = "./$test"; 
+system($cmd);
+print "\n";
+sleep 15;
+
+#Find the record with aucat
+$id_cmd = "cat ./ssh_uid";
+open(HSI, "$id_cmd |")
+	or die "Cannot open id";
+my $user_uid = <HSI>;
+chomp($user_uid);
+close(HSI);
+$au_cmd = "$aucat_executable | grep 'LOGIN' | grep 'uid=$user_uid'";
+open(HSI, "$au_cmd |")
+	or die "Cannot open aucat";
+
+my @aucat_records = <HSI>;
+close(HSI);
+
+if ( @aucat_records == 1 ) {
+    print "TEST PASS: $au_cmd\n";
+    $aucat_successcount++;
+}
+else {
+    print "TEST FAIL: $au_cmd\n";
+    $aucat_failcount++;
+    goto EXIT;
+}
+
+my($timestamp, $seqnr, $pid, $login, $data ) = split(/\s+/, $aucat_records[0], 5);
+my($junk, $uid, $junk, $hostname, $junk, $address, $junk, $terminal, $junk, $executable) = split(/[,=]/, $data, 10);
+chomp($executable);
+
+#Testing the EVENT  flags with the LOGIN type
+
+$au_cmd = "$augrep_executable -e LOGIN ";
+augrep_results( @aucat_records );
+
+$au_cmd = "$augrep_executable --event=LOGIN";
+augrep_results( @aucat_records );
+
+$au_cmd="$augrep_executable -e LOGIN -A $address";
+augrep_results( @aucat_records );
+
+$au_cmd = "$augrep_executable -e LOGIN --address=$address";
+augrep_results( @aucat_records );
+
+#Executable flags
+
+$au_cmd = "$augrep_executable -e LOGIN -E $executable";
+augrep_results( @aucat_records );
+
+$au_cmd = "$augrep_executable -e LOGIN --execute=$executable";
+augrep_results( @aucat_records );
+
+#Hostname flags
+
+$au_cmd = "$augrep_executable -e LOGIN -H $hostname";
+augrep_results( @aucat_records );
+
+$au_cmd = "$augrep_executable -e LOGIN --hostname=$hostname";
+augrep_results( @aucat_records );
+
+#Terminal flags
+
+$au_cmd = "$augrep_executable -e LOGIN -T $terminal";
+augrep_results( @aucat_records );
+
+$au_cmd = "$augrep_executable -e LOGIN --terminal=$terminal";
+augrep_results( @aucat_records );
+
+EXIT:
+#Restore pam.d/sshd to original configuration
+system("cp /etc/pam.d/sshd.bak /etc/pam.d/sshd");
+
+#Final Printout
+print ("\n\taucat  login results");
+print ("\tsuccess count: $aucat_successcount");
+print ("\tfail count: $aucat_failcount\n");
+
+print ("\n\taugrep login results");
+print ("\tsuccess count: $augrep_successcount");
+print ("\tfail count: $augrep_failcount\n\n");
+
+print ("TEST PASSED = " . ($aucat_successcount + $augrep_successcount) . ", FAILED = " . ($aucat_failcount + $augrep_failcount) . "\n");
+
+#Final Cleanup
+au_utils::postTestCleanup();

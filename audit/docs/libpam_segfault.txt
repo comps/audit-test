@@ -1,0 +1,28 @@
+TEST su()
+INFO Performing test on su
+DEBUG TEST 1
+DEBUG createTempFileName: /tmp/lausXXXXXX
+DEBUG temp file name: /tmp/lauso0OpdH
+DEBUG setresgid to 0, 0, 0
+DEBUG setresuid to 526, 526, 0
+DEBUG Calling getLAUSData
+DEBUG getLAUSData
+DEBUG Setting begin timestamp
+DEBUG Performing PAM program test
+spawn su - laus_y
+Password: 
+laus_y@dragoon:~> 
+laus_y@dragoon:~> exit
+DEBUG Setting end timestamp
+DEBUG setresuid to root
+DEBUG setresgid to root
+
+Program received signal SIGSEGV, Segmentation fault.
+0x0000007fe01363c4 in _IO_vfscanf () from /lib64/libc.so.6
+(gdb) bt
+#0  0x0000007fe01363c4 in _IO_vfscanf () from /lib64/libc.so.6
+#1  0x0000007fe013accc in vfscanf () from /lib64/libc.so.6
+#2  0x0000007fe013ad18 in fscanf () from /lib64/libc.so.6
+#3  0x00000000100041cc in test_su (dataPtr=0x100569e0) at test_su.c:113
+#4  0x0000000010002b74 in main (argc=603980866, argv=0x30) at libpam.c:250
+#5  0x0000007fe0100348 in __libc_start_main () from /lib64/libc.so.6

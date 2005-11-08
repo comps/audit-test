@@ -1,0 +1,157 @@
+#!/usr/bin/perl
+# Copyright (C) International Business Machines Corp., 2003
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details. 
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+# USA 
+#
+# FILE: au_trustedpgms
+#
+# PURPOSE: test for aucat/augrep utilities on "TEXT" audit records
+#
+# DESCRIPTION:    This test uses the test_groupadd in the same directory
+#                 to generate TEXT audit records (with the local filter.conf in place).
+#                 The Event flags are tested with the TEXT type.
+#                 The TEXT type specific flags are tested.
+#
+#                 Then this script runs the following scenarios: (the data is only a sample the 
+#                 test actually pulls it from the aucat record found).
+#
+# aucat | grep groupadd
+# augrep -e TEXT | grep groupadd
+# augrep --event=TEXT | grep groupadd
+# augrep -e TEXT -X groupadd
+# augrep -e TEXT --textdata=groupadd
+#
+#
+# HISTORY:
+#       08/2003 Originated by Niki A. Rahimi <narahimi@us.ibm.com>
+#       08/2003 Reviewed and revised by Michael A. Halcrow <mike@halcrow.us>
+#       09/2003 Furthered by Kylene J. Smith <kylene@us.ibm.com>
+
+use strict;
+require au_params;
+require au_utils;
+
+my $filter_dot_conf_fullpath = au_params::filter_dot_conf_fullpath();
+my $filter_dot_conf_backup_fullpath = au_params::filter_dot_conf_backup_fullpath();
+my $aucat_executable = au_params::aucat_executable();
+my $augrep_executable = au_params::augrep_executable();
+my $audit_log_fullpath = au_params::audit_log_fullpath();
+my $audit_logs_fullpath = au_params::audit_logs_fullpath();
+my $audit_log_link_fullpath = au_params::audit_log_link_fullpath();
+my $auditd_executable = au_params::auditd_executable();
+
+my $test = "groupadd";
+my $aucat_successcount = 0;
+my $aucat_failcount = 0;
+my $augrep_successcount = 0;
+my $augrep_failcount = 0;
+
+my $au_cmd="";
+
+sub augrep_results ( \@ ) {
+
+    my @cat_record = @{$_[0]};
+
+    open(HSI, "$au_cmd |")
+	or die "TEST ERROR: Cannot open augrep";
+
+    my @grep_record = <HSI>;
+    close(HSI);
+
+    if ( @grep_record == 1  && @grep_record == @cat_record ) {
+	print "TEST PASS: $au_cmd\n";
+	$augrep_successcount++;
+    }
+    else {
+	print "TEST FAIL: $au_cmd\n";
+	$augrep_failcount++;
+    }    
+}
+
+sub aucat_results ( ) {
+
+    $au_cmd = "$aucat_executable | grep 'groupadd: group added'";
+
+    # wait for the record to get to the log
+    sleep 2;
+
+    open(HSI, "$au_cmd |")
+	or die "TEST ERROR: Cannot open aucat";
+
+    my @cat_record = <HSI>;
+    close(HSI);
+
+
+    if ( @cat_record == 1 ) {
+	print "TEST PASS: $au_cmd\n";
+	$aucat_successcount++;
+    }
+    else {
+	print "TEST FAIL: $au_cmd\n";
+	$aucat_failcount++;
+	goto EXIT;
+    }
+
+    return @cat_record;
+}
+
+au_utils::preTestSetup();
+
+my $cmd = "./test_$test"; 
+system($cmd);
+
+my @aucat_records = aucat_results();
+
+my( $timestamp, $seqnr, $pid, $login, $data ) = split( /\s+/, $aucat_records[0], 5 );
+my($prgm, $junk) = split(/\W/, $data, 3);
+
+
+
+#Test event flags with TEXT
+$au_cmd = "$augrep_executable -e TEXT | grep 'groupadd: group added'";
+augrep_results(@aucat_records);
+
+
+$au_cmd = "$augrep_executable --event=TEXT | grep 'groupadd: group added'";
+augrep_results(@aucat_records);
+
+#Test TEXT specific flags
+
+#test data flags
+$au_cmd = "$augrep_executable -e TEXT -X 'groupadd: group added'";
+augrep_results(@aucat_records);
+
+$au_cmd = "$augrep_executable -e TEXT --textdata='groupadd: group added'";
+augrep_results(@aucat_records);
+
+#$au_cmd = "$augrep_executable -e TEXT -U [audittag] --textdata='groupadd: group added'";
+#augrep_results(@aucat_records);
+
+
+EXIT:
+
+#Final Output
+print ("\n\taucat  trustedpgms results");
+print ("\tsuccess count: $aucat_successcount");
+print ("\tfail count: $aucat_failcount\n");
+
+print ("\n\taugrep trustedpgms results");
+print ("\tsuccess count: $augrep_successcount");
+print ("\tfail count: $augrep_failcount\n\n");
+
+print ("TEST PASSED = " . ($aucat_successcount + $augrep_successcount) . ", FAILED = " . ($aucat_failcount + $augrep_failcount) . "\n");
+
+au_utils::postTestCleanup();

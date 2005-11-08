@@ -51,6 +51,8 @@ UTILS_OBJS	= create_dir.o			\
 		  create_temp_user_name.o	\
 		  create_temp_group_name.o	\
 		  create_temp_dir.o		\
+		  debug_audit_msg.o		\
+		  encode_syscall_args.o		\
 		  find_next_pts.o		\
 		  get_identifiers.o		\
 		  get_laus_data.o		\
@@ -69,9 +71,6 @@ LAF_OBJS	= laf/laf_clear.o		\
 		  laf/laf_stop.o		\
 		  laf/laf_verify.o
 
-LAUS_OBJS	= laus/laus_args.o		\
-		  laus/laus_verify.o
-
 SEM_EXE		= semaphore_poster
 SEM_EXE2	= semaphore_poster2
 SEM_OBJS	= semaphore_poster.o
@@ -88,8 +87,8 @@ EXIT_OBJS	= exit_with_pid_status.o
 
 all: deps $(UTILS_AR) $(SEM_EXE) $(RC_EXE) $(PTS_EXE) $(AUDIT_TRAIL_EXE) $(EXIT_EXE)
 
-$(UTILS_AR): $(UTILS_OBJS) $(LAF_OBJS) $(LAUS_OBJS)
-	$(AR) rc $@ $(UTILS_OBJS) $(LAF_OBJS) $(LAUS_OBJS)
+$(UTILS_AR): $(UTILS_OBJS) $(LAF_OBJS)
+	$(AR) rc $@ $(UTILS_OBJS) $(LAF_OBJS)
 	$(RANLIB) $@
 
 $(SEM_EXE): $(SEM_OBJS)
@@ -109,7 +108,7 @@ $(PTS_EXE): $(PTS_OBJS)
 
 clean:
 	$(RM) -r .deps
-	$(RM) $(UTILS_OBJS) $(LAF_OBJS) $(LAUS_OBJS)
+	$(RM) $(UTILS_OBJS) $(LAF_OBJS)
 
 clobber: clean
 	$(RM) $(UTILS_AR) $(SEM_EXE) $(SEM_EXE2) $(RC_EXE) \

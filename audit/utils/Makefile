@@ -108,7 +108,8 @@ $(PTS_EXE): $(PTS_OBJS)
 
 clean:
 	$(RM) -r .deps
-	$(RM) $(UTILS_OBJS) $(LAF_OBJS)
+	$(RM) $(UTILS_OBJS) $(LAF_OBJS) $(SEM_OBJS) $(RC_OBJS) \
+	$(PTS_OBJS) $(EXIT_OBJS)
 
 clobber: clean
 	$(RM) $(UTILS_AR) $(SEM_EXE) $(SEM_EXE2) $(RC_EXE) \

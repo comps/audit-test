@@ -141,8 +141,6 @@ Arguments:\n\
     {&test_usermod, "usermod", NULL}
   };
 
-  init_globals();
-
   // Iterate through command line options
   while (1) {
     int option_index = 0;

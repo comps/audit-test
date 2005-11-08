@@ -20,7 +20,7 @@
 
 #include "includes.h"
 
-int laf_set_filters(log_options logOption)
+int audit_set_filters(log_options logOption)
 {
     int rc = 0;
 

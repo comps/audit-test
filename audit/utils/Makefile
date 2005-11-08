@@ -57,7 +57,6 @@ UTILS_OBJS	= create_dir.o			\
 		  get_identifiers.o		\
 		  get_laus_data.o		\
 		  get_login_uid.o		\
-		  init_globals.o		\
 		  mysprintf.o			\
 		  file_utils.o			\
 		  run.o				\

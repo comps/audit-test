@@ -131,11 +131,6 @@ int main(int argc, char **argv)
     }
 
     /*
-     * Initialize test suite configuration
-     */
-    init_globals();
-
-    /*
      * Get system info
      */
     if (getcwd(cwd, PATH_MAX) == NULL) {

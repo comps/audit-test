@@ -46,7 +46,7 @@ static int match_type(laus_data *, parse_info_t *, char *, char *);
 static int match_syscall_record(laus_data *, parse_info_t *, char *, char *);
 
 
-int laf_verify_log(laus_data *dataPtr, log_options logOption)
+int audit_verify_log(laus_data *dataPtr, log_options logOption)
 {
 
     int rc = 0;
@@ -59,20 +59,20 @@ int laf_verify_log(laus_data *dataPtr, log_options logOption)
     if ((fp = fopen("/var/log/audit/audit.log", "r")) == NULL) {
 	printf1("ERROR: Unable to open audit log: %s\n", strerror(errno));
 	rc = -1;
-	goto exit_laf_verify_log;
+	goto exit_verify_log;
     }
 
     if ((buf = (char *)malloc(AUDIT_RECORD_MAX)) == NULL) {
 	printf1("ERROR: malloc: %s\n", strerror(errno));
 	rc = -1;
-	goto exit_laf_verify_log;
+	goto exit_verify_log;
     }
 
     if ((init_parse_info(0, &tinfo) < 0) ||
 	(init_parse_info(dataPtr->msg_type, &vinfo) < 0)) {
 	printf1("ERROR: Unable to initialize regex info.\n");
 	rc = -1;
-	goto exit_laf_verify_log;
+	goto exit_verify_log;
     }
 
     while ((fgets(buf, AUDIT_RECORD_MAX, fp)) != NULL) {
@@ -97,7 +97,7 @@ int laf_verify_log(laus_data *dataPtr, log_options logOption)
     printf5("records found: %d\n", records_found);
     rc = records_found;
 
-exit_laf_verify_log:
+exit_verify_log:
     if (buf) {
 	free(buf);
     }

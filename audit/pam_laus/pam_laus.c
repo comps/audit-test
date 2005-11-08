@@ -128,8 +128,6 @@ Arguments:\n\
     {&test_vsftpd, "vsftpd", NULL}
   };
 
-  init_globals();
-
   backupFile("/etc/audit/filter.conf");
 
   // Iterate through command line options

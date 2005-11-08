@@ -79,22 +79,14 @@ int auditArg5( laus_data* lausDataPtr,
 char* mysprintf(char* fmt, ...);
 int run(char* command); 
 
-void init_globals();
+/*
+ * Audit Interaction Utilities
+ */
 int audit_start();
 int audit_stop();
 int audit_clear_logs();
 int audit_reload();
 int audit_set_filters(log_options);
 int audit_verify_log(laus_data *, log_options);
-
-/*
- * LAF utility functions
- */
-int laf_start();
-int laf_stop();
-int laf_clear_logs();
-int laf_reload();
-int laf_set_filters(log_options);
-int laf_verify_log(laus_data *, log_options);
 
 #endif

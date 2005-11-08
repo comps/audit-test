@@ -20,7 +20,7 @@
 
 #include "includes.h"
 
-int laf_clear_logs()
+int audit_clear_logs()
 {
     int rc = 0;
     int i, fd;

@@ -20,7 +20,7 @@
 
 #include "includes.h"
 
-int laf_reload()
+int audit_reload()
 {
     int rc = 0;
 

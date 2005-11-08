@@ -128,11 +128,6 @@ extern char* helper;
 extern int helper_uid;
 extern char* helper_homedir;
 
-/*
- * Audit utility functions ops structure
- */
-struct audit_utils audit_ops;
-
 // Here is where we redefine the C language to act like Perl!
 #define RUNCOMMANDORDIE( cmd, ... ) { char* command = mysprintf( cmd, ## __VA_ARGS__ ); if( ( rc = system( command ) ) == -1 ) { printf1( "Error running command: [%s]\n", command ); free( command ); goto EXIT_CLEANUP; } free( command ); }
 #define RUNCOMMAND( cmd, ... ) { char* command = mysprintf( cmd, ## __VA_ARGS__ ); if( ( rc = system( command ) ) == -1 ) { printf1( "Error running command: [%s]\n", command ); } free( command ); }

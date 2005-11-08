@@ -20,7 +20,7 @@
 
 #include "includes.h"
 
-int laf_stop()
+int audit_stop()
 {
 
     int rc = 0;

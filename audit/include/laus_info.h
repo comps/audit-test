@@ -134,6 +134,13 @@ struct aud_msg_netlink {
 #define AUDIT_MSG_NETLINK	4
 #define AUDIT_MSG_USERBASE	256     /* user land messages start here */
 
+/*
+ * From SUSE <audit.h>
+ */
+enum {
+        AUDIT_MSG_TEXT = AUDIT_MSG_USERBASE,
+};
+
 /* Values for msg_arch */
 enum {
         AUDIT_ARCH_I386,
@@ -177,37 +184,6 @@ enum audit_arg {
         AUDIT_ARG_NULL,
         AUDIT_ARG_ERROR,
         AUDIT_ARG_VECTOR       /* for execve */
-};
-
-
-/*
- * From SUSE <audit.h>
- */
-enum {
-        AUDIT_MSG_TEXT = AUDIT_MSG_USERBASE,
-};
-
-
-/*
- * From SUSE <laus.h>
- */
-
-/*
- * File header of the audit log file
- */
-struct laus_file_header {
-        u_int32_t               h_version;
-        u_int32_t               h_msgversion;
-        u_int32_t               h_count;
-        char                    h_hostname[256];
-};
-
-/*
- * Record headers used in the audit log file
- */
-struct laus_record_header {
-        time_t                  r_time;
-        size_t                  r_size;
 };
 
 #endif

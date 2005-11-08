@@ -51,38 +51,6 @@ typedef int __laus_int32;
 #define NO_CHECK_SYSCALL_DATA 0x7ba970a7
 
 typedef struct {
-	uid_t		uid;
-	char		hostname[AUD_MAX_HOSTNAME];
-	char		address[AUD_MAX_ADDRESS];
-	char		terminal[AUD_MAX_TERMINAL];
-        char		executable[PATH_MAX];
-} laus_login ;
-
-typedef struct {
-        int             personality;
-	int		code, minor;
-	int		result;
-        int             resultErrno;
-        unsigned int    length;
-	unsigned char*  data;	/* variable size */
-} laus_syscall;
-
-typedef struct {
-        long code;
-} laus_exit;
-
-typedef struct {
-        unsigned int    groups, dst_groups;
-	int		result;
-        unsigned int    length;
-	unsigned char*  data;	/* variable size */
-} laus_netlink;
-
-typedef struct {
-    unsigned char*  data;	/* variable size */
-} laus_text;
-
-typedef struct {
     char*        testName;
     Boolean      successCase;    
     time_t       begin_r_time;
@@ -175,17 +143,6 @@ typedef struct {
 } log_options;
 
 typedef int ARG_TYPE;
-/*
-typedef enum {
-        AUDIT_ARG_IMMEDIATE = 1,
-        AUDIT_ARG_POINTER,
-        AUDIT_ARG_STRING,
-        AUDIT_ARG_PATH,
-        AUDIT_ARG_CWD,
-        AUDIT_ARG_NULL,
-        AUDIT_ARG_END = 0
-} ARG_TYPE;
-*/
 
 #define AUDIT_ARG_IMMEDIATE_u 1234 
 #define AUDIT_ARG_IGNORE 2345

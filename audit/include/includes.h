@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "testsuite.h"
 #include "types.h"
 #include "globals.h"
 #include "utils.h"

@@ -35,6 +35,8 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
+#include "testsuite.h" /* for log_options */
+
 /*
  * Audit Interaction
  */

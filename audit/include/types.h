@@ -38,8 +38,6 @@
 //
 // New types
 //
-typedef enum {FALSE, TRUE} Boolean; 
-
 #if defined(__MODE_32) || defined(__IX86)
 typedef long long __laus_int64;
 typedef int __laus_int32;
@@ -106,17 +104,6 @@ typedef struct {
   } laus_var_data;
 } laus_data;
 
-#define LOGOPTION_INDEX_ALL 0
-#define LOGOPTION_INDEX_SUCCESS_ONLY 1
-#define LOGOPTION_INDEX_FAIL_ONLY 2
-#define LOGOPTION_INDEX_NOTHING 3
-
-// logOptions data
-typedef struct {
-  Boolean logSuccess;
-  Boolean logFailure;
-} log_options;
-
 typedef int ARG_TYPE;
 /*
 typedef enum {
@@ -132,11 +119,5 @@ typedef enum {
 
 #define AUDIT_ARG_IMMEDIATE_u 1234 
 #define AUDIT_ARG_IGNORE 2345
-
-struct test_counters {
-    int passed;
-    int failed;
-    int skipped;
-};
 
 #endif

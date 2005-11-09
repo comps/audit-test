@@ -52,7 +52,6 @@
 #define AUDIT_ARCH  -1
 #endif
 
-#define SKIP_TEST_CASE          256
 #define NO_RETURN_CODE          -2
 #define NO_PID_CHECK            -2
 #define NO_ID_CHECK             -2

@@ -61,6 +61,12 @@
 #define MAX_ARG_SIZE 30                 /* test_execve */
 #define MAX_WAIT_TIME_FOR_CHILD 60      /* test_execve */
 
+/* 
+ * Global variables
+ */
+extern char cwd[PATH_MAX];
+extern int helper_uid; /* user for testing EPERM, EACCES errors */
+
 /*
  * Syscall Test Function Prototypes
  *

@@ -71,18 +71,19 @@ static int parse_command_line(int, char **, struct syscall_opts *);
 static void usage();
 static int verify(int, laus_data *, log_options, struct test_counters *);
 
-char cwd[PATH_MAX];
-int logOptionsIndex = 0;
+/* global to utils lib */
 int debug = 2;
 uid_t login_uid = 0;
-char *helper;
+
+/* global to syscalls tests */
+char cwd[PATH_MAX];
 int helper_uid;
-char *helper_homedir;
 
 int main(int argc, char **argv)
 {
     int rc = 0;				// main return code
     struct syscall_opts options;	// CLI options
+    int logOptionsIndex = 0;
     int i;				// loop counter
     Boolean success;			// loop counter
     char test_user[LOGIN_NAME_MAX + 1];	// test user
@@ -91,6 +92,9 @@ int main(int argc, char **argv)
     int test_rc;			// testcase return code
     struct test_counters count = { 0, 0, 0 }; // aggregate results
     char *command = NULL;		// command string
+
+    char *helper;
+    char *helper_homedir;
 
     /* 
      * Parse and check command line options

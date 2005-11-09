@@ -50,6 +50,8 @@ int audit_verify_log(laus_data *, log_options);
 /*
  * System Info Collection
  */
+extern uid_t login_uid;
+
 typedef struct identifiers_s {
     int ruid;
     int euid;
@@ -145,6 +147,8 @@ do {								\
 /*
  * Debug Messages
  */
+extern int debug; /* global debug level */
+
 void debug_expected(const laus_data* dataPtr);
 
 #define printf1(msg, ...)		\

@@ -56,7 +56,6 @@
 #include <pwd.h>
 #include <getopt.h>
 
-int test_rc = 0;
 int pass_testcases = 0;
 int fail_testcases = 0;
 int skip_testcases = 0;
@@ -69,7 +68,7 @@ char cwd[PATH_MAX];
 */
 int main(int argc, char **argv)
 {
-
+  int test_rc = 0;
   int rc    = 0;
   int k     = 0;
   uid_t uid = 0;

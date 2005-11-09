@@ -57,46 +57,4 @@
 #define NO_ID_CHECK             -2
 #define NO_FORK			-3 
 
-//
-// Global variables
-//
-extern int logOptionsIndex;
-//
-// If an error is detected with the syscall being tested, an ERROR
-// message is output and the global test_rc variable is set. This
-// allows the test to continue for the rest of the syscalls.
-//
-// If an error is detected with any of the test setup functions,
-// the test case aborts immediately since the test environment is
-// no longer valid.
-//
-extern int test_rc;
-//
-// Constant resource names
-//
-// Temp files are dynamically generated as /tmp/laustestxxxxxx.
-// BUGBUG: tempdir should be read from environment variable
-// 
-// static char* tempdir  = "/tmp";
-// static char* tempprefix = "laus";
-
-extern int debug;
-extern char cwd[PATH_MAX];
-
-// 
-// The login uid must be passed into the test since it
-// it cannot be obtained via a system call. The login
-// uid will be checked against the value stored in an
-// audit record.
-// 
-extern uid_t login_uid;
-
-//
-// The security relevant tests attempt to test the EPERM and EACCES
-// error conditions.  To do this, we create a globally available test
-// user.
-extern char* helper;
-extern int helper_uid;
-extern char* helper_homedir;
-
 #endif

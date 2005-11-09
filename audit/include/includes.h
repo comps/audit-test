@@ -42,10 +42,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <asm/types.h>
 
 #include "testsuite.h"
-#include "types.h"
-#include "globals.h"
+#include "context.h"
 #include "utils.h"
 
 #endif

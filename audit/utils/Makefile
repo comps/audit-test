@@ -44,9 +44,7 @@ AR		= ar
 RANLIB		= ranlib
 
 UTILS_AR	= laus_test_utils.a
-UTILS_OBJS	= create_dir.o			\
-		  create_file.o			\
-		  create_temp_file.o		\
+UTILS_OBJS	= create_temp_file.o		\
 		  create_temp_file_name.o	\
 		  create_temp_user_name.o	\
 		  create_temp_group_name.o	\

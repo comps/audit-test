@@ -35,28 +35,49 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-int size_of_file(char*);
-int backupFile(char*);
-int restoreFile(char*);
+/*
+ * Audit Interaction
+ */
+int audit_start();
+int audit_stop();
+int audit_clear_logs();
+int audit_reload();
+int audit_set_filters(log_options);
+int audit_verify_log(laus_data *, log_options);
+
+/*
+ * System Info Collection
+ */
 int getLAUSData(laus_data*);
 int getLoginUID();
-int createFile(char* fname, mode_t mode, uid_t uid, gid_t gid);
+int getIdentifiers( identifiers_t* identifiers );
+int getPid(char* executable);
+
+/*
+ * File Content Preservation
+ */
+int backupFile(char*);
+int restoreFile(char*);
+
+/*
+ * Temp Data Creation
+ */
 int createTempFile(char** fname, mode_t mode, uid_t uid, gid_t gid);
 int createTempFileName(char** fname);
 int createTempDir(char** fname, mode_t mode, uid_t uid, gid_t gid);
 int createTempUser(char** user, int* uid, char** homedir);
 int createTempUserName(char** user, int* uid, char** homedir);
 int createTempGroupName( char** user, int* uid );
-void debug_expected(const laus_data* dataPtr);
-int getIdentifiers( identifiers_t* identifiers );
-int getPid(char* executable);
-int preSysCall(laus_data* dataPtr);
-int postSysCall(laus_data* dataPtr, int resultErrno, int errorRC, int expectedErrno);
-int arg_vector(char** vector, int vector_size, const ARG_TYPE type,
-	const int size, const char* src);
+
+/*
+ * Syscall Args Encoding
+ */
 int arg_get(ARG_TYPE* ptype, int* psize, char* dest, const char** src);
+int arg_vector(char** vector, int vector_size, 
+	       const ARG_TYPE type, const int size, const char* src);
 int auditArg0( laus_data* lausDataPtr );
-int auditArg1( laus_data* lausDataPtr, const int auditArgType, const int size, void* dataPtr );
+int auditArg1( laus_data* lausDataPtr, 
+	       const int auditArgType, const int size, void* dataPtr );
 int auditArg2( laus_data* lausDataPtr,
 	       const int auditArgType1, const int size1, void* dataPtr1,
 	       const int auditArgType2, const int size2, void* dataPtr2 );
@@ -76,17 +97,170 @@ int auditArg5( laus_data* lausDataPtr,
 	       const int auditArgType4, const int size4, void* dataPtr4,
 	       const int auditArgType5, const int size5, void* dataPtr5 );
 
-char* mysprintf(char* fmt, ...);
-int run(char* command); 
+/*
+ * Syscall Test Setup/Teardown
+ */
+int preSysCall(laus_data* dataPtr);
+int postSysCall(laus_data* dataPtr, int resultErrno, int errorRC, 
+		int expectedErrno);
 
 /*
- * Audit Interaction Utilities
+ * Shell Command Utilities
  */
-int audit_start();
-int audit_stop();
-int audit_clear_logs();
-int audit_reload();
-int audit_set_filters(log_options);
-int audit_verify_log(laus_data *, log_options);
+int run(char* command); 
+char* mysprintf(char* fmt, ...);
+#define RUNCOMMAND(cmd, ...) \
+do {								\
+    char* command = mysprintf(cmd, ## __VA_ARGS__);		\
+    if ((rc = system(command)) == -1) {				\
+	printf1("Error running command: [%s]\n", command);	\
+    }								\
+    free(command);						\
+} while (0)							\
 
-#endif
+#define RUNCOMMANDORDIE(cmd, ...) \
+do {								\
+    char* command = mysprintf(cmd, ## __VA_ARGS__ );		\
+    if ((rc = system(command)) == -1) {				\
+	printf1("Error running command: [%s]\n", command);	\
+	free(command);						\
+	goto EXIT_CLEANUP;					\
+    }								\
+    free(command);						\
+} while (0)
+
+/*
+ * Debug Messages
+ */
+void debug_expected(const laus_data* dataPtr);
+
+#define printf1(msg, ...)		\
+do {					\
+    if (debug >= 1) {			\
+	printf( "ENVIRONMENT ");	\
+	printf( msg, ## __VA_ARGS__);	\
+    }					\
+} while (0)
+
+#define printf2(msg, ...)		\
+do {					\
+    if (debug >= 2) {			\
+	printf( "TEST ");		\
+	printf( msg, ## __VA_ARGS__);	\
+    }					\
+} while (0)
+
+#define printf2prime(msg, ...)		\
+do {					\
+    if (debug >= 2) {			\
+	printf(msg, ## __VA_ARGS__);	\
+    }					\
+} while (0)
+
+#define printf3(msg, ...)		\
+do {					\
+    if (debug >= 3) {			\
+	printf( "WARNING ");		\
+	printf( msg, ## __VA_ARGS__);	\
+    }					\
+} while (0)
+
+#define printf4(msg, ...)		\
+do {					\
+    if (debug >= 4) {			\
+	printf( "INFO ");		\
+	printf( msg, ## __VA_ARGS__);	\
+    }					\
+} while (0)
+
+#define printf5(msg, ...)		\
+do {					\
+    if (debug >= 5) {			\
+	printf( "DEBUG ");		\
+	printf( msg, ## __VA_ARGS__);	\
+    }					\
+} while (0)
+
+#define printf5prime(msg, ...)		\
+do {					\
+    if (debug >= 5) {			\
+	printf( msg, ## __VA_ARGS__);	\
+    }					\
+} while (0)
+
+#define printf8(msg, ...)		\
+do {					\
+    if (debug >= 8) {			\
+	printf( "AUDIT ");		\
+	printf( msg, ## __VA_ARGS__);	\
+    }					\
+} while (0)
+
+#define printf8prime(msg, ...)		\
+do {					\
+    if (debug >= 8) {			\
+	printf( msg, ## __VA_ARGS__);	\
+    }					\
+} while (0)
+
+#define printf9(msg, ...)		\
+do {					\
+    if (debug >= 9) {			\
+	printf( "AUDIT DEBUG ");	\
+	printf( msg, ## __VA_ARGS__);	\
+    }					\
+} while (0)
+
+#define printf9prime(msg, ...)		\
+do {					\
+    if (debug >= 9) {			\
+	printf( msg, ## __VA_ARGS__);	\
+    }					\
+} while (0)
+
+#define printf_level(lev, msg, ...)	\
+do {					\
+    switch (lev) {			\
+    case 1:				\
+	printf1(msg, ## __VA_ARGS__);	\
+	break;				\
+    case 2:				\
+	printf2(msg, ## __VA_ARGS__);	\
+	break;				\
+    case 3:				\
+	printf3(msg, ## __VA_ARGS__);	\
+	break;				\
+    case 4:				\
+	printf4(msg, ## __VA_ARGS__);	\
+	break;				\
+    case 5:				\
+	printf5(msg, ## __VA_ARGS__);	\
+	break;				\
+    case 8:				\
+	printf8(msg, ## __VA_ARGS__);	\
+	break;				\
+    case 9:				\
+	printf9(msg, ## __VA_ARGS__);	\
+	break;				\
+    }					\
+} while (0)
+
+#define printf_level_prime(lev, msg, ...)	\
+do {						\
+    switch (lev) {				\
+    case 2:					\
+	printf2prime(msg, ## __VA_ARGS__);	\
+	break;					\
+    case 5:					\
+	printf5prime(msg, ## __VA_ARGS__);	\
+	break;					\
+    case 8:					\
+	printf8prime(msg, ## __VA_ARGS__);	\
+	break;					\
+    case 9:					\
+	printf9prime(msg, ## __VA_ARGS__);	\
+	break;					\
+    }						\
+} while (0)
+
+#endif	/* _UTILS_H */

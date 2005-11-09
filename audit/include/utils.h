@@ -48,6 +48,17 @@ int audit_verify_log(laus_data *, log_options);
 /*
  * System Info Collection
  */
+typedef struct identifiers_s {
+    int ruid;
+    int euid;
+    int suid;
+    int fsuid;
+    int rgid;
+    int egid;
+    int sgid;
+    int fsgid;
+} identifiers_t;
+
 int getLAUSData(laus_data*);
 int getLoginUID();
 int getIdentifiers( identifiers_t* identifiers );

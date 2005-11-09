@@ -34,9 +34,6 @@
 #ifndef _GLOBALS_H
 #define _GLOBALS_H
 
-#define DEFAULT_TEST_USER "nobody"
-#define TESTCASE_NAME_MAX 25
-
 #if defined(__IX86)
 #define AUDIT_ARCH  AUDIT_ARCH_I386
 #elif defined(__PPC32)
@@ -55,36 +52,11 @@
 #define AUDIT_ARCH  -1
 #endif
 
-// For syscalls/tests/test_execve.c
-#define MAX_ARG_SIZE 30
-#define MAX_WAIT_TIME_FOR_CHILD 60
-
-#ifndef __PPC
-#define __NR_chown16 182
-#define __NR_fchown16 95
-#define __NR_lchown16 16
-#define __NR_setfsgid16 139
-#define __NR_setfsuid16 138
-#define __NR_setgid16 46
-#define __NR_setgroups16 81
-#define __NR_setregid16 71
-#define __NR_setresgid16 170
-#define __NR_setresuid16 164
-#define __NR_setreuid16 70
-#define __NR_setuid16 23
-#endif
-
 #define SKIP_TEST_CASE          256
 #define NO_RETURN_CODE          -2
 #define NO_PID_CHECK            -2
 #define NO_ID_CHECK             -2
 #define NO_FORK			-3 
-
-#ifndef HOST_NAME_MAX
-#define HOST_NAME_MAX 255
-#endif
-
-#define XATTR_TEST_VALUE "text/plain"
 
 //
 // Global variables

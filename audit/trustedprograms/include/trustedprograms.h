@@ -40,6 +40,12 @@ typedef struct {
   char* cleanup_args;
 } trustedprogram_commands;
 
+typedef struct {
+    int		(*testPtr)(laus_data *);
+    char	*testName;
+    laus_data	*dataPtr;
+} trustedprogram_data;
+
 int test_at(laus_data* dataPtr);
 int test_atd(laus_data* dataPtr);
 int test_cron(laus_data* dataPtr);

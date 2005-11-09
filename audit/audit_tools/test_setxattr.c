@@ -33,6 +33,8 @@
 #include <attr/xattr.h>
 #include <pwd.h>
 
+#define XATTR_TEST_VALUE "text/plain"
+
 int debug = 2;
 
 int aucat_test_setxattr( int succeed, char* username );

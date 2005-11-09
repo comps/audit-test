@@ -30,7 +30,16 @@
 **
 **********************************************************************/
 
-  syscall_data syscallTests[] = {
+/*
+ * Syscall Test Matrix
+ */
+typedef struct {
+    int         (*testPtr)(laus_data *);
+    char        *testName;
+    laus_data   *dataPtr;
+} syscall_data;
+
+syscall_data syscallTests[] = {
     { &test_access, "access", NULL }, 
     { &test_adjtimex, "adjtimex", NULL }, 
     { &test_bind, "bind", NULL }, 
@@ -66,40 +75,6 @@
 #endif
     { &test_init_module, "init_module", NULL }, 
     { &test_ioctl, "ioctl", NULL },
-    /*
-    { &test_ioctl_SIOCETHTOOL, "SIOCETHTOOL", NULL },
-    { &test_ioctl_SIOCSIFLINK, "SIOCSIFLINK", NULL },
-
-    { &test_ioctl_SIOCSIFPFLAGS, "SIOCSIFPFLAGS", NULL },
-    { &test_ioctl_SIOCSMIIREG, "SIOCSMIIREG", NULL },
-    { &test_ioctl_SIOCDIFADDR, "SIOCDIFADDR", NULL },
-    { &test_ioctl_SIOCDRARP, "SIOCDRARP", NULL },
-    { &test_ioctl_SIOCCHGTUNNEL, "SIOCCHGTUNNEL", NULL },
-    { &test_ioctl_SIOCDELTUNNEL, "SIOCDELTUNNEL", NULL },
-    { &test_ioctl_SIOCADDTUNNEL, "SIOCADDTUNNEL", NULL },
-    { &test_ioctl_SIOCSIFFLAGS, "SIOCSIFFLAGS", NULL },
-    { &test_ioctl_SIOCSIFADDR, "SIOCSIFADDR", NULL },
-    { &test_ioctl_SIOCSIFDSTADDR, "SIOCSIFDSTADDR", NULL },
-    { &test_ioctl_SIOCSIFBRDADDR, "SIOCSIFBRDADDR", NULL },
-    { &test_ioctl_SIOCSIFNETMASK, "SIOCSIFNETMASK", NULL },
-    { &test_ioctl_SIOCSIFMTU, "SIOCSIFMTU", NULL },
-    { &test_ioctl_SIOCSIFHWADDR, "SIOCSIFHWADDR", NULL },
-    { &test_ioctl_SIOCSIFTXQLEN, "SIOCSIFTXQLEN", NULL },
-    { &test_ioctl_SIOCSIFHWBROADCAST, "SIOCSIFHWBROADCAST", NULL },
-    { &test_ioctl_SIOCSARP, "SIOCSARP", NULL },
-    { &test_ioctl_SIOCDARP, "SIOCDARP", NULL },
-    { &test_ioctl_SIOCADDRT, "SIOCADDRT", NULL },
-    { &test_ioctl_SIOCDELRT, "SIOCDELRT", NULL },
-    { &test_ioctl_SIOCSIFNAME, "SIOCSIFNAME", NULL },
-    { &test_ioctl_SIOCSIFMEM, "SIOCSIFMEM", NULL },
-    { &test_ioctl_SIOCSIFSLAVE, "SIOCSIFSLAVE", NULL },
-    { &test_ioctl_SIOCADDMULTI, "SIOCADDMULTI", NULL },
-    { &test_ioctl_SIOCDELMULTI, "SIOCDELMULTI", NULL },
-    { &test_ioctl_SIOCSIFMETRIC, "SIOCSIFMETRIC", NULL },
-    { &test_ioctl_SIOCSIFMAP, "SIOCSIFMAP", NULL },
-    { &test_ioctl_SIOCSIFBR, "SIOCSIFBR", NULL },
-    { &test_ioctl_SIOCSIFENCAP, "SIOCSIFENCAP", NULL },
-    */
 #ifdef __IX86
     { &test_ioperm, "ioperm", NULL }, 
 #endif
@@ -209,5 +184,4 @@
 #ifndef __IA64
     { &test_vfork, "vfork", NULL }, 
 #endif
-  };
-
+};

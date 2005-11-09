@@ -40,6 +40,12 @@ typedef struct {
   char* cleanup_args;
 } pamprogram_commands;
 
+typedef struct {
+    int		(*testPtr)(laus_data *);
+    char	*testName;
+    laus_data	*dataPtr;
+} pam_data;
+
 int test_login(laus_data* dataPtr);
 int test_sshd(laus_data* dataPtr);
 int test_su(laus_data* dataPtr);

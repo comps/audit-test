@@ -33,6 +33,40 @@
 #ifndef _SYSCALLS_H
 #define _SYSCALLS_H
 
+/*
+ * Default Values
+ */
+#define DEFAULT_TEST_USER "nobody"
+#define XATTR_TEST_VALUE "text/plain"
+
+#ifndef __PPC
+#define __NR_chown16 182
+#define __NR_fchown16 95
+#define __NR_lchown16 16
+#define __NR_setfsgid16 139
+#define __NR_setfsuid16 138
+#define __NR_setgid16 46
+#define __NR_setgroups16 81
+#define __NR_setregid16 71
+#define __NR_setresgid16 170
+#define __NR_setresuid16 164
+#define __NR_setreuid16 70
+#define __NR_setuid16 23
+#endif
+
+/*
+ * Limits
+ */
+#define TESTCASE_NAME_MAX 25
+#define MAX_ARG_SIZE 30                 /* test_execve */
+#define MAX_WAIT_TIME_FOR_CHILD 60      /* test_execve */
+
+/*
+ * Syscall Test Function Prototypes
+ *
+ * When adding a new test, you must also update the test matrix in
+ * syscalls_array.h.
+ */
 int test_access(laus_data* dataPtr);
 int test_adjtimex(laus_data* dataPtr);
 int test_bind(laus_data* dataPtr);
@@ -60,39 +94,6 @@ int test_ftruncate(laus_data* dataPtr);
 int test_ftruncate64(laus_data* dataPtr);
 int test_init_module(laus_data* dataPtr);
 int test_ioctl(laus_data* dataPtr);
-int test_ioctl_SIOCADDMULTI( laus_data* dataPtr );
-int test_ioctl_SIOCADDRT( laus_data* dataPtr );
-int test_ioctl_SIOCADDTUNNEL( laus_data* dataPtr );
-int test_ioctl_SIOCCHGTUNNEL( laus_data* dataPtr );
-int test_ioctl_SIOCDARP( laus_data* dataPtr );
-int test_ioctl_SIOCDELMULTI( laus_data* dataPtr );
-int test_ioctl_SIOCDELRT( laus_data* dataPtr );
-int test_ioctl_SIOCDELTUNNEL( laus_data* dataPtr );
-int test_ioctl_SIOCDIFADDR( laus_data* dataPtr );
-int test_ioctl_SIOCDRARP( laus_data* dataPtr );
-int test_ioctl_SIOCETHTOOL( laus_data* dataPtr );
-int test_ioctl_SIOCSARP( laus_data* dataPtr );
-int test_ioctl_SIOCSIFADDR( laus_data* dataPtr );
-int test_ioctl_SIOCSIFBR( laus_data* dataPtr );
-int test_ioctl_SIOCSIFBRDADDR( laus_data* dataPtr );
-int test_ioctl_SIOCSIFDSTADDR( laus_data* dataPtr );
-int test_ioctl_SIOCSIFENCAP( laus_data* dataPtr );
-int test_ioctl_SIOCSIFFLAGS( laus_data* dataPtr );
-int test_ioctl_SIOCSIFFLAGS2( laus_data* dataPtr );
-int test_ioctl_SIOCSIFHWADDR( laus_data* dataPtr );
-int test_ioctl_SIOCSIFHWBROADCAST( laus_data* dataPtr );
-int test_ioctl_SIOCSIFLINK( laus_data* dataPtr );
-int test_ioctl_SIOCSIFMAP( laus_data* dataPtr );
-int test_ioctl_SIOCSIFMEM( laus_data* dataPtr );
-int test_ioctl_SIOCSIFMETRIC( laus_data* dataPtr );
-int test_ioctl_SIOCSIFMTU( laus_data* dataPtr );
-int test_ioctl_SIOCSIFNAME( laus_data* dataPtr );
-int test_ioctl_SIOCSIFNAME2( laus_data* dataPtr );
-int test_ioctl_SIOCSIFNETMASK( laus_data* dataPtr );
-int test_ioctl_SIOCSIFPFLAGS( laus_data* dataPtr );
-int test_ioctl_SIOCSIFSLAVE( laus_data* dataPtr );
-int test_ioctl_SIOCSIFTXQLEN( laus_data* dataPtr );
-int test_ioctl_SIOCSMIIREG( laus_data* dataPtr );
 int test_ioperm(laus_data* dataPtr);
 int test_iopl(laus_data* dataPtr);
 int test_kill(laus_data* dataPtr);
@@ -170,6 +171,5 @@ int test_unlink(laus_data* dataPtr);
 int test_utime(laus_data* dataPtr);
 int test_utimes(laus_data* dataPtr);
 int test_vfork(laus_data* dataPtr);
-
 
 #endif

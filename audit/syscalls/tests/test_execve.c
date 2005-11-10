@@ -92,19 +92,6 @@ int test_execve(struct audit_data *context)
     printf5("Setting u.syscall.sysnum to %d\n", AUDIT_execve);
     context->u.syscall.sysnum = AUDIT_execve;
 
-// This is needed for accurate processing of headers on s390x when test suite
-//   is compiled in 31bit mode but running on a 64bit kernel (emulation).
-//   auditd is running in 64bit mode but compilation of the test suite yields
-//   data structures whose sizes are different.
-#if defined(__S390X) && defined(__MODE_32)
-    context->arch = AUDIT_ARCH_S390;
-#elif defined(__X86_64) && defined(__MODE_32)
-    context->arch = AUDIT_ARCH_X86_64;
-#elif defined(__PPC64) && defined(__MODE_32)
-    context->arch = AUDIT_ARCH_PPC;
-#elif defined(__IA64) && defined(__MODE_32)
-    context->arch = AUDIT_ARCH_IA64;
-#endif
    /**
     * Do as much setup work as possible right here
     */

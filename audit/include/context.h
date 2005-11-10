@@ -21,6 +21,8 @@
 #ifndef _CONTEXT_H
 #define _CONTEXT_H
 
+#include <linux/audit.h>
+
 #if defined(__MODE_32) || defined(__IX86)
 typedef long long __laus_int64;
 typedef int __laus_int32;
@@ -67,32 +69,23 @@ enum audit_arg {
 #define AUDIT_MSG_TEXT          256
 #define AUDIT_MSG_USERBASE	256     /* user land messages start here */
 
-/* msg_arch */
-enum {
-        AUDIT_ARCH_I386,
-        AUDIT_ARCH_PPC,
-        AUDIT_ARCH_PPC64,
-        AUDIT_ARCH_S390,
-        AUDIT_ARCH_S390X,
-        AUDIT_ARCH_X86_64,
-        AUDIT_ARCH_IA64,
-};
+/* syscall arch */
 #if defined(__IX86)
-#define AUDIT_ARCH  AUDIT_ARCH_I386
+#define TS_BUILD_ARCH  AUDIT_ARCH_I386
 #elif defined(__PPC32)
-#define AUDIT_ARCH  AUDIT_ARCH_PPC
+#define TS_BUILD_ARCH  AUDIT_ARCH_PPC
 #elif defined(__PPC64)
-#define AUDIT_ARCH  AUDIT_ARCH_PPC64
+#define TS_BUILD_ARCH  AUDIT_ARCH_PPC64
 #elif defined(__S390X)
-#define AUDIT_ARCH  AUDIT_ARCH_S390X
+#define TS_BUILD_ARCH  AUDIT_ARCH_S390X
 #elif defined(__S390)
-#define AUDIT_ARCH  AUDIT_ARCH_S390
+#define TS_BUILD_ARCH  AUDIT_ARCH_S390
 #elif defined(__X86_64)
-#define AUDIT_ARCH  AUDIT_ARCH_X86_64
+#define TS_BUILD_ARCH  AUDIT_ARCH_X86_64
 #elif defined(__IA64)
-#define AUDIT_ARCH  AUDIT_ARCH_IA64
+#define TS_BUILD_ARCH  AUDIT_ARCH_IA64
 #else
-#define AUDIT_ARCH  -1
+#define TS_BUILD_ARCH  -1
 #endif
 
 /* syscall numbers */

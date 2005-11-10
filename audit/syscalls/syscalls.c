@@ -213,7 +213,7 @@ int main(int argc, char **argv)
 		context.fsuid = test_user_pw->pw_uid;
 		context.fsgid = test_user_pw->pw_gid;
 		context.success = success;
-		context.u.syscall.arch = AUDIT_ARCH;
+		context.u.syscall.arch = TS_BUILD_ARCH;
 
 		/*
 		 * Perform test

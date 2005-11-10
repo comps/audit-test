@@ -40,31 +40,27 @@
 ** This funciton will call some LAUS service API
 ** to obtain audit_id.
 */
-int getLAUSData(laus_data *dataPtr)
+int getLAUSData(struct audit_data *context)
 {
 
     int rc = 0;
-    uid_t ruid, euid, suid;	// fsuid;   not needed?
-    gid_t rgid, egid, sgid;	// fsgid;   not needed?
+    uid_t ruid;		// XXX currently unused
+    gid_t rgid;		// XXX currently unused
+    uid_t euid, suid;	// fsuid;   not needed?
+    gid_t egid, sgid;	// fsgid;   not needed?
 
     printf5("getLAUSData\n");
 
     /*
-     ** BUGBUG: Don't know how to get:
-     ** msg_seqnr
-     ** msg_audit_id
-     */
-
-    /*
      ** Get PID
      */
-    if ((dataPtr->msg_pid != NO_PID_CHECK) && (dataPtr->msg_pid != NO_FORK))
-	dataPtr->msg_pid = getpid();
+    if ((context->pid != NO_PID_CHECK) && (context->pid != NO_FORK))
+	context->pid = getpid();
 
     /*
      ** Get login uid from global data
      */
-    dataPtr->msg_login_uid = login_uid;
+    context->loginuid = login_uid;
 
     /*
      ** Get uids/gids
@@ -74,14 +70,12 @@ int getLAUSData(laus_data *dataPtr)
     if ((rc = getresuid(&ruid, &euid, &suid)) != 0) {
 	goto EXIT;
     }
-    dataPtr->msg_ruid = ruid;
-    dataPtr->msg_suid = suid;
+    context->suid = suid;
 
     if ((rc = getresgid(&rgid, &egid, &sgid)) != 0) {
 	goto EXIT;
     }
-    dataPtr->msg_rgid = rgid;
-    dataPtr->msg_sgid = sgid;
+    context->sgid = sgid;
 
   EXIT:
     return rc;

@@ -59,18 +59,16 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_access(laus_data *dataPtr)
+int test_access(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EACCES;
     char *fileName = NULL;
     int mode;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_access);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_access;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_access);
+    context->u.syscall.sysnum = AUDIT_access;
 
      /**
       * Do as much setup work as possible right here
@@ -78,37 +76,34 @@ int test_access(laus_data *dataPtr)
     // Generate unique filename
 
     if ((rc = createTempFile(&fileName, S_IRUSR,
-			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+			     context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", fileName);
 	goto EXIT;
     }
 
-    dataPtr->msg_ruid = dataPtr->msg_euid;
-
-    if (dataPtr->successCase) {
+    if (context->success) {
 	mode = R_OK;
     } else {
 	mode = W_OK;
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
+    if ((rc = auditArg2(context,
 			AUDIT_ARG_PATH, strlen(fileName), fileName,
 			AUDIT_ARG_IMMEDIATE, sizeof(mode), &mode)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_access, fileName, mode);
+    context->u.syscall.exit = syscall(__NR_access, fileName, mode);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }

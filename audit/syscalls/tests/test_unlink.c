@@ -49,10 +49,8 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_unlink(laus_data *dataPtr)
+int test_unlink(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EPERM;
     char *fileName = NULL;
@@ -60,8 +58,8 @@ int test_unlink(laus_data *dataPtr)
 
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_unlink);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_unlink;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_unlink);
+    context->u.syscall.sysnum = AUDIT_unlink;
 
      /**
       * Do as much setup work as possible right here
@@ -69,31 +67,31 @@ int test_unlink(laus_data *dataPtr)
 
     // create the file
     if ((rc = createTempFile(&fileName, S_IRWXU,
-			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+			     context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", fileName);
 	goto EXIT;
     }
 
-    if (!dataPtr->successCase) {
-	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
+    if (!context->success) {
+	context->euid = context->fsuid = helper_uid;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg1(dataPtr,
+    if ((rc = auditArg1(context,
 			AUDIT_ARG_PATH, strlen(fileName), fileName)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	remove_me = 1;
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result = syscall(__NR_unlink, fileName);
+    context->u.syscall.exit = syscall(__NR_unlink, fileName);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -102,7 +100,7 @@ EXIT_CLEANUP:
     /*
      * Do cleanup work here
      */
-    if (!dataPtr->successCase) {
+    if (!context->success) {
 	if (unlink(fileName) != 0) {
 	    printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName,
 		    errno);

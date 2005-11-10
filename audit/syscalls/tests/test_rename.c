@@ -51,7 +51,7 @@
 #include "syscalls.h"
 #include <libgen.h>
 
-int test_rename(laus_data *dataPtr)
+int test_rename(struct audit_data *context)
 {
 
     int rc = 0;
@@ -61,16 +61,16 @@ int test_rename(laus_data *dataPtr)
     char *targetPath = NULL;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_rename);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_rename;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_rename);
+    context->u.syscall.sysnum = AUDIT_rename;
 
     if ((rc = createTempFile(&path, S_IRWXU | S_IRWXG | S_IRWXO,
-			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+			     context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", path);
 	goto EXIT;
     }
 
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// dynamically create target temp file name
 	if ((rc = createTempFileName(&targetPath)) == -1) {
 	    printf1("ERROR: Cannot create file %s\n", targetPath);
@@ -84,36 +84,34 @@ int test_rename(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr, AUDIT_ARG_PATH, strlen(path), path,
-			dataPtr->
-			successCase ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
+    if ((rc = auditArg2(context, AUDIT_ARG_PATH, strlen(path), path,
+			context->success ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
 			strlen(targetPath), targetPath)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
-    // Fill in laus_data structure
+    // Fill in struct audit_data structure
     printf5("Calling getLAUSData\n");
-    if ((rc = getLAUSData(dataPtr)) != 0) {
-	printf1("Error returned from getLAUSData( dataPtr ): rc=%i\n", rc);
+    if ((rc = getLAUSData(context)) != 0) {
+	printf1("Error returned from getLAUSData( context ): rc=%i\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_rename, path, targetPath);
+    context->u.syscall.exit = syscall(__NR_rename, path, targetPath);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
 EXIT_CLEANUP:
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// remove the target temporary file
 	printf5("Removing file %s\n", targetPath);
 	if (unlink(targetPath) == -1) {

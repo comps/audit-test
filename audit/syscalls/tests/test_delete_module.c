@@ -31,7 +31,7 @@
 extern long init_module(void *, unsigned long, const char *);
 extern long delete_module(const char *, unsigned int);
 
-int test_delete_module(laus_data *dataPtr)
+int test_delete_module(struct audit_data *context)
 {
 
     int rc = 0;
@@ -44,13 +44,12 @@ int test_delete_module(laus_data *dataPtr)
     void *region = MAP_FAILED;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n",
-	    AUDIT_delete_module);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_delete_module;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_delete_module);
+    context->u.syscall.sysnum = AUDIT_delete_module;
 
-    if (dataPtr->successCase) {
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
+    if (context->success) {
+	context->euid = 0;
+	context->egid = 0;
     }
     //load module
     if ((fd = open(module_path, O_RDONLY)) == -1) {
@@ -77,23 +76,22 @@ int test_delete_module(laus_data *dataPtr)
 	goto out;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
+    if ((rc = auditArg2(context,
 			AUDIT_ARG_STRING, strlen(module_name), module_name,
 			AUDIT_ARG_IMMEDIATE, sizeof(flags), &flags)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto out;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto out;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	delete_module(module_name, flags);
+    context->u.syscall.exit = delete_module(module_name, flags);
 
     // Do post-system call work
-    postSysCall(dataPtr, errno, -1, exp_errno);
+    postSysCall(context, errno, -1, exp_errno);
 
 out:
     if ((delete_module(module_name, flags) != 0) && (errno != ENOENT)) {

@@ -45,7 +45,7 @@
 #include <termio.h>
 #include <sys/ioctl.h>
 
-int test_ioctl(laus_data *dataPtr)
+int test_ioctl(struct audit_data *context)
 {
 
 
@@ -60,9 +60,9 @@ int test_ioctl(laus_data *dataPtr)
     struct termio tio;
 
     // Set the syscall specific data
-    dataPtr->laus_var_data.syscallData.code = AUDIT_ioctl;
+    context->u.syscall.sysnum = AUDIT_ioctl;
 
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Create a file readable by test user if testing success case
 	if ((fd = open(dev, O_RDWR, 0777)) == -1) {
 	    printf1("ERROR: Cannot open tty device %s\n", dev);
@@ -79,7 +79,7 @@ int test_ioctl(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_PATH, strlen(path), path,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &tcgeta,
 			AUDIT_ARG_POINTER, 0, dummy)) != 0) {
@@ -87,16 +87,15 @@ int test_ioctl(laus_data *dataPtr)
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT;
     }
     // Execute system call
-    rc = dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_ioctl, fd, TCGETA, &tio);
+    rc = context->u.syscall.exit = syscall(__NR_ioctl, fd, TCGETA, &tio);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT;
     }
@@ -108,7 +107,7 @@ EXIT:
     close(fd);
 
     // cleanup
-    if (!dataPtr->successCase) {
+    if (!context->success) {
 	// close dev for success case
 	unlink(notty);
     }

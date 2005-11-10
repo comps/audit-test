@@ -69,7 +69,8 @@ struct syscall_opts {
 
 static int parse_command_line(int, char **, struct syscall_opts *);
 static void usage();
-static int verify(int, laus_data *, log_options, struct test_counters *);
+static int verify(int, struct audit_data *, log_options, 
+		  struct test_counters *);
 
 /* global to utils lib */
 int debug = 2;
@@ -88,7 +89,7 @@ int main(int argc, char **argv)
     Boolean success;			// loop counter
     char test_user[LOGIN_NAME_MAX + 1];	// test user
     struct passwd *test_user_pw = NULL;	// test user's /etc/passwd data
-    laus_data test_data;		// expected log data
+    struct audit_data context;		// expected log data
     int test_rc;			// testcase return code
     struct test_counters count = { 0, 0, 0 }; // aggregate results
     char *command = NULL;		// command string
@@ -205,15 +206,14 @@ int main(int argc, char **argv)
 		/*
 		 * Initialize expected record
 		 */
-		memset(&test_data, '\0', sizeof(laus_data));
-		test_data.msg_arch = AUDIT_ARCH;
-		test_data.msg_type = AUDIT_MSG_SYSCALL;
-		test_data.msg_euid = test_user_pw->pw_uid;
-		test_data.msg_egid = test_user_pw->pw_gid;
-		test_data.msg_fsuid = test_user_pw->pw_uid;
-		test_data.msg_fsgid = test_user_pw->pw_gid;
-		test_data.testName = syscallTests[i].testName;
-		test_data.successCase = success;
+		memset(&context, '\0', sizeof(struct audit_data));
+		context.type = AUDIT_MSG_SYSCALL;
+		context.euid = test_user_pw->pw_uid;
+		context.egid = test_user_pw->pw_gid;
+		context.fsuid = test_user_pw->pw_uid;
+		context.fsgid = test_user_pw->pw_gid;
+		context.success = success;
+		context.u.syscall.arch = AUDIT_ARCH;
 
 		/*
 		 * Perform test
@@ -223,20 +223,20 @@ int main(int argc, char **argv)
 		    syscallTests[i].testName,
 		    logOptions[logOptionsIndex].logSuccess,
 		    logOptions[logOptionsIndex].logFailure,
-		    test_data.successCase);
-		test_rc = syscallTests[i].testPtr(&test_data);
+		    context.success);
+		test_rc = syscallTests[i].testPtr(&context);
 
 		/*
 		 * Determine results
 		 */
-		verify(test_rc, &test_data, logOptions[logOptionsIndex], &count);
+		verify(test_rc, &context, logOptions[logOptionsIndex], &count);
 
 		/* 
-		 * syscallData.data is allocated during each test run,
+		 * u.syscall.data is allocated during each test run,
 		 * and must be freed per iteration.
 		 */
-		if (test_data.laus_var_data.syscallData.data) {
-		    free(test_data.laus_var_data.syscallData.data);
+		if (context.u.syscall.args) {
+		    free(context.u.syscall.args);
 		}
 
 		success--;
@@ -262,7 +262,7 @@ EXIT:
 }
 
 static
-int verify(int return_code, laus_data *dataPtr, log_options logOption,
+int verify(int return_code, struct audit_data *context, log_options logOption,
 	   struct test_counters *count)
 {
     int rc = 0;
@@ -271,20 +271,20 @@ int verify(int return_code, laus_data *dataPtr, log_options logOption,
 
     switch (return_code) {
 	case 0:
-	    rc = audit_verify_log(dataPtr, logOption);
+	    rc = audit_verify_log(context, logOption);
 	    if (rc < 0) {
 		goto EXIT_ERROR;
 	    }
 
-	    if ((dataPtr->successCase && logOption.logSuccess) ||
-		(!dataPtr->successCase && logOption.logFailure)) {
+	    if ((context->success && logOption.logSuccess) ||
+		(!context->success && logOption.logFailure)) {
 		printf2("Verify record\n");
 		if (rc > 0) {
 		    count->passed++;
 		    printf2("AUDIT PASS ");
 		} else {
 		    count->failed++;
-		    debug_expected(dataPtr);
+		    debug_expected(context);
 		    printf2("AUDIT FAIL ");
 		}
 	    } else {
@@ -299,28 +299,27 @@ int verify(int return_code, laus_data *dataPtr, log_options logOption,
 	    }
 	    printf2prime
 		(": '%s' [logSuccess=%x, logFailure=%x, successCase=%x]\n",
-		 dataPtr->testName, logOption.logSuccess, logOption.logFailure,
-		 dataPtr->successCase);
+		 "", logOption.logSuccess, logOption.logFailure,
+		 context->success);
 	    break;
 
 	case SKIP_TEST_CASE:
 	    count->skipped++;
 	    printf2
 		("%s() test case skipped: [logSuccess=%d, logFailure=%d, successCase=%d]\n",
-		 dataPtr->testName, logOption.logSuccess, logOption.logFailure,
-		 dataPtr->successCase);
+		 "", logOption.logSuccess, logOption.logFailure,
+		 context->success);
 	    break;
 
 	default:
 	    count->failed++;
 	    printf1
 		("ERROR: %s() test invalid: [logSuccess=%d, logFailure=%d, successCase=%d]\n",
-		 dataPtr->testName, logOption.logSuccess, logOption.logFailure,
-		 dataPtr->successCase);
+		 "", logOption.logSuccess, logOption.logFailure,
+		 context->success);
 	    printf2
 		("AUDIT FAIL : '%s' test invalid: [%s, logSuccess=%d, logFailure=%d]\n",
-		 dataPtr->testName,
-		 dataPtr->successCase ? "successCase" : "failureCase",
+		 "", context->success ? "successCase" : "failureCase",
 		 logOption.logSuccess, logOption.logFailure);
 	    break;
     }

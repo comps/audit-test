@@ -51,9 +51,8 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_setpgid(laus_data *dataPtr)
+int test_setpgid(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EINVAL;
 
@@ -61,17 +60,17 @@ int test_setpgid(laus_data *dataPtr)
     int pgid;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_setpgid);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_setpgid;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setpgid);
+    context->u.syscall.sysnum = AUDIT_setpgid;
 
   /**
    * Do as much setup work as possible right here
    */
-    dataPtr->msg_euid = 0;
-    dataPtr->msg_egid = 0;
-    dataPtr->msg_fsuid = 0;
-    dataPtr->msg_fsgid = 0;
-    if (dataPtr->successCase) {
+    context->euid = 0;
+    context->egid = 0;
+    context->fsuid = 0;
+    context->fsgid = 0;
+    if (context->success) {
 	// Set up for success
 	pid = 0;
 	pgid = 0;
@@ -82,24 +81,22 @@ int test_setpgid(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    //if( ( rc = auditArg0( dataPtr ) ) != 0 ) {
-    if ((rc = auditArg2(dataPtr,
+    if ((rc = auditArg2(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &pid,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &pgid)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_setpgid, pid, pgid);
+    context->u.syscall.exit = syscall(__NR_setpgid, pid, pgid);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -108,7 +105,7 @@ EXIT_CLEANUP:
   /**
    * Do cleanup work here
    */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Clean up from success case setup
     }
 

@@ -62,9 +62,8 @@ typedef struct errnoAndReturnValue_s {
     int savedErrno;
 } errnoAndReturnValue_t;
 
-int test_setsid(laus_data *dataPtr)
+int test_setsid(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EPERM;
     int pid;
@@ -77,8 +76,8 @@ int test_setsid(laus_data *dataPtr)
     int savedErrno;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_setsid);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_setsid;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setsid);
+    context->u.syscall.sysnum = AUDIT_setsid;
 
   /**
    * Do as much setup work as possible right here
@@ -90,30 +89,30 @@ int test_setsid(laus_data *dataPtr)
 	printf1("Error getting shared memory: errno=%i\n", errno);
 	goto EXIT;		// TODO: Explicitely account for the fact that the semaphore has been created at this point
     }
-    dataPtr->msg_euid = 0;
-    dataPtr->msg_egid = 0;
-    dataPtr->msg_fsuid = 0;
-    dataPtr->msg_fsgid = 0;
-    if (dataPtr->successCase) {
+    context->euid = 0;
+    context->egid = 0;
+    context->fsuid = 0;
+    context->fsgid = 0;
+    if (context->success) {
 	// Set up for success
     } else {
 	// Set up for error
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg0(dataPtr)) != 0) {
+    if ((rc = auditArg0(context)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
     if ((pid = fork()) == 0) {
 	errnoAndReturnValue_t *childEarv;
-	if (!dataPtr->successCase) {
+	if (!context->success) {
 	    setsid();
 	}
 	if (((long)(childEarv = shmat(shmid, NULL, 0))) == -1) {
@@ -133,7 +132,7 @@ int test_setsid(laus_data *dataPtr)
 	}
 	_exit(0);
     } else {
-	dataPtr->msg_pid = pid;
+	context->pid = pid;
 	if (waitpid(pid, NULL, 0) == -1) {
 	    printf1("Error waiting on pid %d: errno=%i\n", pid, errno);
 	    goto EXIT_CLEANUP;
@@ -144,7 +143,7 @@ int test_setsid(laus_data *dataPtr)
 		 shmid, errno);
 	    goto EXIT_CLEANUP;
 	}
-	dataPtr->laus_var_data.syscallData.result = earv->returnValue;
+	context->u.syscall.exit = earv->returnValue;
 	savedErrno = earv->savedErrno;
 	if (shmdt(earv) == -1) {
 	    printf1
@@ -155,7 +154,7 @@ int test_setsid(laus_data *dataPtr)
     }
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, savedErrno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, savedErrno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -171,7 +170,7 @@ EXIT_CLEANUP:
 	goto EXIT;
     }
     // Release the shared memory
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Clean up from success case setup
     }
 

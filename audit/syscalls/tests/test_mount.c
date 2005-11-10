@@ -59,7 +59,7 @@
 #include "syscalls.h"
 #include <sys/mount.h>
 
-int test_mount(laus_data *dataPtr)
+int test_mount(struct audit_data *context)
 {
 
     int rc = 0;
@@ -73,26 +73,26 @@ int test_mount(laus_data *dataPtr)
     printf4("Performing test_mount\n");
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_mount);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_mount;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_mount);
+    context->u.syscall.sysnum = AUDIT_mount;
 
     // dynamically create test directory
     if ((rc = (createTempDir(&target, S_IRWXU | S_IRWXG | S_IRWXO,
-			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1)) {
+			     context->euid, context->egid)) == -1)) {
 	printf1("ERROR: Cannot create dir %s\n", target);
 	goto EXIT;
     }
     printf5("Genereated target directory %s\n", target);
 
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// must run as root
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg5(dataPtr,
+    if ((rc = auditArg5(context,
 			AUDIT_ARG_STRING, strlen(source), source,
 			AUDIT_ARG_PATH, strlen(target), target,
 			AUDIT_ARG_STRING, strlen(filesystem_type),
@@ -104,16 +104,16 @@ int test_mount(laus_data *dataPtr)
 
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
+    context->u.syscall.exit =
 	syscall(__NR_mount, source, target, filesystem_type, mountflags, NULL);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -123,7 +123,7 @@ EXIT_CLEANUP:
       * Do cleanup work here
       */
     // FAILURE CASE:  no mount should have occured, but target dir needs removal.
-    if (dataPtr->successCase) {
+    if (context->success) {
 	if (umount(target) == -1) {
 	    printf1("Cannot umount %s\n", target);
 	}

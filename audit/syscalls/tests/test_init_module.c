@@ -30,7 +30,7 @@
 extern long init_module(void *, unsigned long, const char *);
 extern long delete_module(const char *, unsigned int);
 
-int test_init_module(laus_data *dataPtr)
+int test_init_module(struct audit_data *context)
 {
 
     int rc = 0;
@@ -44,13 +44,12 @@ int test_init_module(laus_data *dataPtr)
     char dummy[] = { 0 };
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n",
-	    AUDIT_init_module);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_init_module;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_init_module);
+    context->u.syscall.sysnum = AUDIT_init_module;
 
-    if (dataPtr->successCase) {
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
+    if (context->success) {
+	context->euid = 0;
+	context->egid = 0;
     }
     // Set up
     if ((fd = open(module_path, O_RDONLY)) == -1) {
@@ -72,7 +71,7 @@ int test_init_module(laus_data *dataPtr)
 	goto out;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_POINTER, 0, dummy,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &mstat.st_size,
 			AUDIT_ARG_STRING, 0, "")) != 0) {
@@ -80,15 +79,14 @@ int test_init_module(laus_data *dataPtr)
 	goto out;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto out;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	init_module(region, mstat.st_size, "");
+    context->u.syscall.exit = init_module(region, mstat.st_size, "");
 
-    postSysCall(dataPtr, errno, -1, exp_errno);
+    postSysCall(context, errno, -1, exp_errno);
 
 out:
     if ((delete_module(module_name, flags) != 0) && (errno != ENOENT)) {

@@ -61,10 +61,8 @@
 #include <asm/ipc.h>
 #endif
 
-int test_msgctl(laus_data *dataPtr)
+int test_msgctl(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EPERM;
     //  int msgctlrc = 0;
@@ -81,7 +79,7 @@ int test_msgctl(laus_data *dataPtr)
 
 
     // Set the syscall-specific data
-    dataPtr->laus_var_data.syscallData.code = AUDIT_msgctl;
+    context->u.syscall.sysnum = AUDIT_msgctl;
 
     memset(&buf, 0, sizeof(buf));
 
@@ -92,16 +90,16 @@ int test_msgctl(laus_data *dataPtr)
 		errno);
 	goto EXIT;
     }
-    if (dataPtr->successCase) {
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+    if (context->success) {
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
     } else {
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgid,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd_on_disk,
 			AUDIT_ARG_POINTER, 0, &buf)) != 0) {
@@ -109,26 +107,19 @@ int test_msgctl(laus_data *dataPtr)
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-    dataPtr->laus_var_data.syscallData.result = syscall(__NR_msgctl,	// syscall
-							msgid,	// First
-							IPC_RMID,	// Second
-//                                                     0,
-							&buf);	// Third
+    context->u.syscall.exit = syscall(__NR_msgctl, msgid, IPC_RMID, &buf);
 #else
-    dataPtr->laus_var_data.syscallData.result = syscall(__NR_ipc,	// syscall
-							MSGCTL,	// name
-							msgid,	// First
-							IPC_RMID,	// Second
-							0, &buf);	// Third
+    context->u.syscall.exit = syscall(__NR_ipc, MSGCTL, 
+					msgid, IPC_RMID, 0, &buf);
 #endif
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -136,7 +127,7 @@ int test_msgctl(laus_data *dataPtr)
 
 EXIT_CLEANUP:
 
-    if (!dataPtr->successCase && msgid && (msgid != -1)) {
+    if (!context->success && msgid && (msgid != -1)) {
 	if ((rc = msgctl(msgid, IPC_RMID, 0)) == -1) {
 	    printf1
 		("Error removing message queue with ID = [%d]: errno = [%i]\n",

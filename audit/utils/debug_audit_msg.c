@@ -45,7 +45,7 @@
 static void var_parms(int, int, const char *);
 
 //generic
-void debug_expected(const laus_data *);
+void debug_expected(const struct audit_data *);
 
 /**********************
  ** HELPER FUNCTIONS **
@@ -186,43 +186,37 @@ void var_parms(int level, int call, const char *src)
     }
 }
 
-void debug_expected(const laus_data *dataPtr)
+void debug_expected(const struct audit_data *context)
 {
-    //Dump all the expected data
-    printf5("\tbegin     : %s", ctime(&(dataPtr->begin_r_time)));
-    printf5("\tend       : %s", ctime(&(dataPtr->end_r_time)));
-    printf5("\tseqnr     : %i\n", dataPtr->msg_seqnr);
-    printf5("\ttype      : %i\n", dataPtr->msg_type);
-    printf5("\tarch      : %i\n", dataPtr->msg_arch);
-    printf5("\tpid       : %i\n", dataPtr->msg_pid);
-    printf5("\tsize      : %zi\n", dataPtr->msg_size);
-    printf5("\taudit id  : %i\n", dataPtr->msg_audit_id);
-    printf5("\tluid      : %i\n", dataPtr->msg_login_uid);
-    printf5("\teuid      : %i\n", dataPtr->msg_euid);
-    printf5("\truid      : %i\n", dataPtr->msg_ruid);
-    printf5("\tsuid      : %i\n", dataPtr->msg_suid);
-    printf5("\tfsuid     : %i\n", dataPtr->msg_fsuid);
-    printf5("\tegid      : %i\n", dataPtr->msg_egid);
-    printf5("\trgid      : %i\n", dataPtr->msg_rgid);
-    printf5("\tsgid      : %i\n", dataPtr->msg_sgid);
-    printf5("\tfsgid     : %i\n", dataPtr->msg_fsgid);
+    printf5("\ttype      : %u\n", context->type);
+    printf5("\tserial    : %u\n", context->serial);
+    printf5("\ttimestamp : %s\n", ctime(&(context->timestamp)));
+    printf5("\tbegin     : %s\n", ctime(&(context->begin_time)));
+    printf5("\tend       : %s\n", ctime(&(context->end_time)));
+    printf5("\tpid       : %i\n", context->pid);
+    printf5("\tloginuid	 : %u\n", context->loginuid);
+    printf5("\tuid       : %u\n", context->uid);
+    printf5("\teuid      : %u\n", context->euid);
+    printf5("\tsuid      : %u\n", context->suid);
+    printf5("\tfsuid     : %u\n", context->fsuid);
+    printf5("\tgid       : %u\n", context->gid);
+    printf5("\tegid      : %u\n", context->egid);
+    printf5("\tsgid      : %u\n", context->sgid);
+    printf5("\tfsgid     : %u\n", context->fsgid);
+    printf5("\tsuccess	 : %u\n", context->success);
 
-    //Dump syscall specific data
-    if (dataPtr->msg_type == AUDIT_MSG_SYSCALL) {
+    if (context->type == AUDIT_MSG_SYSCALL) {
 
-	printf5("\tcode      : %i\n", dataPtr->laus_var_data.syscallData.code);
-	printf5("\tresult    : %i\n",
-		dataPtr->laus_var_data.syscallData.result);
-	printf5("\terrno     : %i\n",
-		dataPtr->laus_var_data.syscallData.resultErrno);
+	printf5("\tsyscall   : %s\n", context->u.syscall.sysname);
+	printf5("\tsysnum    : %i\n", context->u.syscall.sysnum);
+	printf5("\tarch      : %x\n", context->u.syscall.arch);
+	printf5("\tpers      : %lx\n", context->u.syscall.pers);
+	printf5("\texit      : %i\n", context->u.syscall.exit);
 
-	//Dump syscall parameters
 	printf5("\tparameters\n");
-	var_parms(5, dataPtr->laus_var_data.syscallData.code,
-		  dataPtr->laus_var_data.syscallData.data);
+	var_parms(5, context->u.syscall.exit, context->u.syscall.args);
 
-	// Dump user space audit data
-    } else if (dataPtr->msg_type == AUDIT_MSG_TEXT) {
-	printf5("\ttext: %s\n", dataPtr->laus_var_data.textData.data);
+    } else if (context->type == AUDIT_MSG_TEXT) {
+	printf5("\ttext: %s\n", context->u.user.buf);
     }
 }

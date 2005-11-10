@@ -56,7 +56,7 @@
 /*
  ** execute a ftruncate operation
  */
-int test_ftruncate(laus_data *dataPtr)
+int test_ftruncate(struct audit_data *context)
 {
 
 
@@ -67,12 +67,12 @@ int test_ftruncate(laus_data *dataPtr)
     int fd;
 
     // Set the syscall specific data
-    dataPtr->laus_var_data.syscallData.code = AUDIT_ftruncate;
+    context->u.syscall.sysnum = AUDIT_ftruncate;
     // BUGBUG: Need to understand how to set up syscall parameters
 
     // dynamically create temp file name
     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+			     context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", fileName);
 	goto EXIT;
     }
@@ -84,10 +84,10 @@ int test_ftruncate(laus_data *dataPtr)
 	goto EXIT_CLEANUP;
     }
 
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// dynamically create temp file name
 	if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-				 dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+				 context->euid, context->egid)) == -1) {
 	    printf1("ERROR: Cannot create file %s\n", fileName);
 	    goto EXIT;
 	}
@@ -103,26 +103,25 @@ int test_ftruncate(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
-			dataPtr->successCase ? AUDIT_ARG_PATH : AUDIT_ARG_ERROR,
-			dataPtr->
-			successCase ? strlen(fileName) : sizeof(__laus_int64),
-			dataPtr->successCase ? fileName : (void *)&exp_errno,
+    if ((rc = auditArg2(context,
+			context->success ? AUDIT_ARG_PATH : AUDIT_ARG_ERROR,
+			context->
+			success ? strlen(fileName) : sizeof(__laus_int64),
+			context->success ? fileName : (void *)&exp_errno,
 			AUDIT_ARG_IMMEDIATE_u, sizeof(length), &length)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_ftruncate, fd, length);
+    context->u.syscall.exit = syscall(__NR_ftruncate, fd, length);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -130,7 +129,7 @@ int test_ftruncate(laus_data *dataPtr)
 
 EXIT_CLEANUP:
     // ftruncate cleanup
-    if (dataPtr->successCase) {
+    if (context->success) {
 	if ((rc = unlink(fileName)) != 0) {
 	    printf1("ERROR: Unable to remove file %s: errno=%i\n",
 		    fileName, errno);

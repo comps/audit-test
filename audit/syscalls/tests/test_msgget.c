@@ -66,9 +66,8 @@
 #endif
 #include <sys/msg.h>
 
-int test_msgget(laus_data *dataPtr)
+int test_msgget(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EACCES;
     int key = 0;
@@ -78,7 +77,7 @@ int test_msgget(laus_data *dataPtr)
     int mode;
 
     // Set the syscall-specific data
-    dataPtr->laus_var_data.syscallData.code = AUDIT_msgget;
+    context->u.syscall.sysnum = AUDIT_msgget;
 
     // Set the mode flags
     mode = S_IRWXU | S_IRWXG | S_IRWXO;
@@ -86,7 +85,7 @@ int test_msgget(laus_data *dataPtr)
     // Set the key value.
     // If successCase == 0, then we will be double-allocating the memory
     // to force an error condition. 
-    if (dataPtr->successCase) {
+    if (context->success) {
 	key = IPC_PRIVATE;
     } else {
 	mode = 0600 | IPC_CREAT;
@@ -100,7 +99,7 @@ int test_msgget(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
+    if ((rc = auditArg2(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &key,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &mode)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
@@ -108,21 +107,21 @@ int test_msgget(laus_data *dataPtr)
     }
 
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    //     dataPtr->laus_var_data.syscallData.result = secondMsgid = msgget( key, mode );
+    //     context->u.syscall.exit = secondMsgid = msgget( key, mode );
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-    dataPtr->laus_var_data.syscallData.result = secondMsgid =
+    context->u.syscall.exit = secondMsgid =
 	syscall(__NR_msgget, key, mode);
 #else
-    dataPtr->laus_var_data.syscallData.result = secondMsgid =
+    context->u.syscall.exit = secondMsgid =
 	syscall(__NR_ipc, MSGGET, key, mode);
 #endif
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }

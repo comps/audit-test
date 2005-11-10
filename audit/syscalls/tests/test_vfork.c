@@ -57,9 +57,8 @@
 #include <sched.h>
 
 #ifdef __NR_vfork
-int test_vfork(laus_data *dataPtr)
+int test_vfork(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = 0;
     int status;
@@ -68,14 +67,14 @@ int test_vfork(laus_data *dataPtr)
     int flags = CLONE_CHILD_CLEARTID | CLONE_CHILD_SETTID | 0x11;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_clone);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_clone;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_clone);
+    context->u.syscall.sysnum = AUDIT_clone;
 
     // Do as much setup work as possible right here
 
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Set up for success
-	// Might include: dataPtr->msg_euid = 0; dataPtr->msg_egid = 0;;
+	// Might include: context->euid = 0; context->egid = 0;;
     } else {
 	rc = SKIP_TEST_CASE;
 	goto EXIT;
@@ -86,13 +85,13 @@ int test_vfork(laus_data *dataPtr)
 	goto EXIT;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg1(dataPtr,
+    if ((rc = auditArg1(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -107,8 +106,8 @@ int test_vfork(laus_data *dataPtr)
 	_exit(0);
     }
     waitpid(firstPid, &status, 0);
-    dataPtr->laus_var_data.syscallData.result = NO_RETURN_CODE;
-    dataPtr->msg_pid = NO_PID_CHECK;
+    context->u.syscall.exit = NO_RETURN_CODE;
+    context->pid = NO_PID_CHECK;
 
     // Do post-system call work
 	/**
@@ -117,7 +116,7 @@ int test_vfork(laus_data *dataPtr)
 	 * Generating this error would invalidate the test environment, and
 	 * so the error condition is not tested for vfork().
 	 */
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -128,7 +127,7 @@ EXIT_CLEANUP:
 
 
     // Do cleanup work here
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Clean up from success case setup
     }
 

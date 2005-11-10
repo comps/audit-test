@@ -75,10 +75,8 @@ struct rlimit_on_disk {		// edited from /usr/include/bits/resource.h
 #define rlimit_on_disk rlimit
 #endif
 
-int test_setrlimit(laus_data *dataPtr)
+int test_setrlimit(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EINVAL;
 
@@ -87,13 +85,13 @@ int test_setrlimit(laus_data *dataPtr)
     struct rlimit syscall_rlim;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_setrlimit);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_setrlimit;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setrlimit);
+    context->u.syscall.sysnum = AUDIT_setrlimit;
 
 	/**
 	 * Do as much setup work as possible right here
 	 */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	resource = RLIMIT_CPU;
 
 	getrlimit(resource, &syscall_rlim);
@@ -101,34 +99,31 @@ int test_setrlimit(laus_data *dataPtr)
 	rlim.rlim_max = (__s32)(syscall_rlim.rlim_max);
 
 	// Set up for success
-	// Might include: dataPtr->msg_euid = 0; dataPtr->msg_egid = 0;
+	// Might include: context->euid = 0; context->egid = 0;
     } else {
 	// Set up for error
 	resource = -1;
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
+    if ((rc = auditArg2(context,
 			AUDIT_ARG_IMMEDIATE_u, sizeof(int), &resource,
-			dataPtr->
-			successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL,
-			dataPtr->
-			successCase ? sizeof(struct rlimit_on_disk) : 0,
+			context->success ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL,
+			context->success ? sizeof(struct rlimit_on_disk) : 0,
 			&rlim)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_setrlimit, resource, &syscall_rlim);
+    context->u.syscall.exit = syscall(__NR_setrlimit, resource, &syscall_rlim);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -137,7 +132,7 @@ EXIT_CLEANUP:
 	/**
 	 * Do cleanup work here
 	 */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Clean up from success case setup
     }
 

@@ -33,13 +33,13 @@
 #include "includes.h"
 #include <time.h>
 
-int postSysCall(laus_data *dataPtr, int resultErrno, int errorRC,
+int postSysCall(struct audit_data *context, int resultErrno, int errorRC,
 		int expectedErrno)
 {
     int rc = 0;
 
     printf5("Setting end timestamp\n");
-    dataPtr->end_r_time = time(NULL) + 2;	// MH: 2 seconds past current
+    context->end_time = time(NULL) + 2;	// MH: 2 seconds past current
     // time
 
     // su back to root
@@ -55,44 +55,35 @@ int postSysCall(laus_data *dataPtr, int resultErrno, int errorRC,
 	goto EXIT;
     }
     // Save resulting errno into data structure
-    if (dataPtr->laus_var_data.syscallData.result == -1) {
-	dataPtr->laus_var_data.syscallData.resultErrno = resultErrno;
-    } else {
-	dataPtr->laus_var_data.syscallData.resultErrno = 0;
+    if (context->u.syscall.exit == -1) {
+	context->u.syscall.exit = resultErrno;
     }
 
     // Check if the syscall executed as expected.
     printf5("Checking to see if the system call executed as expected\n");
-    if (dataPtr->laus_var_data.syscallData.result == errorRC) {
-	if (dataPtr->successCase) {
-	    printf2("SYSCALL ERROR: %s unsuccessful in successful case:",
-		    dataPtr->testName);
+    if (context->u.syscall.exit == errorRC) {
+	if (context->success) {
+	    printf2("SYSCALL ERROR: unsuccessful in successful case:");
 	    rc = 1;
 	} else {
 	    if (resultErrno == expectedErrno) {
-		printf2
-		    ("SYSCALL SUCCESS: %s unsuccessful in unsuccessful case:",
-		     dataPtr->testName);
+		printf2("SYSCALL SUCCESS: unsuccessful in unsuccessful case:");
 	    } else {
 		printf2
-		    ("SYSCALL ERROR: %s unsuccessful, but errno is different than expected (%i):",
-		     dataPtr->testName, expectedErrno);
+		    ("SYSCALL ERROR: unsuccessful, but errno != expected (%i):",
+		     expectedErrno);
 		rc = 1;
 	    }
 	}
     } else {
-	if (dataPtr->successCase) {
-	    printf2("SYSCALL SUCCESS: %s successful in successful case:",
-		    dataPtr->testName);
+	if (context->success) {
+	    printf2("SYSCALL SUCCESS: successful in successful case:");
 	} else {
-	    printf2("SYSCALL ERROR: %s successful in unsuccessful case:",
-		    dataPtr->testName);
+	    printf2("SYSCALL ERROR: successful in unsuccessful case:");
 	    rc = 1;
 	}
     }
-
-    printf(" rc=%i, errno=%i\n", dataPtr->laus_var_data.syscallData.result,
-	   dataPtr->laus_var_data.syscallData.resultErrno);
+    printf(" exit=%i\n", context->u.syscall.exit);
 
 EXIT:
     return rc;

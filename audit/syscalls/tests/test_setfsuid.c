@@ -67,9 +67,8 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_setfsuid(laus_data *dataPtr)
+int test_setfsuid(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EPERM;
 
@@ -78,15 +77,15 @@ int test_setfsuid(laus_data *dataPtr)
     //int failureRc;            //not needed?
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_setfsuid);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_setfsuid;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setfsuid);
+    context->u.syscall.sysnum = AUDIT_setfsuid;
 
      /**
       * Do as much setup work as possible right here
       */
-    if (dataPtr->successCase) {
-	secondFsuid = dataPtr->msg_euid;
-	dataPtr->msg_euid = 0;
+    if (context->success) {
+	secondFsuid = context->euid;
+	context->euid = 0;
     } else {
 	int nonexistentFsuid;
 	identifiers_t identifiers;
@@ -104,10 +103,10 @@ int test_setfsuid(laus_data *dataPtr)
 	nonexistentFsuid = 42;
 
 	// su to test user
-	printf5("seteuid to %i\n", dataPtr->msg_euid);
-	if ((rc = seteuid(dataPtr->msg_euid)) != 0) {
+	printf5("seteuid to %i\n", context->euid);
+	if ((rc = seteuid(context->euid)) != 0) {
 	    printf1("Unable to seteuid to %i: errno=%i\n",
-		    dataPtr->msg_euid, errno);
+		    context->euid, errno);
 	    goto EXIT;		// Or possibly EXIT_CLEANUP
 	}
 
@@ -134,26 +133,25 @@ int test_setfsuid(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg1(dataPtr,
+    if ((rc = auditArg1(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &secondFsuid)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_setfsuid, secondFsuid);
+    context->u.syscall.exit = syscall(__NR_setfsuid, secondFsuid);
 
     // Do post-system call work
-    if (!dataPtr->successCase) {
-	dataPtr->laus_var_data.syscallData.result = -1;
+    if (!context->success) {
+	context->u.syscall.exit = -1;
 	errno = exp_errno;
     }
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -162,7 +160,7 @@ EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	setfsuid(0);
     }
 

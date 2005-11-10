@@ -70,7 +70,7 @@
 #include "syscalls.h"
 #include <dirent.h>
 
-int test_fchdir(laus_data *dataPtr)
+int test_fchdir(struct audit_data *context)
 {
 
     int rc = 0;
@@ -80,14 +80,14 @@ int test_fchdir(laus_data *dataPtr)
     DIR *dir = NULL;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_fchdir);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_fchdir;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_fchdir);
+    context->u.syscall.sysnum = AUDIT_fchdir;
 
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// dynamically create test directory
 	if ((rc = (createTempDir(&path, S_IRWXU | S_IRWXG | S_IRWXO,
-				 dataPtr->msg_euid,
-				 dataPtr->msg_egid)) == -1)) {
+				 context->euid,
+				 context->egid)) == -1)) {
 	    printf1("ERROR: Cannot create dir %s\n", path);
 	    goto EXIT;
 	}
@@ -101,8 +101,8 @@ int test_fchdir(laus_data *dataPtr)
 	}
     } else {
 	if ((rc = (createTempFile(&path, S_IRWXU | S_IRWXG | S_IRWXO,
-				  dataPtr->msg_euid,
-				  dataPtr->msg_egid)) == -1)) {
+				  context->euid,
+				  context->egid)) == -1)) {
 	    printf1("ERROR: Cannot create file%s\n", path);
 	    goto EXIT;
 	}
@@ -115,33 +115,33 @@ int test_fchdir(laus_data *dataPtr)
     printf5("Generated and opened path %s fd = %d\n", path, fd);
 
     // Set up audit argument buffer
-    if ((rc = auditArg1(dataPtr, AUDIT_ARG_PATH, strlen(path), path)) != 0) {
+    if ((rc = auditArg1(context, AUDIT_ARG_PATH, strlen(path), path)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP_OPENED;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result = syscall(__NR_fchdir, fd);
+    context->u.syscall.exit = syscall(__NR_fchdir, fd);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
 EXIT_CLEANUP_OPENED:
-    if (dataPtr->successCase && closedir(dir) == -1) {
+    if (context->success && closedir(dir) == -1) {
 	printf1("Error closing directory %s: errno=%i\n", path, errno);
     }
 EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// chdir out of the directory we are about to nuke
 	if (chdir(cwd) == -1) {
 	    printf1("Error executing chdir(\"%s\"): errno=%i\n", cwd, errno);

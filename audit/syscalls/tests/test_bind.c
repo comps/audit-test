@@ -63,7 +63,7 @@
 #include <netinet/in.h>
 #include <linux/net.h>
 
-int test_bind(laus_data *dataPtr)
+int test_bind(struct audit_data *context)
 {
 
 
@@ -81,13 +81,13 @@ int test_bind(laus_data *dataPtr)
     char SocketPath[19];
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_bind);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_bind;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_bind);
+    context->u.syscall.sysnum = AUDIT_bind;
 
      /**
       * Do as much setup work as possible right here
       */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	my_addr.sin_port = htons(-1);
 	if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
 	    printf1("Error creating socket\n");
@@ -132,37 +132,37 @@ int test_bind(laus_data *dataPtr)
 	sockfd = -1;
     }
 
-
     // Set up audit argument buffer
-    // Since bind() test is called a little differently than the rest of the tests,
-    if ((rc = auditArg3(dataPtr,
-			(dataPtr->
-			 successCase ? AUDIT_ARG_PATH : AUDIT_ARG_ERROR),
-			(dataPtr->
-			 successCase ? strlen(SocketPath) : sizeof(__u64)),
-			(dataPtr->
-			 successCase ? (void *)SocketPath : (void *)&exp_errno),
-			(dataPtr->
-			 successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL),
-			(dataPtr->successCase ? sizeof(struct sockaddr) : 0),
-			&my_addr, AUDIT_ARG_IMMEDIATE, sizeof(socklen_t),
-			&addrlen)) != 0) {
+    // Since bind() test is called a little differently than the rest
+    // of the tests,
+    if (context->success)
+	rc = auditArg3(context,
+		       AUDIT_ARG_PATH, strlen(SocketPath), (void *)SocketPath,
+		       AUDIT_ARG_POINTER, sizeof(struct sockaddr), &my_addr,
+		       AUDIT_ARG_IMMEDIATE, sizeof(socklen_t), &addrlen);
+    else
+	rc = auditArg3(context,
+		       AUDIT_ARG_ERROR, sizeof(__u64), (void *)&exp_errno,
+		       AUDIT_ARG_NULL, 0, &my_addr,
+		       AUDIT_ARG_IMMEDIATE, sizeof(socklen_t), &addrlen);
+    if (rc != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
+
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
     // syscall() does not cooperate with the bind() system call, so call bind() directly
-    dataPtr->laus_var_data.syscallData.result =
+    context->u.syscall.exit =
 	bind(sockfd, (struct sockaddr *)&my_addr, addrlen);
 
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -171,7 +171,7 @@ EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	close(sockfd);
     }
 

@@ -59,7 +59,7 @@
 #include "syscalls.h"
 #include <attr/xattr.h>
 
-int test_fremovexattr(laus_data *dataPtr)
+int test_fremovexattr(struct audit_data *context)
 {
 
     int rc = 0;
@@ -71,19 +71,18 @@ int test_fremovexattr(laus_data *dataPtr)
     char *name = "user.mime_type";
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n",
-	    AUDIT_fremovexattr);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_fremovexattr;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_fremovexattr);
+    context->u.syscall.sysnum = AUDIT_fremovexattr;
 
     //Do as much setup work as possible right here
     size = sizeof(XATTR_TEST_VALUE);
     if ((rc = createTempFile(&path, (S_IRWXU | S_IRWXG | S_IRWXO),
-			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+			     context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", path);
 	goto EXIT;
     }
 
-    if (dataPtr->successCase) {	// Set up for success
+    if (context->success) {	// Set up for success
 	// Create the target file
 	if ((rc =
 	     setxattr(path, name, "test/plain", strlen(XATTR_TEST_VALUE),
@@ -101,21 +100,20 @@ int test_fremovexattr(laus_data *dataPtr)
 	goto EXIT_CLEANUP_UNLINK;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
+    if ((rc = auditArg2(context,
 			AUDIT_ARG_PATH, strlen(path), path,
 			AUDIT_ARG_STRING, strlen(name), name)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP_CLOSE;
     }
     // Do pre-system call work
-    preSysCall(dataPtr);
+    preSysCall(context);
 
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_fremovexattr, filedes, name);
+    context->u.syscall.exit = syscall(__NR_fremovexattr, filedes, name);
 
     // Do post-system call work
-    postSysCall(dataPtr, errno, -1, exp_errno);
+    postSysCall(context, errno, -1, exp_errno);
 
 EXIT_CLEANUP_CLOSE:
     // Clean up from success case setup

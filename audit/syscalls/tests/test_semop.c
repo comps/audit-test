@@ -69,11 +69,8 @@
 #include <asm/ipc.h>
 #endif
 
-
-
-int test_semop(laus_data *dataPtr)
+int test_semop(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EACCES;
     int semid = -1;
@@ -83,13 +80,13 @@ int test_semop(laus_data *dataPtr)
     unsigned int nsops = 1;
 
     // Set the syscall-specific data
-    dataPtr->laus_var_data.syscallData.code = AUDIT_semop;
+    context->u.syscall.sysnum = AUDIT_semop;
 
     // Set the key value.
     // If successCase == 0, then we will be creating a semaphore set
     // under the permissions of root, which the test user will not have
     // permission to access.
-    if (dataPtr->successCase) {
+    if (context->success) {
 	mode = (IPC_CREAT | IPC_EXCL) | 0666;
 	if ((semid = semget(IPC_PRIVATE, 1, mode)) == -1) {
 	    printf1("Error creating semaphore: errno=%i\n", errno);
@@ -111,7 +108,7 @@ int test_semop(laus_data *dataPtr)
 
 
     // Set up audit argument buffer
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &semid,
 			AUDIT_ARG_POINTER, sizeof(s), &s,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &nsops)) != 0) {
@@ -119,20 +116,20 @@ int test_semop(laus_data *dataPtr)
 	goto EXIT;
     }
     // Do pre-system call work   
-    preSysCall(dataPtr);
+    preSysCall(context);
 
     // Execute the semop system call
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-    dataPtr->laus_var_data.syscallData.result =
+    context->u.syscall.exit =
 	syscall(__NR_semop, semid, &s, 1);
 #else
-    dataPtr->laus_var_data.syscallData.result =
+    context->u.syscall.exit =
 	syscall(__NR_ipc, SEMOP, semid, 1, 0, &s);
-//  dataPtr->laus_var_data.syscallData.result = semop( semid, &s, 1 );
+//  context->u.syscall.exit = semop( semid, &s, 1 );
 #endif
 
     // Do post-system call work
-    postSysCall(dataPtr, errno, -1, exp_errno);
+    postSysCall(context, errno, -1, exp_errno);
 
 EXIT_CLEANUP:
 

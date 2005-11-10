@@ -63,10 +63,8 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_open(laus_data *dataPtr)
+int test_open(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EACCES;
     int fd = 0;
@@ -79,12 +77,12 @@ int test_open(laus_data *dataPtr)
     char *fileName = NULL;
 
     // Set the syscall specific data
-    dataPtr->laus_var_data.syscallData.code = AUDIT_open;
+    context->u.syscall.sysnum = AUDIT_open;
 
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Create a file readable by test user if testing success case
 	if ((rc = createTempFile(&fileName, mode,
-				 dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+				 context->euid, context->egid)) == -1) {
 	    printf1("ERROR: Cannot create file %s\n", fileName);
 	    goto EXIT;
 	}
@@ -97,7 +95,7 @@ int test_open(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_PATH,
 			strlen(fileName),
 			fileName,
@@ -107,16 +105,15 @@ int test_open(laus_data *dataPtr)
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    fd = dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_open, fileName, flags, mode);
+    fd = context->u.syscall.exit = syscall(__NR_open, fileName, flags, mode);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -125,7 +122,7 @@ int test_open(laus_data *dataPtr)
 
 EXIT_CLEANUP:
     // open cleanup
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// close file if successfully opened
 	if ((rc = close(fd)) != 0) {
 	    printf1("ERROR: Unable to close file %s: errno=%i\n", fileName,

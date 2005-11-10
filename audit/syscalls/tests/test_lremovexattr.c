@@ -55,7 +55,7 @@
 #include "syscalls.h"
 #include <attr/xattr.h>
 
-int test_lremovexattr(laus_data *dataPtr)
+int test_lremovexattr(struct audit_data *context)
 {
 
     int rc = 0;
@@ -66,9 +66,8 @@ int test_lremovexattr(laus_data *dataPtr)
     char *name = "user.mime_type";
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n",
-	    AUDIT_lremovexattr);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_lremovexattr;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_lremovexattr);
+    context->u.syscall.sysnum = AUDIT_lremovexattr;
 
 	/**
 	 * Do as much setup work as possible right here
@@ -76,7 +75,7 @@ int test_lremovexattr(laus_data *dataPtr)
     size = sizeof(XATTR_TEST_VALUE);
     // Create the target file
     if ((rc = createTempFile(&path, S_IRWXU,
-			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+			     context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", path);
 	goto EXIT;
     }
@@ -86,14 +85,14 @@ int test_lremovexattr(laus_data *dataPtr)
 	printf(" Error setting attribute [%s]: errno=%i\n", name, errno);
 	goto EXIT_CLEANUP;
     }
-    if (dataPtr->successCase) {	// Set up for success
+    if (context->success) {	// Set up for success
 	// Nothing to do for success case
     } else {			// Set up for error       
-	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
+	context->euid = context->fsuid = helper_uid;
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
+    if ((rc = auditArg2(context,
 			AUDIT_ARG_PATH,
 			strlen(path), path,
 			AUDIT_ARG_STRING, strlen(name), name)) != 0) {
@@ -101,14 +100,13 @@ int test_lremovexattr(laus_data *dataPtr)
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
-    preSysCall(dataPtr);
+    preSysCall(context);
 
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_lremovexattr, path, name);
+    context->u.syscall.exit = syscall(__NR_lremovexattr, path, name);
 
     // Do post-system call work
-    postSysCall(dataPtr, errno, -1, exp_errno);
+    postSysCall(context, errno, -1, exp_errno);
 
 EXIT_CLEANUP:
 	/**

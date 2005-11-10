@@ -63,9 +63,8 @@
 #endif
 
 
-int test_shmat(laus_data *dataPtr)
+int test_shmat(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EACCES;
     int shmid = 0;
@@ -76,17 +75,17 @@ int test_shmat(laus_data *dataPtr)
 
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_shmat);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_shmat;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_shmat);
+    context->u.syscall.sysnum = AUDIT_shmat;
 
   /**
    * Do as much setup work as possible right here
    */
-    if (dataPtr->successCase) {
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+    if (context->success) {
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
 	mode = S_IRWXU | S_IRWXG | S_IRWXO;
     } else {
 	mode = S_IRWXU;
@@ -101,22 +100,21 @@ int test_shmat(laus_data *dataPtr)
 
 
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
     shmptr = shmat(shmid, NULL, 0);
     if (shmptr != (void *)-1) {
-	dataPtr->laus_var_data.syscallData.result = 0;
+	context->u.syscall.exit = 0;
     } else {
-	dataPtr->laus_var_data.syscallData.result = -1;
-	dataPtr->laus_var_data.syscallData.resultErrno = errno;
+	context->u.syscall.exit = -1;
     }
 
     // Strange location because kernel is filling in a value in raddr we need
     // Set up audit argument buffer
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &shmid,
 			AUDIT_ARG_NULL, 0, voidPtr,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &shmflg)) != 0) {
@@ -124,7 +122,7 @@ int test_shmat(laus_data *dataPtr)
 	goto EXIT_CLEANUP;
     }
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -132,7 +130,7 @@ int test_shmat(laus_data *dataPtr)
 
 EXIT_CLEANUP:
     // shared memory cleanup
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// detach memory if successfully attached
 	if (shmptr != (void *)-1) {
 	    if (shmdt(shmptr) == -1) {

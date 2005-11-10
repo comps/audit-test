@@ -53,7 +53,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_fchown(laus_data *dataPtr)
+int test_fchown(struct audit_data *context)
 {
 
     int rc = 0;
@@ -65,14 +65,14 @@ int test_fchown(laus_data *dataPtr)
     int group;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_fchown);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_fchown;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_fchown);
+    context->u.syscall.sysnum = AUDIT_fchown;
 
   /**
    * Do as much setup work as possible right here
    */
-    owner = dataPtr->msg_euid;
-    group = dataPtr->msg_egid;
+    owner = context->euid;
+    group = context->egid;
     if ((rc = createTempFile(&fileName, S_IRWXU,	// | S_IRWXG | S_IRWXO,
 			     0, 0)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", fileName);
@@ -84,15 +84,15 @@ int test_fchown(laus_data *dataPtr)
 	rc = fd;
 	goto EXIT_CLEANUP;
     }
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Only root may chown, override test user
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_PATH, strlen(fileName), fileName,
 			AUDIT_ARG_IMMEDIATE, sizeof(owner), &owner,
 			AUDIT_ARG_IMMEDIATE, sizeof(group), &group)) != 0) {
@@ -100,16 +100,15 @@ int test_fchown(laus_data *dataPtr)
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_fchown, fd, owner, group);
+    context->u.syscall.exit = syscall(__NR_fchown, fd, owner, group);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }

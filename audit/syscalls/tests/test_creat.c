@@ -59,9 +59,8 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_creat(laus_data *dataPtr)
+int test_creat(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EACCES;
     int mode = S_IRWXO;
@@ -77,11 +76,11 @@ int test_creat(laus_data *dataPtr)
     // Set the syscall specific data
     // The creat() system call is actually an open() system call with the
     //  O_CREAT flag set
-    dataPtr->laus_var_data.syscallData.code = AUDIT_open;
+    context->u.syscall.sysnum = AUDIT_open;
 
     // create file to choose a filename
     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+			     context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", fileName);
 	goto EXIT;
     }
@@ -91,8 +90,8 @@ int test_creat(laus_data *dataPtr)
 	goto EXIT;
     }
 
-    if (!dataPtr->successCase) {
-	dataPtr->msg_ruid = dataPtr->msg_euid = dataPtr->msg_fsuid = helper_uid;
+    if (!context->success) {
+	context->euid = context->fsuid = helper_uid;
 	printf5("Free file name\n");
 	free(fileName);
 	fileName = mysprintf("/root/lausXXXXXX");
@@ -104,9 +103,8 @@ int test_creat(laus_data *dataPtr)
     // Set up audit argument buffer
     // The creat() system call is actually an open() system call with the
     //  O_CREAT flag set
-    if ((rc = auditArg3(dataPtr,
-			dataPtr->
-			successCase ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
+    if ((rc = auditArg3(context,
+			context->success ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
 			strlen(fileName), fileName, AUDIT_ARG_IMMEDIATE,
 			sizeof(flags), &flags, AUDIT_ARG_IMMEDIATE,
 			sizeof(mode), &mode)) != 0) {
@@ -114,16 +112,15 @@ int test_creat(laus_data *dataPtr)
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_creat, fileName, mode);
+    context->u.syscall.exit = syscall(__NR_creat, fileName, mode);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }

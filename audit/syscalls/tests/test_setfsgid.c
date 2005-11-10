@@ -62,30 +62,25 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_setfsgid(laus_data *dataPtr)
+int test_setfsgid(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EPERM;
 
     int fsgid;
-    //int resultFsgid;   // variables not needed?
-    //int originalEgid = dataPtr->msg_egid;  
-    //int originalEuid = dataPtr->msg_euid;
 
     identifiers_t identifiers;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_setfsgid);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_setfsgid;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setfsgid);
+    context->u.syscall.sysnum = AUDIT_setfsgid;
 
 	/**
 	 * Do as much setup work as possible right here
 	 */
-    if (dataPtr->successCase) {
-	fsgid = dataPtr->msg_egid;
-	dataPtr->msg_euid = 0;
+    if (context->success) {
+	fsgid = context->egid;
+	context->euid = 0;
     } else {
 		/**
 		 * To test the failure case, the following conditions must apply:
@@ -101,10 +96,10 @@ int test_setfsgid(laus_data *dataPtr)
 	fsgid = 42;
 
 	// su to test user
-	printf5("seteuid to %i\n", dataPtr->msg_euid);
-	if ((rc = seteuid(dataPtr->msg_euid)) != 0) {
+	printf5("seteuid to %i\n", context->euid);
+	if ((rc = seteuid(context->euid)) != 0) {
 	    printf1("Unable to seteuid to %i: errno=%i\n",
-		    dataPtr->msg_euid, errno);
+		    context->euid, errno);
 	    goto EXIT;		// Or possibly EXIT_CLEANUP
 	}
 
@@ -125,19 +120,19 @@ int test_setfsgid(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg1(dataPtr,
+    if ((rc = auditArg1(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &fsgid)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
 
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Make system call
-    dataPtr->laus_var_data.syscallData.result = syscall(__NR_setfsgid, fsgid);
+    context->u.syscall.exit = syscall(__NR_setfsgid, fsgid);
 
     // Do post-system call work
 
@@ -156,16 +151,16 @@ int test_setfsgid(laus_data *dataPtr)
     // LAuS shows a return of 0 on success, and -1 on error (as any sane system call returns).  The test
     // has been modified to look for these adjusted return codes.
 
-    if (!dataPtr->successCase) {
-	dataPtr->laus_var_data.syscallData.result = -1;
+    if (!context->success) {
+	context->u.syscall.exit = -1;
     } else {
-	dataPtr->laus_var_data.syscallData.result = 0;
-	dataPtr->msg_fsuid = 0;
+	context->u.syscall.exit = 0;
+	context->fsuid = 0;
     }
 
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -174,7 +169,7 @@ EXIT_CLEANUP:
 	/**
 	 * Do cleanup work here
 	 */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	setfsgid(0);
     }
 

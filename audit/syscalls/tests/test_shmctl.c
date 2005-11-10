@@ -62,9 +62,8 @@
 #include <sys/shm.h>
 #include <asm/page.h>
 
-int test_shmctl(laus_data *dataPtr)
+int test_shmctl(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EPERM;
     int shmctlrc = 0;
@@ -76,8 +75,8 @@ int test_shmctl(laus_data *dataPtr)
     struct shmid_ds buf;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_shmctl);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_shmctl;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_shmctl);
+    context->u.syscall.sysnum = AUDIT_shmctl;
 
   /**
    * Do as much setup work as possible right here
@@ -94,11 +93,11 @@ int test_shmctl(laus_data *dataPtr)
 	goto EXIT;
     }
 
-    if (dataPtr->successCase) {
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+    if (context->success) {
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
     } else {
     }
 
@@ -113,12 +112,12 @@ int test_shmctl(laus_data *dataPtr)
 #endif
 
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &shmid,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd,
 			AUDIT_ARG_NULL, 0, NULL)) != 0) {
 #else
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &shmid,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd,
 			AUDIT_ARG_POINTER, 0, &buf)) != 0) {
@@ -127,29 +126,27 @@ int test_shmctl(laus_data *dataPtr)
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-    dataPtr->laus_var_data.syscallData.result = shmctlrc = syscall(__NR_shmctl,
-								   shmid,
-								   IPC_RMID, 0,
-								   &buf);
+    context->u.syscall.exit = shmctlrc = syscall(__NR_shmctl, shmid,
+						 IPC_RMID, 0, &buf);
 #else
-    dataPtr->laus_var_data.syscallData.result = shmctlrc =
+    context->u.syscall.exit = shmctlrc =
 	syscall(__NR_ipc, SHMCTL, shmid, IPC_RMID, 0, &buf);
 #endif
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
 EXIT_CLEANUP:
-    if (!dataPtr->successCase && shmid && (shmid != -1)) {
+    if (!context->success && shmid && (shmid != -1)) {
 	if ((rc = shmctl(shmid, IPC_RMID, 0)) == -1) {
 	    printf1
 		("Error removind shared memory with ID = [%d]: errno = [%i]\n",

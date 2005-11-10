@@ -41,7 +41,7 @@
   **
   **  On success, execve() does not return.  Hence, there is no return
   **  code.  We simply assign the value of ``0'' to the
-  **  dataPtr->laus_var_data.syscallData.result variable as a
+  **  context->u.syscall.exit variable as a
   **  placeholder.  IPC machanisms are employed to detect the
   **  success (or lack therof) of the execve() call in the child
   **  process.
@@ -69,7 +69,7 @@
 #include <sys/sem.h>
 #include <time.h>
 
-int test_execve(laus_data *dataPtr)
+int test_execve(struct audit_data *context)
 {
 
     int rc = 0;
@@ -89,37 +89,37 @@ int test_execve(laus_data *dataPtr)
     int semid = -1;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_execve);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_execve;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_execve);
+    context->u.syscall.sysnum = AUDIT_execve;
 
 // This is needed for accurate processing of headers on s390x when test suite
 //   is compiled in 31bit mode but running on a 64bit kernel (emulation).
 //   auditd is running in 64bit mode but compilation of the test suite yields
 //   data structures whose sizes are different.
 #if defined(__S390X) && defined(__MODE_32)
-    dataPtr->msg_arch = AUDIT_ARCH_S390;
+    context->arch = AUDIT_ARCH_S390;
 #elif defined(__X86_64) && defined(__MODE_32)
-    dataPtr->msg_arch = AUDIT_ARCH_X86_64;
+    context->arch = AUDIT_ARCH_X86_64;
 #elif defined(__PPC64) && defined(__MODE_32)
-    dataPtr->msg_arch = AUDIT_ARCH_PPC;
+    context->arch = AUDIT_ARCH_PPC;
 #elif defined(__IA64) && defined(__MODE_32)
-    dataPtr->msg_arch = AUDIT_ARCH_IA64;
+    context->arch = AUDIT_ARCH_IA64;
 #endif
    /**
     * Do as much setup work as possible right here
     */
     envp[0] = NULL;
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Set up for success
 	if (chdir(cwd) == -1) {
 	    printf1("Error changing to working directory [%s]: errno=%i\n", cwd,
 		    errno);
 	    goto EXIT;
 	}
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
 	argv[0] = filename;
 	argv[1] = (char *)malloc(MAX_ARG_SIZE);
 	argv[2] = NULL;
@@ -140,14 +140,14 @@ int test_execve(laus_data *dataPtr)
 	argv[0] = NULL;
     }
 
-    if (dataPtr->successCase) {
+    if (context->success) {
 	realpath(filename, path);
     } else {
 	realpath(filename2, path);
-	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = helper_uid;
+	context->euid = context->fsuid = helper_uid;
     }
 
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_PATH,
 			strlen(path),
 			path,
@@ -158,12 +158,12 @@ int test_execve(laus_data *dataPtr)
     }
 
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
-    if (dataPtr->successCase) {
+    if (context->success) {
 	if ((pid = fork()) == 0) {
 	    // We are in the child
 	    // Execute system call successfully
@@ -200,19 +200,18 @@ int test_execve(laus_data *dataPtr)
 	    }
 	    printf5("Received semaphore\n");
 	    // execve() really has no success return code; this is a placeholder
-	    dataPtr->laus_var_data.syscallData.result = NO_RETURN_CODE;
+	    context->u.syscall.exit = NO_RETURN_CODE;
 	    //audit message is posted from the forked process update the ptr
-	    dataPtr->msg_pid = pid;
-	    dataPtr->msg_sgid = 0;
+	    context->pid = pid;
+	    context->sgid = 0;
 	}
     } else {
 	// Execute system call erroneously
-	dataPtr->laus_var_data.syscallData.result =
-	    syscall(__NR_execve, filename2, argv, envp);
+	context->u.syscall.exit = syscall(__NR_execve, filename2, argv, envp);
     }
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -221,7 +220,7 @@ EXIT_CLEANUP:
    /**
     * Do cleanup work here
     */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Clean up from success case setup
 	// Free command name buffer
 	free(argv[1]);

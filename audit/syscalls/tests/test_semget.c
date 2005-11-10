@@ -67,9 +67,8 @@
 #endif
 #include <sys/sem.h>
 
-int test_semget(laus_data *dataPtr)
+int test_semget(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EACCES;
     int key = 0;
@@ -80,7 +79,7 @@ int test_semget(laus_data *dataPtr)
     int nsems = 1;
 
     // Set the syscall-specific data
-    dataPtr->laus_var_data.syscallData.code = AUDIT_semget;
+    context->u.syscall.sysnum = AUDIT_semget;
 
     // Set the mode flags
     mode = S_IRWXU | S_IRWXG | S_IRWXO;
@@ -92,7 +91,7 @@ int test_semget(laus_data *dataPtr)
     // If successCase == 0, then we will be creating a semaphore set
     // under the permissions of root, which the test user will not have
     // permission to access.
-    if (dataPtr->successCase) {
+    if (context->success) {
 	key = IPC_PRIVATE;
     } else {
 	mode = 0600 | IPC_CREAT;
@@ -106,7 +105,7 @@ int test_semget(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &key,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &nsems,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &mode)) != 0) {
@@ -114,19 +113,19 @@ int test_semget(laus_data *dataPtr)
 	goto EXIT;
     }
     // Do pre-system call work   
-    preSysCall(dataPtr);
+    preSysCall(context);
 
     // Execute the semget system call
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-    dataPtr->laus_var_data.syscallData.result = secondSemid =
+    context->u.syscall.exit = secondSemid =
 	syscall(__NR_semget, key, nsems, mode);
 #else
-    dataPtr->laus_var_data.syscallData.result = secondSemid =
+    context->u.syscall.exit = secondSemid =
 	syscall(__NR_ipc, SEMGET, key, nsems, mode);
 #endif
 
     // Do post-system call work
-    postSysCall(dataPtr, errno, -1, exp_errno);
+    postSysCall(context, errno, -1, exp_errno);
 
     //EXIT_FREE_SEM:   // not needed?
 

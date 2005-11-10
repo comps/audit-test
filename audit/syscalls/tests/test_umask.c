@@ -45,7 +45,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_umask(laus_data *dataPtr)
+int test_umask(struct audit_data *context)
 {
 
 
@@ -54,33 +54,33 @@ int test_umask(laus_data *dataPtr)
 
     int mask;
 
-    if (!dataPtr->successCase) {	//umask never fails
+    if (!context->success) {	//umask never fails
 	rc = SKIP_TEST_CASE;
 	goto EXIT;
     }
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_umask);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_umask;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_umask);
+    context->u.syscall.sysnum = AUDIT_umask;
 
 
     //Do as much setup work as possible right here
     mask = 000;
     umask(mask);
     // Set up audit argument buffer
-    if ((rc = auditArg1(dataPtr, AUDIT_ARG_IMMEDIATE, sizeof(int), &mask)) != 0) {
+    if ((rc = auditArg1(context, AUDIT_ARG_IMMEDIATE, sizeof(int), &mask)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result = syscall(__NR_umask, mask);
+    context->u.syscall.exit = syscall(__NR_umask, mask);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }

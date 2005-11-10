@@ -180,73 +180,38 @@ enum {
 #define AUDIT_utimes		1036
 #define audit_NUM_CALLS 81
 
-/*
- * This set of data structures collects system context to compare with
- * a resulting audit record.  Some members may be initialized prior to
- * the operation, while others are populated with the operation
- * results.
- */
-#define AUD_MAX_ADDRESS		256
-#define AUD_MAX_EVNAME		16
-#define AUD_MAX_HOSTNAME	256
-#define AUD_MAX_TERMINAL	256
+struct audit_syscall {
+    char          *sysname;
+    int           sysnum;
+    int           arch;
+    unsigned long pers;
+    int           exit;
+    unsigned int  arglen;
+    char          *args;
+};
 
-typedef struct {
-    uid_t         uid;
-    char          hostname[AUD_MAX_HOSTNAME];
-    char          address[AUD_MAX_ADDRESS];
-    char          terminal[AUD_MAX_TERMINAL];
-    char	  executable[PATH_MAX];
-} laus_login ;
+struct audit_user {
+    unsigned int buflen;
+    char         *buf;
+};
 
-typedef struct {
-    int           personality;
-    int		  code;
-    int		  minor;
-    int		  result;
-    int           resultErrno;
-    unsigned int  length;
-    unsigned char *data;	/* variable size */
-} laus_syscall;
-
-typedef struct {
-    long code;
-} laus_exit;
-
-typedef struct {
-    unsigned int  groups;
-    unsigned int  dst_groups;
-    int           result;
-    unsigned int  length;
-    unsigned char *data;	/* variable size */
-} laus_netlink;
-
-typedef struct {
-    unsigned char *data;	/* variable size */
-} laus_text;
-
-typedef struct {
-    char*        testName;
-    Boolean      successCase;    
-    time_t       begin_r_time;
-    time_t       end_r_time;
-    u_int32_t    msg_seqnr;
-    u_int16_t    msg_type;
-    u_int16_t    msg_arch;
-    pid_t        msg_pid;
-    size_t       msg_size;
-    unsigned int msg_audit_id;
-    unsigned int msg_login_uid;
-    unsigned int msg_euid, msg_ruid, msg_suid, msg_fsuid;
-    unsigned int msg_egid, msg_rgid, msg_sgid, msg_fsgid;
-    char         msg_evname[AUD_MAX_EVNAME];
+struct audit_data {
+    unsigned int type;
+    unsigned int serial;
+    time_t       timestamp;
+    time_t       begin_time;
+    time_t       end_time;
+    pid_t        pid;
+    uid_t        loginuid;
+    uid_t        uid, euid, suid, fsuid;
+    gid_t        gid, egid, sgid, fsgid;
+    unsigned int success;
+    char         *comm;
+    char         *exe;
     union {
-        laus_login   loginData;
-        laus_syscall syscallData;
-        laus_exit    exitData;
-        laus_netlink netlinkData;
-        laus_text    textData;
-    } laus_var_data;
-} laus_data;
+        struct audit_syscall    syscall;
+        struct audit_user       user;
+    } u;
+};
 
 #endif	/* _CONTEXT_H */

@@ -57,9 +57,8 @@
 #include "syscalls.h"
 #include <linux/utsname.h>
 
-int test_setdomainname(laus_data *dataPtr)
+int test_setdomainname(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EPERM;
 
@@ -67,9 +66,8 @@ int test_setdomainname(laus_data *dataPtr)
     size_t len = __NEW_UTS_LEN;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n",
-	    AUDIT_setdomainname);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_setdomainname;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setdomainname);
+    context->u.syscall.sysnum = AUDIT_setdomainname;
 
     if (getdomainname(name, len) == -1) {
 	printf1("Cannot get current domainname\n");
@@ -79,42 +77,40 @@ int test_setdomainname(laus_data *dataPtr)
     len = strlen(name);
 
     // Do as much setup work as possible right here
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Set up for success
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
 	// Get the current domainname
     } else {
 	// Set up for error
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
-			dataPtr->
-			successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL,
-			dataPtr->successCase ? strlen(name) : 0,
-			dataPtr->successCase ? &name : NULL,
+    if ((rc = auditArg2(context,
+			context->success ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL,
+			context->success ? strlen(name) : 0,
+			context->success ? &name : NULL,
 			AUDIT_ARG_IMMEDIATE, sizeof(size_t), &len)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    preSysCall(dataPtr);
+    preSysCall(context);
 
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_setdomainname, name, len);
+    context->u.syscall.exit = syscall(__NR_setdomainname, name, len);
 
     // Do post-system call work
-    postSysCall(dataPtr, errno, -1, exp_errno);
+    postSysCall(context, errno, -1, exp_errno);
 
     //EXIT_CLEANUP:
     /**
      * Do cleanup work here
      */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Clean up from success case setup
     }
 

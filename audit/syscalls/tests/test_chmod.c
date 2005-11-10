@@ -51,7 +51,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_chmod(laus_data *dataPtr)
+int test_chmod(struct audit_data *context)
 {
 
 
@@ -61,24 +61,24 @@ int test_chmod(laus_data *dataPtr)
     int mode = S_IRUSR;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_chmod);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_chmod;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_chmod);
+    context->u.syscall.sysnum = AUDIT_chmod;
 
      /**
       * Do as much setup work as possible right here
       */
     // so create file with 700 permissions
     if ((rc = createTempFile(&fileName, S_IRWXU,
-			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+			     context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", fileName);
 	goto EXIT;
     }
 
-    if (!dataPtr->successCase) {
-	dataPtr->msg_ruid = dataPtr->msg_euid = dataPtr->msg_fsuid = helper_uid;
+    if (!context->success) {
+	context->euid = context->fsuid = helper_uid;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
+    if ((rc = auditArg2(context,
 			AUDIT_ARG_PATH,
 			strlen(fileName),
 			fileName,
@@ -87,16 +87,15 @@ int test_chmod(laus_data *dataPtr)
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_chmod, fileName, mode);
+    context->u.syscall.exit = syscall(__NR_chmod, fileName, mode);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }

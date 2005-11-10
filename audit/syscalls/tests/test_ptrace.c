@@ -62,9 +62,8 @@ typedef struct errnoAndReturnValue_s {
     int savedErrno;
 } errnoAndReturnValue_t;
 
-int test_ptrace(laus_data *dataPtr)
+int test_ptrace(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EPERM;
 
@@ -84,17 +83,17 @@ int test_ptrace(laus_data *dataPtr)
     int placeHolder;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_ptrace);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_ptrace;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_ptrace);
+    context->u.syscall.sysnum = AUDIT_ptrace;
 
   /**
    * Do as much setup work as possible right here
    */
     // Initialize IPC
     // Shared memory
-    if ((rc = seteuid(dataPtr->msg_euid)) != 0) {
+    if ((rc = seteuid(context->euid)) != 0) {
 	printf1("Unable to seteuid to %i: errno=%i\n",
-		dataPtr->msg_euid, errno);
+		context->euid, errno);
 	goto EXIT;
     }
     if ((shmid = shmget(IPC_PRIVATE, sizeof(errnoAndReturnValue_t),
@@ -110,12 +109,12 @@ int test_ptrace(laus_data *dataPtr)
     addr = &placeHolder;
     data = &placeHolder;
     request = PTRACE_TRACEME;
-    if (!dataPtr->successCase) {
+    if (!context->success) {
 	request = PTRACE_KILL;
 	pid = 1;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg4(dataPtr,
+    if ((rc = auditArg4(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(enum __ptrace_request),
 			&request, AUDIT_ARG_IMMEDIATE, sizeof(int), &pid,
 			AUDIT_ARG_POINTER, 0, addr, AUDIT_ARG_POINTER, 0,
@@ -124,19 +123,19 @@ int test_ptrace(laus_data *dataPtr)
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT;
     }
     // Execute system call
-    if (dataPtr->successCase) {
+    if (context->success) {
 	int pid;
 	if ((pid = fork()) == 0) {
 	    errnoAndReturnValue_t *childEarv;
 	    // In child
 	    if ((rc = seteuid(0)) != 0) {
 		printf1("Unable to seteuid to %i: errno=%i\n",
-			dataPtr->msg_euid, errno);
+			context->euid, errno);
 		goto EXIT;
 	    }
 	    if (((long)(childEarv = shmat(shmid, NULL, 0))) == -1) {
@@ -146,9 +145,9 @@ int test_ptrace(laus_data *dataPtr)
 		// TODO: Something a bit more drastic should happen at this point
 		_exit(0);
 	    }
-	    if ((rc = seteuid(dataPtr->msg_euid)) != 0) {
+	    if ((rc = seteuid(context->euid)) != 0) {
 		printf1("Unable to seteuid to %i: errno=%i\n",
-			dataPtr->msg_euid, errno);
+			context->euid, errno);
 		goto EXIT;
 	    }
 	    childEarv->returnValue =
@@ -156,7 +155,7 @@ int test_ptrace(laus_data *dataPtr)
 	    childEarv->savedErrno = errno;
 	    if ((rc = seteuid(0)) != 0) {
 		printf1("Unable to seteuid to %i: errno=%i\n",
-			dataPtr->msg_euid, errno);
+			context->euid, errno);
 		goto EXIT;
 	    }
 	    if (shmdt(childEarv) == -1) {
@@ -168,7 +167,7 @@ int test_ptrace(laus_data *dataPtr)
 	    _exit(0);
 	} else {
 	    // In parent
-	    dataPtr->msg_pid = pid;
+	    context->pid = pid;
 	    if (waitpid(pid, NULL, 0) == -1) {
 		printf1("Error waiting on pid %d: errno=%i\n", pid, errno);
 		goto EXIT_CLEANUP;
@@ -183,7 +182,7 @@ int test_ptrace(laus_data *dataPtr)
 		     shmid, errno);
 		goto EXIT_CLEANUP;
 	    }
-	    dataPtr->laus_var_data.syscallData.result = earv->returnValue;
+	    context->u.syscall.exit = earv->returnValue;
 	    savedErrno = earv->savedErrno;
 	    if (shmdt(earv) == -1) {
 		printf1
@@ -193,13 +192,13 @@ int test_ptrace(laus_data *dataPtr)
 	    }
 	}
     } else {
-	dataPtr->laus_var_data.syscallData.result =
+	context->u.syscall.exit =
 	    syscall(__NR_ptrace, request, pid, addr, data);
 	savedErrno = errno;
     }
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, savedErrno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, savedErrno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT;
     }

@@ -57,10 +57,8 @@
 #include "syscalls.h"
 #include <sys/mount.h>
 
-int test_umount(laus_data *dataPtr)
+int test_umount(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EPERM;
     char *target = NULL;
@@ -69,12 +67,12 @@ int test_umount(laus_data *dataPtr)
     printf4("Performing test_umount\n");
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_umount);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_umount;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_umount);
+    context->u.syscall.sysnum = AUDIT_umount;
 
     // dynamically create test directory
     if (rc = (createTempDir(&target, S_IRWXU | S_IRWXG | S_IRWXO,
-			    dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+			    context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create dir %s\n", target);
 	goto EXIT;
     }
@@ -87,30 +85,30 @@ int test_umount(laus_data *dataPtr)
     printf5("Mounted source directory \"none\" to "
 	    "target directory %s\n", target);
 
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// must run as root
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
+    if ((rc = auditArg2(context,
 			AUDIT_ARG_PATH, strlen(target), target,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &dummy)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result = syscall(__NR_umount, target);
+    context->u.syscall.exit = syscall(__NR_umount, target);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -119,7 +117,7 @@ EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-    if (!dataPtr->successCase) {
+    if (!context->success) {
 	if (umount(target) == -1) {
 	    printf1("Error umounting target directory [%s] for deletion."
 		    "  Errno: %i\n", target, errno);

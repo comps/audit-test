@@ -65,9 +65,8 @@
 #include <asm/ipc.h>
 #endif
 
-int test_shmdt(laus_data *dataPtr)
+int test_shmdt(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EINVAL;
     int shmid = 0;
@@ -76,14 +75,14 @@ int test_shmdt(laus_data *dataPtr)
     int mode;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_shmdt);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_shmdt;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_shmdt);
+    context->u.syscall.sysnum = AUDIT_shmdt;
 
      /**
       * Do as much setup work as possible right here
       */
     // Create the shared memory segment
-    if (dataPtr->successCase) {
+    if (context->success) {
 	mode = S_IRWXU | S_IRWXG | S_IRWXO;
 	if ((shmid = shmget(IPC_PRIVATE, PAGE_SIZE, mode)) == -1) {
 	    printf1("ERROR: Unable to create shared memory segment\n");
@@ -94,14 +93,14 @@ int test_shmdt(laus_data *dataPtr)
     }
 
     // su to test user
-    printf5("seteuid to %i\n", dataPtr->msg_euid);
-    if ((rc = seteuid(dataPtr->msg_euid)) != 0) {
+    printf5("seteuid to %i\n", context->euid);
+    if ((rc = seteuid(context->euid)) != 0) {
 	printf1("ERROR: Unable to seteuid to %i: errno=%i\n",
-		dataPtr->msg_euid, errno);
+		context->euid, errno);
 	goto EXIT_FREE_SHM;
     }
     // Attach to the shared memory
-    if (dataPtr->successCase) {
+    if (context->success) {
 	if ((long)(shmptr = shmat(shmid, NULL, 0)) == -1) {
 	    printf1
 		("ERROR: Unable to attach to shared memory with shmid %d: errno=%i\n",
@@ -116,22 +115,22 @@ int test_shmdt(laus_data *dataPtr)
 	goto EXIT_FREE_SHM;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg1(dataPtr,
+    if ((rc = auditArg1(context,
 			(shmptr == NULL ? AUDIT_ARG_NULL : AUDIT_ARG_POINTER),
 			0, shmptr)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result = dtrc = shmdt(shmptr);
+    context->u.syscall.exit = dtrc = shmdt(shmptr);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -141,7 +140,7 @@ EXIT_CLEANUP:
 
 EXIT_FREE_SHM:
     // shared memory cleanup
-    if (dataPtr->successCase) {	// Shared memory is only allocated in the success case
+    if (context->success) {	// Shared memory is only allocated in the success case
 	if (shmctl(shmid, IPC_RMID, 0) == -1) {
 	    printf1
 		("ERROR: Unable to free shared memory with shmid %d: errno=%i\n",

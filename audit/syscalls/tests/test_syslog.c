@@ -52,9 +52,8 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_syslog(laus_data *dataPtr)
+int test_syslog(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EINVAL;
     char *buf = NULL;
@@ -62,12 +61,12 @@ int test_syslog(laus_data *dataPtr)
     int type = 3;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_syslog);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_syslog;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_syslog);
+    context->u.syscall.sysnum = AUDIT_syslog;
 
     // Do as much setup work as possible right here
 
-    if (dataPtr->successCase) {	// Set up for success
+    if (context->success) {	// Set up for success
 	if ((buf = (char *)malloc(len)) == NULL) {
 	    printf1("Could not allocate memory for buffer\n");
 	    goto EXIT;
@@ -77,26 +76,25 @@ int test_syslog(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &type,
-			(dataPtr->
-			 successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL), 0,
+			(context->
+			 success ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL), 0,
 			buf, AUDIT_ARG_IMMEDIATE, sizeof(int), &len) != 0)) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    //dataPtr->laus_var_data.syscallData.result = syslog( type, buf, len );
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_syslog, type, buf, len);
+    //context->u.syscall.exit = syslog( type, buf, len );
+    context->u.syscall.exit = syscall(__NR_syslog, type, buf, len);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -105,7 +103,7 @@ EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-    if (dataPtr->successCase && buf) {	// Clean up from success case setup
+    if (context->success && buf) {	// Clean up from success case setup
 	free(buf);
     }
 

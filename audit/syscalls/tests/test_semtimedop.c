@@ -75,10 +75,8 @@
 #define TIMEOUTSIZE 16
 #endif
 
-
-int test_semtimedop(laus_data *dataPtr)
+int test_semtimedop(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EACCES;
     int semid = -1;
@@ -89,13 +87,13 @@ int test_semtimedop(laus_data *dataPtr)
     struct timespec timeout;
 
     // Set the syscall-specific data
-    dataPtr->laus_var_data.syscallData.code = AUDIT_semtimedop;
+    context->u.syscall.sysnum = AUDIT_semtimedop;
 
     // Set the key value.
     // If successCase == 0, then we will be creating a semaphore set
     // under the permissions of root, which the test user will not have
     // permission to access.
-    if (dataPtr->successCase) {
+    if (context->success) {
 	mode = (IPC_CREAT | IPC_EXCL) | 0666;
 	if ((semid = semget(IPC_PRIVATE, 1, mode)) == -1) {
 	    printf1("Error creating semaphore: errno=%i\n", errno);
@@ -119,7 +117,7 @@ int test_semtimedop(laus_data *dataPtr)
     timeout.tv_nsec = 0;
 
     // Set up audit argument buffer
-    if ((rc = auditArg4(dataPtr,
+    if ((rc = auditArg4(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &semid,
 			AUDIT_ARG_POINTER, sizeof(s), &s,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &nsops,
@@ -128,14 +126,13 @@ int test_semtimedop(laus_data *dataPtr)
 	goto EXIT;
     }
     // Do pre-system call work   
-    preSysCall(dataPtr);
+    preSysCall(context);
 
     // Execute the semtimedop system call
-    dataPtr->laus_var_data.syscallData.result =
-	semtimedop(semid, &s, 1, &timeout);
+    context->u.syscall.exit = semtimedop(semid, &s, 1, &timeout);
 
     // Do post-system call work
-    postSysCall(dataPtr, errno, -1, exp_errno);
+    postSysCall(context, errno, -1, exp_errno);
 
 EXIT_CLEANUP:
 

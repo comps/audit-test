@@ -72,10 +72,8 @@ _syscall6(int, ipc, int, minor, int, msgqid, size_t, msgsz, int, msgflg, struct 
 #endif
 */
 
-int test_msgrcv(laus_data *dataPtr)
+int test_msgrcv(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EACCES;
     int msgid;
@@ -94,7 +92,7 @@ int test_msgrcv(laus_data *dataPtr)
 
 
     // Set the syscall-specific data
-    dataPtr->laus_var_data.syscallData.code = AUDIT_msgrcv;
+    context->u.syscall.sysnum = AUDIT_msgrcv;
 
     mode = S_IRWXU;
     //msgsz = 1;
@@ -122,11 +120,11 @@ int test_msgrcv(laus_data *dataPtr)
 	goto EXIT_CLEANUP;
     }
 
-    if (dataPtr->successCase) {
-	dataPtr->msg_euid = dataPtr->msg_ruid = dataPtr->msg_fsuid = 0;
+    if (context->success) {
+	context->euid = context->fsuid = 0;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg5(dataPtr,
+    if ((rc = auditArg5(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgid,
 			AUDIT_ARG_POINTER, 0, &buf2,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgsz,
@@ -136,27 +134,26 @@ int test_msgrcv(laus_data *dataPtr)
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	msgrcv(msgid, &buf2, msgsz, msgtyp, msgflg);
+    context->u.syscall.exit = msgrcv(msgid, &buf2, msgsz, msgtyp, msgflg);
     /*
        #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-       dataPtr->laus_var_data.syscallData.result = syscall( __NR_msgrcv, msgid, msgsz, msgflg, &buf2, msgtyp ); 
+       context->u.syscall.exit = syscall( __NR_msgrcv, msgid, msgsz, msgflg, &buf2, msgtyp ); 
        #elif defined(TEST_MSGRCV_VER0)
        kludge.msgp = &buf2;
        kludge.msgtyp = msgtyp;
-       dataPtr->laus_var_data.syscallData.result = syscall( __NR_ipc, MSGRCV, msgid, msgsz, msgflg, &kludge ); 
+       context->u.syscall.exit = syscall( __NR_ipc, MSGRCV, msgid, msgsz, msgflg, &kludge ); 
        #else
-       dataPtr->laus_var_data.syscallData.result = syscall( __NR_ipc, 0x10000|MSGRCV, msgid, msgsz, 
+       context->u.syscall.exit = syscall( __NR_ipc, 0x10000|MSGRCV, msgid, msgsz, 
        msgflg, &buf2, msgtyp ); 
        #endif
      */
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }

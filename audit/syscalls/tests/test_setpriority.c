@@ -54,10 +54,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-int test_setpriority(laus_data *dataPtr)
+int test_setpriority(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EINVAL;
 
@@ -66,19 +64,18 @@ int test_setpriority(laus_data *dataPtr)
     int prio;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n",
-	    AUDIT_setpriority);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_setpriority;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setpriority);
+    context->u.syscall.sysnum = AUDIT_setpriority;
 
      /**
       * Do as much setup work as possible right here
       */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Set up for success
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
 	which = PRIO_PROCESS;
 	who = 0;
 	prio = 1;
@@ -95,7 +92,7 @@ int test_setpriority(laus_data *dataPtr)
 
     // Set up audit argument buffer
     //auditing only logging the first 3 args
-    if ((rc = auditArg3(dataPtr,
+    if ((rc = auditArg3(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &which,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &who,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &prio)) != 0) {
@@ -103,16 +100,15 @@ int test_setpriority(laus_data *dataPtr)
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_setpriority, which, who, prio);
+    context->u.syscall.exit = syscall(__NR_setpriority, which, who, prio);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -121,7 +117,7 @@ EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Clean up from success case setup
     }
 

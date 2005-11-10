@@ -58,7 +58,7 @@
 
 #ifdef __NR_clone2
 
-int test_clone2(laus_data *dataPtr)
+int test_clone2(struct audit_data *context)
 {
 
 
@@ -70,11 +70,11 @@ int test_clone2(laus_data *dataPtr)
     // Set the syscall-specific data
     // BUGBUG: /usr/include/linux/audit.h should be patched to
     // include AUDIT_clone2
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_clone);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_clone;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_clone);
+    context->u.syscall.sysnum = AUDIT_clone;
 
     // Do as much setup work as possible right here
-    if (dataPtr->successCase) {	// Set up for success
+    if (context->success) {	// Set up for success
 
     } else {			// Set up for error
 
@@ -86,12 +86,12 @@ int test_clone2(laus_data *dataPtr)
     // Set up audit argument buffer
     // Only save off first argument to assist log verification
     if ((rc =
-	 auditArg1(dataPtr, AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
+	 auditArg1(context, AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -107,11 +107,11 @@ int test_clone2(laus_data *dataPtr)
 	    _exit(0);
 	default:
 	    //In parent
-	    dataPtr->laus_var_data.syscallData.result = pid;
+	    context->u.syscall.exit = pid;
     }
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }

@@ -34,7 +34,7 @@
  * Syscall Test Matrix
  */
 typedef struct {
-    int         (*testPtr)(laus_data *);
+    int         (*testPtr)(struct audit_data *);
     char        *testName;
 } syscall_data;
 

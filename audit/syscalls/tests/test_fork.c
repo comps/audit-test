@@ -51,7 +51,7 @@
 #include "syscalls.h"
 #include <sched.h>
 
-int test_fork(laus_data *dataPtr)
+int test_fork(struct audit_data *context)
 {
 
 
@@ -60,15 +60,15 @@ int test_fork(laus_data *dataPtr)
     int flags = CLONE_CHILD_CLEARTID | CLONE_CHILD_SETTID | 0x11;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_clone);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_clone;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_clone);
+    context->u.syscall.sysnum = AUDIT_clone;
 
   /**
    * Do as much setup work as possible right here
    */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Set up for success
-	// Might include: dataPtr->msg_euid = 0; dataPtr->msg_egid = 0;;
+	// Might include: context->msg_euid = 0; context->msg_egid = 0;;
     } else {
 	rc = SKIP_TEST_CASE;
 	goto EXIT;
@@ -76,19 +76,19 @@ int test_fork(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg1(dataPtr,
+    if ((rc = auditArg1(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
 
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    if ((dataPtr->laus_var_data.syscallData.result = fork()) == 0) {
+    if ((context->u.syscall.exit = fork()) == 0) {
 	// We are in the child
 	_exit(0);		// This must happen before we leave this scope
     } else {
@@ -102,7 +102,7 @@ int test_fork(laus_data *dataPtr)
    * Generating this error would invalidate the test environment, and
    * so the error condition is not tested for fork().
    */
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -112,7 +112,7 @@ EXIT_CLEANUP:
   /**
    * Do cleanup work here
    */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Clean up from success case setup
     }
 

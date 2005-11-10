@@ -60,7 +60,7 @@
 #include <linux/capability.h>
 extern int capget(cap_user_header_t header, const cap_user_data_t data);
 
-int test_capset(laus_data *dataPtr)
+int test_capset(struct audit_data *context)
 {
 
     int rc = 0;
@@ -73,8 +73,8 @@ int test_capset(laus_data *dataPtr)
 	(cap_user_data_t) malloc(sizeof(struct __user_cap_data_struct));
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_capset);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_capset;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_capset);
+    context->u.syscall.sysnum = AUDIT_capset;
 
      /**
       * Do as much setup work as possible right here
@@ -95,11 +95,11 @@ int test_capset(laus_data *dataPtr)
 	goto EXIT_CLEANUP;
     }
 
-    if (!dataPtr->successCase) {
+    if (!context->success) {
 	data->permitted = ~data->permitted;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg5(dataPtr,
+    if ((rc = auditArg5(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(__u64), &version,
 			AUDIT_ARG_IMMEDIATE, sizeof(__u64), &pid,
 			AUDIT_ARG_POINTER, sizeof(__u32), &data->effective,
@@ -111,16 +111,15 @@ int test_capset(laus_data *dataPtr)
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_capset, header, data);
+    context->u.syscall.exit = syscall(__NR_capset, header, data);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }

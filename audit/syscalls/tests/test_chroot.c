@@ -65,7 +65,7 @@ typedef struct errnoAndReturnValue_s {
     int savedErrno;
 } errnoAndReturnValue_t;
 
-int test_chroot(laus_data *dataPtr)
+int test_chroot(struct audit_data *context)
 {
 
     int rc = 0;
@@ -84,8 +84,8 @@ int test_chroot(laus_data *dataPtr)
     char *tempPath = "/tmp";
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_chroot);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_chroot;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_chroot);
+    context->u.syscall.sysnum = AUDIT_chroot;
 
     // Do as much setup work as possible right here
 
@@ -96,15 +96,15 @@ int test_chroot(laus_data *dataPtr)
 	printf1("Error getting shared memory: errno=%i\n", errno);
 	goto EXIT;		// TODO: Explicitely account for the fact that the semaphore has been created at this point
     }
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Set up for success
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
 	mode = S_IRWXU | S_IRWXG | S_IRWXO;
 	if ((rc = createTempFile(&path, mode,
-				 dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+				 context->euid, context->egid)) == -1) {
 	    printf1("ERROR: Cannot create file %s\n", path);
 	    goto EXIT;
 	}
@@ -123,17 +123,17 @@ int test_chroot(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg1(dataPtr, AUDIT_ARG_PATH, strlen(path), path) != 0)) {
+    if ((rc = auditArg1(context, AUDIT_ARG_PATH, strlen(path), path) != 0)) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    if (dataPtr->successCase) {
+    if (context->success) {
 	int pid;
 	pid = fork();
 	if (pid == 0) {
@@ -155,7 +155,7 @@ int test_chroot(laus_data *dataPtr)
 	    }
 	    _exit(0);
 	} else {
-	    dataPtr->msg_pid = pid;
+	    context->pid = pid;
 	    if (waitpid(pid, NULL, 0) == -1) {
 		printf1("Error waiting on pid %d: errno=%i\n", pid, errno);
 		goto EXIT_CLEANUP;
@@ -166,7 +166,7 @@ int test_chroot(laus_data *dataPtr)
 		     shmid, errno);
 		goto EXIT_CLEANUP;
 	    }
-	    dataPtr->laus_var_data.syscallData.result = earv->returnValue;
+	    context->u.syscall.exit = earv->returnValue;
 	    savedErrno = earv->savedErrno;
 	    if (shmdt(earv) == -1) {
 		printf1
@@ -177,12 +177,12 @@ int test_chroot(laus_data *dataPtr)
 	}
 
     } else {
-	dataPtr->laus_var_data.syscallData.result = syscall(__NR_chroot, path);
+	context->u.syscall.exit = syscall(__NR_chroot, path);
 	savedErrno = errno;
     }
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, savedErrno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, savedErrno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -191,7 +191,7 @@ EXIT_CLEANUP:
   /**
    * Do cleanup work here
    */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// Clean up from success case setup
 	// Delete the temporary directory
 	if (rmdir(path) == -1) {
@@ -202,7 +202,7 @@ EXIT_CLEANUP:
     }
 
 EXIT:
-    if (dataPtr->successCase) {
+    if (context->success) {
 	if (path)
 	    free(path);
     }

@@ -59,7 +59,7 @@
 #include "syscalls.h"
 #include <sys/io.h>
 
-int test_iopl(laus_data *dataPtr)
+int test_iopl(struct audit_data *context)
 {
 
 
@@ -70,38 +70,38 @@ int test_iopl(laus_data *dataPtr)
 
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_iopl);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_iopl;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_iopl);
+    context->u.syscall.sysnum = AUDIT_iopl;
 
      /**
       * Do as much setup work as possible right here
       */
-    dataPtr->msg_euid = 0;
-    dataPtr->msg_egid = 0;
-    dataPtr->msg_fsuid = 0;
-    dataPtr->msg_fsgid = 0;
-    if (dataPtr->successCase) {
+    context->euid = 0;
+    context->egid = 0;
+    context->fsuid = 0;
+    context->fsgid = 0;
+    if (context->success) {
 	level = 1;
     } else {
 	level = 42;
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg1(dataPtr,
+    if ((rc = auditArg1(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &level)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result = syscall(__NR_iopl, level);
+    context->u.syscall.exit = syscall(__NR_iopl, level);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
@@ -111,7 +111,7 @@ EXIT_CLEANUP:
      /**
       * Do cleanup work here
       */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	iopl(0);
     }
 

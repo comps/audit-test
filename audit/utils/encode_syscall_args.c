@@ -45,7 +45,8 @@
 ** adjust the size accordingly.
 */
 
-int arg_put(laus_data *lausDataPtr, ARG_TYPE type, const int size, char *src)
+int arg_put(struct audit_data *context, ARG_TYPE type, const int size,
+	    char *src)
 {
 
     int newsize = size;
@@ -68,34 +69,34 @@ int arg_put(laus_data *lausDataPtr, ARG_TYPE type, const int size, char *src)
 	type = AUDIT_ARG_IMMEDIATE;
     }
 
-    lausDataPtr->laus_var_data.syscallData.data =
-	realloc(lausDataPtr->laus_var_data.syscallData.data,
-		lausDataPtr->laus_var_data.syscallData.length + sizeof(type));
-    memcpy(lausDataPtr->laus_var_data.syscallData.data +
-	   lausDataPtr->laus_var_data.syscallData.length, &type, sizeof(type));
-    lausDataPtr->laus_var_data.syscallData.length += sizeof(type);
+    context->u.syscall.args =
+	realloc(context->u.syscall.args,
+		context->u.syscall.arglen + sizeof(type));
+    memcpy(context->u.syscall.args +
+	   context->u.syscall.arglen, &type, sizeof(type));
+    context->u.syscall.arglen += sizeof(type);
 
     if (type != AUDIT_ARG_END) {
 
-	lausDataPtr->laus_var_data.syscallData.data =
-	    realloc(lausDataPtr->laus_var_data.syscallData.data,
-		    lausDataPtr->laus_var_data.syscallData.length +
+	context->u.syscall.args =
+	    realloc(context->u.syscall.args,
+		    context->u.syscall.arglen +
 		    sizeof(newsize));
-	memcpy(lausDataPtr->laus_var_data.syscallData.data +
-	       lausDataPtr->laus_var_data.syscallData.length, &newsize,
+	memcpy(context->u.syscall.args +
+	       context->u.syscall.arglen, &newsize,
 	       sizeof(newsize));
-	lausDataPtr->laus_var_data.syscallData.length += sizeof(newsize);
+	context->u.syscall.arglen += sizeof(newsize);
 
 	if (size != 0) {
 
-	    lausDataPtr->laus_var_data.syscallData.data =
-		realloc(lausDataPtr->laus_var_data.syscallData.data,
-			lausDataPtr->laus_var_data.syscallData.length +
+	    context->u.syscall.args =
+		realloc(context->u.syscall.args,
+			context->u.syscall.arglen +
 			newsize);
-	    memcpy(lausDataPtr->laus_var_data.syscallData.data +
-		   lausDataPtr->laus_var_data.syscallData.length, newsrc,
+	    memcpy(context->u.syscall.args +
+		   context->u.syscall.arglen, newsrc,
 		   newsize);
-	    lausDataPtr->laus_var_data.syscallData.length += newsize;
+	    context->u.syscall.arglen += newsize;
 	}
     }
     return 0;
@@ -149,28 +150,27 @@ int arg_get(ARG_TYPE *ptype, int *psize, char *dest, const char **src)
     return rc;
 }
 
-int auditArgNil(laus_data *lausDataPtr)
+int auditArgNil(struct audit_data *context)
 {
 
-    lausDataPtr->laus_var_data.syscallData.personality = NO_CHECK_SYSCALL_DATA;
-    lausDataPtr->laus_var_data.syscallData.data = NULL;
-    lausDataPtr->laus_var_data.syscallData.length = 0;
-    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
-    //lausDataPtr->laus_var_data.syscallData.length += sizeof(char *);
+    context->u.syscall.pers = NO_CHECK_SYSCALL_DATA;
+    context->u.syscall.args = NULL;
+    context->u.syscall.arglen = 0;
+    arg_put(context, AUDIT_ARG_END, 0, NULL);
     return 0;
 }
 
-int auditArg0(laus_data *lausDataPtr)
+int auditArg0(struct audit_data *context)
 {
 
-    lausDataPtr->laus_var_data.syscallData.data = NULL;
-    lausDataPtr->laus_var_data.syscallData.length = 0;
-    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
-    lausDataPtr->laus_var_data.syscallData.length += 4;
+    context->u.syscall.args = NULL;
+    context->u.syscall.arglen = 0;
+    arg_put(context, AUDIT_ARG_END, 0, NULL);
+    context->u.syscall.arglen += 4;
     return 0;
 }
 
-int auditArg1(laus_data *lausDataPtr,
+int auditArg1(struct audit_data *context,
 	      const int auditArgType, const int size, void *dataPtr)
 {
 
@@ -181,15 +181,15 @@ int auditArg1(laus_data *lausDataPtr,
 	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
 	return 1;
     }
-    lausDataPtr->laus_var_data.syscallData.data = NULL;
-    lausDataPtr->laus_var_data.syscallData.length = 0;
-    arg_put(lausDataPtr, auditArgType, size, dataPtr);
-    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
-    lausDataPtr->laus_var_data.syscallData.length += 4;
+    context->u.syscall.args = NULL;
+    context->u.syscall.arglen = 0;
+    arg_put(context, auditArgType, size, dataPtr);
+    arg_put(context, AUDIT_ARG_END, 0, NULL);
+    context->u.syscall.arglen += 4;
     return 0;
 }
 
-int auditArg2(laus_data *lausDataPtr,
+int auditArg2(struct audit_data *context,
 	      const int auditArgType1, const int size1, void *dataPtr1,
 	      const int auditArgType2, const int size2, void *dataPtr2)
 {
@@ -207,16 +207,16 @@ int auditArg2(laus_data *lausDataPtr,
 	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
 	return 1;
     }
-    lausDataPtr->laus_var_data.syscallData.data = NULL;
-    lausDataPtr->laus_var_data.syscallData.length = 0;
-    arg_put(lausDataPtr, auditArgType1, size1, dataPtr1);
-    arg_put(lausDataPtr, auditArgType2, size2, dataPtr2);
-    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
-    lausDataPtr->laus_var_data.syscallData.length += 4;
+    context->u.syscall.args = NULL;
+    context->u.syscall.arglen = 0;
+    arg_put(context, auditArgType1, size1, dataPtr1);
+    arg_put(context, auditArgType2, size2, dataPtr2);
+    arg_put(context, AUDIT_ARG_END, 0, NULL);
+    context->u.syscall.arglen += 4;
     return 0;
 }
 
-int auditArg3(laus_data *lausDataPtr,
+int auditArg3(struct audit_data *context,
 	      const int auditArgType1, const int size1, void *dataPtr1,
 	      const int auditArgType2, const int size2, void *dataPtr2,
 	      const int auditArgType3, const int size3, void *dataPtr3)
@@ -237,17 +237,17 @@ int auditArg3(laus_data *lausDataPtr,
 	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
 	return 1;
     }
-    lausDataPtr->laus_var_data.syscallData.data = NULL;
-    lausDataPtr->laus_var_data.syscallData.length = 0;
-    arg_put(lausDataPtr, auditArgType1, size1, dataPtr1);
-    arg_put(lausDataPtr, auditArgType2, size2, dataPtr2);
-    arg_put(lausDataPtr, auditArgType3, size3, dataPtr3);
-    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
-    lausDataPtr->laus_var_data.syscallData.length += 4;
+    context->u.syscall.args = NULL;
+    context->u.syscall.arglen = 0;
+    arg_put(context, auditArgType1, size1, dataPtr1);
+    arg_put(context, auditArgType2, size2, dataPtr2);
+    arg_put(context, auditArgType3, size3, dataPtr3);
+    arg_put(context, AUDIT_ARG_END, 0, NULL);
+    context->u.syscall.arglen += 4;
     return 0;
 }
 
-int auditArg4(laus_data *lausDataPtr,
+int auditArg4(struct audit_data *context,
 	      const int auditArgType1, const int size1, void *dataPtr1,
 	      const int auditArgType2, const int size2, void *dataPtr2,
 	      const int auditArgType3, const int size3, void *dataPtr3,
@@ -276,18 +276,18 @@ int auditArg4(laus_data *lausDataPtr,
 	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
 	return 1;
     }
-    lausDataPtr->laus_var_data.syscallData.data = NULL;
-    lausDataPtr->laus_var_data.syscallData.length = 0;
-    arg_put(lausDataPtr, auditArgType1, size1, dataPtr1);
-    arg_put(lausDataPtr, auditArgType2, size2, dataPtr2);
-    arg_put(lausDataPtr, auditArgType3, size3, dataPtr3);
-    arg_put(lausDataPtr, auditArgType4, size4, dataPtr4);
-    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
-    lausDataPtr->laus_var_data.syscallData.length += 4;
+    context->u.syscall.args = NULL;
+    context->u.syscall.arglen = 0;
+    arg_put(context, auditArgType1, size1, dataPtr1);
+    arg_put(context, auditArgType2, size2, dataPtr2);
+    arg_put(context, auditArgType3, size3, dataPtr3);
+    arg_put(context, auditArgType4, size4, dataPtr4);
+    arg_put(context, AUDIT_ARG_END, 0, NULL);
+    context->u.syscall.arglen += 4;
     return 0;
 }
 
-int auditArg5(laus_data *lausDataPtr,
+int auditArg5(struct audit_data *context,
 	      const int auditArgType1, const int size1, void *dataPtr1,
 	      const int auditArgType2, const int size2, void *dataPtr2,
 	      const int auditArgType3, const int size3, void *dataPtr3,
@@ -319,14 +319,14 @@ int auditArg5(laus_data *lausDataPtr,
 	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
 	return 1;
     }
-    lausDataPtr->laus_var_data.syscallData.data = NULL;
-    lausDataPtr->laus_var_data.syscallData.length = 0;
-    arg_put(lausDataPtr, auditArgType1, size1, dataPtr1);
-    arg_put(lausDataPtr, auditArgType2, size2, dataPtr2);
-    arg_put(lausDataPtr, auditArgType3, size3, dataPtr3);
-    arg_put(lausDataPtr, auditArgType4, size4, dataPtr4);
-    arg_put(lausDataPtr, auditArgType5, size5, dataPtr5);
-    arg_put(lausDataPtr, AUDIT_ARG_END, 0, NULL);
-    lausDataPtr->laus_var_data.syscallData.length += 4;
+    context->u.syscall.args = NULL;
+    context->u.syscall.arglen = 0;
+    arg_put(context, auditArgType1, size1, dataPtr1);
+    arg_put(context, auditArgType2, size2, dataPtr2);
+    arg_put(context, auditArgType3, size3, dataPtr3);
+    arg_put(context, auditArgType4, size4, dataPtr4);
+    arg_put(context, auditArgType5, size5, dataPtr5);
+    arg_put(context, AUDIT_ARG_END, 0, NULL);
+    context->u.syscall.arglen += 4;
     return 0;
 }

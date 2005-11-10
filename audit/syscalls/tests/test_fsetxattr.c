@@ -59,7 +59,7 @@
 #include "syscalls.h"
 #include <attr/xattr.h>
 
-int test_fsetxattr(laus_data *dataPtr)
+int test_fsetxattr(struct audit_data *context)
 {
 
     int rc = 0;
@@ -73,8 +73,8 @@ int test_fsetxattr(laus_data *dataPtr)
     int flags;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_fsetxattr);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_fsetxattr;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_fsetxattr);
+    context->u.syscall.sysnum = AUDIT_fsetxattr;
 
 	/**
 	 * Do as much setup work as possible right here
@@ -84,7 +84,7 @@ int test_fsetxattr(laus_data *dataPtr)
 
     // Create the target file
     if ((rc = createTempFile(&path, (S_IRWXU | S_IRWXG | S_IRWXO),
-			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+			     context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", path);
 	goto EXIT;
     }
@@ -95,7 +95,7 @@ int test_fsetxattr(laus_data *dataPtr)
 	goto EXIT_CLEANUP_UNLINK;
     }
 
-    if (dataPtr->successCase) {	// Set up for success
+    if (context->success) {	// Set up for success
 	flags = XATTR_CREATE;
 	strcpy(value, XATTR_TEST_VALUE);
     } else {			// Set up for error
@@ -103,7 +103,7 @@ int test_fsetxattr(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg5(dataPtr,
+    if ((rc = auditArg5(context,
 			AUDIT_ARG_PATH, strlen(path), path,
 			AUDIT_ARG_STRING, strlen(name), name,
 			AUDIT_ARG_POINTER, size, value,
@@ -113,14 +113,14 @@ int test_fsetxattr(laus_data *dataPtr)
 	goto EXIT_CLEANUP_CLOSE;
     }
     // Do pre-system call work
-    preSysCall(dataPtr);
+    preSysCall(context);
 
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
+    context->u.syscall.exit =
 	syscall(__NR_fsetxattr, filedes, name, value, size, flags);
 
     // Do post-system call work
-    postSysCall(dataPtr, errno, -1, exp_errno);
+    postSysCall(context, errno, -1, exp_errno);
 
 EXIT_CLEANUP_CLOSE:
     if ((close(filedes)) == -1) {

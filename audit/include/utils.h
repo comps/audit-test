@@ -45,7 +45,7 @@ int audit_stop();
 int audit_clear_logs();
 int audit_reload();
 int audit_set_filters(log_options);
-int audit_verify_log(laus_data *, log_options);
+int audit_verify_log(struct audit_data *, log_options);
 
 /*
  * System Info Collection
@@ -63,7 +63,7 @@ typedef struct identifiers_s {
     int fsgid;
 } identifiers_t;
 
-int getLAUSData(laus_data*);
+int getLAUSData(struct audit_data *);
 int getLoginUID();
 int getIdentifiers( identifiers_t* identifiers );
 int getPid(char* executable);
@@ -90,33 +90,28 @@ int createTempGroupName( char** user, int* uid );
 int arg_get(ARG_TYPE* ptype, int* psize, char* dest, const char** src);
 int arg_vector(char** vector, int vector_size, 
 	       const ARG_TYPE type, const int size, const char* src);
-int auditArg0( laus_data* lausDataPtr );
-int auditArg1( laus_data* lausDataPtr, 
-	       const int auditArgType, const int size, void* dataPtr );
-int auditArg2( laus_data* lausDataPtr,
-	       const int auditArgType1, const int size1, void* dataPtr1,
-	       const int auditArgType2, const int size2, void* dataPtr2 );
-int auditArg3( laus_data* lausDataPtr,
-	       const int auditArgType1, const int size1, void* dataPtr1,
-	       const int auditArgType2, const int size2, void* dataPtr2,
-	       const int auditArgType3, const int size3, void* dataPtr3 );
-int auditArg4( laus_data* lausDataPtr,
-	       const int auditArgType1, const int size1, void* dataPtr1,
-	       const int auditArgType2, const int size2, void* dataPtr2,
-	       const int auditArgType3, const int size3, void* dataPtr3,
-	       const int auditArgType4, const int size4, void* dataPtr4 );
-int auditArg5( laus_data* lausDataPtr,
-	       const int auditArgType1, const int size1, void* dataPtr1,
-	       const int auditArgType2, const int size2, void* dataPtr2,
-	       const int auditArgType3, const int size3, void* dataPtr3,
-	       const int auditArgType4, const int size4, void* dataPtr4,
-	       const int auditArgType5, const int size5, void* dataPtr5 );
+int auditArg0(struct audit_data *);
+int auditArg1(struct audit_data *, const int, const int, void *);
+int auditArg2(struct audit_data *, const int, const int, void *,
+	       const int, const int, void *);
+int auditArg3(struct audit_data *, const int, const int, void *,
+	       const int, const int, void *,
+	       const int, const int, void *);
+int auditArg4(struct audit_data *, const int, const int, void *,
+	       const int, const int, void *,
+	       const int, const int, void *,
+	       const int, const int, void *);
+int auditArg5(struct audit_data *, const int, const int, void *,
+	       const int, const int, void *,
+	       const int, const int, void *,
+	       const int, const int, void *,
+	       const int, const int, void *);
 
 /*
  * Syscall Test Setup/Teardown
  */
-int preSysCall(laus_data* dataPtr);
-int postSysCall(laus_data* dataPtr, int resultErrno, int errorRC, 
+int preSysCall(struct audit_data* dataPtr);
+int postSysCall(struct audit_data* dataPtr, int resultErrno, int errorRC, 
 		int expectedErrno);
 
 /*
@@ -149,7 +144,7 @@ do {								\
  */
 extern int debug; /* global debug level */
 
-void debug_expected(const laus_data* dataPtr);
+void debug_expected(const struct audit_data* dataPtr);
 
 #define printf1(msg, ...)		\
 do {					\

@@ -64,28 +64,26 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_setgid32(laus_data *dataPtr)
+int test_setgid32(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EPERM;
     int gid;
 
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n", AUDIT_setgid);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_setgid;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setgid);
+    context->u.syscall.sysnum = AUDIT_setgid;
 
   /**
    * Do as much setup work as possible right here
    */
-    if (dataPtr->successCase) {
+    if (context->success) {
 	gid = 0;
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
 	printf5("Target gid=%d in success case\n", gid);
     } else {
 	identifiers_t identifiers;
@@ -101,10 +99,10 @@ int test_setgid32(laus_data *dataPtr)
 	gid = 42;
 
 	// su to test user
-	printf5("seteuid to %i\n", dataPtr->msg_euid);
-	if ((rc = seteuid(dataPtr->msg_euid)) != 0) {
+	printf5("seteuid to %i\n", context->euid);
+	if ((rc = seteuid(context->euid)) != 0) {
 	    printf1("Unable to seteuid to %i: errno=%i\n",
-		    dataPtr->msg_euid, errno);
+		    context->euid, errno);
 	    goto EXIT;		// Or possibly EXIT_CLEANUP
 	}
 
@@ -126,22 +124,22 @@ int test_setgid32(laus_data *dataPtr)
     }
 
     // Set up audit argument buffer
-    if ((rc = auditArg1(dataPtr, AUDIT_ARG_IMMEDIATE, sizeof(int), &gid)) != 0) {
+    if ((rc = auditArg1(context, AUDIT_ARG_IMMEDIATE, sizeof(int), &gid)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call  
-    dataPtr->laus_var_data.syscallData.result = syscall(__NR_setgid32, gid);
-    if (dataPtr->successCase) {
-	dataPtr->msg_sgid = gid;
+    context->u.syscall.exit = syscall(__NR_setgid32, gid);
+    if (context->success) {
+	context->sgid = gid;
     }
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }

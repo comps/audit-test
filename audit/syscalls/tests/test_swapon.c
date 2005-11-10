@@ -58,10 +58,8 @@
    /*
     ** execute a swapon operation
     */
-int test_swapon(laus_data *dataPtr)
+int test_swapon(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EPERM;
     //int length;           // variables not needed?
@@ -73,12 +71,12 @@ int test_swapon(laus_data *dataPtr)
 
 
     // Set the syscall specific data
-    dataPtr->laus_var_data.syscallData.code = AUDIT_swapon;
+    context->u.syscall.sysnum = AUDIT_swapon;
     // BUGBUG: Need to understand how to set up syscall parameters
 
     // dynamically create temp file name
     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-			     dataPtr->msg_euid, dataPtr->msg_egid)) == -1) {
+			     context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", fileName);
 	goto EXIT;
     }
@@ -111,39 +109,39 @@ int test_swapon(laus_data *dataPtr)
     free(cmd);
 
     // if testing success case, create the file, and mkswap
-    if (dataPtr->successCase) {
+    if (context->success) {
 	// must be root to swapon()
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
-			dataPtr->successCase ? AUDIT_ARG_PATH : AUDIT_ARG_NULL,
-			dataPtr->successCase ? strlen(fileName) : 0, fileName,
+    if ((rc = auditArg2(context,
+			context->success ? AUDIT_ARG_PATH : AUDIT_ARG_NULL,
+			context->success ? strlen(fileName) : 0, fileName,
 			AUDIT_ARG_IMMEDIATE, sizeof(swapflags),
 			&swapflags)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result = swapon(fileName, swapflags);
+    context->u.syscall.exit = swapon(fileName, swapflags);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
 EXIT_CLEANUP:
     // swapon cleanup
-    if (dataPtr->successCase) {
+    if (context->success) {
 	if ((swapoff(fileName)) != 0) {
 	    printf1("ERROR: Unable to swapoff file %s: errno=%i\n",
 		    fileName, errno);

@@ -59,10 +59,8 @@
 #endif
 #include <sys/sem.h>
 
-int test_semctl(laus_data *dataPtr)
+int test_semctl(struct audit_data *context)
 {
-
-
     int rc = 0;
     int exp_errno = EPERM;
     int semctlrc = 0;
@@ -77,10 +75,8 @@ int test_semctl(laus_data *dataPtr)
 #endif
     char *buf = NULL;
 
-    //syscall_data* syscallData = (syscall_data*)dataPtr;   // not needed?
-
     // Set the syscall-specific data
-    dataPtr->laus_var_data.syscallData.code = AUDIT_semctl;
+    context->u.syscall.sysnum = AUDIT_semctl;
 
     // Allocate shared memory space so that we can test deallocation via
     // semctl
@@ -89,14 +85,14 @@ int test_semctl(laus_data *dataPtr)
 	printf1("ERROR: Unable to allocate new semaphore: errno=%i\n", errno);
 	goto EXIT;
     }
-    if (dataPtr->successCase) {
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+    if (context->success) {
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
     }
     // Set up audit argument buffer
-    if ((rc = auditArg4(dataPtr,
+    if ((rc = auditArg4(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &semid,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &semnum,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd_on_disk,
@@ -110,27 +106,27 @@ int test_semctl(laus_data *dataPtr)
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-    dataPtr->laus_var_data.syscallData.result = semctlrc =
+    context->u.syscall.exit = semctlrc =
 	syscall(__NR_semctl, semid, 0, cmd, &buf);
 #else
-    dataPtr->laus_var_data.syscallData.result = semctlrc =
+    context->u.syscall.exit = semctlrc =
 	syscall(__NR_ipc, SEMCTL, semid, 0, cmd, &buf);
 #endif
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
 EXIT_CLEANUP:
 
-    if (!dataPtr->successCase && semid && (semid != -1)) {
+    if (!context->success && semid && (semid != -1)) {
 	if ((rc = semctl(semid, 0, IPC_RMID)) == -1) {
 	    printf1
 		("Error removing semaphore set with ID = [%d]: errno = [%i]\n",

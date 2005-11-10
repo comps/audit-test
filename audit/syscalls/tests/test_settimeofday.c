@@ -68,9 +68,8 @@ struct timeval_on_disk {	// edited from /usr/include/bits/time.h
 #define timeval_on_disk timeval
 #endif
 
-int test_settimeofday(laus_data *dataPtr)
+int test_settimeofday(struct audit_data *context)
 {
-
     int rc = 0;
     int exp_errno = EPERM;
     struct timeval *tv = NULL;
@@ -78,16 +77,15 @@ int test_settimeofday(laus_data *dataPtr)
     struct timezone *tz = NULL;
 
     // Set the syscall-specific data
-    printf5("Setting laus_var_data.syscallData.code to %d\n",
-	    AUDIT_settimeofday);
-    dataPtr->laus_var_data.syscallData.code = AUDIT_settimeofday;
+    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_settimeofday);
+    context->u.syscall.sysnum = AUDIT_settimeofday;
 
     // Do as much setup work as possible right here
-    if (dataPtr->successCase) {	// Set up for success
-	dataPtr->msg_euid = 0;
-	dataPtr->msg_egid = 0;
-	dataPtr->msg_fsuid = 0;
-	dataPtr->msg_fsgid = 0;
+    if (context->success) {	// Set up for success
+	context->euid = 0;
+	context->egid = 0;
+	context->fsuid = 0;
+	context->fsgid = 0;
 
 	tv = (struct timeval *)malloc(sizeof(struct timeval));
 	memset(tv, '\0', sizeof(tv));
@@ -116,31 +114,25 @@ int test_settimeofday(laus_data *dataPtr)
     printf5("time value and time zone structures initialized\n");
 
     // Set up audit argument buffer
-    if ((rc = auditArg2(dataPtr,
-			(dataPtr->
-			 successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL),
-			(dataPtr->
-			 successCase ? sizeof(struct timeval_on_disk) : 0),
-			tv_on_disk,
-			(dataPtr->
-			 successCase ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL),
-			(dataPtr->successCase ? sizeof(struct timezone) : 0),
-			tz)
+    if ((rc = auditArg2(context, 
+	    (context->success ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL), 
+	    (context->success ? sizeof(struct timeval_on_disk) : 0), tv_on_disk,
+	    (context->success ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL),
+	    (context->success ? sizeof(struct timezone) : 0), tz)
 	) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
-    if ((rc = preSysCall(dataPtr)) != 0) {
+    if ((rc = preSysCall(context)) != 0) {
 	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT;
     }
     // Execute system call
-    dataPtr->laus_var_data.syscallData.result =
-	syscall(__NR_settimeofday, tv, tz);
+    context->u.syscall.exit = syscall(__NR_settimeofday, tv, tz);
 
     // Do post-system call work
-    if ((rc = postSysCall(dataPtr, errno, -1, exp_errno)) != 0) {
+    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
 	printf1("ERROR: post-syscall failed (%d)\n", rc);
     }
 

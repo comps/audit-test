@@ -34,34 +34,31 @@
 #include "includes.h"
 #include <time.h>
 
-int preSysCall(laus_data *dataPtr)
+int preSysCall(struct audit_data *context)
 {
     int rc = 0;
 
     // su to test user
-    printf5("setresgid to %i, %i, %i\n", dataPtr->msg_rgid, dataPtr->msg_egid,
-	    0);
-    if ((rc = setresgid(dataPtr->msg_rgid, dataPtr->msg_egid, 0)) != 0) {
+    printf5("setresgid to %i, %i, %i\n", context->egid, context->egid, 0);
+    if ((rc = setresgid(context->egid, context->egid, 0)) != 0) {
 	printf1("Unable to setresgid to %i, %i, %i: errno=%i\n",
-		dataPtr->msg_rgid, dataPtr->msg_egid, 0, errno);
+		context->egid, context->egid, 0, errno);
 	goto EXIT;
     }
-    printf5("setresuid to %i, %i, %i\n", dataPtr->msg_ruid, dataPtr->msg_euid,
-	    0);
-    if ((rc = setresuid(dataPtr->msg_ruid, dataPtr->msg_euid, 0)) != 0) {
+    printf5("setresuid to %i, %i, %i\n", context->euid, context->euid, 0);
+    if ((rc = setresuid(context->euid, context->euid, 0)) != 0) {
 	printf1("Unable to setresuid to %i, %i, %i: errno=%i\n",
-		dataPtr->msg_ruid, dataPtr->msg_euid, 0, errno);
+		context->euid, context->euid, 0, errno);
 	goto EXIT;
     }
-    // Fill in laus_data structure
     printf5("Calling getLAUSData\n");
-    if ((rc = getLAUSData(dataPtr)) != 0) {
-	printf1("Error returned from getLAUSData( dataPtr ): rc=%i\n", rc);
+    if ((rc = getLAUSData(context)) != 0) {
+	printf1("Error returned from getLAUSData(): rc=%i\n", rc);
 	goto EXIT;
     }
 
     printf5("Setting begin timestamp\n");
-    dataPtr->begin_r_time = time(NULL) - 2;	// MH: Start two seconds
+    context->begin_time = time(NULL) - 2;	// MH: Start two seconds
     // before current time
     printf5("Performing system call\n");
 

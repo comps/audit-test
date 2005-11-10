@@ -36,17 +36,18 @@ typedef struct parse_info {
     int nmatch;			// number of matches
     char *regex;		// regex string
     char *type;			// record type string
-    int (*handler) (laus_data *, struct parse_info *, char *, char *);	// match handler
+    int (*handler) (struct audit_data *, struct parse_info *, char *, char *);	// match handler
 } parse_info_t;
 
 static int init_parse_info(u_int16_t, parse_info_t *);
 static void free_parse_info(parse_info_t *);
 
-static int match_type(laus_data *, parse_info_t *, char *, char *);
-static int match_syscall_record(laus_data *, parse_info_t *, char *, char *);
+static int match_type(struct audit_data *, parse_info_t *, char *, char *);
+static int match_syscall_record(struct audit_data *, parse_info_t *, char *, 
+				char *);
 
 
-int audit_verify_log(laus_data *dataPtr, log_options logOption)
+int audit_verify_log(struct audit_data *context, log_options logOption)
 {
 
     int rc = 0;
@@ -69,7 +70,7 @@ int audit_verify_log(laus_data *dataPtr, log_options logOption)
     }
 
     if ((init_parse_info(0, &tinfo) < 0) ||
-	(init_parse_info(dataPtr->msg_type, &vinfo) < 0)) {
+	(init_parse_info(context->type, &vinfo) < 0)) {
 	printf1("ERROR: Unable to initialize regex info.\n");
 	rc = -1;
 	goto exit_verify_log;
@@ -78,12 +79,12 @@ int audit_verify_log(laus_data *dataPtr, log_options logOption)
     while ((fgets(buf, AUDIT_RECORD_MAX, fp)) != NULL) {
 
 	/* determine record type field */
-	if (tinfo.handler(dataPtr, &tinfo, buf, vinfo.type) <= 0) {
+	if (tinfo.handler(context, &tinfo, buf, vinfo.type) <= 0) {
 	    continue;
 	}
 
 	/* match rest of record */
-	if ((vinfo.handler)(dataPtr, &vinfo, buf, NULL)) {
+	if ((vinfo.handler)(context, &vinfo, buf, NULL)) {
 	    printf9("matched record: %s\n", buf);
 	    records_found++;
 	}
@@ -185,7 +186,7 @@ static void free_parse_info(parse_info_t *info)
     }
 }
 
-static int match_type(laus_data *dataPtr, parse_info_t *info, char *buf,
+static int match_type(struct audit_data *context, parse_info_t *info, char *buf,
 		      char *etype)
 {
     int rc = 0;			// -1 = error, 0 = no match, 1 = matched
@@ -221,7 +222,7 @@ exit_match_type:
     return rc;
 }
 
-static int match_syscall_record(laus_data *dataPtr, parse_info_t *info,
+static int match_syscall_record(struct audit_data *context, parse_info_t *info,
 				char *buf, char *unused)
 {
     int rc = 1;			// -1 = error, 0 = no match, 1 = matched
@@ -262,34 +263,34 @@ static int match_syscall_record(laus_data *dataPtr, parse_info_t *info,
 	value[valuelen] = '\0';
 
 	/* use the index into pmatch instead of a string comparison  to speed this up */
-	if (strcmp(key, "arch") == 0) {	// XXX dataPtr->msg_arch
+	if (strcmp(key, "arch") == 0) {	// XXX context->u.syscall.arch
 	} else if (strcmp(key, "syscall") == 0) {
-	    if (dataPtr->laus_var_data.syscallData.code != atoi(value)) {
+	    if (context->u.syscall.sysnum != atoi(value)) {
 		rc = 0;
 		break;
 	    }
 	} else if (strcmp(key, "success") == 0) {	// XXX ??
 	} else if (strcmp(key, "exit") == 0) {
 	    /*
-	       if ((dataPtr->laus_var_data.syscallData.result != NO_RETURN_CODE) &&
-	       (dataPtr->laus_var_data.syscallData.result != atoi(value))) {
+	       if ((context->u.syscall.exit != NO_RETURN_CODE) &&
+	       (context->u.syscall.exit  != atoi(value))) {
 	       rc = 0;
 	       break;
 	       }
 	     */
-	} else if (strcmp(key, "a0") == 0) {	// XXX dataPtr->laus_var_data.syscallData.data
+	} else if (strcmp(key, "a0") == 0) {	// XXX context->u.syscall.args
 	} else if (strcmp(key, "a1") == 0) {
 	} else if (strcmp(key, "a2") == 0) {
 	} else if (strcmp(key, "a3") == 0) {
 	} else if (strcmp(key, "pid") == 0) {
-	    if ((dataPtr->msg_pid != NO_PID_CHECK) &&
-		(dataPtr->msg_pid != atoi(value))) {
+	    if ((context->pid != NO_PID_CHECK) &&
+		(context->pid != atoi(value))) {
 		rc = 0;
 		break;
 	    }
 	} else if (strcmp(key, "auid") == 0) {
-	    if ((dataPtr->msg_login_uid != NO_ID_CHECK) &&
-		(dataPtr->msg_login_uid != atoi(value))) {
+	    if ((context->loginuid != NO_ID_CHECK) &&
+		(context->loginuid != atoi(value))) {
 		rc = 0;
 		break;
 	    }
@@ -297,48 +298,48 @@ static int match_syscall_record(laus_data *dataPtr, parse_info_t *info,
 	} else if (strcmp(key, "gid") == 0) {	// XXX ??
 	} else if (strcmp(key, "euid") == 0) {
 	    /*
-	       if ((dataPtr->msg_euid != NO_ID_CHECK) && 
-	       (dataPtr->msg_euid != atoi(value))) {
+	       if ((context->euid != NO_ID_CHECK) && 
+	       (context->euid != atoi(value))) {
 	       rc = 0;
 	       break;
 	       }
 	     */
 	} else if (strcmp(key, "suid") == 0) {
 	    /*
-	       if ((dataPtr->msg_suid != NO_ID_CHECK) && 
-	       (dataPtr->msg_suid != atoi(value))) {
+	       if ((context->suid != NO_ID_CHECK) && 
+	       (context->suid != atoi(value))) {
 	       rc = 0;
 	       break;
 	       }
 	     */
 	} else if (strcmp(key, "fsuid") == 0) {
 	    /*
-	       if ((dataPtr->msg_fsuid != NO_ID_CHECK) && 
-	       (dataPtr->msg_fsuid != atoi(value))) {
+	       if ((context->fsuid != NO_ID_CHECK) && 
+	       (context->fsuid != atoi(value))) {
 	       rc = 0;
 	       break;
 	       }
 	     */
 	} else if (strcmp(key, "egid") == 0) {
 	    /*
-	       if ((dataPtr->msg_egid != NO_ID_CHECK) && 
-	       (dataPtr->msg_egid != atoi(value))) {
+	       if ((context->egid != NO_ID_CHECK) && 
+	       (context->egid != atoi(value))) {
 	       matched = 0;
 	       break;
 	       }
 	     */
 	} else if (strcmp(key, "sgid") == 0) {
 	    /*
-	       if ((dataPtr->msg_sgid != NO_ID_CHECK) && 
-	       (dataPtr->msg_sgid != atoi(value))) {
+	       if ((context->sgid != NO_ID_CHECK) && 
+	       (context->sgid != atoi(value))) {
 	       matched = 0;
 	       break;
 	       }
 	     */
 	} else if (strcmp(key, "fsgid") == 0) {
 	    /*
-	       if ((dataPtr->msg_fsgid != NO_ID_CHECK) && 
-	       (dataPtr->msg_fsgid != atoi(value))) {
+	       if ((context->fsgid != NO_ID_CHECK) && 
+	       (context->fsgid != atoi(value))) {
 	       matched = 0;
 	       break;
 	       }

@@ -61,7 +61,7 @@
 int test_truncate64(struct audit_data *context)
 {
     int rc = 0;
-#if !defined(__PPC) && !defined(__X86_64)  && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__)  && !defined(__s390x__) && !defined(__ia64__)
     int exp_errno = EACCES;
     long long length = 1;
     //size_t count = 80;    // not needed?

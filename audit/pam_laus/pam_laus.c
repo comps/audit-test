@@ -97,26 +97,20 @@ Arguments:\n\
   struct passwd* login_uid_data = NULL;
   laus_data* successDataPtr = NULL;
 
-#ifdef __IX86
+#if defined(__i386__)
   int arch = AUDIT_ARCH_I386;
-#endif
-#ifdef __PPC32
-  int arch = AUDIT_ARCH_PPC;
-#endif
-#ifdef __PPC64
+#elif defined(__powerpc64__)
   int arch = AUDIT_ARCH_PPC64;
-#endif
-#ifdef __S390
-  int arch = AUDIT_ARCH_S390;
-#endif
-#ifdef __S390X
+#elif defined(__powerpc__)
+  int arch = AUDIT_ARCH_PPC;
+#elif defined(__s390x__)
   int arch = AUDIT_ARCH_S390X;
-#endif
-#ifdef __X86_64
-  int arch =  AUDIT_ARCH_X86_64;
-#endif
-#ifdef __IA64
-  int arch =  AUDIT_ARCH_IA64;
+#elif defined(__s390__)
+  int arch = AUDIT_ARCH_S390;
+#elif defined(__x86_64__)
+  int arch = AUDIT_ARCH_X86_64;
+#elif defined(__ia64__)
+  int arch = AUDIT_ARCH_IA64;
 #endif
 
   // Array contains data for each pam program test.

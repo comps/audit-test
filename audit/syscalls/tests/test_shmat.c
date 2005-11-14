@@ -56,9 +56,9 @@
 #include "syscalls.h"
 #include <sys/shm.h>
 #include <asm/page.h>
-#if defined(__PPC64)
+#if defined(__powerpc64__)
 #include <asm-ppc64/ipc.h>
-#elif !defined(__IA64)
+#elif !defined(__ia64__)
 #include <asm/ipc.h>
 #endif
 

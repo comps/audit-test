@@ -54,9 +54,9 @@
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
-#if defined(__PPC64)
+#if defined(__powerpc64__)
 #include <asm-ppc64/ipc.h>
-#elif !defined(__IA64)
+#elif !defined(__ia64__)
 #include <asm/ipc.h>
 #endif
 #include <sys/shm.h>
@@ -102,13 +102,14 @@ int test_shmctl(struct audit_data *context)
 
 // Handle special case on zSeries in 31 bit mode.
 // IPC_RMID needs to be ored with IPC_64 flag to get the correct value
-#if defined(__S390X) && defined(__MODE_32)
+#if defined(__s390x__) // && defined(__MODE_32)
+#error This #if needs to be updated to test something other than __MODE_32
     cmd = IPC_RMID | 0x0100;	// Value of IPC_64 as defined in /usr/include/linux/ipc.h
 #else
     cmd = IPC_RMID;
 #endif
 
-#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
+#if (defined(__x86_64__) || defined(__ia64__))
     if ((rc = auditArg3(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &shmid,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd,
@@ -128,7 +129,7 @@ int test_shmctl(struct audit_data *context)
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
+#if (defined(__x86_64__) || defined(__ia64__))
     context->u.syscall.exit = shmctlrc = syscall(__NR_shmctl, shmid,
 						 IPC_RMID, 0, &buf);
 #else

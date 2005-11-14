@@ -65,7 +65,7 @@
 int test_setgid16(struct audit_data *context)
 {
     int rc = 0;
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__ia64__)
     int exp_errno = EPERM;
     int gid;
 

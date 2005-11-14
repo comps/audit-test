@@ -60,9 +60,9 @@
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
-#if defined(__PPC64)
+#if defined(__powerpc64__)
 #include <asm-ppc64/ipc.h>
-#elif !defined(__IA64)
+#elif !defined(__ia64__)
 #include <asm/ipc.h>
 #endif
 #include <sys/sem.h>
@@ -114,7 +114,7 @@ int test_semget(struct audit_data *context)
     preSysCall(context);
 
     // Execute the semget system call
-#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
+#if (defined(__x86_64__) || defined(__ia64__))
     context->u.syscall.exit = secondSemid =
 	syscall(__NR_semget, key, nsems, mode);
 #else

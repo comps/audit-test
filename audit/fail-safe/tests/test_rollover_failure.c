@@ -323,7 +323,7 @@ int test_rollover_failure(laus_data *ld, uid_t uid, gid_t gid) {
 
 	// A killall command will hang now, kill the audit daemon with -9
 	printf5("Using 'kill -9' to kill the audit daemon\n");
-#ifdef __PPC64
+#ifdef __powerpc64__
         system("/bin/kill -9 `/bin/pidof auditd64` >/dev/null 2>&1");
 #else
 	system("/bin/kill -9 `/bin/pidof auditd` >/dev/null 2>&1");

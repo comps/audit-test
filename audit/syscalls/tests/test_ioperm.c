@@ -56,7 +56,7 @@
 int test_ioperm(struct audit_data *context)
 {
     int rc = 0;
-#ifdef __IX86
+#ifdef __i386__
     int exp_errno = EPERM;
 
     unsigned long from;

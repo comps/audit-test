@@ -48,7 +48,7 @@
 #define STR_PATH1		"/etc/audit"
 #define STR_PATH2		"/home"
 
-//#if defined(__S390) || defined(__S390X)
+//#if defined(__s390__) || defined(__s390x__)
 //#define ETHERNET_DEV            "iucv"
 //#else
 #define ETHERNET_DEV		"eth"

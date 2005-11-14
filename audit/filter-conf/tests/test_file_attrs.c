@@ -60,7 +60,7 @@ int test_file(laus_data *ld, uid_t uid, gid_t gid) {
 	int rc = 0;
 
 	int fd = 0;
-#if defined(__PPC64) || defined(__S390X) || defined(__X86_64)
+#if defined(__powerpc64__) || defined(__s390x__) || defined(__x86_64__)
         int flags = O_RDONLY | O_LARGEFILE;
 #else
         int flags = O_RDONLY;
@@ -131,7 +131,7 @@ int test_file_owner(laus_data *ld, uid_t uid, gid_t gid) {
 
 	char *file = NULL;
 	int fd = 0;
-#if defined(__PPC64) || defined(__S390X) || defined(__X86_64)
+#if defined(__powerpc64__) || defined(__s390x__) || defined(__x86_64__)
         int flags = O_RDONLY | O_LARGEFILE;
 #else
         int flags = O_RDONLY;
@@ -209,7 +209,7 @@ int test_dev(laus_data *ld, uid_t uid, gid_t gid) {
 	int rc = 0;
 
 	int fd = 0;
-#if defined(__PPC64) || defined(__S390X) || defined(__X86_64)
+#if defined(__powerpc64__) || defined(__s390x__) || defined(__x86_64__)
         int flags = O_RDONLY | O_LARGEFILE;
 #else
         int flags = O_RDONLY;

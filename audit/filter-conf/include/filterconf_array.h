@@ -108,7 +108,7 @@ filterconf_data filterconf_tests[] = {
 	{ &test_syscall_argN, "syscall arg1 false", NULL, { FALSE, FALSE }, "syscall setreuid = is-testuid(arg1);" },
 
 	// Syscall syscall-minor tests
-#if !defined(__X86_64) && !defined(__IA64)
+#if !defined(__x86_64__) && !defined(__ia64__)
 	//{ &test_syscall_minor, "syscall minor true",  NULL, { TRUE, TRUE },   "syscall socketcall = is-socket-minor(syscall-minor);" },
 	//{ &test_syscall_minor, "syscall minor false", NULL, { FALSE, FALSE }, "syscall socketcall = is-bind-minor(syscall-minor);" },
 #endif

@@ -74,7 +74,7 @@ else
 endif
 
 $(EXE): $(ALL_OBJS) $(UTILS_AR) $(TESTS_AR)
-	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) $(ALL_OBJS) ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive $(LIBS)
+	$(CC) $(FLAGS) $(CFLAGS) -o $(EXE) $(ALL_OBJS) tests/*.o utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive $(LIBS)
 
 clean:
 	make clean -C kmods

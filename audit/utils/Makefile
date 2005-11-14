@@ -90,18 +90,18 @@ $(UTILS_AR): $(UTILS_OBJS) $(LAF_OBJS)
 	$(RANLIB) $@
 
 $(SEM_EXE): $(SEM_OBJS)
-	$(CC) $(FLAGS) $(ARCH) -o $@ $(SEM_OBJS)
+	$(CC) $(FLAGS) -o $@ $(SEM_OBJS)
 	cp $(SEM_EXE) $(SEM_EXE2)
 	chmod 700 $(SEM_EXE2)
 
 $(EXIT_EXE): $(EXIT_OBJS)
-	$(CC) $(FLAGS) $(ARCH) -o $@ $(EXIT_OBJS)
+	$(CC) $(FLAGS) -o $@ $(EXIT_OBJS)
 
 $(RC_EXE): $(RC_OBJS)
-	$(CC) $(FLAGS) $(ARCH) -o $@ $(RC_OBJS)
+	$(CC) $(FLAGS) -o $@ $(RC_OBJS)
 
 $(PTS_EXE): $(PTS_OBJS)
-	$(CC) $(FLAGS) $(ARCH) -o $@ $(PTS_OBJS)
+	$(CC) $(FLAGS) -o $@ $(PTS_OBJS)
 	ln -sf `pwd`/$@ $(PTS_LINK) 
 
 clean:

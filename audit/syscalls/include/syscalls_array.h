@@ -46,13 +46,13 @@ syscall_data syscallTests[] = {
     { &test_chdir, "chdir" }, 
     { &test_chmod, "chmod" }, 
     { &test_chown, "chown" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_chown16, "chown16" }, 
     { &test_chown32, "chown32" }, 
 #endif
     { &test_chroot, "chroot" }, 
     { &test_clone, "clone" }, 
-#ifdef __IA64
+#ifdef __ia64__
     { &test_clone2, "clone2" }, 
 #endif
     { &test_creat, "creat" }, 
@@ -61,7 +61,7 @@ syscall_data syscallTests[] = {
     { &test_fchdir, "fchdir" }, 
     { &test_fchmod, "fchmod" }, 
     { &test_fchown, "fchown" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_fchown16, "fchown16" }, 
     { &test_fchown32, "fchown32" }, 
 #endif
@@ -69,20 +69,20 @@ syscall_data syscallTests[] = {
     { &test_fremovexattr, "fremovexattr" }, 
     { &test_fsetxattr, "fsetxattr" }, 
     { &test_ftruncate, "ftruncate" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_ftruncate64, "ftruncate64" }, 
 #endif
     { &test_init_module, "init_module" }, 
     { &test_ioctl, "ioctl" },
-#ifdef __IX86
+#ifdef __i386__
     { &test_ioperm, "ioperm" }, 
 #endif
-#ifdef __IX86
+#ifdef __i386__
     { &test_iopl, "iopl" }, 
 #endif
     { &test_kill, "kill" }, 
     { &test_lchown, "lchown" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_lchown16, "lchown16" }, 
     { &test_lchown32, "lchown32" }, 
 #endif
@@ -108,22 +108,22 @@ syscall_data syscallTests[] = {
     { &test_semtimedop, "semtimedop" },
     { &test_setdomainname, "setdomainname" }, 
     { &test_setfsgid, "setfsgid" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_setfsgid16, "setfsgid16" }, 
     { &test_setfsgid32, "setfsgid32" }, 
 #endif
     { &test_setfsuid, "setfsuid" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_setfsuid16, "setfsuid16" }, 
     { &test_setfsuid32, "setfsuid32" }, 
 #endif
     { &test_setgid, "setgid" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_setgid16, "setgid16" }, 
     { &test_setgid32, "setgid32" }, 
 #endif
     { &test_setgroups, "setgroups" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_setgroups16, "setgroups16" }, 
     { &test_setgroups32, "setgroups32" }, 
 #endif
@@ -131,22 +131,22 @@ syscall_data syscallTests[] = {
     { &test_setpgid, "setpgid" }, 
     { &test_setpriority, "setpriority" }, 
     { &test_setregid, "setregid" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_setregid16, "setregid16" },
     { &test_setregid32, "setregid32" }, 
 #endif
     { &test_setresgid, "setresgid" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_setresgid16, "setresgid16" }, 
     { &test_setresgid32, "setresgid32" }, 
 #endif
     { &test_setresuid, "setresuid" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_setresuid16, "setresuid16" }, 
     { &test_setresuid32, "setresuid32" }, 
 #endif
     { &test_setreuid, "setreuid" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_setreuid16, "setreuid16" }, 
     { &test_setreuid32, "setreuid32" }, 
 #endif
@@ -154,7 +154,7 @@ syscall_data syscallTests[] = {
     { &test_setsid, "setsid" }, 
     { &test_settimeofday, "settimeofday" }, 
     { &test_setuid, "setuid" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_setuid16, "setuid16" }, 
     { &test_setuid32, "setuid32" }, 
 #endif
@@ -169,18 +169,18 @@ syscall_data syscallTests[] = {
     { &test_syslog, "syslog" },  
     { &test_tkill, "tkill" },
     { &test_truncate, "truncate" }, 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
     { &test_truncate64, "truncate64" }, 
 #endif
     { &test_umask, "umask" }, 
     { &test_unlink, "unlink" }, 
-#ifndef __IA64
+#ifndef __ia64__
     { &test_utime, "utime" }, 
 #endif
-#ifdef __IA64
+#ifdef __ia64__
     { &test_utimes, "utimes" }, 
 #endif
-#ifndef __IA64
+#ifndef __ia64__
     { &test_vfork, "vfork" }, 
 #endif
 };

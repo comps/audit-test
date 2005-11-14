@@ -42,6 +42,7 @@ IA		:= ia64
 HOME_DIR	:= $(shell pwd | awk -F"laus_test" '{print $$1}')
 SYSTEMINFO      := systeminfo.run.log
 FLAGS           := -g -O2 -Wall -Werror -D_GNU_SOURCE
+LDFLAGS         :=
 
 AUDIT_CLEAN_LOG := /etc/init.d/audit stop; /bin/rm -f /var/log/audit.d/*; /etc/init.d/audit start
 
@@ -64,55 +65,27 @@ DEPS		:=  binutils \
 PPC64_DEPS	:=  gcc-64bit 
 WARN_DEPS	:=  
 
-ifneq (,$(findstring $(MACHINE),$(X)))
-	ARCH := -D__IX86
-else
-	ifneq (,$(findstring $(MACHINE),$(P)))
-		ARCH := -D__PPC32 -D__PPC
-	else
-		ifneq (,$(findstring $(MACHINE),$(IP)))
-			ARCH := -D__PPC64 -D__PPC
-			DEPS := $(DEPS) $(PPC64_DEPS)
-		else
-			ifneq (,$(findstring $(MACHINE),$(Z)))
-				ARCH := -D__S390
-			else
-				ifneq (,$(findstring $(MACHINE), $(Z64)))
-					ARCH := -D__S390X
-				else
-					ifneq (,$(findstring $(MACHINE), $(X86_64)))
-						ARCH := -D__X86_64
-					else
-						ifneq (,$(findstring $(MACHINE), $(IA)))
-							ARCH := -D__IA64
-						endif
-					endif
-				endif
-			endif
-		endif
-	endif
-endif
+# If MODE isn't set explicitly, the default for the machine is used
 ifeq ($(MODE), 32)
 	ifneq (,$(findstring $(MACHINE), $(Z64)))
-		ARCH += -m31 -D__MODE_32
-		export LDFLAGS = -m31
+		FLAGS += -m31
+		LDFLAGS += -m31
 	else 
 		ifneq (,$(findstring $(MACHINE), $(X86_64)))
-			ARCH += -m32 -D__MODE_32 -malign-double
-			export LDFLAGS = -m32
+			FLAGS += -m32 -malign-double
+			LDFLAGS += -m32
 		else
-			ARCH += -m32 -D__MODE_32
-			export LDFLAGS = -m32
+			FLAGS += -m32
+			LDFLAGS += -m32
 		endif
 	endif
-else
+endif
+ifeq ($(MODE), 64)
 	ifeq (,$(findstring $(MACHINE),($(X),$(IA))))
-		ARCH += -m64 -D__MODE_64
-		export LIB_DIR = /lib64
-		export LDFLAGS = -m64
+		FLAGS += -m64
+		LDFLAGS += -m64
 	endif
 endif
-
 
 .PHONY: all clean deps depsdir subdirs $(SUB_DIRS) test run \
 	cleanup extract msgque report rmlogs
@@ -121,7 +94,7 @@ endif
 # Compile rules
 #
 %.o: %.c Makefile
-	$(CC) $(FLAGS) $(ARCH) $(INCLUDES) -c -o $@ $<
+	$(CC) $(FLAGS) $(INCLUDES) -c -o $@ $<
 
 #
 # Dependency rules

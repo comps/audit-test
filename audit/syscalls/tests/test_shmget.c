@@ -58,9 +58,9 @@
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
-#if defined(__PPC64)
+#if defined(__powerpc64__)
 #include <asm-ppc64/ipc.h>
-#elif !defined(__IA64)
+#elif !defined(__ia64__)
 #include <asm/ipc.h>
 #endif
 #include <asm/page.h>
@@ -113,7 +113,7 @@ int test_shmget(struct audit_data *context)
     }
     // Execute system call
     //  context->u.syscall.exit = secondShmid = shmget( key, PAGE_SIZE, mode );
-#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
+#if (defined(__x86_64__) || defined(__ia64__))
     context->u.syscall.exit = secondShmid =
 	syscall(__NR_shmget, key, PAGE_SIZE, mode);
 #else

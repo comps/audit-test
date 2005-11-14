@@ -59,7 +59,7 @@ LIBS		+= -llaus
 all: subdirs deps $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
 
 $(FAILSAFE_EXE): $(FAILSAFE_OBJS) $(FAILSAFE_ARS)
-	$(CC) -o $@ $(ARCH) $(FAILSAFE_OBJS) -Wl,--whole-archive -Wl,$(FAILSAFE_ARS) -Wl,--no-whole-archive $(LIBS)
+	$(CC) -o $@ $(FAILSAFE_OBJS) -Wl,--whole-archive -Wl,$(FAILSAFE_ARS) -Wl,--no-whole-archive $(LIBS)
 
 $(FAILSAFE_NOTIFY): $(FAILSAFE_EXE)
 	$(LN) -sf $< $@

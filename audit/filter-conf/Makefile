@@ -55,7 +55,7 @@ LIBS		+= -llaus
 all: subdirs deps $(FILTER_EXE)
 
 $(FILTER_EXE): $(FILTER_OBJS) $(FILTER_ARS)
-	$(CC) -o $@ $(FILTER_OBJS) $(ARCH) -Wl,--whole-archive -Wl,$(FILTER_ARS) -Wl,--no-whole-archive $(LIBS)
+	$(CC) -o $@ $(FILTER_OBJS) -Wl,--whole-archive -Wl,$(FILTER_ARS) -Wl,--no-whole-archive $(LIBS)
 
 run:
 	$(AUDIT_CLEAN_LOG)

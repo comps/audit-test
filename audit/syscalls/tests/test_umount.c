@@ -51,7 +51,7 @@
    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
    **
    **********************************************************************/
-#ifndef __X86_64
+#ifndef __x86_64__
 
 #include "includes.h"
 #include "syscalls.h"

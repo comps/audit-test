@@ -94,7 +94,7 @@ int test_login(laus_data* dataPtr) {
   char* encryptedpassword = "42VmxaOByKwlA";
   char* badpassword = "anything_but_eal";
 
-#ifdef __PPC
+#ifdef __powerpc__
   char* executable = "/lib/libnss_compat.so.2";
 #else
   char* executable = "/bin/login";

@@ -52,9 +52,9 @@
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
-#if defined(__PPC64)
+#if defined(__powerpc64__)
 #include <asm-ppc64/ipc.h>
-#elif !defined(__IA64)
+#elif !defined(__ia64__)
 #include <asm/ipc.h>
 #endif
 #include <sys/sem.h>
@@ -88,7 +88,7 @@ int test_semctl(struct audit_data *context)
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &semid,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &semnum,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd,
-#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
+#if (defined(__x86_64__) || defined(__ia64__))
 			AUDIT_ARG_POINTER, 0, &buf
 #else
 			AUDIT_ARG_NULL, 0, NULL
@@ -103,7 +103,7 @@ int test_semctl(struct audit_data *context)
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-#if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
+#if (defined(__x86_64__) || defined(__ia64__))
     context->u.syscall.exit = semctlrc =
 	syscall(__NR_semctl, semid, 0, cmd, &buf);
 #else

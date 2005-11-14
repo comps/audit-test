@@ -63,13 +63,13 @@
 #include "syscalls.h"
 #include <sys/ipc.h>
 #include <sys/sem.h>
-#if defined(__PPC64)
+#if defined(__powerpc64__)
 #include <asm-ppc64/ipc.h>
-#elif !defined(__IA64)
+#elif !defined(__ia64__)
 #include <asm/ipc.h>
 #endif
 #include <time.h>
-#if defined(__IX86)
+#if defined(__i386__)
 #define TIMEOUTSIZE 8
 #else
 #define TIMEOUTSIZE 16

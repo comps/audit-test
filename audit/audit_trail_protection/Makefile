@@ -45,7 +45,7 @@ EXE = $(AUDIT_TRAIL_EXE)
 all: $(EXE)
 
 $(EXE): $(AUDIT_TRAIL_OBJS)
-	$(CC) $(FLAGS) $(ARCH) -o $@ $(AUDIT_TRAIL_OBJS)
+	$(CC) $(FLAGS) -o $@ $(AUDIT_TRAIL_OBJS)
 
 clean:
 	$(RM) *.o

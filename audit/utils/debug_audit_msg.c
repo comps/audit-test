@@ -122,7 +122,7 @@ void var_parms(int level, int call, const char *src)
 			    fprintf(stderr, "data=%.*s", bnd, 
 				    ((char *)grp_array));
 			    break;
-#if !defined(__PPC64) && !defined(__X86_64)
+#if !defined(__powerpc64__) && !defined(__x86_64__)
 			case __NR_setgroups:
 			    bnd = size / sizeof(u_int16_t);
 			    idx = 0;
@@ -132,7 +132,7 @@ void var_parms(int level, int call, const char *src)
 				fprintf(stderr, "\n\t\t\tindex=%i, value=%i", 
 					idx, ((u_int16_t *) grp_array)[idx]);
 			    break;
-#if !defined(__PPC) && !defined(__S390X) && !defined(__IA64)
+#if !defined(__powerpc__) && !defined(__s390x__) && !defined(__ia64__)
 			case __NR_setgroups32:
 
 			    bnd = size / sizeof(gid_t);

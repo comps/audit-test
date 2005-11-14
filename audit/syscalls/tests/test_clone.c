@@ -55,7 +55,7 @@
 #include "syscalls.h"
 #include <sched.h>
 
-#ifndef __IA64
+#ifndef __ia64__
 int fn(void *x)
 {
     sleep(1);
@@ -98,7 +98,7 @@ int test_clone(struct audit_data *context)
 	goto EXIT_CLEANUP;
     }
     // Execute system call--parent waits b/c of CLONE_VFORK flag
-#ifdef __IA64
+#ifdef __ia64__
     // ia64 glibc doesn't have a symbol for clone
     pid = syscall(__NR_clone, flags, NULL);
 #else

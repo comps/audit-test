@@ -63,19 +63,19 @@ enum audit_arg {
 #define AUDIT_MSG_USERBASE	256     /* user land messages start here */
 
 /* syscall arch */
-#if defined(__IX86)
+#if defined(__i386__)
 #define TS_BUILD_ARCH  AUDIT_ARCH_I386
-#elif defined(__PPC32)
-#define TS_BUILD_ARCH  AUDIT_ARCH_PPC
-#elif defined(__PPC64)
+#elif defined(__powerpc64__)
 #define TS_BUILD_ARCH  AUDIT_ARCH_PPC64
-#elif defined(__S390X)
+#elif defined(__powerpc__)
+#define TS_BUILD_ARCH  AUDIT_ARCH_PPC
+#elif defined(__s390x__)
 #define TS_BUILD_ARCH  AUDIT_ARCH_S390X
-#elif defined(__S390)
+#elif defined(__s390__)
 #define TS_BUILD_ARCH  AUDIT_ARCH_S390
-#elif defined(__X86_64)
+#elif defined(__x86_64__)
 #define TS_BUILD_ARCH  AUDIT_ARCH_X86_64
-#elif defined(__IA64)
+#elif defined(__ia64__)
 #define TS_BUILD_ARCH  AUDIT_ARCH_IA64
 #else
 #define TS_BUILD_ARCH  -1

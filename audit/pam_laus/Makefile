@@ -56,7 +56,7 @@ SUB_DIRS        = tests utils ../utils
 all: subdirs deps $(EXE)
 
 $(EXE): $(ALL_OBJS) $(UTILS_AR)
-	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) pam_laus.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive 
+	$(CC) $(FLAGS) $(CFLAGS) -o $(EXE) pam_laus.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive 
 
 run: all
 	$(AUDIT_CLEAN_LOG)

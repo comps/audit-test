@@ -41,7 +41,7 @@
 #define DEFAULT_TEST_USER "nobody"
 #define XATTR_TEST_VALUE "text/plain"
 
-#ifndef __PPC
+#ifndef __powerpc__
 #define __NR_chown16 182
 #define __NR_fchown16 95
 #define __NR_lchown16 16

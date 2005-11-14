@@ -66,10 +66,10 @@ int test_setdomainname(struct audit_data *context)
     size_t len = __NEW_UTS_LEN;
 
     if (getdomainname(name, len) == -1) {
-	printf1("Cannot get current domainname\n");
+	fprintf(stderr, "Cannot get current domainname\n");
 	goto EXIT;
     }
-    printf4("Current domainname = [%s]\n", name);
+    fprintf(stderr, "Current domainname = [%s]\n", name);
     len = strlen(name);
 
     // Do as much setup work as possible right here
@@ -90,7 +90,7 @@ int test_setdomainname(struct audit_data *context)
 			context->success ? strlen(name) : 0,
 			context->success ? &name : NULL,
 			AUDIT_ARG_IMMEDIATE, sizeof(size_t), &len)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
@@ -111,6 +111,6 @@ int test_setdomainname(struct audit_data *context)
     }
 
 EXIT:
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

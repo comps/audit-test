@@ -74,7 +74,7 @@ int test_fremovexattr(struct audit_data *context)
     size = sizeof(XATTR_TEST_VALUE);
     if ((rc = createTempFile(&path, (S_IRWXU | S_IRWXG | S_IRWXO),
 			     context->euid, context->egid)) == -1) {
-	printf1("ERROR: Cannot create file %s\n", path);
+	fprintf(stderr, "ERROR: Cannot create file %s\n", path);
 	goto EXIT;
     }
 
@@ -83,7 +83,7 @@ int test_fremovexattr(struct audit_data *context)
 	if ((rc =
 	     setxattr(path, name, "test/plain", strlen(XATTR_TEST_VALUE),
 		      XATTR_CREATE)) == -1) {
-	    printf1("Error setting attribute [%s]: errno=%i\n", name, errno);
+	    fprintf(stderr, "Error setting attribute [%s]: errno=%i\n", name, errno);
 	    goto EXIT_CLEANUP_UNLINK;
 	}
 
@@ -91,7 +91,7 @@ int test_fremovexattr(struct audit_data *context)
 
     }
     if ((filedes = rc = open(path, O_RDWR)) == -1) {
-	printf1("Error opening newly created temporary file [%s]: errno=%i\n",
+	fprintf(stderr, "Error opening newly created temporary file [%s]: errno=%i\n",
 		path, errno);
 	goto EXIT_CLEANUP_UNLINK;
     }
@@ -99,7 +99,7 @@ int test_fremovexattr(struct audit_data *context)
     if ((rc = auditArg2(context,
 			AUDIT_ARG_PATH, strlen(path), path,
 			AUDIT_ARG_STRING, strlen(name), name)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP_CLOSE;
     }
     // Do pre-system call work
@@ -114,20 +114,20 @@ int test_fremovexattr(struct audit_data *context)
 EXIT_CLEANUP_CLOSE:
     // Clean up from success case setup
     if ((close(filedes)) == -1) {
-	printf1("Error close file descriptor %d\n", filedes);
+	fprintf(stderr, "Error close file descriptor %d\n", filedes);
 	goto EXIT_CLEANUP_UNLINK;
     }
 
 EXIT_CLEANUP_UNLINK:
     // Clean up from success case setup
     if ((unlink(path)) == -1) {
-	printf1("Error unlinking file %s\n", path);
+	fprintf(stderr, "Error unlinking file %s\n", path);
 	goto EXIT;
     }
 
 EXIT:
     if (path)
 	free(path);
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

@@ -79,13 +79,13 @@ int test_setgroups32(struct audit_data *context)
 	// Set up audit argument buffer for success case
 	if ((rc = auditArg1(context,
 			    AUDIT_ARG_POINTER, sizeof(gid_t), list)) != 0) {
-	    printf1("Error setting up audit argument buffer\n");
+	    fprintf(stderr, "Error setting up audit argument buffer\n");
 	    goto EXIT;
 	}
     } else {
 	// Set up audit argument buffer for fail case
 	if ((rc = auditArg1(context, AUDIT_ARG_NULL, 0, NULL)) != 0) {
-	    printf1("Error setting up audit argument buffer\n");
+	    fprintf(stderr, "Error setting up audit argument buffer\n");
 	    goto EXIT;
 	}
     }
@@ -93,7 +93,7 @@ int test_setgroups32(struct audit_data *context)
 
     // Do pre-system call work  
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT;
     }
 
@@ -101,12 +101,12 @@ int test_setgroups32(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT;
     }
 
 EXIT:
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
 #endif
     return rc;
 }

@@ -72,7 +72,7 @@ int test_lremovexattr(struct audit_data *context)
     // Create the target file
     if ((rc = createTempFile(&path, S_IRWXU,
 			     context->euid, context->egid)) == -1) {
-	printf1("ERROR: Cannot create file %s\n", path);
+	fprintf(stderr, "ERROR: Cannot create file %s\n", path);
 	goto EXIT;
     }
     if ((rc =
@@ -92,7 +92,7 @@ int test_lremovexattr(struct audit_data *context)
 			AUDIT_ARG_PATH,
 			strlen(path), path,
 			AUDIT_ARG_STRING, strlen(name), name)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
@@ -110,13 +110,13 @@ EXIT_CLEANUP:
 	 */
     // Clean up
     if ((unlink(path)) == -1) {
-	printf1("Error unlinking file %s\n", path);
+	fprintf(stderr, "Error unlinking file %s\n", path);
 	goto EXIT;
     }
 
 EXIT:
     if (path)
 	free(path);
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

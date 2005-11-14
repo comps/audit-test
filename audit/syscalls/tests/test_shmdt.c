@@ -81,7 +81,7 @@ int test_shmdt(struct audit_data *context)
     if (context->success) {
 	mode = S_IRWXU | S_IRWXG | S_IRWXO;
 	if ((shmid = shmget(IPC_PRIVATE, PAGE_SIZE, mode)) == -1) {
-	    printf1("ERROR: Unable to create shared memory segment\n");
+	    fprintf(stderr, "ERROR: Unable to create shared memory segment\n");
 	    goto EXIT;
 	}
     } else {
@@ -89,37 +89,38 @@ int test_shmdt(struct audit_data *context)
     }
 
     // su to test user
-    printf5("seteuid to %i\n", context->euid);
+    fprintf(stderr, "seteuid to %i\n", context->euid);
     if ((rc = seteuid(context->euid)) != 0) {
-	printf1("ERROR: Unable to seteuid to %i: errno=%i\n",
+	fprintf(stderr, "ERROR: Unable to seteuid to %i: errno=%i\n",
 		context->euid, errno);
 	goto EXIT_FREE_SHM;
     }
     // Attach to the shared memory
     if (context->success) {
 	if ((long)(shmptr = shmat(shmid, NULL, 0)) == -1) {
-	    printf1
-		("ERROR: Unable to attach to shared memory with shmid %d: errno=%i\n",
+	    fprintf
+		(stderr,
+		 "ERROR: Unable to attach to shared memory with shmid %d: errno=%i\n",
 		 shmid, errno);
 	    goto EXIT_FREE_SHM;
 	}
     }
     // su back to root
-    printf5("seteuid to root\n");
+    fprintf(stderr, "seteuid to root\n");
     if ((rc = seteuid(0)) != 0) {
-	printf1("ERROR: Unable to seteuid to root: errno=%i\n", errno);
+	fprintf(stderr, "ERROR: Unable to seteuid to root: errno=%i\n", errno);
 	goto EXIT_FREE_SHM;
     }
     // Set up audit argument buffer
     if ((rc = auditArg1(context,
 			(shmptr == NULL ? AUDIT_ARG_NULL : AUDIT_ARG_POINTER),
 			0, shmptr)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -127,7 +128,7 @@ int test_shmdt(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -138,8 +139,9 @@ EXIT_FREE_SHM:
     // shared memory cleanup
     if (context->success) {	// Shared memory is only allocated in the success case
 	if (shmctl(shmid, IPC_RMID, 0) == -1) {
-	    printf1
-		("ERROR: Unable to free shared memory with shmid %d: errno=%i\n",
+	    fprintf
+		(stderr,
+		 "ERROR: Unable to free shared memory with shmid %d: errno=%i\n",
 		 shmid, errno);
 	    goto EXIT;
 	}

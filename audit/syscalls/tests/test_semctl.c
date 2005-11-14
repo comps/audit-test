@@ -74,7 +74,7 @@ int test_semctl(struct audit_data *context)
     // semctl
     mode = S_IRWXU;
     if ((semid = semget(IPC_PRIVATE, 1, mode)) == -1) {
-	printf1("ERROR: Unable to allocate new semaphore: errno=%i\n", errno);
+	fprintf(stderr, "ERROR: Unable to allocate new semaphore: errno=%i\n", errno);
 	goto EXIT;
     }
     if (context->success) {
@@ -94,12 +94,12 @@ int test_semctl(struct audit_data *context)
 			AUDIT_ARG_NULL, 0, NULL
 #endif
 	 )) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -112,7 +112,7 @@ int test_semctl(struct audit_data *context)
 #endif
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -120,8 +120,9 @@ EXIT_CLEANUP:
 
     if (!context->success && semid && (semid != -1)) {
 	if ((rc = semctl(semid, 0, IPC_RMID)) == -1) {
-	    printf1
-		("Error removing semaphore set with ID = [%d]: errno = [%i]\n",
+	    fprintf
+		(stderr,
+		 "Error removing semaphore set with ID = [%d]: errno = [%i]\n",
 		 semid, errno);
 	    goto EXIT;
 	}

@@ -82,7 +82,7 @@ int test_setsid(struct audit_data *context)
     // Shared memory
     if ((shmid = shmget(IPC_PRIVATE, sizeof(errnoAndReturnValue_t),
 			IPC_CREAT)) == -1) {
-	printf1("Error getting shared memory: errno=%i\n", errno);
+	fprintf(stderr, "Error getting shared memory: errno=%i\n", errno);
 	goto EXIT;		// TODO: Explicitely account for the fact that the semaphore has been created at this point
     }
     context->euid = 0;
@@ -97,12 +97,12 @@ int test_setsid(struct audit_data *context)
 
     // Set up audit argument buffer
     if ((rc = auditArg0(context)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -112,8 +112,9 @@ int test_setsid(struct audit_data *context)
 	    setsid();
 	}
 	if (((long)(childEarv = shmat(shmid, NULL, 0))) == -1) {
-	    printf1
-		("Error attaching to shared memory segment with id %d: errno=%i\n",
+	    fprintf
+		(stderr,
+		 "Error attaching to shared memory segment with id %d: errno=%i\n",
 		 shmid, errno);
 	    // TODO: Something a bit more drastic should happen at this point
 	    _exit(0);
@@ -121,8 +122,9 @@ int test_setsid(struct audit_data *context)
 	childEarv->returnValue = syscall(__NR_setsid);
 	childEarv->savedErrno = errno;
 	if (shmdt(childEarv) == -1) {
-	    printf1
-		("Error detaching from shared memory segment at address 0x%p: errno=%i\n",
+	    fprintf
+		(stderr,
+		 "Error detaching from shared memory segment at address 0x%p: errno=%i\n",
 		 childEarv, errno);
 	    _exit(0);
 	}
@@ -130,20 +132,22 @@ int test_setsid(struct audit_data *context)
     } else {
 	context->pid = pid;
 	if (waitpid(pid, NULL, 0) == -1) {
-	    printf1("Error waiting on pid %d: errno=%i\n", pid, errno);
+	    fprintf(stderr, "Error waiting on pid %d: errno=%i\n", pid, errno);
 	    goto EXIT_CLEANUP;
 	}
 	if (((long)(earv = shmat(shmid, NULL, 0))) == -1) {
-	    printf1
-		("Error attaching to shared memory segment with id %d: errno=%i\n",
+	    fprintf
+		(stderr,
+		 "Error attaching to shared memory segment with id %d: errno=%i\n",
 		 shmid, errno);
 	    goto EXIT_CLEANUP;
 	}
 	context->u.syscall.exit = earv->returnValue;
 	savedErrno = earv->savedErrno;
 	if (shmdt(earv) == -1) {
-	    printf1
-		("Error detaching from shared memory segment at address 0x%p: errno=%i\n",
+	    fprintf
+		(stderr,
+		 "Error detaching from shared memory segment at address 0x%p: errno=%i\n",
 		 earv, errno);
 	    goto EXIT_CLEANUP;
 	}
@@ -151,7 +155,7 @@ int test_setsid(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, savedErrno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -161,7 +165,7 @@ EXIT_CLEANUP:
    */
     // Release the shared memory
     if (shmctl(shmid, 0, IPC_RMID) == -1) {
-	printf1("Error removing shared memory with id %d: errno=%i\n", shmid,
+	fprintf(stderr, "Error removing shared memory with id %d: errno=%i\n", shmid,
 		errno);
 	goto EXIT;
     }
@@ -171,6 +175,6 @@ EXIT_CLEANUP:
     }
 
 EXIT:
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

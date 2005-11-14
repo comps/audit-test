@@ -78,12 +78,12 @@ int test_clone2(struct audit_data *context)
     // Only save off first argument to assist log verification
     if ((rc =
 	 auditArg1(context, AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call--parent waits b/c of CLONE_VFORK flag
@@ -91,7 +91,7 @@ int test_clone2(struct audit_data *context)
     pid = syscall(__NR_clone2, flags, NULL);
     switch (pid) {
 	case -1:
-	    printf1("ERROR: clone2 failed (%d)\n", pid);
+	    fprintf(stderr, "ERROR: clone2 failed (%d)\n", pid);
 	    goto EXIT_CLEANUP;
 	case 0:
 	    //In child
@@ -103,7 +103,7 @@ int test_clone2(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -111,7 +111,7 @@ int test_clone2(struct audit_data *context)
 EXIT_CLEANUP:
 
 EXIT:
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
 #endif /* __NR_clone2 */
     return rc;
 }

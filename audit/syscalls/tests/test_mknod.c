@@ -67,11 +67,11 @@ int test_mknod(struct audit_data *context)
 	// dynamically create temp file, and delete it real quick
 	if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
 				 context->euid, context->egid)) == -1) {
-	    printf1("ERROR: Cannot create file %s\n", fileName);
+	    fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
 	    goto EXIT;
 	}
 	if ((rc = unlink(fileName)) != 0) {
-	    printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName,
+	    fprintf(stderr, "ERROR: Unable to remove file %s: errno=%i\n", fileName,
 		    errno);
 	    goto EXIT;
 	}
@@ -89,12 +89,12 @@ int test_mknod(struct audit_data *context)
 			strlen(fileName), fileName, AUDIT_ARG_IMMEDIATE,
 			sizeof(mode), &mode, AUDIT_ARG_IMMEDIATE, 4,
 			&dev)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -102,7 +102,7 @@ int test_mknod(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -111,7 +111,7 @@ EXIT_CLEANUP:
     // mknod cleanup
     if (context->success) {
 	if ((unlink(fileName)) != 0) {
-	    printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName,
+	    fprintf(stderr, "ERROR: Unable to remove file %s: errno=%i\n", fileName,
 		    errno);
 	    goto EXIT;
 	}

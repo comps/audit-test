@@ -81,12 +81,12 @@ int test_fsetxattr(struct audit_data *context)
     // Create the target file
     if ((rc = createTempFile(&path, (S_IRWXU | S_IRWXG | S_IRWXO),
 			     context->euid, context->egid)) == -1) {
-	printf1("ERROR: Cannot create file %s\n", path);
+	fprintf(stderr, "ERROR: Cannot create file %s\n", path);
 	goto EXIT;
     }
     // Open the target file
     if ((filedes = rc = open(path, O_RDWR)) == -1) {
-	printf1("Error opening file [%s] for read/write access: errno=%i\n",
+	fprintf(stderr, "Error opening file [%s] for read/write access: errno=%i\n",
 		path, errno);
 	goto EXIT_CLEANUP_UNLINK;
     }
@@ -105,7 +105,7 @@ int test_fsetxattr(struct audit_data *context)
 			AUDIT_ARG_POINTER, size, value,
 			AUDIT_ARG_IMMEDIATE, sizeof(size_t), &size,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP_CLOSE;
     }
     // Do pre-system call work
@@ -120,20 +120,20 @@ int test_fsetxattr(struct audit_data *context)
 
 EXIT_CLEANUP_CLOSE:
     if ((close(filedes)) == -1) {
-	printf1("Error closing filehandle %d\n", filedes);
+	fprintf(stderr, "Error closing filehandle %d\n", filedes);
 	goto EXIT_CLEANUP_UNLINK;
     }
 
 EXIT_CLEANUP_UNLINK:
     // Clean up from success case setup
     if ((unlink(path)) == -1) {
-	printf1("Error unlinking file %s\n", path);
+	fprintf(stderr, "Error unlinking file %s\n", path);
 	goto EXIT;
     }
 
 EXIT:
     if (path)
 	free(path);
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

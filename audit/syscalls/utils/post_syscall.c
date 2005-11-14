@@ -38,20 +38,20 @@ int postSysCall(struct audit_data *context, int resultErrno, int errorRC,
 {
     int rc = 0;
 
-    printf5("Setting end timestamp\n");
+    fprintf(stderr, "Setting end timestamp\n");
     context->end_time = time(NULL) + 2;	// MH: 2 seconds past current
     // time
 
     // su back to root
-    printf5("setresuid to root\n");
+    fprintf(stderr, "setresuid to root\n");
     if ((rc = setresuid(0, 0, 0)) != 0) {
-	printf1("Unable to setresuid to root: errno=%i\n", errno);
+	fprintf(stderr, "Unable to setresuid to root: errno=%i\n", errno);
 	goto EXIT;
     }
 
-    printf5("setresgid to root\n");
+    fprintf(stderr, "setresgid to root\n");
     if ((rc = setresgid(0, 0, 0)) != 0) {
-	printf1("Unable to setresgid to root: errno=%i\n", errno);
+	fprintf(stderr, "Unable to setresgid to root: errno=%i\n", errno);
 	goto EXIT;
     }
     // Save resulting errno into data structure
@@ -60,26 +60,27 @@ int postSysCall(struct audit_data *context, int resultErrno, int errorRC,
     }
 
     // Check if the syscall executed as expected.
-    printf5("Checking to see if the system call executed as expected\n");
+    fprintf(stderr, "Checking to see if the system call executed as expected\n");
     if (context->u.syscall.exit == errorRC) {
 	if (context->success) {
-	    printf2("SYSCALL ERROR: unsuccessful in successful case:");
+	    fprintf(stderr, "SYSCALL ERROR: unsuccessful in successful case:");
 	    rc = 1;
 	} else {
 	    if (resultErrno == expectedErrno) {
-		printf2("SYSCALL SUCCESS: unsuccessful in unsuccessful case:");
+		fprintf(stderr, "SYSCALL SUCCESS: unsuccessful in unsuccessful case:");
 	    } else {
-		printf2
-		    ("SYSCALL ERROR: unsuccessful, but errno != expected (%i):",
+		fprintf
+		    (stderr,
+		     "SYSCALL ERROR: unsuccessful, but errno != expected (%i):",
 		     expectedErrno);
 		rc = 1;
 	    }
 	}
     } else {
 	if (context->success) {
-	    printf2("SYSCALL SUCCESS: successful in successful case:");
+	    fprintf(stderr, "SYSCALL SUCCESS: successful in successful case:");
 	} else {
-	    printf2("SYSCALL ERROR: successful in unsuccessful case:");
+	    fprintf(stderr, "SYSCALL ERROR: successful in unsuccessful case:");
 	    rc = 1;
 	}
     }

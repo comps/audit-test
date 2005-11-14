@@ -50,37 +50,37 @@ int test_delete_module(struct audit_data *context)
     //load module
     if ((fd = open(module_path, O_RDONLY)) == -1) {
 	rc = fd;
-	printf1("Error opening %s: %s [%d]\n", module_path,
+	fprintf(stderr, "Error opening %s: %s [%d]\n", module_path,
 		strerror(errno), errno);
 	goto out;
     }
 
     if ((rc = fstat(fd, &mstat)) == -1) {
-	printf1("Error getting module file size: %s [%d]\n",
+	fprintf(stderr, "Error getting module file size: %s [%d]\n",
 		strerror(errno), errno);
 	goto out;
     }
 
     region = mmap(NULL, mstat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (region == MAP_FAILED) {
-	printf1("mmap:  %s [%d]\n", strerror(errno), errno);
+	fprintf(stderr, "mmap:  %s [%d]\n", strerror(errno), errno);
 	goto out;
     }
 
     if ((rc = init_module(region, mstat.st_size, "")) == -1) {
-	printf1("Error loading module: %s [%d]\n", strerror(errno), errno);
+	fprintf(stderr, "Error loading module: %s [%d]\n", strerror(errno), errno);
 	goto out;
     }
     // Set up audit argument buffer
     if ((rc = auditArg2(context,
 			AUDIT_ARG_STRING, strlen(module_name), module_name,
 			AUDIT_ARG_IMMEDIATE, sizeof(flags), &flags)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto out;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto out;
     }
     // Execute system call
@@ -91,17 +91,17 @@ int test_delete_module(struct audit_data *context)
 
 out:
     if ((delete_module(module_name, flags) != 0) && (errno != ENOENT)) {
-	printf1("Error removing module [%s]: %s [%d]\n", module_name,
+	fprintf(stderr, "Error removing module [%s]: %s [%d]\n", module_name,
 		strerror(errno), errno);
     }
     if ((region != MAP_FAILED) && (munmap(region, mstat.st_size) != 0)) {
-	printf1("munmap: %s [%d]\n", strerror(errno), errno);
+	fprintf(stderr, "munmap: %s [%d]\n", strerror(errno), errno);
     }
     if (fd != -1) {
 	close(fd);
     }
 
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
 
     return rc;
 }

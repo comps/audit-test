@@ -69,7 +69,7 @@ int test_chdir(struct audit_data *context)
     // dynamically create test directory
     if ((rc = (createTempDir(&path, S_IRWXU,
 			     context->euid, context->egid)) == -1)) {
-	printf1("ERROR: Cannot create dir %s\n", path);
+	fprintf(stderr, "ERROR: Cannot create dir %s\n", path);
 	goto EXIT;
     }
 
@@ -77,17 +77,17 @@ int test_chdir(struct audit_data *context)
 	context->euid = context->fsuid = helper_uid;
     }
 
-    printf5("Generated directory %s\n", path);
+    fprintf(stderr, "Generated directory %s\n", path);
 
     // Set up audit argument buffer
     if ((rc = auditArg1(context, (AUDIT_ARG_PATH), (strlen(path)), path)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
 
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -95,7 +95,7 @@ int test_chdir(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -107,20 +107,20 @@ EXIT_CLEANUP:
     if (context->success) {
 	// chdir out of the directory we are about to nuke
 	if (chdir(context->u.syscall.cwd) == -1) {
-	    printf1("Error executing chdir(\"%s\"): errno=%i\n", 
+	    fprintf(stderr, "Error executing chdir(\"%s\"): errno=%i\n", 
 		    context->u.syscall.cwd, errno);
 	    goto EXIT;
 	}
     }
     // remove the temporary directory
     if (rmdir(path) == -1) {
-	printf1("Error removing directory %s: errno=%i\n", path, errno);
+	fprintf(stderr, "Error removing directory %s: errno=%i\n", path, errno);
 	goto EXIT;
     }
 
 EXIT:
     if (path)
 	free(path);
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

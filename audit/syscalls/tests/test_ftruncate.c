@@ -69,12 +69,12 @@ int test_ftruncate(struct audit_data *context)
     // dynamically create temp file name
     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
 			     context->euid, context->egid)) == -1) {
-	printf1("ERROR: Cannot create file %s\n", fileName);
+	fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
 	goto EXIT;
     }
 
     if ((fd = open(fileName, O_WRONLY)) == -1) {
-	printf1("ERROR: Unable to open %s write only: errno=%i\n",
+	fprintf(stderr, "ERROR: Unable to open %s write only: errno=%i\n",
 		fileName, errno);
 	rc = fd;
 	goto EXIT_CLEANUP;
@@ -84,11 +84,11 @@ int test_ftruncate(struct audit_data *context)
 	// dynamically create temp file name
 	if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
 				 context->euid, context->egid)) == -1) {
-	    printf1("ERROR: Cannot create file %s\n", fileName);
+	    fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
 	    goto EXIT;
 	}
 	if ((fd = open(fileName, O_WRONLY)) == -1) {
-	    printf1("ERROR: Unable to open %s write only: errno=%i\n",
+	    fprintf(stderr, "ERROR: Unable to open %s write only: errno=%i\n",
 		    fileName, errno);
 	    rc = fd;
 	    goto EXIT_CLEANUP;
@@ -105,12 +105,12 @@ int test_ftruncate(struct audit_data *context)
 			success ? strlen(fileName) : sizeof(__u64),
 			context->success ? fileName : (void *)&exp_errno,
 			AUDIT_ARG_IMMEDIATE_u, sizeof(length), &length)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -118,7 +118,7 @@ int test_ftruncate(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -127,7 +127,7 @@ EXIT_CLEANUP:
     // ftruncate cleanup
     if (context->success) {
 	if ((rc = unlink(fileName)) != 0) {
-	    printf1("ERROR: Unable to remove file %s: errno=%i\n",
+	    fprintf(stderr, "ERROR: Unable to remove file %s: errno=%i\n",
 		    fileName, errno);
 	    goto EXIT;
 	}

@@ -66,10 +66,10 @@ int test_sethostname(struct audit_data *context)
     //Do as much setup work as possible right here
     // Get the current hostname
     if (gethostname(name, len) == -1) {
-	printf1("Cannot get current hostname\n");
+	fprintf(stderr, "Cannot get current hostname\n");
 	goto EXIT;
     }
-    printf4("Current hostname = [%s]\n", name);
+    fprintf(stderr, "Current hostname = [%s]\n", name);
     len = strlen(name);
 
     if (context->success) {
@@ -90,7 +90,7 @@ int test_sethostname(struct audit_data *context)
 			context->success ? strlen(name) : 0,
 			context->success ? &name : NULL,
 			AUDIT_ARG_IMMEDIATE, sizeof(size_t), &len)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
@@ -101,7 +101,7 @@ int test_sethostname(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -114,6 +114,6 @@ EXIT_CLEANUP:
     }
 
 EXIT:
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

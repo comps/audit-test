@@ -88,8 +88,9 @@ int test_msgget(struct audit_data *context)
 	mode = 0600 | IPC_CREAT;
 	key = -1;
 	if ((firstMsgid = msgget(key, mode)) == -1) {
-	    printf1
-		("Cannot create the message queue with key = -1: errno = [%i]\n",
+	    fprintf
+		(stderr,
+		 "Cannot create the message queue with key = -1: errno = [%i]\n",
 		 errno);
 	    goto EXIT;
 	}
@@ -99,13 +100,13 @@ int test_msgget(struct audit_data *context)
     if ((rc = auditArg2(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &key,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &mode)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
 
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -119,7 +120,7 @@ int test_msgget(struct audit_data *context)
 #endif
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -127,15 +128,17 @@ EXIT_CLEANUP:
 
     if (firstMsgid && (firstMsgid != -1)) {
 	if ((msgctl(firstMsgid, IPC_RMID, 0)) == -1) {
-	    printf1
-		("ERROR: Cannot deallocate message memory with msgid=%d: errno=%i\n",
+	    fprintf
+		(stderr,
+		 "ERROR: Cannot deallocate message memory with msgid=%d: errno=%i\n",
 		 firstMsgid, errno);
 	}
     }
     if (secondMsgid && (secondMsgid != -1)) {
 	if ((msgctl(secondMsgid, IPC_RMID, 0)) == -1) {
-	    printf1
-		("ERROR: Cannot deallocate message memory with msgid=%d: errno=%i\n",
+	    fprintf
+		(stderr,
+		 "ERROR: Cannot deallocate message memory with msgid=%d: errno=%i\n",
 		 secondMsgid, errno);
 	    goto EXIT;
 	}

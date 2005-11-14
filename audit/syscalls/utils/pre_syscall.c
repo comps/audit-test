@@ -39,28 +39,28 @@ int preSysCall(struct audit_data *context)
     int rc = 0;
 
     // su to test user
-    printf5("setresgid to %i, %i, %i\n", context->egid, context->egid, 0);
+    fprintf(stderr, "setresgid to %i, %i, %i\n", context->egid, context->egid, 0);
     if ((rc = setresgid(context->egid, context->egid, 0)) != 0) {
-	printf1("Unable to setresgid to %i, %i, %i: errno=%i\n",
+	fprintf(stderr, "Unable to setresgid to %i, %i, %i: errno=%i\n",
 		context->egid, context->egid, 0, errno);
 	goto EXIT;
     }
-    printf5("setresuid to %i, %i, %i\n", context->euid, context->euid, 0);
+    fprintf(stderr, "setresuid to %i, %i, %i\n", context->euid, context->euid, 0);
     if ((rc = setresuid(context->euid, context->euid, 0)) != 0) {
-	printf1("Unable to setresuid to %i, %i, %i: errno=%i\n",
+	fprintf(stderr, "Unable to setresuid to %i, %i, %i: errno=%i\n",
 		context->euid, context->euid, 0, errno);
 	goto EXIT;
     }
-    printf5("Calling getLAUSData\n");
+    fprintf(stderr, "Calling getLAUSData\n");
     if ((rc = getLAUSData(context)) != 0) {
-	printf1("Error returned from getLAUSData(): rc=%i\n", rc);
+	fprintf(stderr, "Error returned from getLAUSData(): rc=%i\n", rc);
 	goto EXIT;
     }
 
-    printf5("Setting begin timestamp\n");
+    fprintf(stderr, "Setting begin timestamp\n");
     context->begin_time = time(NULL) - 2;	// MH: Start two seconds
     // before current time
-    printf5("Performing system call\n");
+    fprintf(stderr, "Performing system call\n");
 
 EXIT:
     return rc;

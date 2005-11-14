@@ -64,7 +64,7 @@ int test_syslog(struct audit_data *context)
 
     if (context->success) {	// Set up for success
 	if ((buf = (char *)malloc(len)) == NULL) {
-	    printf1("Could not allocate memory for buffer\n");
+	    fprintf(stderr, "Could not allocate memory for buffer\n");
 	    goto EXIT;
 	}
     } else {
@@ -77,12 +77,12 @@ int test_syslog(struct audit_data *context)
 			(context->
 			 success ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL), 0,
 			buf, AUDIT_ARG_IMMEDIATE, sizeof(int), &len) != 0)) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -91,7 +91,7 @@ int test_syslog(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -104,6 +104,6 @@ EXIT_CLEANUP:
     }
 
 EXIT:
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

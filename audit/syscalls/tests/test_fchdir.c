@@ -84,40 +84,40 @@ int test_fchdir(struct audit_data *context)
 	if ((rc = (createTempDir(&path, S_IRWXU | S_IRWXG | S_IRWXO,
 				 context->euid,
 				 context->egid)) == -1)) {
-	    printf1("ERROR: Cannot create dir %s\n", path);
+	    fprintf(stderr, "ERROR: Cannot create dir %s\n", path);
 	    goto EXIT;
 	}
 	if ((dir = opendir(path)) == NULL) {	//open test directory
-	    printf1("ERROR: Cannot open dir %s\n", path);
+	    fprintf(stderr, "ERROR: Cannot open dir %s\n", path);
 	    goto EXIT_CLEANUP;
 	}
 	if ((fd = dirfd(dir)) < 0) {
-	    printf1("ERROR: Cannot get valid file descriptor for %s\n", path);
+	    fprintf(stderr, "ERROR: Cannot get valid file descriptor for %s\n", path);
 	    goto EXIT_CLEANUP;
 	}
     } else {
 	if ((rc = (createTempFile(&path, S_IRWXU | S_IRWXG | S_IRWXO,
 				  context->euid,
 				  context->egid)) == -1)) {
-	    printf1("ERROR: Cannot create file%s\n", path);
+	    fprintf(stderr, "ERROR: Cannot create file%s\n", path);
 	    goto EXIT;
 	}
 	if ((fd = open(path, O_RDONLY)) < 0) {
-	    printf1("ERROR: Cannot get valid file descriptor for %s\n", path);
+	    fprintf(stderr, "ERROR: Cannot get valid file descriptor for %s\n", path);
 	    goto EXIT_CLEANUP;
 	}
 
     }
-    printf5("Generated and opened path %s fd = %d\n", path, fd);
+    fprintf(stderr, "Generated and opened path %s fd = %d\n", path, fd);
 
     // Set up audit argument buffer
     if ((rc = auditArg1(context, AUDIT_ARG_PATH, strlen(path), path)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP_OPENED;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -125,13 +125,13 @@ int test_fchdir(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
 EXIT_CLEANUP_OPENED:
     if (context->success && closedir(dir) == -1) {
-	printf1("Error closing directory %s: errno=%i\n", path, errno);
+	fprintf(stderr, "Error closing directory %s: errno=%i\n", path, errno);
     }
 EXIT_CLEANUP:
      /**
@@ -140,21 +140,21 @@ EXIT_CLEANUP:
     if (context->success) {
 	// chdir out of the directory we are about to nuke
 	if (chdir(context->u.syscall.cwd) == -1) {
-	    printf1("Error executing chdir(\"%s\"): errno=%i\n", 
+	    fprintf(stderr, "Error executing chdir(\"%s\"): errno=%i\n", 
 		    context->u.syscall.cwd, errno);
 	}
 	// remove the temporary directory
 	if (rmdir(path) == -1) {
-	    printf1("Error removing directory %s: errno=%i\n", path, errno);
+	    fprintf(stderr, "Error removing directory %s: errno=%i\n", path, errno);
 	}
     } else {
 	if (unlink(path) == -1) {
-	    printf1("Error removing file %s: errno=%i\n", path, errno);
+	    fprintf(stderr, "Error removing file %s: errno=%i\n", path, errno);
 	}
     }
 EXIT:
     if (path)
 	free(path);
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

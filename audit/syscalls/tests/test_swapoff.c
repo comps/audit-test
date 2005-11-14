@@ -75,7 +75,7 @@ int test_swapoff(struct audit_data *context)
     // dynamically create temp file name
     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
 			     context->euid, context->egid)) == -1) {
-	printf1("ERROR: Cannot create file %s\n", fileName);
+	fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
 	goto EXIT;
     }
     // swapoff setup
@@ -91,7 +91,7 @@ int test_swapoff(struct audit_data *context)
 	       + strlen(fileName) + 1);
     sprintf(cmd, "dd if=/dev/zero of=%s bs=1024 count=1024 > /dev/null 2>&1", fileName);	// BUG: This needs to be in the PATH, yet this is not verified.
     if (system(cmd)) {
-	printf1("Could not create file %s\n", fileName);
+	fprintf(stderr, "Could not create file %s\n", fileName);
 	goto EXIT_UNLINK;
     }
     free(cmd);
@@ -99,13 +99,13 @@ int test_swapoff(struct audit_data *context)
     cmd = (char *)malloc(strlen("mkswap > /dev/null 2>&1") + strlen(fileName) + 1);	// BUG: This needs to be in the PATH, yet this is not verified.
     sprintf(cmd, "mkswap %s > /dev/null 2>&1", fileName);
     if (system(cmd) != 0) {
-	printf1("Could not mkswap %s\n", fileName);
+	fprintf(stderr, "Could not mkswap %s\n", fileName);
 	goto EXIT_UNLINK;
     }
     free(cmd);
 
     if ((rc = swapon(fileName, swapflags)) == -1) {
-	printf1("Error calling swapon( %s, 0x%x ); errno=%i\n", fileName,
+	fprintf(stderr, "Error calling swapon( %s, 0x%x ); errno=%i\n", fileName,
 		swapflags, errno);
 	goto EXIT_UNLINK;
     }
@@ -122,12 +122,12 @@ int test_swapoff(struct audit_data *context)
 			context->success ? AUDIT_ARG_PATH : AUDIT_ARG_NULL,
 			context->success ? strlen(fileName) : 0,
 			fileName)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_SWAPOFF;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_SWAPOFF;
     }
     // Execute system call
@@ -135,20 +135,20 @@ int test_swapoff(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
     }
 
 EXIT_SWAPOFF:
     if (!context->success) {
 	if ((rc = swapoff(fileName)) != 0) {
-	    printf1("ERROR: Unable to swapoff file %s: errno=%i\n",
+	    fprintf(stderr, "ERROR: Unable to swapoff file %s: errno=%i\n",
 		    fileName, errno);
 	}
     }
 
 EXIT_UNLINK:
     if ((unlink(fileName)) != 0) {
-	printf1("ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
+	fprintf(stderr, "ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
     }
 
 EXIT:

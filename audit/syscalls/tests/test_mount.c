@@ -70,15 +70,15 @@ int test_mount(struct audit_data *context)
     unsigned long mountflags = 0;
     void *data = NULL;
 
-    printf4("Performing test_mount\n");
+    fprintf(stderr, "Performing test_mount\n");
 
     // dynamically create test directory
     if ((rc = (createTempDir(&target, S_IRWXU | S_IRWXG | S_IRWXO,
 			     context->euid, context->egid)) == -1)) {
-	printf1("ERROR: Cannot create dir %s\n", target);
+	fprintf(stderr, "ERROR: Cannot create dir %s\n", target);
 	goto EXIT;
     }
-    printf5("Genereated target directory %s\n", target);
+    fprintf(stderr, "Genereated target directory %s\n", target);
 
     if (context->success) {
 	// must run as root
@@ -95,13 +95,13 @@ int test_mount(struct audit_data *context)
 			filesystem_type,
 			AUDIT_ARG_IMMEDIATE, sizeof(unsigned long),
 			&mountflags, AUDIT_ARG_NULL, 0, data)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
 
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -110,7 +110,7 @@ int test_mount(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -121,17 +121,17 @@ EXIT_CLEANUP:
     // FAILURE CASE:  no mount should have occured, but target dir needs removal.
     if (context->success) {
 	if (umount(target) == -1) {
-	    printf1("Cannot umount %s\n", target);
+	    fprintf(stderr, "Cannot umount %s\n", target);
 	}
     }
 
     if (rmdir(target) == -1) {
-	printf1("Error removing target directory %s: errno%i\n", target, errno);
+	fprintf(stderr, "Error removing target directory %s: errno%i\n", target, errno);
     }
 EXIT:
     if (target) {
 	free(target);
     }
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

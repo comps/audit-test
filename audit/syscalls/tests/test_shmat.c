@@ -88,15 +88,15 @@ int test_shmat(struct audit_data *context)
 
     // Create the shared memory segment
     if ((shmid = shmget(IPC_PRIVATE, PAGE_SIZE, mode)) == -1) {
-	printf1("ERROR: Unable to create shared memory segment\n");
+	fprintf(stderr, "ERROR: Unable to create shared memory segment\n");
 	goto EXIT;
     }
-    printf4("Generated shmid = [%d]\n", shmid);
+    fprintf(stderr, "Generated shmid = [%d]\n", shmid);
 
 
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -113,12 +113,12 @@ int test_shmat(struct audit_data *context)
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &shmid,
 			AUDIT_ARG_NULL, 0, voidPtr,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &shmflg)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -129,14 +129,16 @@ EXIT_CLEANUP:
 	// detach memory if successfully attached
 	if (shmptr != (void *)-1) {
 	    if (shmdt(shmptr) == -1) {
-		printf1
-		    ("ERROR: Unable to detach memory with shmid %d: errno=%i\n",
+		fprintf
+		    (stderr,
+		     "ERROR: Unable to detach memory with shmid %d: errno=%i\n",
 		     shmid, errno);
 	    }
 	}
 	if (shmctl(shmid, IPC_RMID, 0) == -1) {
-	    printf1
-		("ERROR: Unable to free shared memory with shmid %d: errno=%i\n",
+	    fprintf
+		(stderr,
+		 "ERROR: Unable to free shared memory with shmid %d: errno=%i\n",
 		 shmid, errno);
 	    goto EXIT;
 	}

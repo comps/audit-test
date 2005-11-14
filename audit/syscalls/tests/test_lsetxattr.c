@@ -80,7 +80,7 @@ int test_lsetxattr(struct audit_data *context)
     // Create the target file
     if ((rc = createTempFile(&path, S_IRWXU,
 			     context->euid, context->egid)) == -1) {
-	printf1("ERROR: Cannot create file %s\n", path);
+	fprintf(stderr, "ERROR: Cannot create file %s\n", path);
 	goto EXIT;
     }
     strcpy(value, XATTR_TEST_VALUE);
@@ -99,7 +99,7 @@ int test_lsetxattr(struct audit_data *context)
 			AUDIT_ARG_POINTER, size, value,
 			AUDIT_ARG_IMMEDIATE, sizeof(size_t), &size,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
@@ -118,13 +118,13 @@ EXIT_CLEANUP:
 	 */
     // Clean up
     if ((unlink(path)) == -1) {
-	printf1("Error unlinking file %s\n", path);
+	fprintf(stderr, "Error unlinking file %s\n", path);
 	goto EXIT;
     }
 
 EXIT:
     if (path)
 	free(path);
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

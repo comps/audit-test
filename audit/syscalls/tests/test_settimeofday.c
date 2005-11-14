@@ -75,11 +75,11 @@ int test_settimeofday(struct audit_data *context)
 	memset(tz, '\0', sizeof(tz));
 
 	if ((rc = gettimeofday(tv, tz)) < 0) {
-	    printf1("Unable to get time of day\n");
+	    fprintf(stderr, "Unable to get time of day\n");
 	    goto EXIT;
 	}
     }
-    printf5("time value and time zone structures initialized\n");
+    fprintf(stderr, "time value and time zone structures initialized\n");
 
     // Set up audit argument buffer
     if ((rc = auditArg2(context, 
@@ -88,12 +88,12 @@ int test_settimeofday(struct audit_data *context)
 	    (context->success ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL),
 	    (context->success ? sizeof(struct timezone) : 0), tz)
 	) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT;
     }
     // Execute system call
@@ -101,7 +101,7 @@ int test_settimeofday(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall failed (%d)\n", rc);
     }
 
 EXIT:
@@ -112,6 +112,6 @@ EXIT:
 		free(tz);
 	}
 
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

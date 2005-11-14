@@ -86,14 +86,15 @@ int test_semop(struct audit_data *context)
     if (context->success) {
 	mode = (IPC_CREAT | IPC_EXCL) | 0666;
 	if ((semid = semget(IPC_PRIVATE, 1, mode)) == -1) {
-	    printf1("Error creating semaphore: errno=%i\n", errno);
+	    fprintf(stderr, "Error creating semaphore: errno=%i\n", errno);
 	    goto EXIT_CLEANUP;
 	}
     } else {
 	mode = 0000 | IPC_CREAT;
 	if ((semid = semget(semid, nsems, mode)) == -1) {
-	    printf1
-		("Cannot create the semaphore set with key = -1: errno = [%i]\n",
+	    fprintf
+		(stderr,
+		 "Cannot create the semaphore set with key = -1: errno = [%i]\n",
 		 errno);
 	    goto EXIT;
 	}
@@ -109,7 +110,7 @@ int test_semop(struct audit_data *context)
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &semid,
 			AUDIT_ARG_POINTER, sizeof(s), &s,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &nsops)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work   
@@ -132,8 +133,9 @@ EXIT_CLEANUP:
 
     if (semid && (semid != -1)) {
 	if ((semctl(semid, 0, IPC_RMID)) == -1) {
-	    printf1
-		("ERROR: Cannot deallocate message memory with semid=[%d]: errno=[%i]\n",
+	    fprintf
+		(stderr,
+		 "ERROR: Cannot deallocate message memory with semid=[%d]: errno=[%i]\n",
 		 semid, errno);
 	}
     }

@@ -95,7 +95,7 @@ int test_execve(struct audit_data *context)
     if (context->success) {
 	// Set up for success
 	if (chdir(context->u.syscall.cwd) == -1) {
-	    printf1("Error changing to working directory [%s]: errno=%i\n",
+	    fprintf(stderr, "Error changing to working directory [%s]: errno=%i\n",
 		    context->u.syscall.cwd, errno);
 	    goto EXIT;
 	}
@@ -107,10 +107,10 @@ int test_execve(struct audit_data *context)
 	argv[1] = (char *)malloc(MAX_ARG_SIZE);
 	argv[2] = NULL;
 	if ((semid = semget(IPC_PRIVATE, 1, 0)) == -1) {
-	    printf1("Error creating semaphore: errno=%i\n", errno);
+	    fprintf(stderr, "Error creating semaphore: errno=%i\n", errno);
 	    goto EXIT_CLEANUP;
 	}
-	printf5("Created new semaphore w/ semid = %d\n", semid);
+	fprintf(stderr, "Created new semaphore w/ semid = %d\n", semid);
 	sprintf(argv[1], "%d", semid);
 	vector_size =
 	    arg_vector(&vector, vector_size, AUDIT_ARG_STRING, strlen(argv[0]),
@@ -136,13 +136,13 @@ int test_execve(struct audit_data *context)
 			path,
 			AUDIT_ARG_VECTOR, vector_size, vector,
 			AUDIT_ARG_POINTER, 0, envp)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
 
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -151,13 +151,13 @@ int test_execve(struct audit_data *context)
 	    // We are in the child
 	    // Execute system call successfully
 	    if (execve(filename, argv, envp) == -1) {
-		printf1("execve() error in success case: errno=%i\n", errno);
+		fprintf(stderr, "execve() error in success case: errno=%i\n", errno);
 		// Parent will time out waiting for child
 		_exit(-1);
 	    }
 	    // This process is either assimilated or terminated before we
 	    // get to this point :-)
-	    printf1("BORK BORK BORK\n");	// If this actually prints, then
+	    fprintf(stderr, "BORK BORK BORK\n");	// If this actually prints, then
 	    // lots of people have lots of
 	    // really bad issues to deal with
 	    _exit(-1);
@@ -170,18 +170,19 @@ int test_execve(struct audit_data *context)
 	    sembuf.sem_num = 0;
 	    sembuf.sem_op = -1;
 	    sembuf.sem_flg = IPC_NOWAIT;
-	    printf5("Waiting for semaphore from child process...\n");
+	    fprintf(stderr, "Waiting for semaphore from child process...\n");
 	    timestamp = time(NULL);
 	    // This should spin just a few hundred times
 	    while (semop(semid, &sembuf, 1) == -1) {
 		if ((time(NULL) - timestamp) > MAX_WAIT_TIME_FOR_CHILD) {
-		    printf1
-			("Timed out while waiting for semaphore from child\n");
+		    fprintf
+			(stderr,
+			 "Timed out while waiting for semaphore from child\n");
 		    goto EXIT_CLEANUP;
 		    break;
 		}
 	    }
-	    printf5("Received semaphore\n");
+	    fprintf(stderr, "Received semaphore\n");
 	    // execve() really has no success return code; this is a placeholder
 	    context->u.syscall.exit = NO_RETURN_CODE;
 	    //audit message is posted from the forked process update the ptr
@@ -195,7 +196,7 @@ int test_execve(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -209,13 +210,13 @@ EXIT_CLEANUP:
 	free(argv[1]);
 	// Remove semaphore
 	if (semctl(semid, 0, IPC_RMID) == -1) {
-	    printf1("Error removing semaphore with semid=%d: errno=%i\n", semid,
+	    fprintf(stderr, "Error removing semaphore with semid=%d: errno=%i\n", semid,
 		    errno);
 	    goto EXIT;
 	}
     }
 
 EXIT:
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

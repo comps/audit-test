@@ -66,13 +66,13 @@ int test_symlink(struct audit_data *context)
 
     if ((rc = createTempFile(&source, S_IRWXU | S_IRWXG | S_IRWXO,
 			     context->euid, context->egid)) == -1) {
-	printf1("ERROR: Cannot create file %s\n", source);
+	fprintf(stderr, "ERROR: Cannot create file %s\n", source);
 	goto EXIT;
     }
 
     if (context->success) {
 	if ((rc = createTempFileName(&destination)) == -1) {
-	    printf1("ERROR: Cannot create file %s\n", destination);
+	    fprintf(stderr, "ERROR: Cannot create file %s\n", destination);
 	    goto EXIT_CLEANUP;
 	}
     } else {
@@ -82,7 +82,7 @@ int test_symlink(struct audit_data *context)
 	destination = strdup("/root/");
 	res = realloc(destination, strlen(source));
 	if (!res) {
-	    printf1("ERROR: Unable to realloc memory\n");
+	    fprintf(stderr, "ERROR: Unable to realloc memory\n");
 	    goto EXIT_CLEANUP;
 	}
 	strcat(destination, basename(source));
@@ -93,12 +93,12 @@ int test_symlink(struct audit_data *context)
     if ((rc = auditArg2(context, AUDIT_ARG_STRING, strlen(source), source,
 			context->success ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
 			strlen(destination), destination)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -106,19 +106,19 @@ int test_symlink(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
 
 EXIT_CLEANUP:
     if ((unlink(source)) != 0) {
-	printf1("ERROR: Unable to remove file %s: errno=%i\n", source, errno);
+	fprintf(stderr, "ERROR: Unable to remove file %s: errno=%i\n", source, errno);
 	goto EXIT;
     }
     if (context->success) {
 	if ((unlink(destination)) != 0) {
-	    printf1("ERROR: Unable to remove file %s: errno=%i\n",
+	    fprintf(stderr, "ERROR: Unable to remove file %s: errno=%i\n",
 		    destination, errno);
 	    goto EXIT;
 	}
@@ -130,6 +130,6 @@ EXIT:
     if (destination) {
 	free(destination);
     }
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

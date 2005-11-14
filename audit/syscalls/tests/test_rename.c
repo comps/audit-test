@@ -63,14 +63,14 @@ int test_rename(struct audit_data *context)
 
     if ((rc = createTempFile(&path, S_IRWXU | S_IRWXG | S_IRWXO,
 			     context->euid, context->egid)) == -1) {
-	printf1("ERROR: Cannot create file %s\n", path);
+	fprintf(stderr, "ERROR: Cannot create file %s\n", path);
 	goto EXIT;
     }
 
     if (context->success) {
 	// dynamically create target temp file name
 	if ((rc = createTempFileName(&targetPath)) == -1) {
-	    printf1("ERROR: Cannot create file %s\n", targetPath);
+	    fprintf(stderr, "ERROR: Cannot create file %s\n", targetPath);
 	    strcpy(targetPath, path);
 	    goto EXIT_CLEANUP;
 	}
@@ -78,7 +78,7 @@ int test_rename(struct audit_data *context)
 	targetPath = strdup("/root/");
 	res = realloc(targetPath, strlen(path));
 	if (!res) {
-	    printf1("ERROR: Unable to realloc memory\n");
+	    fprintf(stderr, "ERROR: Unable to realloc memory\n");
 	    goto EXIT_CLEANUP;
 	}
 	strcat(targetPath, basename(path));
@@ -88,18 +88,18 @@ int test_rename(struct audit_data *context)
     if ((rc = auditArg2(context, AUDIT_ARG_PATH, strlen(path), path,
 			context->success ? AUDIT_ARG_PATH : AUDIT_ARG_STRING,
 			strlen(targetPath), targetPath)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Fill in struct audit_data structure
-    printf5("Calling getLAUSData\n");
+    fprintf(stderr, "Calling getLAUSData\n");
     if ((rc = getLAUSData(context)) != 0) {
-	printf1("Error returned from getLAUSData( context ): rc=%i\n", rc);
+	fprintf(stderr, "Error returned from getLAUSData( context ): rc=%i\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -107,22 +107,22 @@ int test_rename(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
 EXIT_CLEANUP:
     if (context->success) {
 	// remove the target temporary file
-	printf5("Removing file %s\n", targetPath);
+	fprintf(stderr, "Removing file %s\n", targetPath);
 	if (unlink(targetPath) == -1) {
-	    printf1("Error removing file %s: errno=%i\n", targetPath, errno);
+	    fprintf(stderr, "Error removing file %s: errno=%i\n", targetPath, errno);
 	    goto EXIT;
 	}
     } else {
-	printf5("Removing file %s\n", path);
+	fprintf(stderr, "Removing file %s\n", path);
 	if (unlink(path) == -1) {
-	    printf1("Error removing file %s: errno=%i\n", path, errno);
+	    fprintf(stderr, "Error removing file %s: errno=%i\n", path, errno);
 	    goto EXIT;
 	}
     }
@@ -134,6 +134,6 @@ EXIT:
     if (path) {
 	free(path);
     }
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

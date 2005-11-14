@@ -62,14 +62,14 @@ int test_ioctl(struct audit_data *context)
     if (context->success) {
 	// Create a file readable by test user if testing success case
 	if ((fd = open(dev, O_RDWR, 0777)) == -1) {
-	    printf1("ERROR: Cannot open tty device %s\n", dev);
+	    fprintf(stderr, "ERROR: Cannot open tty device %s\n", dev);
 	    goto EXIT;
 	}
 	path = dev;
     } else {
 	// Create a file readable by test user if testing success case
 	if ((fd = open(notty, O_CREAT, 0777)) == -1) {
-	    printf1("ERROR: Cannot create test file %s\n", notty);
+	    fprintf(stderr, "ERROR: Cannot create test file %s\n", notty);
 	    goto EXIT;
 	}
 	path = notty;
@@ -80,12 +80,12 @@ int test_ioctl(struct audit_data *context)
 			AUDIT_ARG_PATH, strlen(path), path,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &tcgeta,
 			AUDIT_ARG_POINTER, 0, dummy)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT;
     }
     // Execute system call
@@ -93,7 +93,7 @@ int test_ioctl(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT;
     }
 

@@ -74,7 +74,7 @@ int test_msgsnd(struct audit_data *context)
 
     mode = S_IRWXU;
     if ((msgid = msgget(IPC_PRIVATE, mode)) == -1) {
-	printf1("ERROR: Unable to allocate new message queue: errno=%i\n",
+	fprintf(stderr, "ERROR: Unable to allocate new message queue: errno=%i\n",
 		errno);
 	goto EXIT;
     }
@@ -98,12 +98,12 @@ int test_msgsnd(struct audit_data *context)
 			AUDIT_ARG_POINTER, sizeof(long) + msgsz, &buf,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgsz,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgflg)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -119,7 +119,7 @@ int test_msgsnd(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -128,8 +128,9 @@ EXIT_CLEANUP:
 
     if (!context->success && msgid && (msgid != -1)) {
 	if ((rc = msgctl(msgid, IPC_RMID, 0)) == -1) {
-	    printf1
-		("Error removing message queue with ID = [%d]: errno = [%i]\n",
+	    fprintf
+		(stderr,
+		 "Error removing message queue with ID = [%d]: errno = [%i]\n",
 		 msgid, errno);
 	    goto EXIT;
 	}

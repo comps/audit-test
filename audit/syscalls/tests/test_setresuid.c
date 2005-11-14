@@ -76,7 +76,7 @@ int test_setresuid(struct audit_data *context)
 	euid = -1;
 	ruid = -1;
 	suid = -1;
-	printf5("Target euid=%d, ruid=%d, and suid=%d in success case\n", euid,
+	fprintf(stderr, "Target euid=%d, ruid=%d, and suid=%d in success case\n", euid,
 		ruid, suid);
 	context->euid = 0;
 	context->egid = 0;
@@ -100,15 +100,15 @@ int test_setresuid(struct audit_data *context)
 	suid = -1;		// same here
 
 	// su to test user
-	printf5("seteuid to %i\n", context->euid);
+	fprintf(stderr, "seteuid to %i\n", context->euid);
 	if ((rc = seteuid(context->euid)) != 0) {
-	    printf1("Unable to seteuid to %i: errno=%i\n",
+	    fprintf(stderr, "Unable to seteuid to %i: errno=%i\n",
 		    context->euid, errno);
 	    goto EXIT;		// Or possibly EXIT_CLEANUP
 	}
 
 	if ((rc = getIdentifiers(&identifiers) != 0)) {
-	    printf1("Utility getIdentifiers failed\n");
+	    fprintf(stderr, "Utility getIdentifiers failed\n");
 	    goto EXIT;
 	}
 	while (euid == identifiers.ruid || euid == identifiers.euid ||
@@ -117,9 +117,9 @@ int test_setresuid(struct audit_data *context)
 	}
 
 	// su to superuser
-	printf5("seteuid to root\n");
+	fprintf(stderr, "seteuid to root\n");
 	if ((rc = seteuid(0)) != 0) {
-	    printf1("Unable to seteuid to root: errno=%i\n", errno);
+	    fprintf(stderr, "Unable to seteuid to root: errno=%i\n", errno);
 	    goto EXIT_CLEANUP;	// Or possibly EXIT_CLEANUP
 	}
 
@@ -130,12 +130,12 @@ int test_setresuid(struct audit_data *context)
 			AUDIT_ARG_IMMEDIATE_u, sizeof(int), &ruid,
 			AUDIT_ARG_IMMEDIATE_u, sizeof(int), &euid,
 			AUDIT_ARG_IMMEDIATE_u, sizeof(int), &suid)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT;
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -143,7 +143,7 @@ int test_setresuid(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -153,6 +153,6 @@ EXIT_CLEANUP:
       */
 
 EXIT:
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

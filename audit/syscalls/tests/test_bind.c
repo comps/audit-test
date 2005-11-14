@@ -86,7 +86,7 @@ int test_bind(struct audit_data *context)
     if (context->success) {
 	my_addr.sin_port = htons(-1);
 	if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
-	    printf1("Error creating socket\n");
+	    fprintf(stderr, "Error creating socket\n");
 	    goto EXIT;
 	}
 	// fill in my_addr
@@ -100,7 +100,7 @@ int test_bind(struct audit_data *context)
 	// Now, find a port that works
 	while (bind(sockfd, (struct sockaddr *)&my_addr, addrlen) == -1 &&
 	       portNum < 60000) {
-	    printf3("Attempt to bind to port %d failed; trying one higher\n",
+	    fprintf(stderr, "Attempt to bind to port %d failed; trying one higher\n",
 		    portNum);
 	    portNum++;
 	    my_addr.sin_port = htons(portNum);
@@ -110,15 +110,16 @@ int test_bind(struct audit_data *context)
 	    // happening is very small if we were
 	    // unable to bind to the other 5,651
 	    // ports, so we ignore that case.
-	    printf1
-		("Failed to bind to any port between 54348 and 60000; something must be wrong\n");
+	    fprintf
+		(stderr,
+		 "Failed to bind to any port between 54348 and 60000; something must be wrong\n");
 	    goto EXIT_CLEANUP;
 	} else {
 	    // We have successfully ``binded'' to the socket; 
 	    // OK use current configuration for the audit test
 	    close(sockfd);
 	    if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
-		printf1("Error creating socket\n");
+		fprintf(stderr, "Error creating socket\n");
 		goto EXIT;
 	    }
 	    sprintf(SocketPath, "[sock:af=%d,type=%d]", PF_INET, SOCK_STREAM);
@@ -142,13 +143,13 @@ int test_bind(struct audit_data *context)
 		       AUDIT_ARG_NULL, 0, &my_addr,
 		       AUDIT_ARG_IMMEDIATE, sizeof(socklen_t), &addrlen);
     if (rc != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT;
     }
 
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -159,7 +160,7 @@ int test_bind(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -172,6 +173,6 @@ EXIT_CLEANUP:
     }
 
 EXIT:
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

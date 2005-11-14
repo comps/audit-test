@@ -63,18 +63,18 @@ int test_umount2(struct audit_data *context)
     int flags = 0;
     char *target = NULL;
 
-    printf4("Performing test_umount2\n");
+    fprintf(stderr, "Performing test_umount2\n");
 
     // dynamically create test directory
     if (rc = (createTempDir(&target, S_IRWXU | S_IRWXG | S_IRWXO,
 			    context->euid, context->egid)) == -1) {
-	printf1("ERROR: Cannot create dir %s\n", target);
+	fprintf(stderr, "ERROR: Cannot create dir %s\n", target);
 	goto EXIT;
     }
-    printf5("Genereated target directory %s\n", target);
+    fprintf(stderr, "Genereated target directory %s\n", target);
 
     if (rc = (mount("none", target, "proc", 0, NULL)) == -1) {
-	printf1("ERROR: Cannot mount dir %s\n", target);
+	fprintf(stderr, "ERROR: Cannot mount dir %s\n", target);
 	goto EXIT_CLEANUP;
     }
 
@@ -91,13 +91,13 @@ int test_umount2(struct audit_data *context)
 			strlen(target),
 			target,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
-	printf1("Error setting up audit argument buffer\n");
+	fprintf(stderr, "Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
 
     }
     // Do pre-system call work
     if ((rc = preSysCall(context)) != 0) {
-	printf1("ERROR: pre-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
     // Execute system call
@@ -105,7 +105,7 @@ int test_umount2(struct audit_data *context)
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	printf1("ERROR: post-syscall setup failed (%d)\n", rc);
+	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
 	goto EXIT_CLEANUP;
     }
 
@@ -115,17 +115,18 @@ EXIT_CLEANUP:
 	 */
     if (!context->success) {
 	if (umount(target) == -1) {
-	    printf1
-		("Error umounting target directory [%s] for deletion.  Errno: %i\n",
+	    fprintf
+		(stderr,
+		 "Error umounting target directory [%s] for deletion.  Errno: %i\n",
 		 target, errno);
 	}
     }
     if (rmdir(target) == -1) {
-	printf1("Error removing target directory %s: errno%i\n", target, errno);
+	fprintf(stderr, "Error removing target directory %s: errno%i\n", target, errno);
     }
 EXIT:
     if (target)
 	free(target);
-    printf5("Returning from test\n");
+    fprintf(stderr, "Returning from test\n");
     return rc;
 }

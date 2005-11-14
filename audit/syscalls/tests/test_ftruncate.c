@@ -61,7 +61,7 @@ int test_ftruncate(struct audit_data *context)
 
 
     int rc = 0;
-    __laus_int64 exp_errno = EBADF;
+    int exp_errno = EBADF;
     int length = 1;
     char *fileName = NULL;
     int fd;
@@ -102,7 +102,7 @@ int test_ftruncate(struct audit_data *context)
     if ((rc = auditArg2(context,
 			context->success ? AUDIT_ARG_PATH : AUDIT_ARG_ERROR,
 			context->
-			success ? strlen(fileName) : sizeof(__laus_int64),
+			success ? strlen(fileName) : sizeof(__u64),
 			context->success ? fileName : (void *)&exp_errno,
 			AUDIT_ARG_IMMEDIATE_u, sizeof(length), &length)) != 0) {
 	printf1("Error setting up audit argument buffer\n");

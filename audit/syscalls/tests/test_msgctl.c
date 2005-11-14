@@ -65,16 +65,9 @@ int test_msgctl(struct audit_data *context)
 {
     int rc = 0;
     int exp_errno = EPERM;
-    //  int msgctlrc = 0;
     int msgid = 0;
-    //key_t key;         // not needed?
     int mode;
-    //static int cmd = IPC_RMID;
-#if defined(__S390X) && defined(__MODE_32)
-    static int cmd_on_disk = IPC_RMID | 256;	// IPC_64 = 256 in the kernel 
-#else
-    static int cmd_on_disk = IPC_RMID;
-#endif
+    static int cmd = IPC_RMID;
     struct msqid_ds buf;
 
     memset(&buf, 0, sizeof(buf));
@@ -97,7 +90,7 @@ int test_msgctl(struct audit_data *context)
     // Set up audit argument buffer
     if ((rc = auditArg3(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgid,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd_on_disk,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd,
 			AUDIT_ARG_POINTER, 0, &buf)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT_CLEANUP;
@@ -109,10 +102,10 @@ int test_msgctl(struct audit_data *context)
     }
     // Execute system call
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
-    context->u.syscall.exit = syscall(__NR_msgctl, msgid, IPC_RMID, &buf);
+    context->u.syscall.exit = syscall(__NR_msgctl, msgid, cmd, &buf);
 #else
     context->u.syscall.exit = syscall(__NR_ipc, MSGCTL, 
-					msgid, IPC_RMID, 0, &buf);
+					msgid, cmd, 0, &buf);
 #endif
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
@@ -124,7 +117,7 @@ int test_msgctl(struct audit_data *context)
 EXIT_CLEANUP:
 
     if (!context->success && msgid && (msgid != -1)) {
-	if ((rc = msgctl(msgid, IPC_RMID, 0)) == -1) {
+	if ((rc = msgctl(msgid, cmd, 0)) == -1) {
 	    printf1
 		("Error removing message queue with ID = [%d]: errno = [%i]\n",
 		 msgid, errno);

@@ -23,14 +23,6 @@
 
 #include <linux/audit.h>
 
-#if defined(__MODE_32) || defined(__IX86)
-typedef long long __laus_int64;
-typedef int __laus_int32;
-#else
-typedef long __laus_int64;
-typedef int __laus_int32;
-#endif
-
 /*
  * Context Flags
  */

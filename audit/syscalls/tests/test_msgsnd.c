@@ -71,10 +71,6 @@ int test_msgsnd(struct audit_data *context)
 	long mtype;
 	char mtext[10];
     } buf;
-    struct msgbuf_on_disk {
-	__laus_int64 mtype;
-	char mtext[10];
-    } buf_on_disk;
 
     mode = S_IRWXU;
     if ((msgid = msgget(IPC_PRIVATE, mode)) == -1) {
@@ -85,12 +81,11 @@ int test_msgsnd(struct audit_data *context)
 
     msgsz = 3;			// Determines how much data will actually be in the msgbuf structure
     msgflg = IPC_NOWAIT;
-    buf.mtype = buf_on_disk.mtype = 1;
+    buf.mtype = 1;
     memset(buf.mtext, '\0', sizeof(buf.mtext));
-    memset(buf_on_disk.mtext, '\0', sizeof(buf_on_disk.mtext));
-    buf.mtext[0] = buf_on_disk.mtext[0] = 'a';
-    buf.mtext[1] = buf_on_disk.mtext[1] = 'b';
-    buf.mtext[2] = buf_on_disk.mtext[2] = 'c';
+    buf.mtext[0] = 'a';
+    buf.mtext[1] = 'b';
+    buf.mtext[2] = 'c';
 
 
     printf(" >>> buf address: %p <<< \n", &buf);
@@ -100,11 +95,7 @@ int test_msgsnd(struct audit_data *context)
     }
     // Set up audit argument buffer
     if ((rc = auditArg4(context, AUDIT_ARG_IMMEDIATE, sizeof(int), &msgid,
-#if defined(__IX86)
-			AUDIT_ARG_POINTER, sizeof(__u32) + msgsz, &buf,
-#else
-			AUDIT_ARG_POINTER, sizeof(__u64) + msgsz, &buf_on_disk,
-#endif
+			AUDIT_ARG_POINTER, sizeof(long) + msgsz, &buf,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgsz,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgflg)) != 0) {
 	printf1("Error setting up audit argument buffer\n");

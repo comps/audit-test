@@ -51,16 +51,16 @@ int arg_put(struct audit_data *context, ARG_TYPE type, const int size,
 
     int newsize = size;
     char *newsrc = src;
-    __laus_int64 recast64;
+    __u64 recast64;
 
-    if ((type == AUDIT_ARG_IMMEDIATE) && (size != sizeof(__laus_int64))) {
+    if ((type == AUDIT_ARG_IMMEDIATE) && (size != sizeof(__u64))) {
 	// sign extend 32bit signed int to signed 64bit
 	// Example: ffffffff => ffffffffffffffff
 	recast64 = *(__s32 *) src;
 	newsize = sizeof(recast64);
 	newsrc = (char *)&recast64;
     } else if ((type == AUDIT_ARG_IMMEDIATE_u)
-	       && (size != sizeof(__laus_int64))) {
+	       && (size != sizeof(__u64))) {
 	// convert unsigned 32bit to signed 64bit
 	// Example: ffffffff => 00000000ffffffff
 	recast64 = *(__u32 *) src;

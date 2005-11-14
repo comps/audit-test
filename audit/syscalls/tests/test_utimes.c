@@ -61,19 +61,6 @@
 /* Skip test on platforms that don't support the call */
 #ifdef __NR_utimes
 
-#if (defined(__S390X) || defined(__X86_64) || defined(__PPC64)) && defined(__MODE_32)
-// This is needed for accurate processing of headers on 64bit platforms when test suite
-//   is compiled in 31/32bit mode but running on a 64bit kernel (emulation).
-//   auditd is running in 64bit mode but compilation of the test suite yields
-//   data structures whose sizes are different.
-struct timespec_on_disk {	// edited from /usr/include/time.h
-    __u64 tv_sec;		/* Seconds.  */
-    __u64 tv_nsec;		/* Nanoseconds.  */
-};
-#else
-#define timespec_on_disk timespec
-#endif
-
 /*
  ** execute a utimes operation
  */
@@ -82,7 +69,7 @@ int test_utimes(struct audit_data *context)
     int rc = 0;
     int exp_errno = EPERM;
     char *fileName = NULL;
-    struct timespec_on_disk mod_time, acc_time;
+    struct timespec mod_time, acc_time;
     struct timeval utbuf[2];
 
     // Create the file 
@@ -106,9 +93,9 @@ int test_utimes(struct audit_data *context)
     // Set up audit argument buffer
     if ((rc = auditArg3(context,
 			AUDIT_ARG_PATH, strlen(fileName), fileName,
-			AUDIT_ARG_POINTER, sizeof(struct timespec_on_disk),
-			&acc_time, AUDIT_ARG_POINTER,
-			sizeof(struct timespec_on_disk), &mod_time)) != 0) {
+			AUDIT_ARG_POINTER, sizeof(struct timespec), &acc_time, 
+			AUDIT_ARG_POINTER, sizeof(struct timespec), &mod_time)
+	 ) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }

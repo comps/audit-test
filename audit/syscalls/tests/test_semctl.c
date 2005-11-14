@@ -68,11 +68,6 @@ int test_semctl(struct audit_data *context)
     int mode;
     int semnum = 0;		// this is ignored by semctl when we remove
     static int cmd = IPC_RMID;
-#if defined(__S390X) && defined(__MODE_32)
-    static int cmd_on_disk = IPC_RMID | 256;	// IPC_64 = 256 in the kernel
-#else
-    static int cmd_on_disk = IPC_RMID;
-#endif
     char *buf = NULL;
 
     // Allocate shared memory space so that we can test deallocation via
@@ -92,7 +87,7 @@ int test_semctl(struct audit_data *context)
     if ((rc = auditArg4(context,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &semid,
 			AUDIT_ARG_IMMEDIATE, sizeof(int), &semnum,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd_on_disk,
+			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd,
 #if (defined(__X86_64) || defined(__IA64)) && !defined(__MODE_32)
 			AUDIT_ARG_POINTER, 0, &buf
 #else

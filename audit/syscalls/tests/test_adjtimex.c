@@ -27,18 +27,18 @@
  **  "adjtimex" system call.
  **
  **  In the successful case, this function:
- **   1) Calls adjtimex() with buf.modes=0 (has no effect)
+ **   1) Calls adjtimex() with tbuf.modes=0 (has no effect)
  **   2) Verifies the success result.
  **
  **  The successful case does not modify the timex buffer values, and
  **  so according to the man page, the call will always succeed.
  **  
  **  In the erroneous case, this function:
- **   1) Calls adjtimex() with buf.modes != 0 as the test user
+ **   1) Calls adjtimex() with tbuf.modes != 0 as the test user
  **   2) Verifies the error result.
  **      
  **  In the erroneous case, we call adjtimex as the test user.
- **  According to the man page, if buf.mode is non-zero and the user
+ **  According to the man page, if tbuf.mode is non-zero and the user
  **  is not the superuser, then we will get an error result from the
  **  system call.
  **
@@ -52,65 +52,14 @@
 #include "syscalls.h"
 #include <sys/timex.h>
 
-#if !defined(__IX86)
-struct timeval_on_disk {	// edited from /usr/include/bits/time.h
-    __laus_int64 tv_sec;	/* Seconds.  */
-    __laus_int64 tv_usec;	/* Microseconds.  */
-};
-struct timex_on_disk {		// edited from /usr/include/sys/timex.h
-    __laus_int32 modes;		/* mode selector */
-    __laus_int32 padding_1;	/* PADDING */
-    __laus_int64 offset;	/* time offset (usec) */
-    __laus_int64 freq;		/* frequency offset (scaled ppm) */
-    __laus_int64 maxerror;	/* maximum error (usec) */
-    __laus_int64 esterror;	/* estimated error (usec) */
-    __laus_int32 status;	/* clock command/status */
-    __laus_int32 padding_2;	/* PADDING */
-    __laus_int64 constant;	/* pll time constant */
-    __laus_int64 precision;	/* clock precision (usec) (read only) */
-    __laus_int64 tolerance;	/* clock frequency tolerance (ppm) (read only) */
-
-    struct timeval_on_disk time;	/* (read only) */
-    __laus_int64 tick;		/* (modified) usecs between clock ticks */
-    __laus_int64 ppsfreq;	/* pps frequency (scaled ppm) (ro) */
-    __laus_int64 jitter;	/* pps jitter (us) (ro) */
-    __laus_int32 shift;		/* interval duration (s) (shift) (ro) */
-    __laus_int32 padding_3;	/* PADDING */
-    __laus_int64 stabil;	/* pps stability (scaled ppm) (ro) */
-    __laus_int64 jitcnt;	/* jitter limit exceeded (ro) */
-    __laus_int64 calcnt;	/* calibration intervals (ro) */
-    __laus_int64 errcnt;	/* calibration errors (ro) */
-    __laus_int64 stbcnt;	/* stability limit exceeded (ro) */
-
-    /* ??? */
-    int:32;
-    int:32;
-    int:32;
-    int:32;
-    int:32;
-    int:32;
-    int:32;
-    int:32;
-    int:32;
-    int:32;
-    int:32;
-    int:32;
-};
-#else
-#define timeval_on_disk timeval
-#define timex_on_disk   timex
-#endif
-
 int test_adjtimex(struct audit_data *context)
 {
     int rc = 0;
     int exp_errno = EPERM;
 
-    struct timex_on_disk buf;
-    struct timex syscall_buf;
+    struct timex tbuf;
 
-    memset((char *)&buf, '\0', sizeof(buf));
-    memset((char *)&syscall_buf, '\0', sizeof(syscall_buf));
+    memset((char *)&tbuf, '\0', sizeof(tbuf));
 
 	/**
 	 * Do as much setup work as possible right here
@@ -120,17 +69,18 @@ int test_adjtimex(struct audit_data *context)
 	// Set up for success
 	//    context->euid = 0;
 	//    context->egid = 0;
-	syscall_buf.modes = buf.modes = 0;
+	tbuf.modes = 0;
     } else {
 	// Set up for error
-	syscall_buf.modes = buf.modes = ADJ_STATUS;
-	syscall_buf.status = buf.status = 42;	// EPERM should hit before EINVAL, but just in case...
+	tbuf.modes = ADJ_STATUS;
+	// EPERM should hit before EINVAL, but just in case...
+	tbuf.status = 42;
     }
 
     // Set up audit argument buffer
     if ((rc = auditArg1(context,
-			AUDIT_ARG_POINTER, sizeof(struct timex_on_disk),
-			&buf)) != 0) {
+			AUDIT_ARG_POINTER, sizeof(struct timex),
+			&tbuf)) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
@@ -140,7 +90,7 @@ int test_adjtimex(struct audit_data *context)
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    context->u.syscall.exit = syscall(__NR_adjtimex, &syscall_buf);
+    context->u.syscall.exit = syscall(__NR_adjtimex, &tbuf);
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {

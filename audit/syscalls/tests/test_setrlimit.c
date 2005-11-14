@@ -54,35 +54,13 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#if defined(__MODE_32) || defined(__IX86)
-typedef long long __my64;
-#else
-typedef long __my64;
-#endif
-
-#if !defined(__IX86)
-// This is needed for accurate processing of headers on 64bit platforms when test
-//   is compiled in 31/32bit mode but running on a 64bit kernel (emulation).
-//   auditd is running in 64bit mode but compilation of the test suite yields
-//   data structures whose sizes are different.
-struct rlimit_on_disk {		// edited from /usr/include/bits/resource.h
-    /* The current (soft) limit.  */
-    __my64 rlim_cur;
-    /* The hard limit.  */
-    __my64 rlim_max;
-};
-#else
-#define rlimit_on_disk rlimit
-#endif
-
 int test_setrlimit(struct audit_data *context)
 {
     int rc = 0;
     int exp_errno = EINVAL;
 
     int resource;
-    struct rlimit_on_disk rlim;
-    struct rlimit syscall_rlim;
+    struct rlimit rlim;
 
 	/**
 	 * Do as much setup work as possible right here
@@ -90,9 +68,7 @@ int test_setrlimit(struct audit_data *context)
     if (context->success) {
 	resource = RLIMIT_CPU;
 
-	getrlimit(resource, &syscall_rlim);
-	rlim.rlim_cur = (__s32)(syscall_rlim.rlim_cur);
-	rlim.rlim_max = (__s32)(syscall_rlim.rlim_max);
+	getrlimit(resource, &rlim);
 
 	// Set up for success
 	// Might include: context->euid = 0; context->egid = 0;
@@ -105,8 +81,8 @@ int test_setrlimit(struct audit_data *context)
     if ((rc = auditArg2(context,
 			AUDIT_ARG_IMMEDIATE_u, sizeof(int), &resource,
 			context->success ? AUDIT_ARG_POINTER : AUDIT_ARG_NULL,
-			context->success ? sizeof(struct rlimit_on_disk) : 0,
-			&rlim)) != 0) {
+			context->success ? sizeof(struct rlimit) : 0, &rlim)
+	 ) != 0) {
 	printf1("Error setting up audit argument buffer\n");
 	goto EXIT;
     }
@@ -116,7 +92,7 @@ int test_setrlimit(struct audit_data *context)
 	goto EXIT_CLEANUP;
     }
     // Execute system call
-    context->u.syscall.exit = syscall(__NR_setrlimit, resource, &syscall_rlim);
+    context->u.syscall.exit = syscall(__NR_setrlimit, resource, &rlim);
 
     // Do post-system call work
     if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {

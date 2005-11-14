@@ -61,7 +61,7 @@
 int test_truncate(struct audit_data *context)
 {
     int rc = 0;
-    __laus_int64 exp_errno = EACCES;
+    int exp_errno = EACCES;
     off_t length = 1;		//valid value
     //size_t count = 80;     // not needed?
     char *fileName = NULL;

@@ -59,6 +59,7 @@ int test_rename(struct audit_data *context)
 
     char *path = NULL;
     char *targetPath = NULL;
+    char *res = NULL;
 
     // Set the syscall-specific data
     printf5("Setting u.syscall.sysnum to %d\n", AUDIT_rename);
@@ -79,7 +80,11 @@ int test_rename(struct audit_data *context)
 	}
     } else {
 	targetPath = strdup("/root/");
-	realloc(targetPath, strlen(path));
+	res = realloc(targetPath, strlen(path));
+	if (!res) {
+	    printf1("ERROR: Unable to realloc memory\n");
+	    goto EXIT_CLEANUP;
+	}
 	strcat(targetPath, basename(path));
     }
 

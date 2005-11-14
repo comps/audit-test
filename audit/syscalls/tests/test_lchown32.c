@@ -81,9 +81,9 @@ int test_lchown32(struct audit_data *context)
     group = context->egid;
 
     if (context->success) {
-	context->euid = context->msg_fsuid = 0;
+	context->euid = context->fsuid = 0;
     } else {
-	context->euid = context->msg_fsuid = helper_uid;
+	context->euid = context->fsuid = helper_uid;
     }
 
     // Generate unique filename

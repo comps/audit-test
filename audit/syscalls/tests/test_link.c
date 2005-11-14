@@ -65,6 +65,7 @@ int test_link(struct audit_data *context)
 
     char *source = NULL;
     char *destination = NULL;
+    char *res = NULL;
 
     // Set the syscall-specific data
     printf5("Setting u.syscall.sysnum to %d\n", AUDIT_link);
@@ -94,7 +95,11 @@ int test_link(struct audit_data *context)
 
 	/* ignore leading directories on tempfile path */
 	destination = strdup("/root/");
-	realloc(destination, strlen(source));
+	res = realloc(destination, strlen(source));
+	if (!res) {
+	    printf1("ERROR: Unable to realloc memory\n");
+	    goto EXIT_CLEANUP;
+	}
 	strcat(destination, basename(source));
 	context->euid = context->fsuid = helper_uid;
     }

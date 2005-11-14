@@ -56,13 +56,10 @@
 #include "syscalls.h"
 #include <sched.h>
 
-#ifdef __NR_clone2
-
 int test_clone2(struct audit_data *context)
 {
-
-
     int rc = 0;
+#ifdef __NR_clone2
     int exp_errno = EPERM;
     int flags = CLONE_VFORK;
     pid_t pid;
@@ -115,7 +112,6 @@ EXIT_CLEANUP:
 
 EXIT:
     printf5("Returning from test\n");
+#endif /* __NR_clone2 */
     return rc;
 }
-
-#endif /* __NR_clone2 */

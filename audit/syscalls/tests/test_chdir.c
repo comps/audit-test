@@ -106,8 +106,9 @@ EXIT_CLEANUP:
       */
     if (context->success) {
 	// chdir out of the directory we are about to nuke
-	if (chdir(cwd) == -1) {
-	    printf1("Error executing chdir(\"%s\"): errno=%i\n", cwd, errno);
+	if (chdir(context->u.syscall.cwd) == -1) {
+	    printf1("Error executing chdir(\"%s\"): errno=%i\n", 
+		    context->u.syscall.cwd, errno);
 	    goto EXIT;
 	}
     }

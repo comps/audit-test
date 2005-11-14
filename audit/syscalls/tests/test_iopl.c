@@ -53,17 +53,14 @@
     **
     **********************************************************************/
 
-#ifdef __IX86
-
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/io.h>
 
 int test_iopl(struct audit_data *context)
 {
-
-
     int rc = 0;
+#ifdef __IX86
     int exp_errno = EINVAL;
 
     int level;
@@ -112,7 +109,6 @@ EXIT_CLEANUP:
 
 EXIT:
     printf5("Returning from test\n");
+#endif
     return rc;
 }
-
-#endif

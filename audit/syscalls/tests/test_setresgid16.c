@@ -59,13 +59,13 @@
     **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
     **
     **********************************************************************/
-#if !defined(__PPC) && !defined(__X86_64)  && !defined(__IA64)
 #include "includes.h"
 #include "syscalls.h"
 
 int test_setresgid16(struct audit_data *context)
 {
     int rc = 0;
+#if !defined(__PPC) && !defined(__X86_64)  && !defined(__IA64)
     int exp_errno = EPERM;
     int rgid, egid, sgid;
 
@@ -153,6 +153,6 @@ EXIT_CLEANUP:
 
 EXIT:
     printf5("Returning from test\n");
+#endif
     return rc;
 }
-#endif

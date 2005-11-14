@@ -33,6 +33,8 @@
 #ifndef _SYSCALLS_H
 #define _SYSCALLS_H
 
+#include "context.h"
+
 /*
  * Default Values
  */
@@ -64,14 +66,13 @@
 /* 
  * Global variables
  */
-extern char cwd[PATH_MAX];
 extern int helper_uid; /* user for testing EPERM, EACCES errors */
 
 /*
  * Syscall Test Function Prototypes
  *
- * When adding a new test, you must also update the test matrix in
- * syscalls_array.h.
+ * When adding a new test, you must also update the test lookup table
+ * in syscalls_table.c.
  */
 int test_access(struct audit_data *);
 int test_adjtimex(struct audit_data *);
@@ -177,5 +178,7 @@ int test_unlink(struct audit_data *);
 int test_utime(struct audit_data *);
 int test_utimes(struct audit_data *);
 int test_vfork(struct audit_data *);
+
+int lookup_testcase(int (**test_h)(), char *testcase);
 
 #endif

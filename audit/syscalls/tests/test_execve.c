@@ -94,9 +94,9 @@ int test_execve(struct audit_data *context)
     envp[0] = NULL;
     if (context->success) {
 	// Set up for success
-	if (chdir(cwd) == -1) {
-	    printf1("Error changing to working directory [%s]: errno=%i\n", cwd,
-		    errno);
+	if (chdir(context->u.syscall.cwd) == -1) {
+	    printf1("Error changing to working directory [%s]: errno=%i\n",
+		    context->u.syscall.cwd, errno);
 	    goto EXIT;
 	}
 	context->euid = 0;

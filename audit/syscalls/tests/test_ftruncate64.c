@@ -50,8 +50,6 @@
    **
    **********************************************************************/
 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
-
 #include "includes.h"
 #include "syscalls.h"
 
@@ -60,9 +58,8 @@
     */
 int test_ftruncate64(struct audit_data *context)
 {
-
-
     int rc = 0;
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     int exp_errno = EINVAL;
     long long length;
     char *fileName = NULL;
@@ -123,6 +120,6 @@ EXIT_CLEANUP:
 EXIT:
     if (fileName)
 	free(fileName);
+#endif
     return rc;
 }
-#endif

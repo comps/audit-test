@@ -58,15 +58,13 @@
 #include <utime.h>
 #include <sys/time.h>
 
-/* Skip test on platforms that don't support the call */
-#ifdef __NR_utimes
-
 /*
  ** execute a utimes operation
  */
 int test_utimes(struct audit_data *context)
 {
     int rc = 0;
+#ifdef __NR_utimes
     int exp_errno = EPERM;
     char *fileName = NULL;
     struct timespec mod_time, acc_time;
@@ -123,7 +121,6 @@ EXIT_CLEANUP:
 EXIT:
     if (fileName)
 	free(fileName);
+#endif /* __NR_utimes */
     return rc;
 }
-
-#endif /* __NR_utimes */

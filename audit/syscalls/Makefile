@@ -55,7 +55,7 @@ IA := ia64
 UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
 TESTS_AR = tests/syscall_test.a
 
-SYSCALL_OBJS = syscalls.o
+SYSCALL_OBJS = syscalls.o syscalls_table.o
 
 ALL_OBJS = $(SYSCALL_OBJS)
 
@@ -74,7 +74,7 @@ else
 endif
 
 $(EXE): $(ALL_OBJS) $(UTILS_AR) $(TESTS_AR)
-	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) syscalls.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive $(LIBS)
+	$(CC) $(FLAGS) $(CFLAGS) $(ARCH) -o $(EXE) $(ALL_OBJS) ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive $(LIBS)
 
 clean:
 	make clean -C kmods

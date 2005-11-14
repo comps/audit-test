@@ -52,7 +52,6 @@
    **
    **********************************************************************/
 
-#if !defined(__PPC) && !defined(__X86_64)  && !defined(__S390X) && !defined(__IA64)
 #include "includes.h"
 #include "syscalls.h"
 
@@ -62,6 +61,7 @@
 int test_truncate64(struct audit_data *context)
 {
     int rc = 0;
+#if !defined(__PPC) && !defined(__X86_64)  && !defined(__S390X) && !defined(__IA64)
     int exp_errno = EACCES;
     long long length = 1;
     //size_t count = 80;    // not needed?
@@ -110,7 +110,6 @@ EXIT_CLEANUP:
 EXIT:
     if (fileName)
 	free(fileName);
+#endif
     return rc;
 }
-
-#endif

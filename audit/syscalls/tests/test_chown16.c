@@ -49,16 +49,13 @@
    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
    **
    **********************************************************************/
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__IA64)
-
 #include "includes.h"
 #include "syscalls.h"
 
 int test_chown16(struct audit_data *context)
 {
-
-
     int rc = 0;
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__IA64)
     int exp_errno = EPERM;
     char *fileName = NULL;
     int owner;
@@ -122,6 +119,6 @@ EXIT:
     if (fileName)
 	free(fileName);
     printf5("Returning from test\n");
+#endif
     return rc;
 }
-#endif

@@ -50,15 +50,13 @@
   **
   **********************************************************************/
 
-#ifdef __IX86
-
 #include "includes.h"
 #include "syscalls.h"
 
 int test_ioperm(struct audit_data *context)
 {
-
     int rc = 0;
+#ifdef __IX86
     int exp_errno = EPERM;
 
     unsigned long from;
@@ -114,7 +112,6 @@ EXIT_CLEANUP:
 
 EXIT:
     printf5("Returning from test\n");
+#endif
     return rc;
 }
-
-#endif

@@ -56,10 +56,10 @@
 #include <sys/wait.h>
 #include <sched.h>
 
-#ifdef __NR_vfork
 int test_vfork(struct audit_data *context)
 {
     int rc = 0;
+#ifdef __NR_vfork
     int exp_errno = 0;
     int status;
     char *fileName = NULL;
@@ -129,6 +129,6 @@ EXIT_CLEANUP:
 
 EXIT:
     printf5("Returning from test\n");
+#endif // __NR_vfork
     return rc;
 }
-#endif // __NR_vfork

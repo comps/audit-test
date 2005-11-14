@@ -64,13 +64,12 @@
  **
  **********************************************************************/
 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
-
 #include "includes.h"
 
 int test_setfsuid32(struct audit_data *context)
 {
     int rc = 0;
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     int exp_errno = EPERM;
 
     int secondFsuid;
@@ -163,7 +162,6 @@ EXIT_CLEANUP:
 
 EXIT:
     printf5("Returning from test\n");
+#endif
     return rc;
 }
-
-#endif

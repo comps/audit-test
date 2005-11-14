@@ -55,8 +55,6 @@
     **
     **********************************************************************/
 
-#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
-
 #include "includes.h"
 #include "syscalls.h"
 #include <grp.h>
@@ -64,6 +62,7 @@
 int test_setgroups32(struct audit_data *context)
 {
     int rc = 0;
+#if !defined(__PPC) && !defined(__X86_64) && !defined(__S390X) && !defined(__IA64)
     int exp_errno = EPERM;
 
     size_t size = 1;
@@ -108,7 +107,6 @@ int test_setgroups32(struct audit_data *context)
 
 EXIT:
     printf5("Returning from test\n");
+#endif
     return rc;
 }
-
-#endif

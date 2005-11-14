@@ -62,10 +62,6 @@ int test_fchmod(struct audit_data *context)
     int fd = -1;
     int mode = S_IRUSR;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_fchmod);
-    context->u.syscall.sysnum = AUDIT_fchmod;
-
   /**
    * Do as much setup work as possible right here
    */

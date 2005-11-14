@@ -66,10 +66,6 @@ int test_ftruncate(struct audit_data *context)
     char *fileName = NULL;
     int fd;
 
-    // Set the syscall specific data
-    context->u.syscall.sysnum = AUDIT_ftruncate;
-    // BUGBUG: Need to understand how to set up syscall parameters
-
     // dynamically create temp file name
     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
 			     context->euid, context->egid)) == -1) {

@@ -65,10 +65,6 @@ int test_setdomainname(struct audit_data *context)
     char name[__NEW_UTS_LEN];
     size_t len = __NEW_UTS_LEN;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setdomainname);
-    context->u.syscall.sysnum = AUDIT_setdomainname;
-
     if (getdomainname(name, len) == -1) {
 	printf1("Cannot get current domainname\n");
 	goto EXIT;

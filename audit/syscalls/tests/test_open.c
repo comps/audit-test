@@ -76,9 +76,6 @@ int test_open(struct audit_data *context)
     int mode = S_IRWXU;		// mode is ignored in this test case
     char *fileName = NULL;
 
-    // Set the syscall specific data
-    context->u.syscall.sysnum = AUDIT_open;
-
     if (context->success) {
 	// Create a file readable by test user if testing success case
 	if ((rc = createTempFile(&fileName, mode,

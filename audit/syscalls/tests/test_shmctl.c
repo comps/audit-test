@@ -74,10 +74,6 @@ int test_shmctl(struct audit_data *context)
     static int cmd;
     struct shmid_ds buf;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_shmctl);
-    context->u.syscall.sysnum = AUDIT_shmctl;
-
   /**
    * Do as much setup work as possible right here
    */

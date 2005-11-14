@@ -78,10 +78,6 @@ int test_setfsgid32(struct audit_data *context)
 
     identifiers_t identifiers;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setfsgid);
-    context->u.syscall.sysnum = AUDIT_setfsgid;
-
 	/**
 	 * Do as much setup work as possible right here
 	 */

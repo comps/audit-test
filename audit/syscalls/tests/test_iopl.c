@@ -68,11 +68,6 @@ int test_iopl(struct audit_data *context)
 
     int level;
 
-
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_iopl);
-    context->u.syscall.sysnum = AUDIT_iopl;
-
      /**
       * Do as much setup work as possible right here
       */

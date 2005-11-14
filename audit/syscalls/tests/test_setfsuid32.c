@@ -77,10 +77,6 @@ int test_setfsuid32(struct audit_data *context)
 
     //int failureRc;    //not needed?
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setfsuid);
-    context->u.syscall.sysnum = AUDIT_setfsuid;
-
   /**
    * Do as much setup work as possible right here
    */

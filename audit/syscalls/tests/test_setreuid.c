@@ -68,11 +68,6 @@ int test_setreuid(struct audit_data *context)
     int exp_errno = EPERM;
     int rgid, egid;
 
-
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setreuid);
-    context->u.syscall.sysnum = AUDIT_setreuid;
-
      /**
       * Do as much setup work as possible right here
       */

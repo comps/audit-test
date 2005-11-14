@@ -68,10 +68,6 @@ int test_chown(struct audit_data *context)
     int group;
 
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_chown);
-    context->u.syscall.sysnum = AUDIT_chown;
-
      /**
       * Do as much setup work as possible right here
       */

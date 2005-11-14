@@ -76,10 +76,6 @@ int test_msgsnd(struct audit_data *context)
 	char mtext[10];
     } buf_on_disk;
 
-
-    // Set the syscall-specific data
-    context->u.syscall.sysnum = AUDIT_msgsnd;
-
     mode = S_IRWXU;
     if ((msgid = msgget(IPC_PRIVATE, mode)) == -1) {
 	printf1("ERROR: Unable to allocate new message queue: errno=%i\n",

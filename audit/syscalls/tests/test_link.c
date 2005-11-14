@@ -67,10 +67,6 @@ int test_link(struct audit_data *context)
     char *destination = NULL;
     char *res = NULL;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_link);
-    context->u.syscall.sysnum = AUDIT_link;
-
     if ((rc = createTempFile(&source, S_IRWXU | S_IRWXG | S_IRWXO,
 			     context->euid, context->egid)) == -1) {
 	printf1("ERROR: Cannot create file %s\n", source);

@@ -66,10 +66,6 @@ int test_chdir(struct audit_data *context)
     int exp_errno = EACCES;
     char *path = NULL;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_chdir);
-    context->u.syscall.sysnum = AUDIT_chdir;
-
     // dynamically create test directory
     if ((rc = (createTempDir(&path, S_IRWXU,
 			     context->euid, context->egid)) == -1)) {

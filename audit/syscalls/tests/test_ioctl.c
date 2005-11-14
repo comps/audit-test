@@ -59,9 +59,6 @@ int test_ioctl(struct audit_data *context)
     int tcgeta = TCGETA;
     struct termio tio;
 
-    // Set the syscall specific data
-    context->u.syscall.sysnum = AUDIT_ioctl;
-
     if (context->success) {
 	// Create a file readable by test user if testing success case
 	if ((fd = open(dev, O_RDWR, 0777)) == -1) {

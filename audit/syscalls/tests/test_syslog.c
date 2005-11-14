@@ -60,10 +60,6 @@ int test_syslog(struct audit_data *context)
     int len = 512;
     int type = 3;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_syslog);
-    context->u.syscall.sysnum = AUDIT_syslog;
-
     // Do as much setup work as possible right here
 
     if (context->success) {	// Set up for success

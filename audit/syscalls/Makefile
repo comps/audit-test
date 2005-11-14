@@ -61,8 +61,7 @@ ALL_OBJS = $(SYSCALL_OBJS)
 
 SUB_DIRS = kmods tests utils ../utils
 
-#LIBS += -llaus
-LIBS +=
+LIBS += -laudit
 
 all: subdirs deps $(EXE)
 

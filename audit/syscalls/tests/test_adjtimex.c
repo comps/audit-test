@@ -112,10 +112,6 @@ int test_adjtimex(struct audit_data *context)
     memset((char *)&buf, '\0', sizeof(buf));
     memset((char *)&syscall_buf, '\0', sizeof(syscall_buf));
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_adjtimex);
-    context->u.syscall.sysnum = AUDIT_adjtimex;
-
 	/**
 	 * Do as much setup work as possible right here
 	 */

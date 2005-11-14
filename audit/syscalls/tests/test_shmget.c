@@ -77,9 +77,6 @@ int test_shmget(struct audit_data *context)
     int mode;
     static int pageSize;
 
-    // Set the syscall-specific data
-    context->u.syscall.sysnum = AUDIT_shmget;
-
     // Set the mode flags
     mode = S_IRWXU | S_IRWXG | S_IRWXO;
 

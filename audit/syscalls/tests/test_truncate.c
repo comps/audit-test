@@ -66,11 +66,6 @@ int test_truncate(struct audit_data *context)
     //size_t count = 80;     // not needed?
     char *fileName = NULL;
 
-
-    // Set the syscall specific data
-    context->u.syscall.sysnum = AUDIT_truncate;
-    // BUGBUG: Need to understand how to set up syscall parameters
-
     // dynamically create temp file name
     if ((rc = createTempFile(&fileName, S_IRWXU,
 			     context->euid, context->egid)) == -1) {

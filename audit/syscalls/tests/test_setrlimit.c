@@ -84,10 +84,6 @@ int test_setrlimit(struct audit_data *context)
     struct rlimit_on_disk rlim;
     struct rlimit syscall_rlim;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setrlimit);
-    context->u.syscall.sysnum = AUDIT_setrlimit;
-
 	/**
 	 * Do as much setup work as possible right here
 	 */

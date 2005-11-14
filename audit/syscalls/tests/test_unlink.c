@@ -56,11 +56,6 @@ int test_unlink(struct audit_data *context)
     char *fileName = NULL;
     int remove_me = 0;
 
-
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_unlink);
-    context->u.syscall.sysnum = AUDIT_unlink;
-
      /**
       * Do as much setup work as possible right here
       */

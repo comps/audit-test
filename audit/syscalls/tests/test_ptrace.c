@@ -82,10 +82,6 @@ int test_ptrace(struct audit_data *context)
 
     int placeHolder;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_ptrace);
-    context->u.syscall.sysnum = AUDIT_ptrace;
-
   /**
    * Do as much setup work as possible right here
    */

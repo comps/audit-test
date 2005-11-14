@@ -77,10 +77,6 @@ int test_msgctl(struct audit_data *context)
 #endif
     struct msqid_ds buf;
 
-
-    // Set the syscall-specific data
-    context->u.syscall.sysnum = AUDIT_msgctl;
-
     memset(&buf, 0, sizeof(buf));
 
     // Allocate shared memory space so that we can test deallocation via msgctl

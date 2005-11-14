@@ -67,10 +67,6 @@ int test_reboot(struct audit_data *context)
     int magic2 = LINUX_REBOOT_MAGIC2;
     void *arg = NULL;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_reboot);
-    context->u.syscall.sysnum = AUDIT_reboot;
-
   /**
    * Do as much setup work as possible right here
    */

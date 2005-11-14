@@ -72,12 +72,6 @@ int test_creat(struct audit_data *context)
     char *fileName = NULL;
     //char* fileName2 = NULL;
 
-
-    // Set the syscall specific data
-    // The creat() system call is actually an open() system call with the
-    //  O_CREAT flag set
-    context->u.syscall.sysnum = AUDIT_open;
-
     // create file to choose a filename
     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
 			     context->euid, context->egid)) == -1) {

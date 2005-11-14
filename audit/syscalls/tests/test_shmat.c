@@ -73,11 +73,6 @@ int test_shmat(struct audit_data *context)
     void *shmptr = NULL;
     int mode;
 
-
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_shmat);
-    context->u.syscall.sysnum = AUDIT_shmat;
-
   /**
    * Do as much setup work as possible right here
    */

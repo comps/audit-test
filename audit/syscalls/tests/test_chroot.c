@@ -83,10 +83,6 @@ int test_chroot(struct audit_data *context)
     char *path = NULL;
     char *tempPath = "/tmp";
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_chroot);
-    context->u.syscall.sysnum = AUDIT_chroot;
-
     // Do as much setup work as possible right here
 
     // Initialize IPC

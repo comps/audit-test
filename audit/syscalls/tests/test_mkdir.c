@@ -61,11 +61,6 @@ int test_mkdir(struct audit_data *context)
     char *path = NULL;
     int mode;
 
-
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_mkdir);
-    context->u.syscall.sysnum = AUDIT_mkdir;
-
      /**
       * Do as much setup work as possible right here
       */

@@ -57,6 +57,7 @@
 
 #include "logoptions.h"
 
+#include <libaudit.h>
 #include <pwd.h>
 
 struct syscall_opts {
@@ -93,6 +94,7 @@ int main(int argc, char **argv)
     int test_rc;			// testcase return code
     struct test_counters count = { 0, 0, 0 }; // aggregate results
     char *command = NULL;		// command string
+    int sysnum;				// syscall number
 
     char *helper;
     char *helper_homedir;
@@ -214,6 +216,15 @@ int main(int argc, char **argv)
 		context.fsgid = test_user_pw->pw_gid;
 		context.success = success;
 		context.u.syscall.arch = TS_BUILD_ARCH;
+		sysnum = audit_name_to_syscall(syscallTests[i].testName,
+					       audit_detect_machine());
+		if (sysnum == -1) {
+		    printf1(
+			"ERROR: Could not translate syscall number for: %s\n", 
+			    syscallTests[i].testName);
+		    goto EXIT_CLEANUP;
+		}
+		context.u.syscall.sysnum = sysnum;
 
 		/*
 		 * Perform test

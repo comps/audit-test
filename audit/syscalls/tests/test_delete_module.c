@@ -43,10 +43,6 @@ int test_delete_module(struct audit_data *context)
     struct stat mstat;
     void *region = MAP_FAILED;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_delete_module);
-    context->u.syscall.sysnum = AUDIT_delete_module;
-
     if (context->success) {
 	context->euid = 0;
 	context->egid = 0;

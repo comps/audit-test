@@ -65,10 +65,6 @@ int test_lremovexattr(struct audit_data *context)
     char *path = NULL;
     char *name = "user.mime_type";
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_lremovexattr);
-    context->u.syscall.sysnum = AUDIT_lremovexattr;
-
 	/**
 	 * Do as much setup work as possible right here
 	 */

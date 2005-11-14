@@ -63,11 +63,6 @@ int test_mknod(struct audit_data *context)
     dev_t dev = 0;
     char *fileName = NULL;
 
-
-
-    // Set the syscall specific data
-    context->u.syscall.sysnum = AUDIT_mknod;
-
     if (context->success) {
 	// dynamically create temp file, and delete it real quick
 	if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,

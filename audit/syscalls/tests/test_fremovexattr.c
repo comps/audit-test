@@ -70,10 +70,6 @@ int test_fremovexattr(struct audit_data *context)
     int filedes;
     char *name = "user.mime_type";
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_fremovexattr);
-    context->u.syscall.sysnum = AUDIT_fremovexattr;
-
     //Do as much setup work as possible right here
     size = sizeof(XATTR_TEST_VALUE);
     if ((rc = createTempFile(&path, (S_IRWXU | S_IRWXG | S_IRWXO),

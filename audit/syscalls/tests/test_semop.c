@@ -79,9 +79,6 @@ int test_semop(struct audit_data *context)
     struct sembuf s;
     unsigned int nsops = 1;
 
-    // Set the syscall-specific data
-    context->u.syscall.sysnum = AUDIT_semop;
-
     // Set the key value.
     // If successCase == 0, then we will be creating a semaphore set
     // under the permissions of root, which the test user will not have

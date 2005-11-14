@@ -72,10 +72,6 @@ int test_capset(struct audit_data *context)
     cap_user_data_t data =
 	(cap_user_data_t) malloc(sizeof(struct __user_cap_data_struct));
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_capset);
-    context->u.syscall.sysnum = AUDIT_capset;
-
      /**
       * Do as much setup work as possible right here
       */

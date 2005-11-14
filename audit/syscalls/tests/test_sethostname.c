@@ -63,10 +63,6 @@ int test_sethostname(struct audit_data *context)
     char name[HOST_NAME_MAX];
     size_t len = HOST_NAME_MAX;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_sethostname);
-    context->u.syscall.sysnum = AUDIT_sethostname;
-
     //Do as much setup work as possible right here
     // Get the current hostname
     if (gethostname(name, len) == -1) {

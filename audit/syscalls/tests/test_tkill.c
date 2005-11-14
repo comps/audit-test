@@ -61,10 +61,6 @@ int test_tkill(struct audit_data *context)
     int pid = 0;
     int sig = -1;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_tkill);
-    context->u.syscall.sysnum = AUDIT_tkill;
-
   /**
    * Do as much setup work as possible right here
    */

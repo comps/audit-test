@@ -67,11 +67,6 @@ int test_lchown16(struct audit_data *context)
     int owner;
     int group;
 
-
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_lchown);
-    context->u.syscall.sysnum = AUDIT_lchown;
-
 	/**
 	 * Do as much setup work as possible right here
 	 */

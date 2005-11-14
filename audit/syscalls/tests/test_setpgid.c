@@ -59,10 +59,6 @@ int test_setpgid(struct audit_data *context)
     int pid;
     int pgid;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setpgid);
-    context->u.syscall.sysnum = AUDIT_setpgid;
-
   /**
    * Do as much setup work as possible right here
    */

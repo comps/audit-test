@@ -88,10 +88,6 @@ int test_execve(struct audit_data *context)
 
     int semid = -1;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_execve);
-    context->u.syscall.sysnum = AUDIT_execve;
-
    /**
     * Do as much setup work as possible right here
     */

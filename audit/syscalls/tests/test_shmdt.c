@@ -74,10 +74,6 @@ int test_shmdt(struct audit_data *context)
     int dtrc = 0;
     int mode;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_shmdt);
-    context->u.syscall.sysnum = AUDIT_shmdt;
-
      /**
       * Do as much setup work as possible right here
       */

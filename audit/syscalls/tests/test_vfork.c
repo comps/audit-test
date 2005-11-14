@@ -66,10 +66,6 @@ int test_vfork(struct audit_data *context)
     pid_t firstPid;
     int flags = CLONE_CHILD_CLEARTID | CLONE_CHILD_SETTID | 0x11;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_clone);
-    context->u.syscall.sysnum = AUDIT_clone;
-
     // Do as much setup work as possible right here
 
     if (context->success) {

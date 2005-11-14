@@ -58,10 +58,6 @@ int test_umask(struct audit_data *context)
 	rc = SKIP_TEST_CASE;
 	goto EXIT;
     }
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_umask);
-    context->u.syscall.sysnum = AUDIT_umask;
-
 
     //Do as much setup work as possible right here
     mask = 000;

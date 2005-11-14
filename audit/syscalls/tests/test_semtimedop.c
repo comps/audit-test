@@ -86,9 +86,6 @@ int test_semtimedop(struct audit_data *context)
     unsigned int nsops = 1;
     struct timespec timeout;
 
-    // Set the syscall-specific data
-    context->u.syscall.sysnum = AUDIT_semtimedop;
-
     // Set the key value.
     // If successCase == 0, then we will be creating a semaphore set
     // under the permissions of root, which the test user will not have

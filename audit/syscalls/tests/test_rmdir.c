@@ -60,11 +60,6 @@ int test_rmdir(struct audit_data *context)
 
     char *path = NULL;
 
-
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_rmdir);
-    context->u.syscall.sysnum = AUDIT_rmdir;
-
     // dynamically create test directory
     if ((rc = (createTempDir(&path, S_IRWXU,
 			     context->euid, context->egid)) == -1)) {

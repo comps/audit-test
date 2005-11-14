@@ -60,10 +60,6 @@ int test_chmod(struct audit_data *context)
     char *fileName = NULL;
     int mode = S_IRUSR;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_chmod);
-    context->u.syscall.sysnum = AUDIT_chmod;
-
      /**
       * Do as much setup work as possible right here
       */

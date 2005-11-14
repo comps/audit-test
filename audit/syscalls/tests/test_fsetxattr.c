@@ -72,10 +72,6 @@ int test_fsetxattr(struct audit_data *context)
     size_t size;
     int flags;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_fsetxattr);
-    context->u.syscall.sysnum = AUDIT_fsetxattr;
-
 	/**
 	 * Do as much setup work as possible right here
 	 */

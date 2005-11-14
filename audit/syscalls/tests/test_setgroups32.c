@@ -69,10 +69,6 @@ int test_setgroups32(struct audit_data *context)
     size_t size = 1;
     gid_t list[1] = { 0 };
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setgroups);
-    context->u.syscall.sysnum = AUDIT_setgroups;
-
      /**
       * Do as much setup work as possible right here
       */

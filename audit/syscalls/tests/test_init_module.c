@@ -43,10 +43,6 @@ int test_init_module(struct audit_data *context)
     void *region = MAP_FAILED;
     char dummy[] = { 0 };
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_init_module);
-    context->u.syscall.sysnum = AUDIT_init_module;
-
     if (context->success) {
 	context->euid = 0;
 	context->egid = 0;

@@ -66,10 +66,6 @@ int test_lsetxattr(struct audit_data *context)
     size_t size;
     int flags;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_lsetxattr);
-    context->u.syscall.sysnum = AUDIT_lsetxattr;
-
 	/**
 	 * Do as much setup work as possible right here
 	 */

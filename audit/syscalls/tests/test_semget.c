@@ -78,9 +78,6 @@ int test_semget(struct audit_data *context)
     int mode;
     int nsems = 1;
 
-    // Set the syscall-specific data
-    context->u.syscall.sysnum = AUDIT_semget;
-
     // Set the mode flags
     mode = S_IRWXU | S_IRWXG | S_IRWXO;
 

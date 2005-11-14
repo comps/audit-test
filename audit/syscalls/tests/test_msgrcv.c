@@ -89,11 +89,6 @@ int test_msgrcv(struct audit_data *context)
     struct ipc_kludge kludge;
 #endif
 
-
-
-    // Set the syscall-specific data
-    context->u.syscall.sysnum = AUDIT_msgrcv;
-
     mode = S_IRWXU;
     //msgsz = 1;
     msgsz = 3;

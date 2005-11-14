@@ -76,9 +76,6 @@ int test_msgget(struct audit_data *context)
     //int doNotDeallocate = 0;   // not needed?
     int mode;
 
-    // Set the syscall-specific data
-    context->u.syscall.sysnum = AUDIT_msgget;
-
     // Set the mode flags
     mode = S_IRWXU | S_IRWXG | S_IRWXO;
 

@@ -65,10 +65,6 @@ int test_umount2(struct audit_data *context)
 
     printf4("Performing test_umount2\n");
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_umount);
-    context->u.syscall.sysnum = AUDIT_umount;
-
     // dynamically create test directory
     if (rc = (createTempDir(&target, S_IRWXU | S_IRWXG | S_IRWXO,
 			    context->euid, context->egid)) == -1) {

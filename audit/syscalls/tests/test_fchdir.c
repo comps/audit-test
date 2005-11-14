@@ -79,10 +79,6 @@ int test_fchdir(struct audit_data *context)
     int fd;
     DIR *dir = NULL;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_fchdir);
-    context->u.syscall.sysnum = AUDIT_fchdir;
-
     if (context->success) {
 	// dynamically create test directory
 	if ((rc = (createTempDir(&path, S_IRWXU | S_IRWXG | S_IRWXO,

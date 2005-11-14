@@ -75,10 +75,6 @@ int test_setsid(struct audit_data *context)
     errnoAndReturnValue_t *earv;
     int savedErrno;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setsid);
-    context->u.syscall.sysnum = AUDIT_setsid;
-
   /**
    * Do as much setup work as possible right here
    */

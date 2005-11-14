@@ -84,10 +84,6 @@ int test_utime(struct audit_data *context)
     struct timespec_on_disk mod_time, acc_time;
     struct utimbuf utbuf;
 
-
-    // Set the syscall specific data
-    context->u.syscall.sysnum = AUDIT_utimes;
-
     // Create the file 
     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
 			     context->euid, context->egid)) == -1) {

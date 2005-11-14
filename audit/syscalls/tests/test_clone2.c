@@ -67,12 +67,6 @@ int test_clone2(struct audit_data *context)
     int flags = CLONE_VFORK;
     pid_t pid;
 
-    // Set the syscall-specific data
-    // BUGBUG: /usr/include/linux/audit.h should be patched to
-    // include AUDIT_clone2
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_clone);
-    context->u.syscall.sysnum = AUDIT_clone;
-
     // Do as much setup work as possible right here
     if (context->success) {	// Set up for success
 

@@ -69,11 +69,6 @@ int test_swapon(struct audit_data *context)
 
     char *cmd;
 
-
-    // Set the syscall specific data
-    context->u.syscall.sysnum = AUDIT_swapon;
-    // BUGBUG: Need to understand how to set up syscall parameters
-
     // dynamically create temp file name
     if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
 			     context->euid, context->egid)) == -1) {

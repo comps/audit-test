@@ -59,10 +59,6 @@ int test_fork(struct audit_data *context)
     int exp_errno = 0;
     int flags = CLONE_CHILD_CLEARTID | CLONE_CHILD_SETTID | 0x11;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_clone);
-    context->u.syscall.sysnum = AUDIT_clone;
-
   /**
    * Do as much setup work as possible right here
    */

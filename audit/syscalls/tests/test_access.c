@@ -66,10 +66,6 @@ int test_access(struct audit_data *context)
     char *fileName = NULL;
     int mode;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_access);
-    context->u.syscall.sysnum = AUDIT_access;
-
      /**
       * Do as much setup work as possible right here
       */

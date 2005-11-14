@@ -63,10 +63,6 @@ int test_setpriority(struct audit_data *context)
     int who;
     int prio;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setpriority);
-    context->u.syscall.sysnum = AUDIT_setpriority;
-
      /**
       * Do as much setup work as possible right here
       */

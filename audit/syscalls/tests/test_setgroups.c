@@ -70,10 +70,6 @@ int test_setgroups(struct audit_data *context)
     //on 32 bit platforms the gid in the kernel is 16 bits (i.e. logged as such)
     //u_int16_t log_list[1] = { 0 };           //not needed?
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setgroups);
-    context->u.syscall.sysnum = AUDIT_setgroups;
-
      /**
       * Do as much setup work as possible right here
       */

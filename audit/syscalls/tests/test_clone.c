@@ -72,10 +72,6 @@ int test_clone(struct audit_data *context)
     pid_t pid;
     char *stack = NULL;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_clone);
-    context->u.syscall.sysnum = AUDIT_clone;
-
     // Do as much setup work as possible right here
     if (context->success) {	// Set up for success
 

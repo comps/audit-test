@@ -76,10 +76,6 @@ int test_settimeofday(struct audit_data *context)
     struct timeval_on_disk *tv_on_disk = NULL;
     struct timezone *tz = NULL;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_settimeofday);
-    context->u.syscall.sysnum = AUDIT_settimeofday;
-
     // Do as much setup work as possible right here
     if (context->success) {	// Set up for success
 	context->euid = 0;

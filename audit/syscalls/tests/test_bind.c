@@ -80,10 +80,6 @@ int test_bind(struct audit_data *context)
     int portNum = -1;
     char SocketPath[19];
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_bind);
-    context->u.syscall.sysnum = AUDIT_bind;
-
      /**
       * Do as much setup work as possible right here
       */

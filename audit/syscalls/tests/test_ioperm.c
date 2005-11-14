@@ -65,10 +65,6 @@ int test_ioperm(struct audit_data *context)
     unsigned long num;
     int turn_on;
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_ioperm);
-    context->u.syscall.sysnum = AUDIT_ioperm;
-
    /**
     * Do as much setup work as possible right here
     */

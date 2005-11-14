@@ -75,10 +75,6 @@ int test_setgroups16(struct audit_data *context)
     //   list[], and it is passed to the verification function.  This is ugly, but the workaround
     //   is needed due to audit's rigid variable sizes.
 
-    // Set the syscall-specific data
-    printf5("Setting u.syscall.sysnum to %d\n", AUDIT_setgroups);
-    context->u.syscall.sysnum = AUDIT_setgroups;
-
      /**
       * Do as much setup work as possible right here
       */

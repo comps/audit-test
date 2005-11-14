@@ -75,9 +75,6 @@ int test_semctl(struct audit_data *context)
 #endif
     char *buf = NULL;
 
-    // Set the syscall-specific data
-    context->u.syscall.sysnum = AUDIT_semctl;
-
     // Allocate shared memory space so that we can test deallocation via
     // semctl
     mode = S_IRWXU;

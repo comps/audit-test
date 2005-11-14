@@ -49,18 +49,11 @@ int getLAUSData(struct audit_data *context)
     uid_t euid, suid;	// fsuid;   not needed?
     gid_t egid, sgid;	// fsgid;   not needed?
 
-    printf5("getLAUSData\n");
-
     /*
      ** Get PID
      */
     if ((context->pid != NO_PID_CHECK) && (context->pid != NO_FORK))
 	context->pid = getpid();
-
-    /*
-     ** Get login uid from global data
-     */
-    context->loginuid = login_uid;
 
     /*
      ** Get uids/gids

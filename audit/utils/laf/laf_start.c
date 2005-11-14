@@ -27,7 +27,8 @@ int audit_start()
 
     rc = system("/etc/init.d/auditd start");
     if (rc == -1) {
-	printf1("ERROR: Unable to start auditd: %s\n", strerror(errno));
+	fprintf(stderr, "Error: unable to start auditd: %s\n", 
+		strerror(errno));
     } else {
 	sleep(2);
     }

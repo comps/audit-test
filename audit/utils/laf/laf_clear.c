@@ -67,7 +67,8 @@ exit_error:
 	free(log_name);
     }
     if (rc < 0) {
-	printf1("ERROR: Unable to clear audit logs: %s\n", strerror(errno));
+	fprintf(stderr, "Error: unable to clear audit logs: %s\n", 
+		strerror(errno));
     }
 
     return rc;

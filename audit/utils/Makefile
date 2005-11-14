@@ -58,7 +58,8 @@ UTILS_OBJS	= create_temp_file.o		\
 		  mysprintf.o			\
 		  file_utils.o			\
 		  run.o				\
-		  get_pid.o
+		  get_pid.o			\
+		  verify.o
 
 LAF_OBJS	= laf/laf_clear.o		\
 		  laf/laf_config.o		\

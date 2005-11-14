@@ -24,14 +24,15 @@ int audit_reload()
 {
     int rc = 0;
 
-    /*
-       rc = system("/etc/init.d/auditd reload");
-       if (rc == -1) {
-       printf1("ERROR: Unable to reload auditd config: %s\n", strerror(errno));
-       } else {
-       sleep(2);
-       }
-     */
+#if 0
+    rc = system("/etc/init.d/auditd reload");
+    if (rc == -1) {
+        fprintf(stderr, "Error: unable to reload auditd config: %s\n", 
+                strerror(errno));
+    } else {
+        sleep(2);
+    }
+#endif
 
     return rc;
 }

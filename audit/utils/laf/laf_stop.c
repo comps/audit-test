@@ -27,7 +27,7 @@ int audit_stop()
 
     rc = system("/etc/init.d/auditd stop");
     if (rc == -1) {
-	printf1("ERROR: Unable to stop auditd: %s\n", strerror(errno));
+	fprintf(stderr, "Error: unable to stop auditd: %s\n", strerror(errno));
     }
 
     return rc;

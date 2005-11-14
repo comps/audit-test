@@ -45,12 +45,13 @@ int getLoginUID()
 	mysprintf("who -m | awk -F\" \" '{print $1}' | xargs id -u > %s",
 		  luid_filename);
     if ((rc = system(command)) == -1) {
-	printf1("ERROR: %s\n", command);
+	fprintf(stderr, "Error: %s\n", command);
 	goto EXIT;
     }
     // Get the pts used
     if ((fPtr = fopen(luid_filename, "r")) == NULL) {
-	printf1("Error opening file [%s] for read access\n", luid_filename);
+	fprintf(stderr, "Error: unable to open file [%s] for read access\n", 
+		luid_filename);
 	goto EXIT;
     }
     fscanf(fPtr, "%d", &rc);

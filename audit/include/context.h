@@ -22,6 +22,7 @@
 #define _CONTEXT_H
 
 #include <linux/audit.h>
+#include <limits.h>             /* for PATH_MAX */
 
 /*
  * Context Flags
@@ -84,8 +85,9 @@ struct audit_syscall {
     char          *sysname;
     int           sysnum;
     int           arch;
-    unsigned long pers;
     int           exit;
+    unsigned long pers;
+    char          cwd[PATH_MAX];
     unsigned int  arglen;
     char          *args;
 };

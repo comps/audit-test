@@ -77,7 +77,7 @@ int backupFile(char *fname)
 	goto EXIT;
     }
 
-    printf5("Copy file %s to %s\n", fname, backup_fname);
+    fprintf(stderr, "Copy file %s to %s\n", fname, backup_fname);
 
 EXIT:
 
@@ -119,7 +119,7 @@ int restoreFile(char *fname)
     // Just rename backup to original name
     rc = rename(backup_fname, fname);
 
-    printf5("Restored file %s from %s\n", fname, backup_fname);
+    fprintf(stderr, "Restored file %s from %s\n", fname, backup_fname);
 
 EXIT:
 

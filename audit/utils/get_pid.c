@@ -36,15 +36,13 @@ int getPid(char *executable)
     snprintf(pidFilename, 255, "/var/run/%s.pid", executable);
 
     if ((fPtr = fopen(pidFilename, "r")) == NULL) {
-	printf1
-	    ("Cannot open %s to get the process ID of the currently running instance of %s\n",
+	fprintf(stderr, "Error: cannot open %s to get the process ID of the currently running instance of %s\n",
 	     pidFilename, executable);
 	return -1;
     }
 
     if (fgets(buf, 10, fPtr) == NULL) {
-	printf1
-	    ("Cannot read %s to get the process ID of the currently running instance of %s\n",
+	fprintf(stderr, "Error: cannot read %s to get the process ID of the currently running instance of %s\n",
 	     pidFilename, executable);
 	return -1;
     }

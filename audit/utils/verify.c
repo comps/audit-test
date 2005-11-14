@@ -1,6 +1,5 @@
 /* =======================================================================
  * Copyright (C) 2005 Hewlett-Packard Company
- * Written by Amy Griffis <amy.griffis@hp.com>
  * 
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -20,17 +19,41 @@
 
 #include "includes.h"
 
-int audit_set_filters()
+/*
+ * Verify test result is as expected.
+ */
+ts_exit verify_result(struct audit_data *context, int success)
 {
-    int rc = 0;
+    ts_exit rc = TEST_EXPECTED;
+    struct audit_data logdata;
 
-#if 0
-    rc = system("/sbin/auditctl -R /tmp/rules_suite.txt > /dev/null");
-    if (rc == -1) {
-        fprintf(stderr, "Error: unable to load audit filters: %s\n", 
-                strerror(errno));
+    if ((success && !context->success) || (!success && context->success)) {
+	rc = TEST_UNEXPECTED;
+	fprintf(stderr, "Warning: test return code unexpected\n");
+	goto exit;
     }
-#endif
 
+    rc = audit_parse_log(context, &logdata);
+    if (rc) {
+	rc = TEST_ERROR;
+	fprintf(stderr, "Error: parsing audit log\n");
+	goto exit;
+    }
+
+    if (!context_match(context, &logdata)) {
+	rc = TEST_UNEXPECTED;
+	fprintf(stderr, "Warning: could not find matching audit record\n");
+    }
+
+exit:
     return rc;
+}
+
+/*
+ * Compare two audit_context structs containing the system context and
+ * the corresponding data from the log.
+ */
+int context_match(struct audit_data *context, struct audit_data *logdata)
+{
+    return 0;
 }

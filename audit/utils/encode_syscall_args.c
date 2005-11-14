@@ -177,8 +177,7 @@ int auditArg1(struct audit_data *context,
     if ((dataPtr == NULL)
 	&& ((auditArgType != AUDIT_ARG_NULL)
 	    && (auditArgType != AUDIT_ARG_VECTOR))) {
-	printf1
-	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
+	fprintf(stderr, "Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
 	return 1;
     }
     context->u.syscall.args = NULL;
@@ -203,8 +202,7 @@ int auditArg2(struct audit_data *context,
 							   && (auditArgType2 !=
 							       AUDIT_ARG_VECTOR))))
     {
-	printf1
-	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
+	fprintf(stderr, "Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
 	return 1;
     }
     context->u.syscall.args = NULL;
@@ -233,8 +231,7 @@ int auditArg3(struct audit_data *context,
 	|| ((dataPtr3 == NULL)
 	    && ((auditArgType3 != AUDIT_ARG_NULL)
 		&& (auditArgType3 != AUDIT_ARG_VECTOR)))) {
-	printf1
-	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
+	fprintf(stderr, "Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
 	return 1;
     }
     context->u.syscall.args = NULL;
@@ -272,8 +269,7 @@ int auditArg4(struct audit_data *context,
 								  !=
 								  AUDIT_ARG_VECTOR))))
     {
-	printf1
-	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
+	fprintf(stderr, "Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
 	return 1;
     }
     context->u.syscall.args = NULL;
@@ -315,8 +311,7 @@ int auditArg5(struct audit_data *context,
 	|| ((dataPtr5 == NULL)
 	    && ((auditArgType5 != AUDIT_ARG_NULL)
 		&& (auditArgType5 != AUDIT_ARG_VECTOR)))) {
-	printf1
-	    ("Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
+	fprintf(stderr, "Attempt to add NULL pointer to audit args buffer, but auditArgType != AUDIT_ARG_NULL\n");
 	return 1;
     }
     context->u.syscall.args = NULL;

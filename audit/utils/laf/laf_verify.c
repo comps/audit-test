@@ -46,8 +46,12 @@ static int match_type(struct audit_data *, parse_info_t *, char *, char *);
 static int match_syscall_record(struct audit_data *, parse_info_t *, char *, 
 				char *);
 
+int audit_parse_log(struct audit_data *context, struct audit_data *logdata)
+{
+    return -1;
+}
 
-int audit_verify_log(struct audit_data *context, log_options logOption)
+int audit_verify_log(struct audit_data *context)
 {
 
     int rc = 0;
@@ -58,20 +62,21 @@ int audit_verify_log(struct audit_data *context, log_options logOption)
     parse_info_t vinfo;		// info for parsing a record variety
 
     if ((fp = fopen("/var/log/audit/audit.log", "r")) == NULL) {
-	printf1("ERROR: Unable to open audit log: %s\n", strerror(errno));
+	fprintf(stderr, "Error: unable to open audit log: %s\n", 
+		strerror(errno));
 	rc = -1;
 	goto exit_verify_log;
     }
 
     if ((buf = (char *)malloc(AUDIT_RECORD_MAX)) == NULL) {
-	printf1("ERROR: malloc: %s\n", strerror(errno));
+	fprintf(stderr, "Error: malloc: %s\n", strerror(errno));
 	rc = -1;
 	goto exit_verify_log;
     }
 
     if ((init_parse_info(0, &tinfo) < 0) ||
 	(init_parse_info(context->type, &vinfo) < 0)) {
-	printf1("ERROR: Unable to initialize regex info.\n");
+	fprintf(stderr, "Error: unable to initialize regex info.\n");
 	rc = -1;
 	goto exit_verify_log;
     }
@@ -85,7 +90,7 @@ int audit_verify_log(struct audit_data *context, log_options logOption)
 
 	/* match rest of record */
 	if ((vinfo.handler)(context, &vinfo, buf, NULL)) {
-	    printf9("matched record: %s\n", buf);
+	    fprintf(stderr, "matched record: %s\n", buf);
 	    records_found++;
 	}
     }
@@ -95,7 +100,7 @@ int audit_verify_log(struct audit_data *context, log_options logOption)
     free_parse_info(&tinfo);
     free_parse_info(&vinfo);
 
-    printf5("records found: %d\n", records_found);
+    fprintf(stderr, "records found: %d\n", records_found);
     rc = records_found;
 
 exit_verify_log:
@@ -148,7 +153,7 @@ static int init_parse_info(u_int16_t type, parse_info_t *info)
 	    info->handler = &match_syscall_record;
 	    break;
 	default:
-	    printf1("ERROR: Urecognized record type %d\n", type);
+	    fprintf(stderr, "Error: urecognized record type %d\n", type);
 	    info->type = NULL;
 	    info->regex = NULL;
 	    info->handler = NULL;
@@ -157,14 +162,14 @@ static int init_parse_info(u_int16_t type, parse_info_t *info)
     }
 
     if (regcomp(&(info->pbuf), info->regex, REG_EXTENDED) != 0) {
-	printf1("ERROR: Unable to compile regex %s\n", info->regex);
+	fprintf(stderr, "Error: unable to compile regex %s\n", info->regex);
 	rc = -1;
 	goto exit_init_parse_info;
     }
 
     info->nmatch = info->pbuf.re_nsub + 1;	// account for match of entire expression
     if ((info->pmatch = malloc(sizeof(regmatch_t) * info->nmatch)) == NULL) {
-	printf1("ERROR: malloc: %s\n", strerror(errno));
+	fprintf(stderr, "Error: malloc: %s\n", strerror(errno));
 	rc = -1;
     }
 
@@ -195,7 +200,7 @@ static int match_type(struct audit_data *context, parse_info_t *info, char *buf,
 
     if (regexec(&(info->pbuf), buf, info->nmatch, info->pmatch, 0) ==
 	REG_NOMATCH) {
-	printf2("WARNING: Urecognized record type: %s\n", buf);
+	fprintf(stderr, "Warning: urecognized record type: %s\n", buf);
 	rc = -1;
 	goto exit_match_type;
     }
@@ -203,7 +208,7 @@ static int match_type(struct audit_data *context, parse_info_t *info, char *buf,
     typelen = info->pmatch[info->nmatch - 1].rm_eo -
 	info->pmatch[info->nmatch - 1].rm_so;
     if ((type = malloc(typelen)) == NULL) {
-	printf1("ERROR: malloc: %s\n", strerror(errno));
+	fprintf(stderr, "Error: malloc: %s\n", strerror(errno));
 	rc = -1;
 	goto exit_match_type;
     }
@@ -233,7 +238,8 @@ static int match_syscall_record(struct audit_data *context, parse_info_t *info,
 
     if (regexec(&(info->pbuf), buf, info->nmatch, info->pmatch, 0) ==
 	REG_NOMATCH) {
-	printf2("WARNING: Urecognized SYSCALL record format: %s\n", buf);
+	fprintf(stderr, "Warning: urecognized SYSCALL record format: %s\n", 
+		buf);
 	rc = -1;
 	goto exit_match_syscall_record;
     }
@@ -244,7 +250,7 @@ static int match_syscall_record(struct audit_data *context, parse_info_t *info,
 	/* copy key,value into temporary buffers */
 	keylen = info->pmatch[i].rm_eo - info->pmatch[i].rm_so;
 	if ((key = malloc(keylen)) == NULL) {
-	    printf1("ERROR: malloc: %s\n", strerror(errno));
+	    fprintf(stderr, "Error: malloc: %s\n", strerror(errno));
 	    rc = -1;
 	    goto exit_match_syscall_record;
 	}
@@ -254,7 +260,7 @@ static int match_syscall_record(struct audit_data *context, parse_info_t *info,
 
 	valuelen = info->pmatch[i + 1].rm_eo - info->pmatch[i + 1].rm_so;
 	if ((value = malloc(valuelen)) == NULL) {
-	    printf1("ERROR: malloc: %s\n", strerror(errno));
+	    fprintf(stderr, "Error: malloc: %s\n", strerror(errno));
 	    rc = -1;
 	    goto exit_match_syscall_record;
 	}

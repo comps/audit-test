@@ -57,20 +57,23 @@ int createTempFileName(char **fname)
     *fname = (char *)malloc(strlen(tempname) + 1);
     strcpy(*fname, tempname);
 
-    printf5("createTempFileName: %s\n", *fname);
+    fprintf(stderr, "createTempFileName: %s\n", *fname);
 
     if ((fd = mkstemp(*fname)) == -1) {
-	printf1("ERROR: Unable to create %s: errno=%i\n", *fname, errno);
+	fprintf(stderr, "Error: unable to create %s: errno=%i\n", 
+		*fname, errno);
 	rc = fd;
 	goto EXIT;
     }
-    printf5("temp file name: %s\n", *fname);
+    fprintf(stderr, "temp file name: %s\n", *fname);
     if ((rc = close(fd)) == -1) {
-	printf1("ERROR: Unable to close file %s: errno=%i\n", *fname, errno);
+	fprintf(stderr, "Error: unable to close file %s: errno=%i\n",
+		*fname, errno);
 	goto EXIT;
     }
     if ((rc = unlink(*fname)) == -1) {
-	printf1("ERROR: Unable to remove file %s: errno=%i\n", *fname, errno);
+	fprintf(stderr, "Error: unable to remove file %s: errno=%i\n",
+		*fname, errno);
 	goto EXIT;
     }
 

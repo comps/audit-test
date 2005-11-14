@@ -48,29 +48,33 @@ int createTempFile(char **fname, mode_t mode, uid_t uid, gid_t gid)
     *fname = (char *)malloc(strlen(tempname) + 1);
     strcpy(*fname, tempname);
 
-    printf5("createTempFile: %s\n", *fname);
+    fprintf(stderr, "createTempFile: %s\n", *fname);
 
     if ((fd = mkstemp(*fname)) == -1) {
-	printf1("ERROR: Unable to create %s: errno=%i\n", *fname, errno);
+	fprintf(stderr, "Error: Unable to create %s: errno=%i\n", 
+		*fname, errno);
 	rc = fd;
 	goto EXIT;
     }
-    printf5("temp file name: %s\n", *fname);
+    fprintf(stderr, "temp file name: %s\n", *fname);
     if ((rc = write(fd, writedata, strlen(writedata))) == -1) {
-	printf1("ERROR: Unable to write data to file %s: errno=%i\n", *fname,
-		errno);
+	fprintf(stderr, "Error: Unable to write data to file %s: errno=%i\n", 
+		*fname, errno);
 	goto EXIT;
     }
     if ((rc = close(fd)) == -1) {
-	printf1("ERROR: Unable to close file %s: errno=%i\n", *fname, errno);
+	fprintf(stderr, "Error: Unable to close file %s: errno=%i\n",
+		*fname, errno);
 	goto EXIT;
     }
     if ((rc = chmod(*fname, mode)) == -1) {
-	printf1("ERROR: Unable to chmod file %s: errno=%i\n", *fname, errno);
+	fprintf(stderr, "Error: Unable to chmod file %s: errno=%i\n",
+		*fname, errno);
 	goto EXIT;
     }
     if ((rc = chown(*fname, uid, gid)) == -1) {
-	printf1("ERROR: Unable to chown file %s: errno=%i\n", *fname, errno);
+	fprintf(stderr, "Error: Unable to chown file %s: errno=%i\n",
+		*fname, errno);
 	goto EXIT;
     }
 

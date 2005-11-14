@@ -21,24 +21,13 @@
 #ifndef _TESTSUITE_H
 #define _TESTSUITE_H
 
+/* Testsuite exit codes */
+typedef enum {
+    TEST_EXPECTED = 0,  /* test completed as expected */
+    TEST_UNEXPECTED,    /* test completed with unexpected result */
+    TEST_ERROR,         /* test did not complete due to error */
+} ts_exit;
+
 #define SKIP_TEST_CASE 256
-
-#define LOGOPTION_INDEX_ALL 0
-#define LOGOPTION_INDEX_SUCCESS_ONLY 1
-#define LOGOPTION_INDEX_FAIL_ONLY 2
-#define LOGOPTION_INDEX_NOTHING 3
-
-typedef enum {FALSE, TRUE} Boolean; 
-
-typedef struct {
-    Boolean logSuccess;
-    Boolean logFailure;
-} log_options;
-
-struct test_counters {
-    int passed;
-    int failed;
-    int skipped;
-};
 
 #endif	/* _TESTSUITE_H */

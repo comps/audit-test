@@ -44,14 +44,13 @@ int audit_start();
 int audit_stop();
 int audit_clear_logs();
 int audit_reload();
-int audit_set_filters(log_options);
-int audit_verify_log(struct audit_data *, log_options);
+int audit_set_filters();
+int audit_verify_log(struct audit_data *);
+int audit_parse_log(struct audit_data *, struct audit_data *);
 
 /*
  * System Info Collection
  */
-extern uid_t login_uid;
-
 typedef struct identifiers_s {
     int ruid;
     int euid;
@@ -115,28 +114,34 @@ int postSysCall(struct audit_data* dataPtr, int resultErrno, int errorRC,
 		int expectedErrno);
 
 /*
+ * Test Verification
+ */
+ts_exit verify_result(struct audit_data *, int);
+int context_match(struct audit_data *, struct audit_data *);
+
+/*
  * Shell Command Utilities
  */
 int run(char* command); 
 char* mysprintf(char* fmt, ...);
 #define RUNCOMMAND(cmd, ...) \
-do {								\
-    char* command = mysprintf(cmd, ## __VA_ARGS__);		\
-    if ((rc = system(command)) == -1) {				\
-	printf1("Error running command: [%s]\n", command);	\
-    }								\
-    free(command);						\
-} while (0)							\
+do {									\
+    char* command = mysprintf(cmd, ## __VA_ARGS__);			\
+    if ((rc = system(command)) == -1) {					\
+	fprintf(stderr, "Error running command: [%s]\n", command);	\
+    }									\
+    free(command);							\
+} while (0)								\
 
 #define RUNCOMMANDORDIE(cmd, ...) \
-do {								\
-    char* command = mysprintf(cmd, ## __VA_ARGS__ );		\
-    if ((rc = system(command)) == -1) {				\
-	printf1("Error running command: [%s]\n", command);	\
-	free(command);						\
-	goto EXIT_CLEANUP;					\
-    }								\
-    free(command);						\
+do {									\
+    char* command = mysprintf(cmd, ## __VA_ARGS__ );			\
+    if ((rc = system(command)) == -1) {					\
+	fprintf(stderr, "Error running command: [%s]\n", command);	\
+	free(command);							\
+	goto EXIT_CLEANUP;						\
+    }									\
+    free(command);							\
 } while (0)
 
 /*
@@ -145,134 +150,5 @@ do {								\
 extern int debug; /* global debug level */
 
 void debug_expected(const struct audit_data* dataPtr);
-
-#define printf1(msg, ...)		\
-do {					\
-    if (debug >= 1) {			\
-	printf( "ENVIRONMENT ");	\
-	printf( msg, ## __VA_ARGS__);	\
-    }					\
-} while (0)
-
-#define printf2(msg, ...)		\
-do {					\
-    if (debug >= 2) {			\
-	printf( "TEST ");		\
-	printf( msg, ## __VA_ARGS__);	\
-    }					\
-} while (0)
-
-#define printf2prime(msg, ...)		\
-do {					\
-    if (debug >= 2) {			\
-	printf(msg, ## __VA_ARGS__);	\
-    }					\
-} while (0)
-
-#define printf3(msg, ...)		\
-do {					\
-    if (debug >= 3) {			\
-	printf( "WARNING ");		\
-	printf( msg, ## __VA_ARGS__);	\
-    }					\
-} while (0)
-
-#define printf4(msg, ...)		\
-do {					\
-    if (debug >= 4) {			\
-	printf( "INFO ");		\
-	printf( msg, ## __VA_ARGS__);	\
-    }					\
-} while (0)
-
-#define printf5(msg, ...)		\
-do {					\
-    if (debug >= 5) {			\
-	printf( "DEBUG ");		\
-	printf( msg, ## __VA_ARGS__);	\
-    }					\
-} while (0)
-
-#define printf5prime(msg, ...)		\
-do {					\
-    if (debug >= 5) {			\
-	printf( msg, ## __VA_ARGS__);	\
-    }					\
-} while (0)
-
-#define printf8(msg, ...)		\
-do {					\
-    if (debug >= 8) {			\
-	printf( "AUDIT ");		\
-	printf( msg, ## __VA_ARGS__);	\
-    }					\
-} while (0)
-
-#define printf8prime(msg, ...)		\
-do {					\
-    if (debug >= 8) {			\
-	printf( msg, ## __VA_ARGS__);	\
-    }					\
-} while (0)
-
-#define printf9(msg, ...)		\
-do {					\
-    if (debug >= 9) {			\
-	printf( "AUDIT DEBUG ");	\
-	printf( msg, ## __VA_ARGS__);	\
-    }					\
-} while (0)
-
-#define printf9prime(msg, ...)		\
-do {					\
-    if (debug >= 9) {			\
-	printf( msg, ## __VA_ARGS__);	\
-    }					\
-} while (0)
-
-#define printf_level(lev, msg, ...)	\
-do {					\
-    switch (lev) {			\
-    case 1:				\
-	printf1(msg, ## __VA_ARGS__);	\
-	break;				\
-    case 2:				\
-	printf2(msg, ## __VA_ARGS__);	\
-	break;				\
-    case 3:				\
-	printf3(msg, ## __VA_ARGS__);	\
-	break;				\
-    case 4:				\
-	printf4(msg, ## __VA_ARGS__);	\
-	break;				\
-    case 5:				\
-	printf5(msg, ## __VA_ARGS__);	\
-	break;				\
-    case 8:				\
-	printf8(msg, ## __VA_ARGS__);	\
-	break;				\
-    case 9:				\
-	printf9(msg, ## __VA_ARGS__);	\
-	break;				\
-    }					\
-} while (0)
-
-#define printf_level_prime(lev, msg, ...)	\
-do {						\
-    switch (lev) {				\
-    case 2:					\
-	printf2prime(msg, ## __VA_ARGS__);	\
-	break;					\
-    case 5:					\
-	printf5prime(msg, ## __VA_ARGS__);	\
-	break;					\
-    case 8:					\
-	printf8prime(msg, ## __VA_ARGS__);	\
-	break;					\
-    case 9:					\
-	printf9prime(msg, ## __VA_ARGS__);	\
-	break;					\
-    }						\
-} while (0)
 
 #endif	/* _UTILS_H */

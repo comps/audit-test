@@ -16,9 +16,7 @@ int main(int argc, char **argv)
     struct sembuf sembuf;
 
     if (argc != 2) {
-	printf
-	    ("Wrong number of arguments [%d].  Must pass in the semaphore identifier.\n",
-	     argc);
+	fprintf(stderr, "Wrong number of arguments [%d].  Must pass in the semaphore identifier.\n", argc);
 	printf("argv[1] = [%s]\n", argv[1]);
 	exit(-1);
     }

@@ -36,17 +36,18 @@ int find_next_pts()
     system
 	("/usr/bin/perl -e '@files = `ls /dev/pts`; $free_pts = 0; for( $x = 0; $x < 42; $x += 1 ) { foreach $file ( <@files> ) { if( \"$x\" eq $file ) { goto NEXT; } } $free_pts = \"$x\"; goto FOUND; NEXT: } FOUND: print $free_pts.\"\n\";' > /tmp/nextPts.txt");
     if ((fPtr = fopen("/tmp/nextPts.txt", "r")) == NULL) {
-	printf1("Error opening pts file: [%s]\n", "/tmp/nextPts.txt");
+	fprintf(stderr, "Error: unable to open pts file: [%s]\n", 
+		"/tmp/nextPts.txt");
 	return -1;
     }
     ptsData = (char *)malloc(MAX_PTS_CHARACTERS);
     if (fread((void *)ptsData, 1, (MAX_PTS_CHARACTERS - 1), fPtr) == 0) {
-	printf1("Error reading pts value\n");
+	fprintf(stderr, "Error: unable to read pts value\n");
 	return -1;
     }
     fclose(fPtr);
     if (unlink("/tmp/nextPts.txt") != 0) {
-	printf1("Error unlinking /tmp/nextPts.txt\n");
+	fprintf(stderr, "Error: unable to unlink /tmp/nextPts.txt\n");
 	return -1;
     }
     ptsData[(MAX_PTS_CHARACTERS - 1)] = '\0';

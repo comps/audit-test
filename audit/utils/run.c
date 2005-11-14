@@ -49,7 +49,7 @@ int run(char *string)
     char *command = NULL;
     char *tmp;
 
-    printf5("Executing: [%s]\n", string);
+    fprintf(stderr, "Executing: [%s]\n", string);
 
     // Copy command to non-static buffer
     command = (char *)malloc(strlen(string) + 1);
@@ -69,7 +69,7 @@ int run(char *string)
 	    index++;
 	    argv[index] = NULL;
 	    if (index > 63) {
-		printf2("Too many arguments\n");
+		fprintf(stderr, "Too many arguments\n");
 		break;
 	    }
 	}
@@ -77,7 +77,7 @@ int run(char *string)
     // Debug info
     index = 0;
     while (argv[index] != NULL) {
-	printf5("arg %i = %s\n", index, argv[index]);
+	fprintf(stderr, "arg %i = %s\n", index, argv[index]);
 	index++;
     }
 
@@ -85,7 +85,7 @@ int run(char *string)
     if ((pid = fork()) == 0) {
 	// We are in the child
 	if (execve(argv[0], argv, envp) == -1) {
-	    printf1("execve() error: errno=%i\n", errno);
+	    fprintf(stderr, "execve() error: errno=%i\n", errno);
 	    exit(-1);
 	}
     } else {

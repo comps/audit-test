@@ -37,7 +37,7 @@ int getIdentifiers(identifiers_t *identifiers)
     int fd;
     char data[2048];
     if ((fd = open("/proc/self/status", O_RDONLY)) == -1) {
-	printf("Error opening '/proc/self/status' for read access\n");
+	fprintf(stderr, "Error: unable to open '/proc/self/status' for read access\n");
 	return -1;
     }
     if (read(fd, data, 2048)) {
@@ -55,7 +55,7 @@ int getIdentifiers(identifiers_t *identifiers)
 	    }
 	}
 	if (!next) {
-	    printf("Error tokenizing /proc/self/status\n");
+	    fprintf(stderr, "Error: unable to tokenize /proc/self/status\n");
 	    return -1;
 	}
 	next = strtok(NULL, "\t");

@@ -42,7 +42,7 @@ int helper_uid;
 static void usage()
 {
     char *usage = "Usage:\n\
-  syscalls -t <syscall_name> [-s <success>] [-u <test_user>]\n\n\
+  syscalls -t <syscall_name> [-s] [-u <test_user>]\n\n\
 Arguments:\n\
   -h                  Display this message.\n\
   -t <syscall_name>   Specify name of system call to test.\n\

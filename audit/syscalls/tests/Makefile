@@ -51,13 +51,11 @@ OBJ=	test_access.o \
 	test_chown.o \
 	test_chown16.o \
 	test_chown32.o \
-	test_chroot.o \
 	test_clone.o \
 	test_clone2.o \
 	test_creat.o \
 	test_delete_module.o \
 	test_execve.o \
-	test_fchdir.o \
 	test_fchmod.o \
 	test_fchown.o \
 	test_fchown16.o \
@@ -65,13 +63,10 @@ OBJ=	test_access.o \
 	test_fork.o \
 	test_fremovexattr.o \
 	test_fsetxattr.o \
-	test_ftruncate.o \
-	test_ftruncate64.o \
 	test_init_module.o \
 	test_ioctl.o \
 	test_ioperm.o \
 	test_iopl.o \
-	test_kill.o \
 	test_lchown.o \
 	test_lchown16.o \
 	test_lchown32.o \
@@ -87,7 +82,6 @@ OBJ=	test_access.o \
 	test_msgrcv.o \
 	test_open.o \
 	test_ptrace.o \
-	test_reboot.o \
 	test_removexattr.o \
 	test_rename.o \
 	test_rmdir.o \
@@ -95,7 +89,6 @@ OBJ=	test_access.o \
 	test_semget.o \
 	test_semop.o \
 	test_semtimedop.o \
-	test_setdomainname.o \
 	test_setfsgid.o \
 	test_setfsgid16.o \
 	test_setfsgid32.o \
@@ -108,9 +101,6 @@ OBJ=	test_access.o \
 	test_setgroups.o \
 	test_setgroups16.o \
 	test_setgroups32.o \
-	test_sethostname.o \
-	test_setpgid.o \
-	test_setpriority.o \
 	test_setregid.o \
 	test_setregid16.o \
 	test_setregid32.o \
@@ -123,8 +113,6 @@ OBJ=	test_access.o \
 	test_setreuid.o \
 	test_setreuid16.o \
 	test_setreuid32.o \
-	test_setrlimit.o \
-	test_setsid.o \
 	test_settimeofday.o \
 	test_setuid.o \
 	test_setuid16.o \
@@ -132,13 +120,9 @@ OBJ=	test_access.o \
 	test_setxattr.o \
 	test_shmat.o \
 	test_shmctl.o \
-	test_shmdt.o \
 	test_shmget.o \
-	test_swapoff.o \
 	test_swapon.o \
 	test_symlink.o \
-	test_syslog.o \
-	test_tkill.o \
 	test_truncate.o \
 	test_truncate64.o \
 	test_umask.o \

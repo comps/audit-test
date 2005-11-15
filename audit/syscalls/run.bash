@@ -168,14 +168,59 @@ function - {
 
 trap 'cleanup; close_log; exit' 0 1 2 3 15
 
-# this should be overridden in run.conf
-function startup {
+# this can be overridden in run.conf
+function startup_hook {
     true
 }
 
-# this should be overridden in run.conf
-function cleanup {
+# this can be overridden in run.conf
+function cleanup_hook {
     true
+}
+
+function startup {
+    declare u=testuser
+
+    dmsg "Starting up"
+
+    # Make sure we're running as root
+    if [[ $EUID != 0 ]]; then
+        die "Please run this suite as root"
+    fi
+
+    # Add the test user which is used for unprivileged tests
+    if ! grep -q "^$u:" /etc/group; then 
+        dmsg "Adding group $u"
+        groupadd "$u" || exit 1
+    fi
+    if ! grep -q "^$u:" /etc/passwd; then 
+        dmsg "Adding user $u"
+        useradd -g "$u" -m "$u" || exit 1
+    fi
+
+    # Mark the current position in the audit log
+    export AUDIT_SEEK=$(wc -c /var/log/audit/audit.log 2>/dev/null)
+    [[ -z $AUDIT_SEEK ]] && AUDIT_SEEK=0
+
+    startup_hook
+}
+
+function cleanup {
+    declare u=testuser
+
+    dmsg "Cleaning up"
+
+    # Remove the test user
+    if grep -q "^$u:" /etc/passwd; then
+        dmsg "Removing user $u"
+        userdel "$u"
+    fi
+    if grep -q "^$u:" /etc/group; then
+        dmsg "Removing group $u"
+        groupdel "$u"
+    fi
+
+    cleanup_hook
 }
 
 function open_log {

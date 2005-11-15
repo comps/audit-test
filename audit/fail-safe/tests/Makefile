@@ -34,11 +34,6 @@
 TOPDIR		= ../..
 TESTDIR		= ..
 
-CC		= gcc
-
-AR		= ar
-RANLIB		= ranlib
-
 TESTS_AR	= failsafe_tests.a
 TESTS_OBJS	= test_rollover.o		\
 		  test_rollover_failure.o
@@ -51,7 +46,6 @@ all: deps $(TESTS_AR)
 
 $(TESTS_AR): $(TESTS_OBJS)
 	$(AR) rc $@ $(TESTS_OBJS)
-	$(RANLIB) $@
 
 clean:
 	$(RM) -r .deps

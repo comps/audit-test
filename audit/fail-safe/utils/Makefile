@@ -34,11 +34,6 @@
 TOPDIR		= ../..
 TESTDIR		= ..
 
-CC		= gcc
-
-AR		= ar
-RANLIB		= ranlib
-
 UTILS_AR	= failsafe_utils.a
 UTILS_OBJS	= failsafe_utils.o		\
 		  failsafe_config.o
@@ -51,7 +46,6 @@ all: deps $(UTILS_AR)
 
 $(UTILS_AR): $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)
-	$(RANLIB) $@
 
 clean:
 	$(RM) -r .deps

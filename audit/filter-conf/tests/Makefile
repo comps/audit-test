@@ -34,11 +34,6 @@
 TOPDIR		= ../..
 TESTDIR		= ..
 
-CC		= gcc
-
-AR		= ar
-RANLIB		= ranlib
-
 TESTS_AR	= filter_conf_tests.a
 TESTS_OBJS	= test_int_cmp.o	\
 		  test_str_cmp.o	\
@@ -58,7 +53,6 @@ all: deps $(TESTS_AR)
 
 $(TESTS_AR): $(TESTS_OBJS)
 	$(AR) rc $@ $(TESTS_OBJS)
-	$(RANLIB) $@
 
 clean:
 	$(RM) -r .deps

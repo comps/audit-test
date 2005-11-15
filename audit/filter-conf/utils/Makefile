@@ -34,11 +34,6 @@
 TOPDIR		= ../..
 TESTDIR		= ..
 
-CC		= gcc
-
-AR		= ar
-RANLIB		= ranlib
-
 UTILS_AR	= filter_conf_utils.a
 UTILS_OBJS	= filter_call_utils.o		\
 		  set_config.o
@@ -51,7 +46,6 @@ all: deps $(UTILS_AR)
 
 $(UTILS_AR): $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)
-	$(RANLIB) $@
 
 clean:
 	$(RM) -r .deps

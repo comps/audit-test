@@ -33,11 +33,7 @@
 ##########################################################################
 TOPDIR		= ../..
 TESTDIR		= ..
-CC		= gcc
 INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
-
-AR		= ar
-RANLIB		= ranlib
 
 TESTS_AR	= trustedprogram_test.a
 OBJ=	test_at.o \
@@ -57,7 +53,6 @@ all: $(TESTS_AR)
 
 $(TESTS_AR): $(OBJ)
 	$(AR) rc $@ $(OBJ)
-	$(RANLIB) $@
 
 clean:
 	$(RM) *.a *.o

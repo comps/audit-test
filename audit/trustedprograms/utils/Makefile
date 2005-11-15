@@ -33,11 +33,7 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
-CC		= gcc
 INCLUDES	=-I$(TOPDIR)/include -I$(TESTDIR)/include
-
-AR		= ar
-RANLIB		= ranlib
 
 UTILS_AR	= trustedprogram_test_utils.a
 UTILS_OBJS	= post_trustedprogram.o		\
@@ -49,7 +45,6 @@ all: $(UTILS_AR)
 
 $(UTILS_AR): $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)
-	$(RANLIB) $@
 
 clean:
 	$(RM) *.a *.o

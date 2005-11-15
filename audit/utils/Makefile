@@ -36,11 +36,7 @@
 
 TOPDIR		= ..
 UTILSDIR	= .
-CC		= gcc
 INCLUDES 	= -I$(TOPDIR)/include -I$(UTILSDIR)/include
-
-AR		= ar
-RANLIB		= ranlib
 
 UTILS_AR	= testutils.a
 UTILS_OBJS	= core/create_temp_file.o	\
@@ -85,7 +81,6 @@ all: deps $(UTILS_AR) $(SEM_EXE) $(RC_EXE) $(PTS_EXE) $(EXIT_EXE)
 
 $(UTILS_AR): $(UTILS_OBJS) $(LAF_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS) $(LAF_OBJS)
-	$(RANLIB) $@
 
 $(SEM_EXE): $(SEM_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(SEM_OBJS)

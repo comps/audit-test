@@ -41,7 +41,6 @@
 TOPDIR          = ..
 TESTDIR		= .
 MAKE		= make
-CC		= gcc
 INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 EXE		= pam_laus
 

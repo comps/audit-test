@@ -33,7 +33,6 @@
 
 TOPDIR		= ..
 
-CC		= gcc
 INCLUDES 	= -I$(TOPDIR)/include
 
 AUDIT_TRAIL_EXE  = audit_trail_protection

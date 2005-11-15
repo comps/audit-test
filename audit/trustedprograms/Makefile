@@ -43,7 +43,6 @@
 TOPDIR		= ..
 TESTDIR		= .
 MAKE		= make
-CC		= gcc
 INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 EXE		= trustedprograms
 

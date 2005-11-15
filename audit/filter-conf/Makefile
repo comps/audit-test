@@ -34,11 +34,6 @@
 TOPDIR		= ..
 TESTDIR		= .
 
-CC		= gcc
-
-AR		= ar
-RANLIB		= ranlib
-
 FILTER_EXE	= filterconf
 FILTER_OBJS	= filterconf.o
 FILTER_ARS	= $(TOPDIR)/utils/testutils.a	\

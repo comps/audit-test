@@ -33,11 +33,7 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
-CC		= gcc
 INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
-
-AR		= ar
-RANLIB		= ranlib
 
 UTILS_AR	= syscall_test_utils.a
 UTILS_OBJS	= post_syscall.o		\
@@ -47,7 +43,6 @@ all: $(UTILS_AR)
 
 $(UTILS_AR): $(UTILS_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS)
-	$(RANLIB) $@
 
 clean:
 	rm -f *.a *.o

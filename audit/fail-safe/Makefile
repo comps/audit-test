@@ -34,11 +34,6 @@
 TOPDIR		= ..
 TESTDIR		= .
 
-CC		= gcc
-
-AR		= ar
-RANLIB		= ranlib
-
 LN		= ln
 
 FAILSAFE_EXE	= failsafe

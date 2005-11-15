@@ -38,7 +38,7 @@
 /*
  * Default Values
  */
-#define DEFAULT_TEST_USER "nobody"
+#define DEFAULT_TEST_USER "testuser"
 #define XATTR_TEST_VALUE "text/plain"
 
 #ifndef __powerpc__

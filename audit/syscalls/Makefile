@@ -45,12 +45,6 @@ MAKE		= make
 CC		= gcc
 INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 EXE		= syscalls
-X 		:= i486 i586 i686 ix86
-P 		:= ppc powerpc
-IP 		:= ppc64 powerpc64
-Z 		:= s390
-X86_64 		:= x86_64
-IA := ia64
 
 UTILS_AR = $(TOPDIR)/utils/testutils.a
 TESTS_AR = tests/syscall_test.a
@@ -68,7 +62,7 @@ all: subdirs deps $(EXE)
 run: all
 ifeq ($(shell whoami),root)
 #	$(AUDIT_CLEAN_LOG)
-	./syscalls &> ./syscalls.run.log
+	./run.bash
 else
 	@echo "You must run this as root"
 endif

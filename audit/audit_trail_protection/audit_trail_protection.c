@@ -38,21 +38,21 @@ int testFilePermissions( char* filename ) {
   int rc = 0;
   struct stat buf;
 
-  printf4( "Testing file permissions: [%s]\n", filename );
+  printf( "Testing file permissions: [%s]\n", filename );
 
   if(( rc = stat( filename, &buf ))) {
-    printf1( "Error attempting to stat file [%s]\n", filename );
+    printf( "Error attempting to stat file [%s]\n", filename );
     return rc;
   }
   
   if( buf.st_uid != 0 ) {
-    printf2( "Audit log permissions test failed on [%s]: owner not superuser\n", filename );
+    printf( "Audit log permissions test failed on [%s]: owner not superuser\n", filename );
     rc = 1;
     goto EXIT;
   }
   
-  if( buf.st_mode & 0x0007F ) {
-    printf2( "Audit log permissions test failed on [%s]: permissions insecure\n", filename );
+  if( buf.st_mode & 0x0004F ) {
+    printf( "Audit log permissions test failed on [%s]: permissions insecure\n", filename );
     rc = 1;
     goto EXIT;
   }  
@@ -64,93 +64,21 @@ int testFilePermissions( char* filename ) {
 
 int main() {
   int rc = 0;
-  FILE* f;
-  char data[ 4096 ];
-  char basename[ 256 ];
-  char filename[ 260 ];
-  //int x, y;
-  int x;	
-  regex_t preg;
-  const char* regex = "file-name[ \t]*=[ \t]*\"\\([^\"]*\\)\";";
-  int cflags = 0;
-  regmatch_t pmatch[ 256 ];
-  int eflags = 0;
   int passed = 0, failed = 0, skipped = 0;
 
-  if( (rc = testFilePermissions( "/etc/audit/audit.conf" )) ) {
+  if( (rc = testFilePermissions( "/etc/auditd.conf" )) ) {
     failed++;
   } else {
     passed++;
   }
 
-  if( (rc = testFilePermissions( "/etc/audit/filesets.conf" )) ) {
+  if( (rc = testFilePermissions( "/etc/audit.rules" )) ) {
     failed++;
   } else {
     passed++;
   }
 
-  if( (rc = testFilePermissions( "/etc/audit/filter.conf" )) ) {
-    failed++;
-  } else {
-    passed++;
-  }
-
-  if( (rc = regcomp( &preg, regex, cflags )) ) {
-    printf1( "Error compiling regex: [%s]\n", regex );
-    skipped += 4;
-    goto EXIT;
-  }
-
-  if( !( f = fopen( "/etc/audit/audit.conf", "r" ) ) ) {
-    printf1( "Error opening /etc/audit/audit.conf for reading\n" );
-    rc = 1;
-    skipped += 4;
-    goto EXIT;
-  }
-
-  if( !( rc = fread( data, 1, 4096, f ) ) ) {
-    printf( "Error reading /etc/audit/audit.conf\n" );
-    rc = 1;
-    skipped += 4;
-    goto EXIT;
-  }
-
-  data[ rc ] = 0;
-
-  fclose( f );
-
-  if( ( rc = regexec( &preg, data, 2, pmatch, eflags ) ) ) {
-    printf( "No match found\n" );
-    skipped += 4;
-    goto EXIT;
-  }
-
-  if( ( pmatch[1].rm_eo - pmatch[1].rm_so ) >= 256 ) {
-    printf( "Audit path longer than 255 characters\n" );
-    rc = 1;
-    skipped += 4;
-    goto EXIT;
-  }
-
-  strncpy( basename, &data[ pmatch[1].rm_so ], pmatch[1].rm_eo - pmatch[1].rm_so );
-
-  basename[ pmatch[1].rm_eo - pmatch[1].rm_so ] = '\0';
-
-  for( x = 0; x < 3; x++ ) {
-
-    sprintf( filename, "%s.%d", basename, x );
-
-    if(( rc = testFilePermissions( filename ))) {
-      failed++;
-    } else {
-      passed++;
-    }
-
-  }
-
- EXIT:
-
-  printf2( "PASSED = %d, FAILED = %d, SKIPPED = %d\n", passed, failed, skipped );
+  printf( "PASSED = %d, FAILED = %d, SKIPPED = %d\n", passed, failed, skipped );
 
   return rc;
 }

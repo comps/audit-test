@@ -72,17 +72,6 @@
 
 
 
-./pam_laus/tests/test_sshd.c  // sshd
-1: sshd When a user successfully uses the sshd program.
-
-./pam_laus/tests/test_login.c  // login
-1: login When a user successfully uses the login program.
-
-./pam_laus/tests/test_vsftpd.c  // vsftpd
-1: ftp When a user successfully uses the vsftpd program.
-
-
-
 ./libpam/tests/test_su.c  // su
 1: su When a user successfully uses the su program.
 2: FAILURE su  // su (and a bad password)
@@ -90,6 +79,7 @@
 ./libpam/tests/test_sshd.c  // sshd
 1: sshd When a user successfully uses the sshd program.
 2: FAILURE sshd When a user unsuccessfully uses the sshd program.
+3: sshd When a user successfully authenticates that their origin information is logged
 
 ./libpam/tests/test_login.c  // login
 1: login When a user successfully uses the login program.
@@ -103,11 +93,8 @@
 
 ./audit_trail_protection/audit_trail_protection.c
 1: stat() file, check root ownership, check permissions
-	/etc/audit/audit.conf
-	/etc/audit/filesets.conf
-	/etc/audit/filter.conf
-2: check audit log path is less than 255 chars long
-
+	/etc/audit.rules
+	/etc/auditd.conf
 
 
 audit_tools/ssh01
@@ -140,85 +127,12 @@ audit_tools/test_bind.c
    5) Verifies that bind executed erroneously
    6) Closes the socket.
 
-audit_tools/au_login
-  use ssh helpers to generate login messages, then check for them with the following commands
-# aucat | grep sshd
-# augrep -e LOGIN
-# augrep --event=LOGIN
-# augrep -e LOGIN -A 127.0.0.1
-# augrep -e LOGIN --address=127.0.0.1
-# augrep -e LOGIN -E /usr/sbin/sshd
-# augrep -e LOGIN --execute=/usr/sbin/sshd
-# augrep -e LOGIN -H localhost
-# augrep -e LOGIN --hostname=localhost
-# augrep -e LOGIN -T NODEVssh
-# augrep -e LOGIN --terminal=NODEVssh
-
-audit_tools/au_netlink
- ip and tc commands to seed audit log 
-# aucat | grep RTM_NEWADDR
-# augrep -e NETLINK
-# augrep --event=NETLINK
-# augrep -e NETLINK -G 0
-# augrep -e NETLINK --group=0
-# augrep -e NETLINK -I 0
-# augrep -e NETLINK --dstgroup=0
-# augrep -e NETLINK -L 0
-# augrep -e NETLINK --netresult=0
-# aucat | grep RTM_DELADDR
-# aucat | grep RTM_NEWNEIGH
-# aucat | grep RTM_DELNEIGH
-# aucat | grep RTM_NEWROUTE
-# aucat | grep RTM_DELROUTE
-# aucat | grep RTM_NEWRULE
-# aucat | grep RTM_DELRULE
-# aucat | grep RTM_NEWQDISC
-# aucat | grep RTM_DELQDISC
-# aucat | grep RTM_NEWTCLASS
-# aucat | grep RTM_DELTCLASS
-# aucat | grep RTM_NEWTFILTER
-# aucat | grep RTM_DELTFILTER
-
 audit_tools/au_restart
   uses `/etc/init.d/audit restart` to seed audit log, then checks for messages
 
-audit_tools/au_syscalls
-  test_setxattr and test_bind used to seed audit log
-# aucat | grep bind
-# augrep -e SYSCALL | grep bind
-# augrep --event=SYSCALL | grep bind
-# augrep -e SYSCALL -S bind
-# augrep -e SYSCALL --syscall=bind
-# augrep -e SYSCALL -M 102
-# augrep -e SYSCALL --major=102
-# augrep -e SYSCALL -N 2 | grep bind
-# augrep -e SYSCALL --minor=2 | grep bind
-# augrep -e SYSCALL -R 0 |  grep bind
-# augrep -e SYSCALL --sysresult=0 |  grep bind
-# augrep -e SYSCALL -D [sock:af=2,type=1]
-# augrep -e SYSCALL --sysdata=[sock:af=2,type=1]
-
-audit_tools/au_trustedpgms
-  test_groupadd used to seed audit log
-# aucat | grep groupadd
-# augrep -e TEXT | grep groupadd
-# augrep --event=TEXT | grep groupadd
-# augrep -e TEXT -X groupadd
-# augrep -e TEXT --textdata=groupadd
-
-
-audbin/audbin.pl
-  test directly calls audbin with a series of parameters and verifies that the results are as expected. 
-# Verify that the %h flag gives the expected results  -- hostname variable
-# Verify that a basic full copy can be made
-# Verify that audbin will not overwrite when the backup file already exists and we give the append flag
-# Verify that audbin will overwrite when the backup file already exists and we give the overwrite flag
-# Verify that audbin will not overwrite when the backup file already
-    exists and we give the %u flag  -- advance counter (save.{+1}) instead of overwrite
-# Verify that save.1 is identical to auditlogbin.0
-# Verify that the log file is cleared after saving its contents
-# Verify that the %t flag gives expected results  -- time variable
-
+audit_tools/ausearch
+   test that searching based on SYSCALL information works
+   test that searching based on TEXT information works
 
 
 fail-safe/tests/test_rollover.c
@@ -272,7 +186,9 @@ fail-safe/tests/test_rollover_failure.c
       failure support worked, resetting the audit configuration and
       displaying all output messages from the notification program(s).
 
-
+fail-safe/tests/test_pam_loginuid.c
+    When auditing is disabled that the pam_loginuid disallows users to login to the system
+     -- could be a manual test
 
 filter-conf/tests/test_socket_attrs.c
  Tests the sock-family, sock-type socket attribute filtering support.

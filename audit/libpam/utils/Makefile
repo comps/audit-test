@@ -35,7 +35,6 @@
 TOPDIR		= ../..
 TESTDIR		= ..
 CC		= gcc
-FLAGS		+= $(CFLAGS)
 INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 AR		= ar

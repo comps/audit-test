@@ -34,7 +34,6 @@
 TOPDIR		= ..
 
 CC		= gcc
-FLAGS		+= $(CFLAGS)
 INCLUDES 	= -I$(TOPDIR)/include
 
 AUDIT_TRAIL_EXE  = audit_trail_protection
@@ -45,7 +44,7 @@ EXE = $(AUDIT_TRAIL_EXE)
 all: $(EXE)
 
 $(EXE): $(AUDIT_TRAIL_OBJS)
-	$(CC) $(FLAGS) -o $@ $(AUDIT_TRAIL_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(AUDIT_TRAIL_OBJS)
 
 clean:
 	$(RM) *.o

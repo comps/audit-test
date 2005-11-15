@@ -35,7 +35,6 @@ TOPDIR		= ../..
 TESTDIR		= ..
 CC		= gcc
 INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
-FLAGS		+= $(CFLAGS)
 
 AR		= ar
 RANLIB		= ranlib

@@ -40,8 +40,8 @@ Z64		= s390x
 X86_64		= x86_64
 IA		= ia64
 SYSTEMINFO      = systeminfo.run.log
-FLAGS           = -g -O2 -Wall -Werror -D_GNU_SOURCE
-LDFLAGS         =
+CFLAGS          += -g -O2 -Wall -Werror -D_GNU_SOURCE
+LDFLAGS         +=
 
 AUDIT_CLEAN_LOG = /etc/init.d/audit stop; /bin/rm -f /var/log/audit.d/*; /etc/init.d/audit start
 
@@ -67,21 +67,21 @@ WARN_DEPS	=
 # If MODE isn't set explicitly, the default for the machine is used
 ifeq ($(MODE), 32)
 	ifneq (,$(findstring $(MACHINE), $(Z64)))
-		FLAGS += -m31
+		CFLAGS += -m31
 		LDFLAGS += -m31
 	else 
 		ifneq (,$(findstring $(MACHINE), $(X86_64)))
-			FLAGS += -m32 -malign-double
+			CFLAGS += -m32 -malign-double
 			LDFLAGS += -m32
 		else
-			FLAGS += -m32
+			CFLAGS += -m32
 			LDFLAGS += -m32
 		endif
 	endif
 endif
 ifeq ($(MODE), 64)
 	ifeq (,$(findstring $(MACHINE),($(X),$(IA))))
-		FLAGS += -m64
+		CFLAGS += -m64
 		LDFLAGS += -m64
 	endif
 endif
@@ -93,7 +93,7 @@ endif
 # Compile rules
 #
 %.o: %.c Makefile
-	$(CC) $(FLAGS) $(INCLUDES) -c -o $@ $<
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
 #
 # Dependency rules
@@ -111,7 +111,7 @@ ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 # Include dependencies if goals do not include 'clean'
 .deps/%.d: %.c
 	@echo Creating dependencies for $<
-	@$(SHELL) -ec '$(CC) $(FLAGS) $(CFLAGS) $(INCLUDES) -MM $< \
+	@$(SHELL) -ec '$(CC) $(CFLAGS) $(INCLUDES) -MM $< \
 		| sed '\''s@\($*\)\.o[ :]*@\1.o $@: @g'\'' > $@; \
 		[ -s $@ ] || $(RM) $@'
 

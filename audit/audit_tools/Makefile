@@ -35,7 +35,6 @@ TOPDIR		= ..
 INCLUDES	= -I$(TOPDIR)/include  -I$(TOPDIR)/syscalls/include \
 		  -I$(TOPDIR)/trustedprograms/include
 CC		= gcc
-FLAGS		+= $(CFLAGS)
 
 all: test_setxattr test_groupadd test_bind
 

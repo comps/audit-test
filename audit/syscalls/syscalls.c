@@ -33,9 +33,6 @@ struct syscall_opts {
     char	 testuser[LOGIN_NAME_MAX + 1];
 };
 
-/* global to utils lib */
-int debug = 2;
-
 /* global to syscalls tests */
 int helper_uid;
 

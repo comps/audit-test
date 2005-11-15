@@ -147,8 +147,6 @@ do {									\
 /*
  * Debug Messages
  */
-extern int debug; /* global debug level */
-
 void debug_expected(const struct audit_data* dataPtr);
 
 #endif	/* _UTILS_H */

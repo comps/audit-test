@@ -44,7 +44,7 @@ EXE		= libpam
 TOPDIR          = ..
 TESTDIR		= .
 INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
-UTILS_AR 	= $(TOPDIR)/utils/laus_test_utils.a
+UTILS_AR 	= $(TOPDIR)/utils/testutils.a
 
 LIBPAM_OBJS     = libpam.o
 

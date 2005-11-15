@@ -52,7 +52,7 @@ Z 		:= s390
 X86_64 		:= x86_64
 IA := ia64
 
-UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
+UTILS_AR = $(TOPDIR)/utils/testutils.a
 TESTS_AR = tests/syscall_test.a
 
 SYSCALL_OBJS = syscalls.o syscalls_table.o

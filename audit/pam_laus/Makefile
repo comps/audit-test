@@ -45,7 +45,7 @@ CC		= gcc
 INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 EXE		= pam_laus
 
-UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
+UTILS_AR = $(TOPDIR)/utils/testutils.a
 
 PAM_LAUS_OBJS   = pam_laus.o
 

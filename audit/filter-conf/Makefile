@@ -41,7 +41,7 @@ RANLIB		= ranlib
 
 FILTER_EXE	= filterconf
 FILTER_OBJS	= filterconf.o
-FILTER_ARS	= $(TOPDIR)/utils/laus_test_utils.a	\
+FILTER_ARS	= $(TOPDIR)/utils/testutils.a	\
 		  $(TESTDIR)/utils/filter_conf_utils.a	\
 		  $(TESTDIR)/tests/filter_conf_tests.a
 

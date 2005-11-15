@@ -50,7 +50,7 @@ trustedprograms_utils:
 
 test_setxattr: test_setxattr.o utils syscalls_utils
 	$(CC) $(FLAGS) -o test_setxattr test_setxattr.o \
-	$(TOPDIR)/utils/laus_test_utils.a \
+	$(TOPDIR)/utils/testutils.a \
 	$(TOPDIR)/syscalls/utils/syscall_test_utils.a $(INCLUDES)
 
 test_setxattr.o: test_setxattr.c $(TOPDIR)/syscalls/include/syscalls.h
@@ -58,7 +58,7 @@ test_setxattr.o: test_setxattr.c $(TOPDIR)/syscalls/include/syscalls.h
 
 test_bind: test_bind.o utils syscalls_utils
 	$(CC) $(FLAGS) -o test_bind test_bind.o \
-	$(TOPDIR)/utils/laus_test_utils.a \
+	$(TOPDIR)/utils/testutils.a \
 	$(TOPDIR)/syscalls/utils/syscall_test_utils.a $(INCLUDES)
 
 test_bind.o: test_bind.c $(TOPDIR)/syscalls/include/syscalls.h
@@ -66,7 +66,7 @@ test_bind.o: test_bind.c $(TOPDIR)/syscalls/include/syscalls.h
 
 test_groupadd: test_groupadd.o utils trustedprograms_utils
 	$(CC) $(FLAGS) -o test_groupadd test_groupadd.o \
-	$(TOPDIR)/utils/laus_test_utils.a \
+	$(TOPDIR)/utils/testutils.a \
 	$(TOPDIR)/trustedprograms/utils/trustedprogram_test_utils.a $(INCLUDES)
 
 test_groupadd.o: test_groupadd.c $(TOPDIR)/trustedprograms/include/trustedprograms.h

@@ -43,23 +43,22 @@ INCLUDES 	= -I$(TOPDIR)/include -I$(UTILSDIR)/include
 AR		= ar
 RANLIB		= ranlib
 
-UTILS_AR	= laus_test_utils.a
-UTILS_OBJS	= create_temp_file.o		\
-		  create_temp_file_name.o	\
-		  create_temp_user_name.o	\
-		  create_temp_group_name.o	\
-		  create_temp_dir.o		\
-		  debug_audit_msg.o		\
-		  encode_syscall_args.o		\
-		  find_next_pts.o		\
-		  get_identifiers.o		\
-		  get_laus_data.o		\
-		  get_login_uid.o		\
-		  mysprintf.o			\
-		  file_utils.o			\
-		  run.o				\
-		  get_pid.o			\
-		  verify.o
+UTILS_AR	= testutils.a
+UTILS_OBJS	= core/create_temp_file.o	\
+		  core/create_temp_file_name.o	\
+		  core/create_temp_user_name.o	\
+		  core/create_temp_group_name.o	\
+		  core/create_temp_dir.o	\
+		  core/debug_audit_msg.o	\
+		  core/encode_syscall_args.o	\
+		  core/file_utils.o		\
+		  core/get_identifiers.o	\
+		  core/get_laus_data.o		\
+		  core/get_login_uid.o		\
+		  core/get_pid.o		\
+		  core/mysprintf.o		\
+		  core/run.o			\
+		  core/verify.o
 
 LAF_OBJS	= laf/laf_clear.o		\
 		  laf/laf_config.o		\
@@ -71,19 +70,19 @@ LAF_OBJS	= laf/laf_clear.o		\
 
 SEM_EXE		= semaphore_poster
 SEM_EXE2	= semaphore_poster2
-SEM_OBJS	= semaphore_poster.o
+SEM_OBJS	= bin/semaphore_poster.o
 
 RC_EXE		= rc_return
-RC_OBJS		= rc_return.o
+RC_OBJS		= bin/rc_return.o
 
 PTS_EXE		= get_pts
-PTS_OBJS	= get_pts.o
+PTS_OBJS	= bin/get_pts.o
 PTS_LINK	= /tmp/$(PTS_EXE)
 
 EXIT_EXE	= exit_with_pid_status
-EXIT_OBJS	= exit_with_pid_status.o
+EXIT_OBJS	= bin/exit_with_pid_status.o
 
-all: deps $(UTILS_AR) $(SEM_EXE) $(RC_EXE) $(PTS_EXE) $(AUDIT_TRAIL_EXE) $(EXIT_EXE)
+all: deps $(UTILS_AR) $(SEM_EXE) $(RC_EXE) $(PTS_EXE) $(EXIT_EXE)
 
 $(UTILS_AR): $(UTILS_OBJS) $(LAF_OBJS)
 	$(AR) rc $@ $(UTILS_OBJS) $(LAF_OBJS)
@@ -106,17 +105,16 @@ $(PTS_EXE): $(PTS_OBJS)
 
 clean:
 	$(RM) -r .deps
-	$(RM) $(UTILS_OBJS) $(LAF_OBJS) $(SEM_OBJS) $(RC_OBJS) \
-	$(PTS_OBJS) $(EXIT_OBJS)
+	$(RM) $(UTILS_OBJS) $(AUDIT_OBJS) \
+	$(SEM_OBJS) $(RC_OBJS) $(PTS_OBJS) $(EXIT_OBJS)
 
 clobber: clean
-	$(RM) $(UTILS_AR) $(SEM_EXE) $(SEM_EXE2) $(RC_EXE) \
-	$(PTS_LINK) $(PTS_EXE) $(AUDIT_TRAIL_EXE) $(EXIT_EXE)
+	$(RM) $(UTILS_AR) $(AUDIT_AR) \
+	$(SEM_EXE) $(SEM_EXE2) $(RC_EXE) $(EXIT_EXE) \
+	$(PTS_EXE) $(PTS_LINK)
 
 include $(TOPDIR)/rules.mk
 
 ifneq (,$(findstring ppc, $(MACHINE)))
 	INCLUDES += -I/usr/include
 endif
-
-

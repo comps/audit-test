@@ -47,7 +47,7 @@ CC		= gcc
 INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 EXE		= trustedprograms
 
-UTILS_AR = $(TOPDIR)/utils/laus_test_utils.a
+UTILS_AR = $(TOPDIR)/utils/testutils.a
 
 SUB_DIRS = tests utils ../utils
 

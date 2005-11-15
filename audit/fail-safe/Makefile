@@ -43,7 +43,7 @@ LN		= ln
 
 FAILSAFE_EXE	= failsafe
 FAILSAFE_OBJS	= failsafe.o
-FAILSAFE_ARS	= $(TOPDIR)/utils/laus_test_utils.a	\
+FAILSAFE_ARS	= $(TOPDIR)/utils/testutils.a	\
 		  $(TESTDIR)/utils/failsafe_utils.a	\
 		  $(TESTDIR)/tests/failsafe_tests.a
 

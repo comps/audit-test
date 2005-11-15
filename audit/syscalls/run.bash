@@ -51,23 +51,33 @@ declare opt_log=run.log
 # utility functions
 #----------------------------------------------------------------------
 
-function warn {
-    echo "Warning: $*" >&2
-}
-
 function die {
-    [[ -n "$*" ]] && echo "${0##*/}: $*" >&2
+    [[ -n "$*" ]] && msg "${0##*/}: $*"
     exit 1
 }
 
-# redefined in open_log
-function vecho {
-    if $opt_verbose || $opt_debug; then echo "$*"; fi
+function warn {
+    msg "Warning: $*"
 }
 
-# redefined in open_log
-function decho {
-    if $opt_debug; then echo "$*"; fi
+function msg {
+    $logging && echo "$*" >>"$opt_log"
+    echo "$*"
+}
+
+function vmsg {
+    $logging && echo "$*" >>"$opt_log"
+    $opt_verbose || $opt_debug && echo "$*"
+}
+
+function dmsg {
+    $logging && echo "$*" >>"$opt_log"
+    $opt_debug && echo "$*"
+}
+
+function prf {
+    $logging && printf "$@" >>"$opt_log"
+    printf "$@"
 }
 
 #----------------------------------------------------------------------
@@ -99,11 +109,11 @@ function + {
     if (( $# > 0 )); then
         for v in "$@"; do
             tv=$(make_variation "$t" "$v")
-            decho "Adding TESTS[${#TESTS[@]}]: $tv"
+            dmsg "Adding TESTS[${#TESTS[@]}]: $tv"
             TESTS[${#TESTS[@]}]=$tv
         done
     else
-        decho "Adding TESTS[${#TESTS[@]}]: $t"
+        dmsg "Adding TESTS[${#TESTS[@]}]: $t"
         TESTS[${#TESTS[@]}]=$t
     fi
 }
@@ -128,7 +138,7 @@ function - {
             for ((i = 0; i < ${#TESTS[@]}; i++)); do
                 tv=$(make_variation "$t" "$v")
                 if [[ "${TESTS[i]}" == "$tv" ]]; then
-                    decho "Removing TESTS[$i]: $tv"
+                    dmsg "Removing TESTS[$i]: $tv"
                     unset TESTS[i]
                     found=true
                 fi
@@ -137,7 +147,7 @@ function - {
     else
         for ((i = 0; i < ${#TESTS[@]}; i++)); do
             if [[ "${TESTS[i]}" == "$t" ]]; then
-                decho "Removing TESTS[$i]: $t"
+                dmsg "Removing TESTS[$i]: $t"
                 unset TESTS[i]
                 found=true
             fi
@@ -169,32 +179,14 @@ function cleanup {
 }
 
 function open_log {
-    exec 3>&1 4>&2 1> >(tee "$opt_log") 2>&1 \
-        || die "can't redirect to $opt_log"
+    :> "$opt_log" || die "can't init $opt_log"
     logging=true
 
-    function vecho {
-        if $opt_verbose || $opt_debug
-        then echo "$*"       # also goes to log
-        else echo "$*" >>"$opt_log"
-        fi
-    }
-
-    function decho {
-        if $opt_debug
-        then echo "$*"       # also goes to log
-        else echo "$*" >>"$opt_log"
-        fi
-    }
-
-    decho "Log file started $(date)"
+    dmsg "Log file started $(date)"
 }
 
 function close_log {
-    $logging || return 0
-    exec 1>&3 2>&4
     logging=false
-    sleep 0.1   # stupid hack to let "tee" finish
 }
 
 #----------------------------------------------------------------------
@@ -245,14 +237,14 @@ function parse_cmdline {
     fi
 
     # Load the config
-    decho "Loading config from $opt_config"
+    dmsg "Loading config from $opt_config"
     conf="$(<$opt_config)
           true"
     eval "$conf" || die "Error reading config file: $opt_config"
 
     # Additional cmdline indicates test adds/removes
     if [[ -n $* ]]; then
-        decho "Loading additional test cases from cmdline"
+        dmsg "Loading additional test cases from cmdline"
         while [[ -n $1 ]]; do
             # make sure there's a space
             tcase="${1:0:1} ${1:1}"
@@ -266,7 +258,7 @@ function run_tests {
     declare x t v output
 
     for t in "${TESTS[@]}"; do
-        printf "%-60s " "$t"
+        prf "%-60s " "$t"
 
         # run_test is defined in the configuration file
         output=$(run_test "$t" 2>&1)
@@ -274,20 +266,20 @@ function run_tests {
         case $? in
             0)  echo PASS
                 (( pass++ ))
-                decho "$output"
-                decho
+                dmsg "$output"
+                dmsg
                 ;;
 
             1)  echo FAIL
                 (( fail++ ))
-                vecho "$output"
-                vecho
+                vmsg "$output"
+                vmsg
                 ;;
 
             *)  echo "ERROR ($?)"
                 (( error++ ))
-                vecho "$output"
-                vecho
+                vmsg "$output"
+                vmsg
                 ;;
         esac
     done
@@ -295,11 +287,11 @@ function run_tests {
 
     (( total = pass + fail + error ))
     echo
-    printf "%4d pass (%d%%)\n" $pass $((pass * 100 / total))
-    printf "%4d fail (%d%%)\n" $fail $((fail * 100 / total))
-    printf "%4d error (%d%%)\n" $error $((error * 100 / total))
-    printf "%s\n" "------------------"
-    printf "%4d total\n" $total
+    prf "%4d pass (%d%%)\n" $pass $((pass * 100 / total))
+    prf "%4d fail (%d%%)\n" $fail $((fail * 100 / total))
+    prf "%4d error (%d%%)\n" $error $((error * 100 / total))
+    prf "%s\n" "------------------"
+    prf "%4d total\n" $total
 
     (( error > 0 )) && return 2
     (( fail > 0 )) && return 1
@@ -307,6 +299,6 @@ function run_tests {
 }
 
 parse_cmdline "$@"
-startup
+startup || die "startup failed"
 run_tests
 exit $?

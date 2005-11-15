@@ -31,39 +31,38 @@
 #
 ##########################################################################
 
-MACHINE		:= $(strip $(shell uname -m))
-X		:= i486 i586 i686 ix86
-P		:= ppc powerpc
-IP		:= ppc64 powerpc64
-Z		:= s390
-Z64		:= s390x
-X86_64		:= x86_64
-IA		:= ia64
-HOME_DIR	:= $(shell pwd | awk -F"laus_test" '{print $$1}')
-SYSTEMINFO      := systeminfo.run.log
-FLAGS           := -g -O2 -Wall -Werror -D_GNU_SOURCE
-LDFLAGS         :=
+MACHINE		= $(strip $(shell uname -m))
+X		= i486 i586 i686 ix86
+P		= ppc powerpc
+IP		= ppc64 powerpc64
+Z		= s390
+Z64		= s390x
+X86_64		= x86_64
+IA		= ia64
+SYSTEMINFO      = systeminfo.run.log
+FLAGS           = -g -O2 -Wall -Werror -D_GNU_SOURCE
+LDFLAGS         =
 
-AUDIT_CLEAN_LOG := /etc/init.d/audit stop; /bin/rm -f /var/log/audit.d/*; /etc/init.d/audit start
+AUDIT_CLEAN_LOG = /etc/init.d/audit stop; /bin/rm -f /var/log/audit.d/*; /etc/init.d/audit start
 
-DEPS		:=  binutils \
-		    cpp \
-                    expect \
-                    flex \
-                    gcc \
-                    gcc-c++ \
-                    glibc-devel \
-                    kernel-source \
-                    laus-devel \
-                    libattr-devel \
-                    libstdc++-devel \
-                    make \
-		    perl-Expect \
-		    perl-IO-Tty \
-		    perl-IO-Stty\
-                    tcl
-PPC64_DEPS	:=  gcc-64bit 
-WARN_DEPS	:=  
+DEPS		= binutils \
+		  cpp \
+                  expect \
+                  flex \
+                  gcc \
+                  gcc-c++ \
+                  glibc-devel \
+                  kernel-source \
+                  laus-devel \
+                  libattr-devel \
+                  libstdc++-devel \
+                  make \
+		  perl-Expect \
+		  perl-IO-Tty \
+		  perl-IO-Stty\
+                  tcl
+PPC64_DEPS	= gcc-64bit 
+WARN_DEPS	=
 
 # If MODE isn't set explicitly, the default for the machine is used
 ifeq ($(MODE), 32)

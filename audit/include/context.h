@@ -108,6 +108,8 @@ struct audit_data {
     uid_t        uid, euid, suid, fsuid;
     gid_t        gid, egid, sgid, fsgid;
     unsigned int success;
+    int          error;
+    int          experror;
     char         *comm;
     char         *exe;
     union {

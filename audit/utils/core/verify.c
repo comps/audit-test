@@ -19,41 +19,38 @@
 
 #include "includes.h"
 
-/*
- * Verify test result is as expected.
- */
-ts_exit verify_result(struct audit_data *context, int success)
+/* Verify operation result */
+ts_exit verify_opresult(struct audit_data *context, int success)
 {
     ts_exit rc = TEST_EXPECTED;
-    struct audit_data logdata;
 
-    if ((success && !context->success) || (!success && context->success)) {
+    if (success && !context->success) {
 	rc = TEST_UNEXPECTED;
-	fprintf(stderr, "Warning: test return code unexpected\n");
+	fprintf(stderr, "Expected operation success, got operation failure\n");
 	goto exit;
     }
 
-    rc = audit_parse_log(context, &logdata);
-    if (rc) {
-	rc = TEST_ERROR;
-	fprintf(stderr, "Error: parsing audit log\n");
+    if (!success && context->success) {
+	rc = TEST_UNEXPECTED;
+	fprintf(stderr, "Expected operation failure, got operation success\n");
 	goto exit;
     }
 
-    if (!context_match(context, &logdata)) {
+    if (context->experror && context->experror != context->error) {
 	rc = TEST_UNEXPECTED;
-	fprintf(stderr, "Warning: could not find matching audit record\n");
+	fprintf(stderr,
+		"Expected operation error %d, got operation error %d\n",
+		context->experror, context->error);
     }
 
 exit:
     return rc;
 }
 
-/*
- * Compare two audit_context structs containing the system context and
- * the corresponding data from the log.
- */
-int context_match(struct audit_data *context, struct audit_data *logdata)
+/* Verify presence or absence of log record */
+ts_exit verify_logresult(struct audit_data *context, int expfind)
 {
-    return 0;
+    ts_exit rc = TEST_EXPECTED;
+
+    return rc;
 }

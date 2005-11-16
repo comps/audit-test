@@ -165,7 +165,7 @@ int main(int argc, char **argv)
 	goto exit;
     }
 
-    fprintf(stderr, "Begin test [%s: %s]\n", options.testcase, 
+    fprintf(stderr, "\nBegin test [%s: %s]\n", options.testcase, 
 	    options.success ? "good" : "bad");
 
     rc = init_context(&context, options.testcase, options.testuser, 
@@ -191,13 +191,17 @@ int main(int argc, char **argv)
 	goto exit;
     }
 
-    context.success = 1;
-    ecode = verify_result(&context, options.success);
+    ecode = verify_opresult(&context, options.success);
+    if (ecode != TEST_EXPECTED)
+	goto exit;
+
+    /* 1 = always want to find log record matching specified context */
+    ecode = verify_logresult(&context, 1);
 
     fprintf(stderr, "End test [%s: %s]\n", options.testcase, 
 	    options.success ? "good" : "bad");
 
-    /* TODO free resources (u.syscall.data, others?) */
+    /* TODO free any addtl context memory */
 
 exit:
     return ecode;

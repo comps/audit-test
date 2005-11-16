@@ -39,12 +39,12 @@ UTILSDIR	= .
 CPPFLAGS 	+= -I$(TOPDIR)/include -I$(UTILSDIR)/include
 
 UTILS_AR	= testutils.a
-UTILS_OBJ	= core/create_temp_file.o	\
+UTILS_OBJ	= core/context.o		\
+		  core/create_temp_file.o	\
 		  core/create_temp_file_name.o	\
 		  core/create_temp_user_name.o	\
 		  core/create_temp_group_name.o	\
 		  core/create_temp_dir.o	\
-		  core/debug_audit_msg.o	\
 		  core/encode_syscall_args.o	\
 		  core/file_utils.o		\
 		  core/get_identifiers.o	\

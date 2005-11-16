@@ -86,7 +86,6 @@ struct audit_syscall {
     int           sysnum;
     int           arch;
     int           exit;
-    unsigned long pers;
     char          cwd[PATH_MAX];
     unsigned int  arglen;
     char          *args;

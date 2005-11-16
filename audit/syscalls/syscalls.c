@@ -79,63 +79,6 @@ static int parse_command_line(int argc, char **argv,
     return rc;
 }
 
-static int init_context(struct audit_data *context, char *testname, 
-			unsigned int success)
-{
-    int rc = 0;
-    int loginuid;
-    int sysnum;
-    struct passwd *pw = NULL;
-    char cwd[PATH_MAX];
-
-    sysnum = audit_name_to_syscall(testname, audit_detect_machine());
-    if (sysnum < 0) {
-	rc = -1;
-	fprintf(stderr, "Error: unable to translate \"%s\" to syscall number\n",
-		testname);
-	goto exit;
-    }
-
-    loginuid = getLoginUID();
-    if (loginuid < 0) {
-	rc = -1;
-	fprintf(stderr, "Error: unable to get login uid\n");
-	goto exit;
-    }
-
-    pw = getpwnam(TEST_USER);
-    if (!pw) {
-	rc = -1;
-	fprintf(stderr, "Error: unable to get passwd info for %s\n", TEST_USER);
-	goto exit;
-    }
-
-    errno = 0;
-    if (getcwd(cwd, PATH_MAX) == NULL) {
-	rc = -1;
-	fprintf(stderr, 
-		"Error: unable to get current working directory: %s\n",
-		strerror(errno));
-	goto exit;
-    }
-
-    memset(context, 0, sizeof(struct audit_data));
-    context->type    = AUDIT_MSG_SYSCALL;
-    context->uid     = pw->pw_uid;
-    context->euid    = pw->pw_uid;
-    context->fsuid   = pw->pw_uid;
-    context->gid     = pw->pw_gid;
-    context->egid    = pw->pw_gid;
-    context->fsgid   = pw->pw_gid;
-    context->success = success;
-    context->u.syscall.arch   = TS_BUILD_ARCH;
-    context->u.syscall.sysnum = sysnum;
-    strncpy(context->u.syscall.cwd, cwd, PATH_MAX);
-
-exit:
-    return rc;
-}
-
 int main(int argc, char **argv)
 {
     int			rc = 0;
@@ -151,28 +94,24 @@ int main(int argc, char **argv)
 	goto exit;
     }
 
-    fprintf(stderr, "\nBegin test [%s: %s]\n", options.testcase, 
-	    options.success ? "good" : "bad");
-
-    rc = init_context(&context, options.testcase, options.success);
+    context_init(&context, AUDIT_MSG_SYSCALL, options.success);
+    rc = context_initsyscall(&context, options.testcase);
     if (rc) {
 	ecode = TEST_ERROR;
-	fprintf(stderr, "Error: unable to initialize syscall context\n");
 	goto exit;
     }
 
     rc = lookup_testcase(&test_handle, options.testcase);
     if (rc) {
 	ecode = TEST_ERROR;
-	fprintf(stderr, "Error: test [%s] not found\n", options.testcase);
+	fprintf(stderr, "Error: test \"%s\" not found\n", options.testcase);
 	goto exit;
     }
 
     rc = test_handle(&context);
     if (rc) {
 	ecode = TEST_ERROR;
-	fprintf(stderr, "Error: test [%s: %s] unable to complete\n", 
-		options.testcase, options.success ? "good" : "bad");
+	fprintf(stderr, "Error: testcase unable to complete\n");
 	goto exit;
     }
 
@@ -183,11 +122,7 @@ int main(int argc, char **argv)
     /* 1 = always want to find log record matching specified context */
     ecode = verify_logresult(&context, 1);
 
-    fprintf(stderr, "End test [%s: %s]\n", options.testcase, 
-	    options.success ? "good" : "bad");
-
-    /* TODO free any addtl context memory */
-
 exit:
+    context_release(&context);
     return ecode;
 }

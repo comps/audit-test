@@ -152,8 +152,6 @@ int arg_get(ARG_TYPE *ptype, int *psize, char *dest, const char **src)
 
 int auditArgNil(struct audit_data *context)
 {
-
-    context->u.syscall.pers = NO_CHECK_SYSCALL_DATA;
     context->u.syscall.args = NULL;
     context->u.syscall.arglen = 0;
     arg_put(context, AUDIT_ARG_END, 0, NULL);

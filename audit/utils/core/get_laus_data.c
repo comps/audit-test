@@ -33,43 +33,8 @@
 
 #include "includes.h"
 
-/*
-** Get data necessary for audit record verification
-**
-** BUGBUG:
-** This funciton will call some LAUS service API
-** to obtain audit_id.
-*/
 int getLAUSData(struct audit_data *context)
 {
-
     int rc = 0;
-    uid_t ruid;		// XXX currently unused
-    gid_t rgid;		// XXX currently unused
-    uid_t euid, suid;	// fsuid;   not needed?
-    gid_t egid, sgid;	// fsgid;   not needed?
-
-    /*
-     ** Get PID
-     */
-    if ((context->pid != NO_PID_CHECK) && (context->pid != NO_FORK))
-	context->pid = getpid();
-
-    /*
-     ** Get uids/gids
-     **
-     ** BUGBUG: Don't know how to get fsuid/fsgid
-     */
-    if ((rc = getresuid(&ruid, &euid, &suid)) != 0) {
-	goto EXIT;
-    }
-    context->suid = suid;
-
-    if ((rc = getresgid(&rgid, &egid, &sgid)) != 0) {
-	goto EXIT;
-    }
-    context->sgid = sgid;
-
-  EXIT:
     return rc;
 }

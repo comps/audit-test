@@ -84,6 +84,15 @@ int createTempUserName(char** user, int* uid, char** homedir);
 int createTempGroupName( char** user, int* uid );
 
 /*
+ * System context accessor routines
+ */
+void context_init(struct audit_data *, int, unsigned int);
+int context_initsyscall(struct audit_data *, char *);
+int context_setidentifiers(struct audit_data *);
+void context_dump(const struct audit_data *);
+void context_release(struct audit_data *);
+
+/*
  * Syscall Args Encoding
  */
 int arg_get(ARG_TYPE* ptype, int* psize, char* dest, const char** src);
@@ -143,10 +152,5 @@ do {									\
     }									\
     free(command);							\
 } while (0)
-
-/*
- * Debug Messages
- */
-void debug_expected(const struct audit_data* dataPtr);
 
 #endif	/* _UTILS_H */

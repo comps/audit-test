@@ -87,13 +87,13 @@ function prf {
 # make_variation(char *cmdline, char *variation)
 # This is just the default implementation; it can be overridden in run.conf
 function make_variation {
-    echo "$*"
+    echo "$1 $2"
 }
 
 # run_test(char *cmdline)
 # This is just the default implementation; it can be overridden in run.conf
 function run_test {
-    eval "$*"
+    eval "$1"
 }
 
 # +(char *cmdline, char *variations...)

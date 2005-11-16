@@ -21,6 +21,10 @@
 #ifndef _TESTSUITE_H
 #define _TESTSUITE_H
 
+#define TEST_USER "testuser"
+
+#define MAX_TESTCASE_NAME 25
+
 /* Testsuite exit codes */
 typedef enum {
     TEST_EXPECTED = 0,  /* test completed as expected */

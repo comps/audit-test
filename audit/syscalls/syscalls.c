@@ -29,8 +29,7 @@
 struct syscall_opts {
     unsigned int help;
     unsigned int success;
-    char	 testcase[TESTCASE_NAME_MAX + 1];
-    char	 testuser[LOGIN_NAME_MAX + 1];
+    char	 testcase[MAX_TESTCASE_NAME + 1];
 };
 
 /* global to syscalls tests */
@@ -39,13 +38,11 @@ int helper_uid;
 static void usage()
 {
     char *usage = "Usage:\n\
-  syscalls -t <syscall_name> [-s] [-u <test_user>]\n\n\
+  syscalls -t <syscall_name> [-s]\n\n\
 Arguments:\n\
   -h                  Display this message.\n\
   -t <syscall_name>   Specify name of system call to test.\n\
-  -s                  Specify testcase expected success (yes when present)\n\
-  -u <test_user>      Specify an existing user on whose behalf\n\
-                      to run the tests.\n";
+  -s                  Specify testcase expected success (yes when present)\n";
     fprintf(stderr, "%s\n", usage);
 }
 
@@ -66,35 +63,24 @@ static int parse_command_line(int argc, char **argv,
 		options->success = 1;
 		break;
 	    case 't':
-		if (strlen(optarg) + 1 > TESTCASE_NAME_MAX)
+		if (strlen(optarg) + 1 > MAX_TESTCASE_NAME)
 		    rc = -1;
 		else
-		    strncpy(options->testcase, optarg, TESTCASE_NAME_MAX);
-		break;
-	    case 'u':
-		if (strlen(optarg) + 2 > LOGIN_NAME_MAX)
-		    rc = -1;
-		else
-		    strncpy(options->testuser, optarg, LOGIN_NAME_MAX);
+		    strncpy(options->testcase, optarg, MAX_TESTCASE_NAME);
 		break;
 	    default:
 		rc = -1;
 	}
     }
 
-    if (rc == 0) {
-	if (strcmp(options->testuser, "") == 0)
-	    strcpy(options->testuser, DEFAULT_TEST_USER);
-
-	if (strcmp(options->testcase, "") == 0)
+    if (rc == 0 && strcmp(options->testcase, "") == 0)
 	    rc = -1;
-    }
 
     return rc;
 }
 
 static int init_context(struct audit_data *context, char *testname, 
-			char *testuser, unsigned int success)
+			unsigned int success)
 {
     int rc = 0;
     int loginuid;
@@ -117,10 +103,10 @@ static int init_context(struct audit_data *context, char *testname,
 	goto exit;
     }
 
-    pw = getpwnam(testuser);
+    pw = getpwnam(TEST_USER);
     if (!pw) {
 	rc = -1;
-	fprintf(stderr, "Error: unable to get passwd info for %s\n", testuser);
+	fprintf(stderr, "Error: unable to get passwd info for %s\n", TEST_USER);
 	goto exit;
     }
 
@@ -168,8 +154,7 @@ int main(int argc, char **argv)
     fprintf(stderr, "\nBegin test [%s: %s]\n", options.testcase, 
 	    options.success ? "good" : "bad");
 
-    rc = init_context(&context, options.testcase, options.testuser, 
-		      options.success);
+    rc = init_context(&context, options.testcase, options.success);
     if (rc) {
 	ecode = TEST_ERROR;
 	fprintf(stderr, "Error: unable to initialize syscall context\n");

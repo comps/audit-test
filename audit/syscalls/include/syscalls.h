@@ -38,7 +38,6 @@
 /*
  * Default Values
  */
-#define DEFAULT_TEST_USER "testuser"
 #define XATTR_TEST_VALUE "text/plain"
 
 #ifndef __powerpc__
@@ -59,7 +58,6 @@
 /*
  * Limits
  */
-#define TESTCASE_NAME_MAX 25
 #define MAX_ARG_SIZE 30                 /* test_execve */
 #define MAX_WAIT_TIME_FOR_CHILD 60      /* test_execve */
 

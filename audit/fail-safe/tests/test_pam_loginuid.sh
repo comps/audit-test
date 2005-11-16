@@ -92,14 +92,6 @@ fi
 
 clear_env
 
-if [ $SECONDRUN -eq 1 ]; then
-  echo TEST_PASSED
-  exit 0
-else if [ $SECONDRUN -eq 0 ]; then
-    echo TEST_FAILED
-  else
-    echo TEST_ERROR
-  fi
-fi
-
-exit 1
+[ $SECONDRUN -eq 1 ] && exit 0 # pass
+[ $SECONDRUN -eq 0 ] && exit 1 # fail
+exit 2 # error

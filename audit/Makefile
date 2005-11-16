@@ -42,7 +42,7 @@ LOG		= run.log
 
 all: subdirs
 
-run: SUB_DIRS = syscalls
+run: SUB_DIRS = syscalls fail-safe
 run:
 	for x in $(SUB_DIRS); do make -C $$x run; done 2>&1 | ./tally-results.awk
 

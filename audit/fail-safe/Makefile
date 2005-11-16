@@ -35,24 +35,21 @@ TOPDIR		= ..
 TESTDIR		= .
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
-FAILSAFE_EXE	= failsafe
-FAILSAFE_OBJ	= failsafe.o
-FAILSAFE_AR	= $(TOPDIR)/utils/testutils.a	\
-		  $(TESTDIR)/utils/failsafe_utils.a	\
-		  $(TESTDIR)/tests/failsafe_tests.a
+# FAILSAFE_EXE	= failsafe
+# FAILSAFE_OBJ	= failsafe.o
+# FAILSAFE_AR	= $(TOPDIR)/utils/testutils.a	\
+# 		  $(TESTDIR)/utils/failsafe_utils.a	\
+# 		  $(TESTDIR)/tests/failsafe_tests.a
+# 
+# FAILSAFE_NOTIFY	= failsafe_notify
 
 ALL_OBJ		= $(FAILSAFE_OBJ)
 ALL_AR		= $(FAILSAFE_AR)
 ALL_EXE		= $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
 
-FAILSAFE_NOTIFY	= failsafe_notify
-FAILSAFE_LOGINUID	= test_pam_loginuid.sh
-
 SUB_DIRS	= utils tests $(TOPDIR)/utils
 
-LDLIBS		+= -llaus
-
-all: subdirs deps $(ALL_EXE)
+all: subdirs deps $(ALL_EXE) run.bash
 
 $(FAILSAFE_EXE): $(FAILSAFE_OBJS) $(FAILSAFE_ARS)
 	$(LINK_EXE)
@@ -61,9 +58,11 @@ $(FAILSAFE_EXE): $(FAILSAFE_OBJS) $(FAILSAFE_ARS)
 $(FAILSAFE_NOTIFY): $(FAILSAFE_EXE)
 	ln -sfn $< $@
 
-#run: all
-#	./$(FAILSAFE_EXE) $(DEBUG_ARG) $(USER_ARG) $(LOGIN_ARG) &> ./$(FAILSAFE_EXE).run.log
-run:
-	cd tests; $(FAILSAFE_LOGINUID) 2>&1 >> ../$(FAILSAFE_EXE).run.log
+.PHONY:
+run.bash:
+	ln -sf $(TOPDIR)/$@ .
+
+run: all
+	./run.bash
 
 include $(TOPDIR)/rules.mk

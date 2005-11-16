@@ -35,9 +35,9 @@ TOPDIR		= ../..
 TESTDIR		= ..
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
-UTILS_AR	= failsafe_utils.a
-UTILS_OBJ	= failsafe_utils.o		\
-		  failsafe_config.o
+# UTILS_AR	= failsafe_utils.a
+# UTILS_OBJ	= failsafe_utils.o		\
+# 		  failsafe_config.o
 
 ALL_AR		= $(UTILS_AR)
 ALL_OBJ		= $(UTILS_OBJ)

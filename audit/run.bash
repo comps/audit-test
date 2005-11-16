@@ -338,8 +338,6 @@ function run_tests {
     prf "%s\n" "------------------"
     prf "%4d total\n" $total
 
-    (( error > 0 )) && return 2
-    (( fail > 0 )) && return 1
     return 0
 }
 

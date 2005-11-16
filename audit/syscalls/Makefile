@@ -47,13 +47,14 @@ CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 SYSCALLS_OBJ	= syscalls.o syscalls_table.o
 SYSCALLS_EXE	= syscalls
 
-UTILS_AR = $(TOPDIR)/utils/testutils.a
-TESTS_AR = tests/syscall_test.a
+UTILS_AR	= $(TOPDIR)/utils/testutils.a
+TUTILS_AR	= utils/syscall_test_utils.a
+TESTS_AR	= tests/syscall_test.a
 
-ALL_OBJ = $(SYSCALLS_OBJ)
-ALL_EXE = $(SYSCALLS_EXE)
+ALL_OBJ		= $(SYSCALLS_OBJ)
+ALL_EXE		= $(SYSCALLS_EXE)
 
-SUB_DIRS = kmods tests utils ../utils
+SUB_DIRS	= kmods tests utils ../utils
 
 all: subdirs deps $(ALL_EXE)
 
@@ -61,7 +62,7 @@ run: all
 	./run.bash
 
 $(SYSCALLS_EXE): LDLIBS += -laudit
-$(SYSCALLS_EXE): $(ALL_OBJ) $(TESTS_AR) $(UTILS_AR) utils/*.o
+$(SYSCALLS_EXE): $(ALL_OBJ) $(TESTS_AR) $(UTILS_AR) $(TUTILS_AR)
 	$(LINK_EXE)
 
 include $(TOPDIR)/rules.mk

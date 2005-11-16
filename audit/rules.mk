@@ -91,6 +91,7 @@ endif
 
 .PHONY: all clean clobber deps depsdir subdirs $(SUB_DIRS) test run \
 	cleanup extract msgque report rmlogs
+all run:
 
 clean:
 	for x in $(SUB_DIRS); do $(MAKE) clean -C $$x || exit 1; done

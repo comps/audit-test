@@ -27,5 +27,7 @@ clean:
 clobber: clean
 	$(RM) *.ko
 
+run:
+
 obj-m := test_module.o
 

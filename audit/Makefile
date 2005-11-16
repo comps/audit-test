@@ -42,31 +42,8 @@ LOG		= run.log
 
 all: subdirs
 
-clean: subdirs
-
-clobber: subdirs
-
-msgque:
-	./rm_msgque
-
-run: msgque subdirs
-	make report	
-
-report:
-	tail -n 1 */*.run.log > $(LOG)
-	echo "" >> $(LOG)
-	echo "----------------------------------" >> $(LOG)
-	echo "" >> $(LOG)
-	echo "FAIL:" >> $(LOG)
-	-grep -H "\WFAIL\W" */*.run.log >> $(LOG)
-	-grep -H "\Wfailed\W" audit_trail_protection/*.run.log >> $(LOG)
-	echo "ERROR:" >> $(LOG)
-	-grep -H "\WERROR\W" */*.run.log >> $(LOG)
-
-cleanup:
-	grep "^laus_" /etc/passwd | awk -F: '{print $$1}' | xargs -i userdel -r {}
-	grep "^laus_" /etc/group | awk -F: '{print $$1}' | xargs -i groupdel {}
-	$(RM) -r /tmp/laus??????
-	$(RM) /etc/security/opasswd  2>/dev/null
+run: SUB_DIRS = syscalls
+run:
+	for x in $(SUB_DIRS); do make -C $$x run; done 2>&1 | ./tally-results.awk
 
 include $(TOPDIR)/rules.mk

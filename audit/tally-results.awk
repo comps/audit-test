@@ -17,13 +17,19 @@ BEGIN {
 
 END {
     total = pass + fail + error
-    print ""
-    print "TALLIED RESULTS"
-    print ""
-    printf "%4d pass (%d%%)\n", pass, pass*100/total
-    printf "%4d fail (%d%%)\n", fail, fail*100/total
-    printf "%4d error (%d%%)\n", error, error*100/total
-    print "------------------"
-    printf "%4d total\n", total
-    print ""
+    if (total > 0) {
+       print ""
+       print "TALLIED RESULTS"
+       print ""
+       printf "%4d pass (%d%%)\n", pass, pass*100/total
+       printf "%4d fail (%d%%)\n", fail, fail*100/total
+       printf "%4d error (%d%%)\n", error, error*100/total
+       print "------------------"
+       printf "%4d total\n", total
+       print ""
+    } else {
+       print ""
+       print "There are no results to be displayed"
+       print ""
+    }
 }

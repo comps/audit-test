@@ -74,7 +74,7 @@ function clear_env {
 
 setup_env
 
-ssh01_s1
+./ssh01_s1
 FIRSTRUN=$?
 
 if [ $FIRSTRUN -eq 0 ]; then
@@ -83,7 +83,7 @@ if [ $FIRSTRUN -eq 0 ]; then
   /etc/init.d/auditd stop
 
   # try the test again
-  ssh01_s1
+  ./ssh01_s1
   SECONDRUN=$?
 
   # turn auditing back on

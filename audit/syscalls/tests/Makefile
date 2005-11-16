@@ -35,110 +35,103 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= syscall_test.a
-OBJ=	test_access.o \
-	test_adjtimex.o \
-	test_bind.o \
-	test_capset.o \
-	test_chdir.o \
-	test_chmod.o \
-	test_chown.o \
-	test_chown16.o \
-	test_chown32.o \
-	test_clone.o \
-	test_clone2.o \
-	test_creat.o \
-	test_delete_module.o \
-	test_execve.o \
-	test_fchmod.o \
-	test_fchown.o \
-	test_fchown16.o \
-	test_fchown32.o \
-	test_fork.o \
-	test_fremovexattr.o \
-	test_fsetxattr.o \
-	test_init_module.o \
-	test_ioctl.o \
-	test_ioperm.o \
-	test_iopl.o \
-	test_lchown.o \
-	test_lchown16.o \
-	test_lchown32.o \
-	test_link.o \
-	test_lremovexattr.o \
-	test_lsetxattr.o \
-	test_mkdir.o \
-	test_mknod.o \
-	test_mount.o \
-	test_msgctl.o \
-	test_msgget.o \
-	test_msgsnd.o \
-	test_msgrcv.o \
-	test_open.o \
-	test_ptrace.o \
-	test_removexattr.o \
-	test_rename.o \
-	test_rmdir.o \
-	test_semctl.o \
-	test_semget.o \
-	test_semop.o \
-	test_semtimedop.o \
-	test_setfsgid.o \
-	test_setfsgid16.o \
-	test_setfsgid32.o \
-	test_setfsuid.o \
-	test_setfsuid16.o \
-	test_setfsuid32.o \
-	test_setgid.o \
-	test_setgid16.o \
-	test_setgid32.o \
-	test_setgroups.o \
-	test_setgroups16.o \
-	test_setgroups32.o \
-	test_setregid.o \
-	test_setregid16.o \
-	test_setregid32.o \
-	test_setresgid.o \
-	test_setresgid16.o \
-	test_setresgid32.o \
-	test_setresuid.o \
-	test_setresuid16.o \
-	test_setresuid32.o \
-	test_setreuid.o \
-	test_setreuid16.o \
-	test_setreuid32.o \
-	test_settimeofday.o \
-	test_setuid.o \
-	test_setuid16.o \
-	test_setuid32.o \
-	test_setxattr.o \
-	test_shmat.o \
-	test_shmctl.o \
-	test_shmget.o \
-	test_swapon.o \
-	test_symlink.o \
-	test_truncate.o \
-	test_truncate64.o \
-	test_umask.o \
-	test_unlink.o \
-	test_utime.o \
-	test_utimes.o \
-	test_vfork.o \
+TESTS_OBJ	= test_access.o \
+		  test_adjtimex.o \
+		  test_bind.o \
+		  test_capset.o \
+		  test_chdir.o \
+		  test_chmod.o \
+		  test_chown.o \
+		  test_chown16.o \
+		  test_chown32.o \
+		  test_clone.o \
+		  test_clone2.o \
+		  test_creat.o \
+		  test_delete_module.o \
+		  test_execve.o \
+		  test_fchmod.o \
+		  test_fchown.o \
+		  test_fchown16.o \
+		  test_fchown32.o \
+		  test_fork.o \
+		  test_fremovexattr.o \
+		  test_fsetxattr.o \
+		  test_init_module.o \
+		  test_ioctl.o \
+		  test_ioperm.o \
+		  test_iopl.o \
+		  test_lchown.o \
+		  test_lchown16.o \
+		  test_lchown32.o \
+		  test_link.o \
+		  test_lremovexattr.o \
+		  test_lsetxattr.o \
+		  test_mkdir.o \
+		  test_mknod.o \
+		  test_mount.o \
+		  test_msgctl.o \
+		  test_msgget.o \
+		  test_msgsnd.o \
+		  test_msgrcv.o \
+		  test_open.o \
+		  test_ptrace.o \
+		  test_removexattr.o \
+		  test_rename.o \
+		  test_rmdir.o \
+		  test_semctl.o \
+		  test_semget.o \
+		  test_semop.o \
+		  test_semtimedop.o \
+		  test_setfsgid.o \
+		  test_setfsgid16.o \
+		  test_setfsgid32.o \
+		  test_setfsuid.o \
+		  test_setfsuid16.o \
+		  test_setfsuid32.o \
+		  test_setgid.o \
+		  test_setgid16.o \
+		  test_setgid32.o \
+		  test_setgroups.o \
+		  test_setgroups16.o \
+		  test_setgroups32.o \
+		  test_setregid.o \
+		  test_setregid16.o \
+		  test_setregid32.o \
+		  test_setresgid.o \
+		  test_setresgid16.o \
+		  test_setresgid32.o \
+		  test_setresuid.o \
+		  test_setresuid16.o \
+		  test_setresuid32.o \
+		  test_setreuid.o \
+		  test_setreuid16.o \
+		  test_setreuid32.o \
+		  test_settimeofday.o \
+		  test_setuid.o \
+		  test_setuid16.o \
+		  test_setuid32.o \
+		  test_setxattr.o \
+		  test_shmat.o \
+		  test_shmctl.o \
+		  test_shmget.o \
+		  test_swapon.o \
+		  test_symlink.o \
+		  test_truncate.o \
+		  test_truncate64.o \
+		  test_umask.o \
+		  test_unlink.o \
+		  test_utime.o \
+		  test_utimes.o \
+		  test_vfork.o \
 
+ALL_OBJ		= $(TESTS_OBJ)
+ALL_AR		= $(TESTS_AR)
 
-all: $(TESTS_AR)
+all: $(ALL_AR)
 
-$(TESTS_AR): $(OBJ)
-	$(AR) rc $@ $(OBJ)
-
-clean:
-	$(RM) *.a *.o
-
+$(TESTS_AR): $(TESTS_OBJ)
 
 include $(TOPDIR)/rules.mk
-
-ifneq (,$(findstring ppc, $(MACHINE)))
-	INCLUDES += -I/usr/include
-endif

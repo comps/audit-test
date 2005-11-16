@@ -36,16 +36,15 @@ TESTDIR		= ..
 INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= libpam_test.a
-OBJ=	test_sshd.o \
-	test_su.o \
-	test_vsftpd.o 
+TESTS_OBJ	= test_sshd.o \
+		  test_su.o \
+		  test_vsftpd.o 
 
-all: $(TESTS_AR)
+ALL_AR		= $(TESTS_AR)
+ALL_OBJ		= $(TESTS_OBJ)
 
-$(TESTS_AR): $(OBJ)
-	$(AR) rc $@ $(OBJ)
+all: $(ALL_AR)
 
-clean:
-	$(RM) *.a *.o
+$(TESTS_AR): $(TESTS_OBJ)
 
 include $(TOPDIR)/rules.mk

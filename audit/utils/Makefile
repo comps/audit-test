@@ -36,10 +36,10 @@
 
 TOPDIR		= ..
 UTILSDIR	= .
-INCLUDES 	= -I$(TOPDIR)/include -I$(UTILSDIR)/include
+CPPFLAGS 	+= -I$(TOPDIR)/include -I$(UTILSDIR)/include
 
 UTILS_AR	= testutils.a
-UTILS_OBJS	= core/create_temp_file.o	\
+UTILS_OBJ	= core/create_temp_file.o	\
 		  core/create_temp_file_name.o	\
 		  core/create_temp_user_name.o	\
 		  core/create_temp_group_name.o	\
@@ -55,7 +55,7 @@ UTILS_OBJS	= core/create_temp_file.o	\
 		  core/run.o			\
 		  core/verify.o
 
-LAF_OBJS	= laf/laf_clear.o		\
+LAF_OBJ		= laf/laf_clear.o		\
 		  laf/laf_config.o		\
 		  laf/laf_read.o		\
 		  laf/laf_reload.o		\
@@ -65,50 +65,40 @@ LAF_OBJS	= laf/laf_clear.o		\
 
 SEM_EXE		= semaphore_poster
 SEM_EXE2	= semaphore_poster2
-SEM_OBJS	= bin/semaphore_poster.o
+SEM_OBJ		= bin/semaphore_poster.o
 
 RC_EXE		= rc_return
-RC_OBJS		= bin/rc_return.o
+RC_OBJ		= bin/rc_return.o
 
 PTS_EXE		= get_pts
-PTS_OBJS	= bin/get_pts.o
+PTS_OBJ		= bin/get_pts.o
 PTS_LINK	= /tmp/$(PTS_EXE)
 
 EXIT_EXE	= exit_with_pid_status
-EXIT_OBJS	= bin/exit_with_pid_status.o
+EXIT_OBJ	= bin/exit_with_pid_status.o
 
-all: deps $(UTILS_AR) $(SEM_EXE) $(RC_EXE) $(PTS_EXE) $(EXIT_EXE)
+ALL_OBJ		= $(UTILS_OBJ) $(LAF_OBJ) $(SEM_OBJ) $(RC_OBJ) $(PTS_OBJ) $(EXIT_OBJ)
+ALL_EXE		= $(SEM_EXE) $(SEM_EXE2) $(RC_EXE) $(PTS_EXE) $(PTS_LINK) $(EXIT_EXE)
+ALL_AR		= $(UTILS_AR)
 
-$(UTILS_AR): $(UTILS_OBJS) $(LAF_OBJS)
-	$(AR) rc $@ $(UTILS_OBJS) $(LAF_OBJS)
+all: deps $(ALL_AR) $(ALL_EXE)
 
-$(SEM_EXE): $(SEM_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(SEM_OBJS)
+$(UTILS_AR): $(UTILS_OBJ) $(LAF_OBJ)
+
+$(SEM_EXE): $(SEM_OBJ)
+
+$(SEM_EXE2): $(SEM_EXE)
 	cp $(SEM_EXE) $(SEM_EXE2)
 	chmod 700 $(SEM_EXE2)
 
-$(EXIT_EXE): $(EXIT_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(EXIT_OBJS)
+$(EXIT_EXE): $(EXIT_OBJ)
 
-$(RC_EXE): $(RC_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(RC_OBJS)
+$(RC_EXE): $(RC_OBJ)
 
-$(PTS_EXE): $(PTS_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(PTS_OBJS)
-	ln -sf `pwd`/$@ $(PTS_LINK) 
+$(PTS_EXE): $(PTS_OBJ)
 
-clean:
-	$(RM) -r .deps
-	$(RM) $(UTILS_OBJS) $(AUDIT_OBJS) \
-	$(SEM_OBJS) $(RC_OBJS) $(PTS_OBJS) $(EXIT_OBJS)
-
-clobber: clean
-	$(RM) $(UTILS_AR) $(AUDIT_AR) \
-	$(SEM_EXE) $(SEM_EXE2) $(RC_EXE) $(EXIT_EXE) \
-	$(PTS_EXE) $(PTS_LINK)
+.PHONY: $(PTS_LINK)
+$(PTS_LINK):
+	ln -sfn `pwd`/$(PTS_EXE) $@
 
 include $(TOPDIR)/rules.mk
-
-ifneq (,$(findstring ppc, $(MACHINE)))
-	INCLUDES += -I/usr/include
-endif

@@ -32,24 +32,17 @@
 ##########################################################################
 
 TOPDIR		= ..
+CPPFLAGS 	+= -I$(TOPDIR)/include
 
-INCLUDES 	= -I$(TOPDIR)/include
+AUDIT_TRAIL_EXE	= audit_trail_protection
+AUDIT_TRAIL_OBJ	= audit_trail_protection.o
 
-AUDIT_TRAIL_EXE  = audit_trail_protection
-AUDIT_TRAIL_OBJS = audit_trail_protection.o
+ALL_EXE = $(AUDIT_TRAIL_EXE)
+ALL_OBJ = $(AUDIT_TRAIL_OBJ)
 
-EXE = $(AUDIT_TRAIL_EXE)
+all: $(ALL_EXE)
 
-all: $(EXE)
-
-$(EXE): $(AUDIT_TRAIL_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(AUDIT_TRAIL_OBJS)
-
-clean:
-	$(RM) *.o
-
-clobber: clean
-	$(RM) $(EXE)
+$(AUDIT_TRAIL_EXE): $(AUDIT_TRAIL_OBJS)
 
 run: all
 	./$(EXE) &> ./$(EXE).run.log

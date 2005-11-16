@@ -33,21 +33,19 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
-INCLUDES	=-I$(TOPDIR)/include -I$(TESTDIR)/include
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 UTILS_AR	= trustedprogram_test_utils.a
-UTILS_OBJS	= post_trustedprogram.o		\
+UTILS_OBJ	= post_trustedprogram.o		\
 		  pre_trustedprogram.o		\
 		  trusted_program.o 	       \
 		  shadow_test_setup.o
 
-all: $(UTILS_AR)
+ALL_AR		= $(UTILS_AR)
+ALL_OBJS	= $(UTILS_OBJ)
+
+all: $(ALL_AR)
 
 $(UTILS_AR): $(UTILS_OBJS)
-	$(AR) rc $@ $(UTILS_OBJS)
-
-clean:
-	$(RM) *.a *.o
-
 
 include $(TOPDIR)/rules.mk

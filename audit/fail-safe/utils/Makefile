@@ -33,22 +33,17 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 UTILS_AR	= failsafe_utils.a
-UTILS_OBJS	= failsafe_utils.o		\
+UTILS_OBJ	= failsafe_utils.o		\
 		  failsafe_config.o
 
-ALL_OBJS	= $(UTILS_OBJS)
+ALL_AR		= $(UTILS_AR)
+ALL_OBJ		= $(UTILS_OBJ)
 
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+all: deps $(ALL_AR)
 
-all: deps $(UTILS_AR)
-
-$(UTILS_AR): $(UTILS_OBJS)
-	$(AR) rc $@ $(UTILS_OBJS)
-
-clean:
-	$(RM) -r .deps
-	$(RM) *.a *.o
+$(UTILS_AR): $(UTILS_OBJ)
 
 include $(TOPDIR)/rules.mk

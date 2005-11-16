@@ -39,44 +39,28 @@
 #    08/03 Updated by Daniel H. Jones <danjones@us.ibm.com>
 #
 ##########################################################################
+
 TOPDIR		= ..
 TESTDIR		= .
-MAKE		= make
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
-EXE		= syscalls
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
+
+SYSCALLS_OBJ	= syscalls.o syscalls_table.o
+SYSCALLS_EXE	= syscalls
 
 UTILS_AR = $(TOPDIR)/utils/testutils.a
 TESTS_AR = tests/syscall_test.a
 
-SYSCALL_OBJS = syscalls.o syscalls_table.o
-
-ALL_OBJS = $(SYSCALL_OBJS)
+ALL_OBJ = $(SYSCALLS_OBJ)
+ALL_EXE = $(SYSCALLS_EXE)
 
 SUB_DIRS = kmods tests utils ../utils
-
-LIBS += -laudit
 
 all: subdirs deps $(EXE)
 
 run: all
-ifeq ($(shell whoami),root)
-#	$(AUDIT_CLEAN_LOG)
 	./run.bash
-else
-	@echo "You must run this as root"
-endif
 
-$(EXE): $(ALL_OBJS) $(UTILS_AR) $(TESTS_AR)
-	$(CC) $(CFLAGS) -o $(EXE) $(ALL_OBJS) tests/*.o utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive $(LIBS)
-
-clean:
-	make clean -C kmods
-	make clean -C tests
-	make clean -C utils
-	$(RM) -r .deps
-	$(RM) *.o
-
-clobber: clean
-	$(RM) $(EXE)
+$(SYSCALLS_EXE): LDLIBS += -laudit
+$(SYSCALLS_EXE): $(ALL_OBJ) $(UTILS_AR) $(TESTS_AR)
 
 include $(TOPDIR)/rules.mk

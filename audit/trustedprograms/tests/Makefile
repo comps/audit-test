@@ -31,31 +31,30 @@
 #    08/03 reimplemented by Daniel H. Jones <danjones@us.ibm.com>
 #
 ##########################################################################
+
 TOPDIR		= ../..
 TESTDIR		= ..
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= trustedprogram_test.a
-OBJ=	test_at.o \
-	test_atd.o \
-	test_cron.o \
-	test_crontab.o \
-	test_gpasswd.o \
-	test_groupadd.o \
-	test_groupdel.o \
-	test_groupmod.o \
-	test_passwd.o \
-	test_useradd.o \
-	test_userdel.o \
-	test_usermod.o 
+TESTS_OBJ	= test_at.o \
+		  test_atd.o \
+		  test_cron.o \
+		  test_crontab.o \
+		  test_gpasswd.o \
+		  test_groupadd.o \
+		  test_groupdel.o \
+		  test_groupmod.o \
+		  test_passwd.o \
+		  test_useradd.o \
+		  test_userdel.o \
+		  test_usermod.o 
 
-all: $(TESTS_AR)
+ALL_AR		= $(TESTS_AR)
+ALL_OBJ		= $(TESTS_OBJ)
+
+all: $(ALL_AR)
 
 $(TESTS_AR): $(OBJ)
-	$(AR) rc $@ $(OBJ)
-
-clean:
-	$(RM) *.a *.o
-
 
 include $(TOPDIR)/rules.mk

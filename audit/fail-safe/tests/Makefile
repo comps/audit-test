@@ -33,22 +33,17 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= failsafe_tests.a
-TESTS_OBJS	= test_rollover.o		\
+TESTS_OBJ	= test_rollover.o		\
 		  test_rollover_failure.o
 
-ALL_OBJS	= $(TESTS_OBJS)
+ALL_OBJ		= $(TESTS_OBJ)
+ALL_AR		= $(TESTS_AR)
 
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
-
-all: deps $(TESTS_AR)
+all: deps $(ALL_AR)
 
 $(TESTS_AR): $(TESTS_OBJS)
-	$(AR) rc $@ $(TESTS_OBJS)
-
-clean:
-	$(RM) -r .deps
-	$(RM) *.a *.o
 
 include $(TOPDIR)/rules.mk

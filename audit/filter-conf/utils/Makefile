@@ -33,22 +33,17 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 UTILS_AR	= filter_conf_utils.a
-UTILS_OBJS	= filter_call_utils.o		\
+UTILS_OBJ	= filter_call_utils.o		\
 		  set_config.o
 
-ALL_OBJS	= $(UTILS_OBJS)
+ALL_OBJ		= $(UTILS_OBJS)
+ALL_AR		= $(UTILS_AR)
 
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
-
-all: deps $(UTILS_AR)
+all: deps $(ALL_AR)
 
 $(UTILS_AR): $(UTILS_OBJS)
-	$(AR) rc $@ $(UTILS_OBJS)
-
-clean:
-	$(RM) -r .deps
-	$(RM) *.a *.o
 
 include $(TOPDIR)/rules.mk

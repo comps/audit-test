@@ -32,7 +32,7 @@
 ##########################################################################
 
 TOPDIR		= ..
-INCLUDES	= -I$(TOPDIR)/include  -I$(TOPDIR)/syscalls/include \
+CPPFLAGS	+= -I$(TOPDIR)/include  -I$(TOPDIR)/syscalls/include \
 		  -I$(TOPDIR)/trustedprograms/include
 
 all: test_setxattr test_groupadd test_bind
@@ -47,28 +47,28 @@ trustedprograms_utils:
 	make -C ../trustedprograms/utils
 
 test_setxattr: test_setxattr.o utils syscalls_utils
-	$(CC) $(FLAGS) -o test_setxattr test_setxattr.o \
+	$(CC) $(CFLAGS) -o test_setxattr test_setxattr.o \
 	$(TOPDIR)/utils/testutils.a \
-	$(TOPDIR)/syscalls/utils/syscall_test_utils.a $(INCLUDES)
+	$(TOPDIR)/syscalls/utils/syscall_test_utils.a $(CPPFLAGS)
 
 test_setxattr.o: test_setxattr.c $(TOPDIR)/syscalls/include/syscalls.h
-	$(CC) $(FLAGS) -c -o test_setxattr.o test_setxattr.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c -o test_setxattr.o test_setxattr.c $(CPPFLAGS)
 
 test_bind: test_bind.o utils syscalls_utils
-	$(CC) $(FLAGS) -o test_bind test_bind.o \
+	$(CC) $(CFLAGS) -o test_bind test_bind.o \
 	$(TOPDIR)/utils/testutils.a \
-	$(TOPDIR)/syscalls/utils/syscall_test_utils.a $(INCLUDES)
+	$(TOPDIR)/syscalls/utils/syscall_test_utils.a $(CPPFLAGS)
 
 test_bind.o: test_bind.c $(TOPDIR)/syscalls/include/syscalls.h
-	$(CC) $(FLAGS) -c -o test_bind.o test_bind.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c -o test_bind.o test_bind.c $(CPPFLAGS)
 
 test_groupadd: test_groupadd.o utils trustedprograms_utils
-	$(CC) $(FLAGS) -o test_groupadd test_groupadd.o \
+	$(CC) $(CFLAGS) -o test_groupadd test_groupadd.o \
 	$(TOPDIR)/utils/testutils.a \
-	$(TOPDIR)/trustedprograms/utils/trustedprogram_test_utils.a $(INCLUDES)
+	$(TOPDIR)/trustedprograms/utils/trustedprogram_test_utils.a $(CPPFLAGS)
 
 test_groupadd.o: test_groupadd.c $(TOPDIR)/trustedprograms/include/trustedprograms.h
-	$(CC) $(FLAGS) -c -o test_groupadd.o test_groupadd.c $(INCLUDES)
+	$(CC) $(CFLAGS) -c -o test_groupadd.o test_groupadd.c $(CPPFLAGS)
 
 clean:
 	$(RM) *.o

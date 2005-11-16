@@ -33,36 +33,27 @@
 
 TOPDIR		= ..
 TESTDIR		= .
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 FILTER_EXE	= filterconf
-FILTER_OBJS	= filterconf.o
-FILTER_ARS	= $(TOPDIR)/utils/testutils.a	\
+FILTER_OBJ	= filterconf.o
+FILTER_AR	= $(TOPDIR)/utils/testutils.a	\
 		  $(TESTDIR)/utils/filter_conf_utils.a	\
 		  $(TESTDIR)/tests/filter_conf_tests.a
 
-ALL_OBJS	= $(FILTER_OBJS)
+ALL_OBJ		= $(FILTER_OBJ)
+ALL_EXE		= $(FILTER_EXE)
+ALL_AR		= $(FILTER_AR)
 
 SUB_DIRS	= utils tests ../utils
 
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
-LIBS		+= -llaus
-
 all: subdirs deps $(FILTER_EXE)
 
-$(FILTER_EXE): $(FILTER_OBJS) $(FILTER_ARS)
-	$(CC) -o $@ $(FILTER_OBJS) -Wl,--whole-archive -Wl,$(FILTER_ARS) -Wl,--no-whole-archive $(LIBS)
+$(FILTER_EXE): LIBS += -llaus
+$(FILTER_EXE): $(FILTER_OBJ) $(FILTER_ARS)
 
 run:
 	$(AUDIT_CLEAN_LOG)
 	./$(FILTER_EXE) $(DEBUG_ARG) $(USER_ARG) $(LOGIN_ARG) &> ./$(FILTER_EXE).run.log
-
-clean:
-	make clean -C tests
-	make clean -C utils
-	$(RM) -r .deps
-	$(RM) *.o
-
-clobber: clean
-	$(RM) $(FILTER_EXE)
 
 include $(TOPDIR)/rules.mk

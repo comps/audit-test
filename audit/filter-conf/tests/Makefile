@@ -33,9 +33,10 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= filter_conf_tests.a
-TESTS_OBJS	= test_int_cmp.o	\
+TESTS_OBJ	= test_int_cmp.o	\
 		  test_str_cmp.o	\
 		  test_syscall_attrs.o	\
 		  test_process_attrs.o	\
@@ -45,17 +46,11 @@ TESTS_OBJS	= test_int_cmp.o	\
 		  test_user_msg.o	\
 		  test_login.o
 
-ALL_OBJS	= $(TESTS_OBJS)
+ALL_OBJ		= $(TESTS_OBJ)
+ALL_AR		= $(TESTS_AR)
 
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+all: deps $(ALL_AR)
 
-all: deps $(TESTS_AR)
-
-$(TESTS_AR): $(TESTS_OBJS)
-	$(AR) rc $@ $(TESTS_OBJS)
-
-clean:
-	$(RM) -r .deps
-	$(RM) *.a *.o
+$(TESTS_AR): $(TESTS_OBJ)
 
 include $(TOPDIR)/rules.mk

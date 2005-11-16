@@ -38,35 +38,29 @@
 #
 ##########################################################################
 
-MAKE		= make
-EXE		= libpam
 TOPDIR          = ..
 TESTDIR		= .
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
+
 UTILS_AR 	= $(TOPDIR)/utils/testutils.a
 
-LIBPAM_OBJS     = libpam.o
+LIBPAM_EXE	= libpam
+LIBPAM_OBJ	= libpam.o
 
-ALL_OBJS        = $(LIBPAM_OBJS)
+ALL_EXE		= $(LIBPAM_EXE)
+ALL_OBJ		= $(LIBPAM_OBJ)
 
 SUB_DIRS        = tests utils ../utils
 
-all: subdirs deps $(EXE)
+all: deps $(EXE)
 
-$(EXE): $(ALL_OBJS)
-	$(CC) $(CFLAGS) -o $(EXE) libpam.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive -llaus
+$(LIBPAM_EXE): LDLIBS += -llaus
+$(LIBPAM_EXE): $(LIBPAM_OBJ)
+	$(MAKE) subdirs
+	$(CC) $(LDFLAGS) -o $@ $^ tests/*.o utils/*.o $(LOADLIBES) $(LDLIBS)
 
 run: all
 	$(AUDIT_CLEAN_LOG)
 	./$(EXE) &> ./$(EXE).run.log
-
-clean:
-	make clean -C tests
-	make clean -C utils
-	$(RM) -r .deps
-	$(RM) *.o
-
-clobber: clean
-	$(RM) $(EXE)
 
 include $(TOPDIR)/rules.mk

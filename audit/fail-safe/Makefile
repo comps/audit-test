@@ -33,42 +33,33 @@
 
 TOPDIR		= ..
 TESTDIR		= .
-
-LN		= ln
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 FAILSAFE_EXE	= failsafe
-FAILSAFE_OBJS	= failsafe.o
-FAILSAFE_ARS	= $(TOPDIR)/utils/testutils.a	\
+FAILSAFE_OBJ	= failsafe.o
+FAILSAFE_AR	= $(TOPDIR)/utils/testutils.a	\
 		  $(TESTDIR)/utils/failsafe_utils.a	\
 		  $(TESTDIR)/tests/failsafe_tests.a
 
-FAILSAFE_NOTIFY	= failsafe_notify
+ALL_OBJ		= $(FAILSAFE_OBJ)
+ALL_AR		= $(FAILSAFE_AR)
+ALL_EXE		= $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
 
-ALL_OBJS	= $(FAILSAFE_OBJS)
+FAILSAFE_NOTIFY	= failsafe_notify
 
 SUB_DIRS	= utils tests $(TOPDIR)/utils
 
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
-LIBS		+= -llaus
+LDLIBS		+= -llaus
 
-all: subdirs deps $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
+all: subdirs deps $(ALL_EXE)
 
 $(FAILSAFE_EXE): $(FAILSAFE_OBJS) $(FAILSAFE_ARS)
-	$(CC) -o $@ $(FAILSAFE_OBJS) -Wl,--whole-archive -Wl,$(FAILSAFE_ARS) -Wl,--no-whole-archive $(LIBS)
 
+.PHONY: $(FAILSAFE_NOTIFY)
 $(FAILSAFE_NOTIFY): $(FAILSAFE_EXE)
-	$(LN) -sf $< $@
+	ln -sfn $< $@
 
 run: all
 	./$(FAILSAFE_EXE) $(DEBUG_ARG) $(USER_ARG) $(LOGIN_ARG) &> ./$(FAILSAFE_EXE).run.log
-
-clean:
-	make clean -C tests
-	make clean -C utils
-	$(RM) -r .deps
-	$(RM) *.o 
-
-clobber: clean
-	$(RM) $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
 
 include $(TOPDIR)/rules.mk

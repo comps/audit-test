@@ -40,34 +40,26 @@
 
 TOPDIR          = ..
 TESTDIR		= .
-MAKE		= make
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
-EXE		= pam_laus
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
-UTILS_AR = $(TOPDIR)/utils/testutils.a
+UTILS_AR 	= $(TOPDIR)/utils/testutils.a
 
-PAM_LAUS_OBJS   = pam_laus.o
+PAM_LAUS_EXE	= pam_laus
+PAM_LAUS_OBJ    = pam_laus.o
 
-ALL_OBJS        = $(PAM_LAUS_OBJS)
+ALL_OBJ         = $(PAM_LAUS_OBJ)
+ALL_EXE		= $(PAM_LAUS_EXE)
 
 SUB_DIRS        = tests utils ../utils
 
-all: subdirs deps $(EXE)
+all: deps $(ALL_EXE)
 
-$(EXE): $(ALL_OBJS) $(UTILS_AR)
-	$(CC) $(CFLAGS) -o $(EXE) pam_laus.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive 
+$(PAM_LAUS_EXE): $(ALL_OBJS) $(UTILS_AR)
+	$(MAKE) subdirs
+	$(CC) $(LDFLAGS) -o $@ $^ tests/*.o utils/*.o $(LOADLIBES) $(LDLIBS)
 
 run: all
 	$(AUDIT_CLEAN_LOG)
 	./$(EXE) &> ./$(EXE).run.log
-
-clean: 
-	make clean -C tests
-	make clean -C utils
-	$(RM) -r .deps
-	$(RM) *.o
-
-clobber: clean
-	$(RM) $(EXE)
 
 include $(TOPDIR)/rules.mk

@@ -33,23 +33,17 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 UTILS_AR	= syscall_test_utils.a
-UTILS_OBJS	= post_syscall.o		\
+UTILS_OBJ	= post_syscall.o		\
 		  pre_syscall.o
 
-all: $(UTILS_AR)
+ALL_AR		= $(UTILS_AR)
+ALL_OBJ		= $(UTILS_OBJ)
 
-$(UTILS_AR): $(UTILS_OBJS)
-	$(AR) rc $@ $(UTILS_OBJS)
+all: $(ALL_AR)
 
-clean:
-	rm -f *.a *.o
-
+$(UTILS_AR): $(UTILS_OBJ)
 
 include $(TOPDIR)/rules.mk
-
-ifneq (,$(findstring ppc, $(MACHINE)))
-	INCLUDES += -I/usr/include
-endif

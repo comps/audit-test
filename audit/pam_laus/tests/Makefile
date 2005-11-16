@@ -33,18 +33,17 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= pam_laus_test.a
-OBJ=	test_sshd.o \
-	test_vsftpd.o 
+TESTS_OBJ	= test_sshd.o \
+		  test_vsftpd.o 
+
+ALL_AR		= $(TESTS_AR)
+ALL_OBJ		= $(TESTS_OBJ)
 
 all: $(TESTS_AR)
 
 $(TESTS_AR): $(OBJ)
-	$(AR) rc $@ $(OBJ)
-
-clean:
-	$(RM) *.a *.o
 
 include $(TOPDIR)/rules.mk

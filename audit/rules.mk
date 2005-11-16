@@ -86,14 +86,17 @@ ifeq ($(MODE), 64)
 	endif
 endif
 
-.PHONY: all clean deps depsdir subdirs $(SUB_DIRS) test run \
+.PHONY: all clean clobber deps depsdir subdirs $(SUB_DIRS) test run \
 	cleanup extract msgque report rmlogs
 
-#
-# Compile rules
-#
-%.o: %.c Makefile
-	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
+clean:
+	for x in $(SUB_DIRS); do $(MAKE) clean -C $$x || exit 1; done
+	$(RM) -r .deps
+	$(RM) $(ALL_OBJ)
+
+clobber: clean
+	for x in $(SUB_DIRS); do $(MAKE) clobber -C $$x || exit 1; done
+	$(RM) $(ALL_EXE) $(ALL_AR)
 
 #
 # Dependency rules

@@ -42,34 +42,26 @@
 
 TOPDIR		= ..
 TESTDIR		= .
-MAKE		= make
-INCLUDES	= -I$(TOPDIR)/include -I$(TESTDIR)/include
-EXE		= trustedprograms
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
-UTILS_AR = $(TOPDIR)/utils/testutils.a
+TP_EXE		= trustedprograms
+TP_OBJ		= trustedprograms.o
 
-SUB_DIRS = tests utils ../utils
+UTILS_AR	= $(TOPDIR)/utils/testutils.a
 
-TRUSTEDPROGRAM_OBJS = trustedprograms.o
+ALL_OBJ		= $(TP_OBJ)
+ALL_EXE		= $(TP_EXE)
 
-ALL_OBJS = $(TRUSTEDPROGRAM_OBJS)
+SUB_DIRS	= tests utils ../utils
 
-all: subdirs deps $(EXE)
+all: deps $(ALL_EXE)
 
-$(EXE): $(ALL_OBJS) $(UTILS_AR)
-	$(CC) $(CFLAGS) -o $(EXE) trustedprograms.o ./tests/*.o ./utils/*.o -Wl,--whole-archive -Wl,$(UTILS_AR) -Wl,--no-whole-archive -llaus
+$(TP_EXE): LDLIBS += -llaus
+$(TP_EXE): $(TP_OBJS) $(UTILS_AR)
+	$(CC) $(LDFLAGS) -o $@ $^ tests/*.o utils/*.o $(LOADLIBES) $(LDLIBS)
 
 run: all
 	$(AUDIT_CLEAN_LOG)
 	./$(EXE) &> ./$(EXE).run.log
-
-clean: 
-	make clean -C tests
-	make clean -C utils
-	$(RM) -r .deps
-	$(RM) *.o
-
-clobber: clean 
-	$(RM) $(EXE)
 
 include $(TOPDIR)/rules.mk

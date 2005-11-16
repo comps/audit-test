@@ -55,7 +55,7 @@ ALL_EXE = $(SYSCALLS_EXE)
 
 SUB_DIRS = kmods tests utils ../utils
 
-all: subdirs deps $(EXE)
+all: subdirs deps $(ALL_EXE)
 
 run: all
 	./run.bash

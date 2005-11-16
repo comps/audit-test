@@ -46,6 +46,7 @@ ALL_AR		= $(FAILSAFE_AR)
 ALL_EXE		= $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
 
 FAILSAFE_NOTIFY	= failsafe_notify
+FAILSAFE_LOGINUID = $(TESTDIR)/tests/test_pam_loginuid.sh
 
 SUB_DIRS	= utils tests $(TOPDIR)/utils
 
@@ -62,5 +63,6 @@ $(FAILSAFE_NOTIFY): $(FAILSAFE_EXE)
 
 run: all
 	./$(FAILSAFE_EXE) $(DEBUG_ARG) $(USER_ARG) $(LOGIN_ARG) &> ./$(FAILSAFE_EXE).run.log
+	cd tests; $(FAILSAFE_LOGINUID) 2>&1 >> ../$(FAILSAFE_EXE).run.log
 
 include $(TOPDIR)/rules.mk

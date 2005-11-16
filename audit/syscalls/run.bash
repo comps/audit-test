@@ -285,7 +285,7 @@ function parse_cmdline {
     dmsg "Loading config from $opt_config"
     conf="$(<$opt_config)
           true"
-    eval "$conf" || die "Error reading config file: $opt_config"
+    eval -- "$conf" || die "Error reading config file: $opt_config"
 
     # Additional cmdline indicates test adds/removes
     if [[ -n $* ]]; then
@@ -293,7 +293,7 @@ function parse_cmdline {
         while [[ -n $1 ]]; do
             # make sure there's a space
             tcase="${1:0:1} ${1:1}"
-            eval "$tcase" || die "Error evaluating \"$tcase\""
+            eval -- "$tcase" || die "Error evaluating \"$tcase\""
             shift
         done
     fi

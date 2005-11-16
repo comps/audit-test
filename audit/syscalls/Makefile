@@ -56,7 +56,11 @@ ALL_EXE		= $(SYSCALLS_EXE)
 
 SUB_DIRS	= kmods tests utils ../utils
 
-all: subdirs deps $(ALL_EXE)
+all: subdirs deps $(ALL_EXE) run.bash
+
+.PHONY:
+run.bash:
+	ln -sf $(TOPDIR)/$@ .
 
 run: all
 	./run.bash

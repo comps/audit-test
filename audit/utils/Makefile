@@ -104,6 +104,6 @@ $(PTS_EXE): $(PTS_OBJ)
 
 .PHONY: $(PTS_LINK)
 $(PTS_LINK):
-	ln -sfn `pwd`/$(PTS_EXE) $@
+	-ln -sfn `pwd`/$(PTS_EXE) $@
 
 include $(TOPDIR)/rules.mk

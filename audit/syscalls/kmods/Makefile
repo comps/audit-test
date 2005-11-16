@@ -21,8 +21,11 @@ all:
 	make -C /usr/src/linux M=`pwd` modules
 
 clean:
-	$(RM) test_module.mod.c .test_module* *.o *.ko
+	$(RM) test_module.mod.c .test_module* *.o
 	$(RM) -rf .tmp_versions
+
+clobber: clean
+	$(RM) *.ko
 
 obj-m := test_module.o
 

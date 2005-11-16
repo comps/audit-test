@@ -1,0 +1,2512 @@
+FILE       : test_shmget.c
+DESCRIPTION: The test_shmget() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "lpc" system call.
+
+In the successful case, this function:
+1) Sets the shared memory mode flags
+2) Clears the audit trail
+3) Sets key to IPC_PRIVATE
+4) Executes the "shmget" library call
+5) Tests the result of the call against the expected successful return
+6) Deallocates the newly allocated block of shared memory.
+
+The successful case executes the expected conditions
+described by the "shmget" library call man page.  That is,
+the shmget() function is called using IPC_PRIVATE for the key
+value.  "size" is set to PAGE_SIZE, and "mode" is set to ( S_IRWXU
+| S_IRWXG | S_IRWXO ).  The function returns an integer value
+specifying the shared memory ID for the newly allocated block of
+memory, which should be a valid value (not NULL or -1).
+
+In the erroneous case, we attempt to access shared memory
+as a non-root user, which causes an EACCES errno.
+ 
+ ---
+
+FILE       : test_semget.c
+DESCRIPTION: The test_semget() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "lpc" system call.
+
+In the successful case, this function:
+1) Sets the semaphore mode flags
+2) Clears the audit trail
+3) Sets key to IPC_PRIVATE
+4) Executes the "semget" library call
+5) Tests the result of the call against the expected successful return
+6) Deallocates the newly allocated semaphore.
+
+The successful case executes the expected conditions
+described by the "semget" library call man page.  That is,
+the semget() function is called using IPC_PRIVATE for the key
+value.  "mode" is set to ( S_IRWXU | S_IRWXG | S_IRWXO ).  "nsems"
+is set to 1.  The function returns an integer value specifying the
+semaphore identifier for the newly allocated semaphore; the
+identifier should be a valid value (not NULL or -1).
+
+In the erroneous case, this function:
+
+Semphore operations are attempted as a non-root user, thus
+causing an EACCES errno.
+
+ ---
+
+FILE       : test_mkdir.c
+DESCRIPTION: The test_mkdir() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"mkdir" system call.
+
+In the successful case, this function:
+ 1) Generates a random new temporary directory name
+ 2) Sets the euid to the test user
+ 3) Performs the mkdir system call with the temporary directory
+    name
+ 4) Sets the euid to the superuser
+ 5) Tests the syscall return value for successful result
+ 6) Removes the temporary directory.
+
+The successful case generates a new random temporary directory
+name and calls mkdir() with that name.  According to the man page
+(and assuming the mksfile() function call returns a unique,
+nonexistent filename), mkdir() should return success.
+
+The erroneous case, according to the man page for mkdir(), should
+cause an EACCES error result, due to the fact that a non-root user
+tries to create a directory in /root
+
+ ---
+
+FILE       : test_setfsgid32.c
+DESCRIPTION: The test_setfsgid32() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setfsgid32" system call.
+
+In the successful case, this function:
+ 1) Sets the fsgid to the test user's gid
+ 2) Verifies that the fsgid was successfully set to the test
+    user's gid
+ 3) Sets the fsgid to superuser.
+
+The successful case executes setfsgid32() as the root user,
+guaranteeing success regardless of the parameter passed to
+setfsgid32(), in accordance with the description found in the man
+page for setfsgid32().
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an fsgid that will result in a failure when passed
+    to setfsgid32() by the test user
+ 3) Sets the euid to the superuser
+ 4) Sets the euid to the test user
+ 5) Attempts to set the fsgid to the unique, invalid fsgid
+    determined in step (2)
+ 6) Sets the euid to the superuser
+ 7) Verifies that the fsgid was not set to the unique, invalid
+    fsgid.
+    
+The erroneous case satisfies the two conditions for failure
+specified in the man page for setfsgid32.  The process does not
+have ruid superuser, and the fsgid does not match the ruid, the
+euid, the fsuid, or the suid.  Thus, when the test user executes
+setfsgid32, we have the erroneous case.
+
+ ---
+
+FILE   : test_mknod.c
+PURPOSE: The test_mknod() function builds into the laus_test
+framework to verify that the Linux Audit System accurately
+logs both successful and erroneous execution of the
+"mknod" system call.
+
+In the successful case, this function:
+1) Generates a unique file name
+2) Clears the audit trail
+3) Executes the "mknod" system call
+4) Tests the results of the system call against the
+expected successful return
+
+The successful case executes the expected conditions
+described by the "mknod" system call manpage.  That is,
+the mknod() function is called using a unique
+filename, according to a valid mode, and thus creates
+the node and returns 0.
+
+The erroneous case executes the faulty conditions
+described by the "EACCES" error under the "mknod" system
+system call manpage.  That is, the mknod() function is
+called using the /root directory as a non-root user, thus the
+operation fails.
+
+ ---
+
+FILE       : test_setregid16.c
+DESCRIPTION: The test_setregid16() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setregid16" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setregid16() with egid=-1 and rgid=-1
+ 3) Verifies that the setregid16 call executed successfully.
+
+The successful case passes the setregid16() parameters egid=-1 and
+rgid=-1.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an egid that will result in a failure when passed
+    to setregid16() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the egid to the unique, invalid egid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setregid16 call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets rgid to -1 to leave it
+unchanged, and it attempts to set egid to a unique, invalid value
+which will cause setregid16() to return a failure code.
+
+ ---
+
+FILE       : test_setuid32.c
+DESCRIPTION: The test_setuid32() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setuid32" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setuid32() with uid=0
+ 3) Verifies that the setuid32 call executed successfully.
+
+The successful case passes the setuid32() parameter
+uid=0.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers a uid that will result in a failure when passed
+    to setuid32() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the uid to the unique, invalid uid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setuid32 call executed erroneously.
+
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It attempts to set uid to a unique,
+invalid value which will cause setuid32() to return a failure
+code.
+
+ ---
+
+FILE       : test_setreuid.c
+DESCRIPTION: The test_setreuid() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setreuid" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setreuid() with egid=-1 and rgid=-1
+ 3) Verifies that the setreuid call executed successfully.
+
+The successful case passes the setreuid() parameters egid=-1 and
+rgid=-1.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an egid that will result in a failure when passed
+    to setreuid() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the egid to the unique, invalid egid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setreuid call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets rgid to -1 to leave it
+unchanged, and it attempts to set egid to a unique, invalid value
+which will cause setreuid() to return a failure code.
+
+ ---
+
+FILE       : test_access.c
+DESCRIPTION: The test_access() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"access" system call.
+
+In the successful case, this function:
+ 1) Generates a unique filename and creates a file with a
+    particular mode
+ 2) Clears the audit trail
+ 3) Uses the access system call to check a mode that is allowed
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a file with mode permissions and
+uses the "access" system call to check the permissions on the file.
+An existing filename and a valid mode is used, and thus the system
+call executes correctly.
+
+In the erroneous case, this function:
+ 1) Generates a unique filename and creates a file with a
+    particular mode
+ 2) Clears the audit trail
+ 3) Uses the access system call to check a nonsensical mode
+ 4) Tests the results of the system call against the
+    expected successful return
+    
+The erroneous case tries to access the file in an invalid mode,
+thus generating an EACCES errno.
+
+ ---
+
+FILE       : test_umask.c
+DESCRIPTION: The test_umask() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"umask" system call.
+
+In the successful case, this function:
+ 1) Sets the umask to 000
+ 2) Calls umask with mask=000
+ 3) Verifies the result against the successful case.
+
+The umask system call is always successful, and so we must treat
+it as a special case in the context of this audit test suite.
+
+There is no erroneous case because umask will never fail.
+
+ ---
+
+FILE       : test_symlink.c
+DESCRIPTION: The test_symlink() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"symlink" system call.
+
+In the successful case, this function:
+ 1) Generates a unique filename and creates a temporary file
+ 2) Generates a unique filename to use as the symlink name
+ 3) Executes the "symlink" system call
+
+The successful case executes the expected conditions described
+by the "symlink" system call manpage.  That is, the symlink() function
+is called with an existing source file and a valid destination
+name.
+
+In the erroneous case, this function:
+ 1) Execute the "symlink" system call with two paths, the destination 
+    which the user doesn't have access to
+    
+The erroneous case executes the expected conditions described by 
+the "symlink" system call manpage for the EACCES errno.  The symlink()
+function is called with unaccessible destination path.
+
+ ---
+
+FILE       : test_execve.c
+DESCRIPTION: The test_execve() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"execve" system call.
+
+We use IPC semaphores to coordinate the child and the parent
+processes.
+
+In the successful case, this function:
+ 1) Creates a new semaphore
+ 2) Forks a child process, which in turn runs execve() with
+    semaphore_poster as the filename and the semaphore identifier
+    as a command-line argument.  This process posts to the
+    semaphore associated with the given identifier
+ 3) Spinlock pends on the semaphore
+ 4) Compares the result against the expected result for the
+    success case.
+
+On success, execve() does not return.  Hence, there is no return
+code.  We simply assign the value of ``0'' to the
+context->u.syscall.exit variable as a
+placeholder.  IPC machanisms are employed to detect the
+success (or lack therof) of the execve() call in the child
+process.
+
+In the erroneous case, this function:
+ 1) Calls execve() with a file that is not executable
+ 2) Compares the result against the expected result for the error
+    case.
+    
+The erroneous case causes execve() to flag an EACCES errno by
+passing it a non-executable filename, in 
+accordance with the man page's specification for error
+conditions.
+
+ ---
+
+FILE       : test_fchmod.c
+DESCRIPTION: The test_fchmod() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"fchmod" system call.
+
+In the successful case, this function:
+ 1) Generate a file name and create a test file
+ 2) Clear the audit trail
+ 3) Execute the "fchmod" system call to change permissions
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a test file and attempts to change
+the permissions on the file.  As the file does exist, and the mode
+is a valid mode, this system call should succeed.
+
+In the erroneous case, this function:
+    
+The erroneous case attempts to change the mode on a file for which
+the executing user does not have permission, thus causing an EPERM
+errno.
+
+ ---
+
+FILE       : test_chown.c
+DESCRIPTION: The test_chown() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"chown" system call.
+
+In the successful case, this function:
+ 1) Generate a file name and create a 777 test file owned by root
+ 2) Clear the audit trail
+ 3) Execute the "chown" system call to change ownership to test user
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a test file owned by root and with 777
+permssions and attempts to change the ownership of the file.
+As the file does exist, and the mode is 777, the chown syscall
+should succeed.
+
+In the erroneous case, this function:
+ 1) Generate a file name and do not create the test file
+ 2) Clear the audit trail
+ 3) Execute the "chown" system call on a file that does not exist
+ 4) Tests the results of the system call against the
+    expected successful return
+    
+The erroneous case has a non-root user try to chown a file owned by root.
+This throws an EPERM errno.
+
+ ---
+
+FILE       : test_chdir.c
+DESCRIPTION: The test_chdir() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"chdir" system call.
+
+In the successful case, this function:
+ 1) Generates a temporary directory name
+ 2) Creates the temporary directory
+ 3) Sets the euid to the test user
+ 4) Makes the chdir syscall to the temporary directory
+ 5) Sets the euid to the superuser
+ 6) Tests the result of the system call to determine whether or
+    not the call was successful
+ 7) Changes to the ".." directory
+ 8) Removes the temporary directory.
+
+The successful case changes the current directory to that
+specified in the path.  Since the directory is created immediately
+before changing to it, we can expect chdir() to successfully
+execute.
+
+In the erroneous case, this function:
+    
+The erroneous case invokes the EACCES error by trying to chdir
+to a 700 directory as a non-root, non-owner user.
+
+ ---
+
+FILE   : test_swapon.c
+PURPOSE: The test_swapon() function builds into the laus_test
+framework to verify that the Linux Audit System accurately
+logs both successful and erroneous execution of the
+"swapon" system call.
+
+In the successful case, this function:
+1) Generates a unique file name
+2) Creates the temporary file, and runs mkswap()
+3) Executes the "swapon" system call
+
+The successful case executes the expected conditions
+described by the "swapon" system call manpage.  That is,
+the swapon() function is called using a valid filename
+that has been created with mkswap(), and then turns
+swapping on.
+
+In the erroneous case, this function:
+1) Calls swapon with as a non-root test user
+
+The erroneous case executes the faulty conditions
+described by the "EPERM" error under the "swapon" system
+system call manpage.
+
+ ---
+
+FILE       : test_setregid.c
+DESCRIPTION: The test_setregid() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setregid" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setregid() with egid=-1 and rgid=-1
+ 3) Verifies that the setregid call executed successfully.
+
+The successful case passes the setregid() parameters egid=-1 and
+rgid=-1.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an egid that will result in a failure when passed
+    to setregid() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the egid to the unique, invalid egid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setregid call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets rgid to -1 to leave it
+unchanged, and it attempts to set egid to a unique, invalid value
+which will cause setregid() to return a failure code.
+
+ ---
+
+FILE       : test_msgsnd.c
+DESCRIPTION: The test_msgsnd() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "msgsnd" system call.
+
+In the successful case, this function:
+ 1) Allocates a new message queue via msgget()
+ 2) Uses msgsnd to send a message
+ 3) Tests the result of the call against the expected successful
+    return.
+
+In the erroneous case, this function:
+ 1) Uses msgsnd() to attempt to send a message with insufficient
+    access permissions
+ 2) Tests the result of the call against the expected erroneous
+    return.
+
+ ---
+
+FILE       : test_fork.c
+DESCRIPTION: The test_fork() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"fork" system call.
+
+In the successful case, this function:
+ 1) Calls fork().  The child process immediately terminates.
+ 2) Compares the result against the expected result for the
+    success case.
+
+The successful case depends only on there being sufficient
+memory resources in the system for the call in the first place.
+
+This test does not test the erroneous case, since the only two
+errors defined in the man page for fork() both involve running
+out of  system resources.  Since running out of resources would
+invalidate the test environment, we cannot produce the error
+condition.
+
+ ---
+
+FILE       : test_fsetxattr.c
+DESCRIPTION: The test_fsetxattr() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"fsetxattr" system call.
+
+In the successful case, this function:
+ 1) Creates a temporary file
+ 2) Opens the temporary file
+ 3) Calls fsetxattr on the opened file with
+    name="user.mime_type" value=XATTR_TEST_VALUE flags=XATTR_CREATE
+ 4) Verifies the success result.
+
+The successful case passes a valid file descriptor, name, value,
+size, and flag to the  fsetxattr call, thus satisfying the
+conditions as given in the man page for fsetxattr for a success
+result.
+
+In the erroneous case, this function:
+ 1) Creates a temporary file
+ 2) Opens the temporary file
+ 3) Calls fsetxattr on the opened file with
+    name="user.mime_type" value=XATTR_TEST_VALUE flags=XATTR_REPLACE
+ 4) Verifies the erroneous result.
+    
+The erroneous case causes an ENOATTR as detailed in the man page by 
+trying to replace and attribute which has not been set.
+
+ ---
+
+FILE       : test_chmod.c
+DESCRIPTION: The test_chmod() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"chmod" system call.
+
+In the successful case, this function:
+ 1) Generate a file name and create a test file
+ 2) Clear the audit trail
+ 3) Execute the "chmod" system call to change permissions
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a test file and attempts to change
+the permissions on the file.  As the file does exist, and the mode
+is a valid mode, this system call should succeed.
+
+In the erroneous case, this function:
+    
+The erroneous case attempts to change the mode on a 700 file by
+a non-root user other than the owner.  This throws an EPERM error.
+
+ ---
+
+FILE       : test_semtimedop.c
+DESCRIPTION: The test_semtimedop() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "lpc" system call.
+
+In the successful case, this function:
+ 1) Sets the semaphore mode flags
+ 2) Clears the audit trail
+ 3) Sets key to IPC_PRIVATE
+ 4) Executes the "semtimedop" library call
+ 5) Tests the result of the call against the expected successful
+    return
+ 6) Deallocates the newly allocated semaphore.
+
+The successful case executes the expected conditions
+described by the "semtimedop" library call man page.  That is,
+the semtimedop() function is called using IPC_PRIVATE for the key
+value.  "mode" is set to ( S_IRWXU | S_IRWXG | S_IRWXO ).  "nsems"
+is set to 1.  The function performs an operation on the semaphore.
+
+In the erroneous case, this function:
+ 1) Sets the semaphore mode flags
+ 2) Clears the audit trail
+ 3) Attempts to perform an operation on a semaphore that the test
+    user cannot access. 
+
+The erroneous case forces an error condition due to the test user
+does not have permission to perform operations upon the semaphore.
+This should cause an EACCES error.
+
+ ---
+
+FILE       : test_setfsuid.c
+DESCRIPTION: The test_setfsuid() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setfsuid" system call.
+
+In the successful case, this function:
+ 1) Becomes superuser
+ 2) Sets the fsuid to the test user's gid
+ 3) Verifies that the fsuid was successfully set to the test
+    user's gid
+
+The successful case executes setfsuid() as the root user,
+guaranteeing success regardless of the parameter passed to
+setfsuid(), in accordance with the description found in the man
+page for setfsuid().
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an fsuid that will result in a failure when passed
+    to setfsuid() by the test user
+ 3) Sets the euid to the superuser
+ 4) Sets the euid to the test user
+ 5) Attempts to set the fsuid to the unique, invalid fsuid
+    determined in step (2)
+ 6) Attempts to set the fsuid to the unique, invalid fsuid
+    determined in step (2) a second time
+ 7) Sets the euid to the superuser
+ 8) Verifies that the fsuid was not set to the unique, invalid
+    fsuid on the first try.
+    
+The erroneous case satisfies the two conditions for failure
+specified in the man page for setfsuid.  The process does not
+have ruid superuser, and the fsuid does not match the ruid, the
+euid, the fsuid, or the suid.  Thus, when the test user executes
+setfsuid, we have the erroneous case.
+
+ ---
+
+FILE       : test_lchown32.c
+DESCRIPTION: The test_lchown() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"lchown" system call.
+
+In the successful case, this function:
+ 1) Generate a file name and create a 777 test file owned by root
+ 2) Clear the audit trail
+ 3) Execute the "lchown" system call to change ownership to test user
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a test file owned by root and with 777
+permssions and attempts to change the ownership of the file.
+As the file does exist, and the mode is 777, the lchown syscall
+should succeed.
+
+In the erroneous case, this function:
+
+The erroneous case has the executing test user attempt to lchown a
+file for which that user does not have permission to do so.
+This throws an EPERM errno.
+
+ ---
+
+FILE       : test_shmctl.c
+DESCRIPTION: The test_shmctl() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "lpc" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Allocates a new block of shared memory via shmget()
+ 3) Uses shmctl() to deallocate the newly allocated block of memory
+ 4) Tests the result of the call against the expected successful
+    return.
+
+The successful case uses the shmid returned by shmget() in using
+shmctl() to deallocate the memory.  If shmctl() returns 0, we have
+a success, as specified in the man page.
+
+In the erroneous case, we attempt to allocate shared memory
+as a non-root user, which causes an EPERM errno.
+
+ ---
+
+FILE   : test_truncate64.c
+PURPOSE: The test_truncate64() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "truncate64" system call.
+
+In the successful case, this function:
+1) Creates the temporary file
+2) Executes the "truncate64" system call with valid length
+
+The successful case executes the expected conditions
+described by the "truncate64" system call manpage.  That is,
+the truncate64() function is called using a valid filename and length.
+
+In the erroneous case, this function:
+1) Creates the temporary file
+2) Executes the "truncate64" system call without permissions for the file
+
+The erroneous case executes the faulty conditions
+described by the "EACCES" error under the "truncate64" system
+system call manpage.  That is, the truncate64() function is
+called using a filename and a negative length.
+
+ ---
+
+FILE   : test_open.c
+PURPOSE: The test_open() function builds into the laus_test
+framework to verify that the Linux Audit System accurately
+logs both successful and erroneous execution of the
+"open" system call.
+
+In the successful case, this function:
+1) Creates the temporary file
+2) Executes the "open" system call
+3) Tests the results of the system call against the
+expected successful return
+
+The successful case executes the expected conditions
+described by the "open" system call manpage.  That is,
+the open() function is called using an existing, readable
+filename, according to valid flags, and returns a file
+descriptor to be used for subsequent input/output
+operations.
+
+In the erroneous case, this function:
+1) Creates a temporary file owned by root, perms 700
+2) Attempts to open the file as a test user
+3) Tests the results of the system call against the
+expected erroneous return
+
+The erroneous case executes the faulty conditions
+described by the "EACCES" error under the "open" system
+system call manpage.  That is, the open() function is
+called by a user who does not have permission to read the
+file and thus the operation fails.
+
+ ---
+
+FILE       : test_setresgid32.c
+DESCRIPTION: The test_setresgid32() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setresgid32" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setresgid32() with egid=-1, rgid=-1, and sgid=-1
+ 3) Verifies that the setresgid32 call executed successfully.
+
+The successful case passes the setresgid32() parameters egid=-1,
+rgid=-1, sgid=-1.  According to the man page, this causes no
+action to be taken while the syscall returns with a successful
+result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an egid that will result in a failure when passed
+    to setresgid32() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the egid to the unique, invalid egid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setresgid32 call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets rgid and sgid to -1 to leave
+them unchanged, and it attempts to set egid to a unique, invalid
+value which will cause setresgid32() to return a failure code.
+
+ ---
+
+FILE       : test_shmat.c
+DESCRIPTION: The test_shmat() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "lpc" system call.
+
+In the successful case, this function:
+ 1) Allocates a new block of shared memory
+ 2) Clears the audit trail
+ 3) Attaches to that block of shared memory
+ 4) Tests the result of the shmat() call against the expected
+    successful return
+ 5) Detaches from the block of shared memory
+ 6) Deallocates the block of shared memory.
+
+The successful case attaches to the shared memory block specified
+by the shmid value returned by shmget().
+
+In the erroneous case, this function:
+
+In the erroneous case, we attempt to attach to shared memory
+as a non-root user, which causes an EACCES errno.
+
+ ---
+
+FILE       : test_lchown.c
+DESCRIPTION: The test_lchown() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"lchown" system call.
+
+In the successful case, this function:
+ 1) Generate a file name and create a 777 test file owned by root
+ 2) Clear the audit trail
+ 3) Execute the "lchown" system call to change ownership to test user
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a test file owned by root and with 777
+permssions and attempts to change the ownership of the file.
+As the file does exist, and the mode is 777, the lchown syscall
+should succeed.
+
+In the erroneous case, this function:
+    
+The erroneous case has the executing test user attempt to lchown a
+file for which that user does not have permission to do so.
+This throws an EPERM errno.
+
+ ---
+
+FILE       : test_setgid32.c
+DESCRIPTION: The test_setgid32() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setgid32" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setgid32() with gid=0
+ 3) Verifies that the setgid32 call executed successfully.
+
+The successful case passes the setgid32() parameter
+gid=0.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers a gid that will result in a failure when passed
+    to setgid32() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the gid to the unique, invalid gid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setgid32 call executed erroneously.
+
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It attempts to set gid to a unique,
+invalid value which will cause setgid32() to return a failure
+code.
+
+ ---
+
+FILE       : test_fchown32.c
+DESCRIPTION: The test_fchown32() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"fchown32" system call.
+
+In the successful case, this function:
+ 1) Generate a file name and create a 777 test file owned by root
+ 2) Clear the audit trail
+ 3) Execute the "fchown32" system call to change ownership to test user
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a test file owned by root and with 777
+permssions and attempts to change the ownership of the file.
+As the file does exist, and the mode is 777, the fchown32 syscall
+should succeed.
+
+In the erroneous case, this function:
+ 1) Generate a file name and do not create the test file
+ 2) Clear the audit trail
+ 3) Execute the "fchown32" system call on a file that does not exist
+ 4) Tests the results of the system call against the
+    expected successful return
+    
+The erroneous case attempts to change the owner of a file that does
+not exist.  This tests the system calls handling of the error
+described in the manpage and label with the EBADF errno.
+
+ ---
+
+FILE       : test_link.c
+DESCRIPTION: The test_link_eacces() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"link" system call.
+
+In the successful case, this function:
+ 1) Generates a unique filename and creates a temporary file
+ 2) Generates a unique filename to use as the link name
+ 3) Clears the audit trail
+ 4) Executes the "link" system call
+ 5) Tests the results of the system call against the
+    expected successful return
+
+The successful case executes the expected conditions described
+by the "link" system call manpage.  That is, the link() function
+is called with an existing source file and a valid destination
+name.
+
+In the erroneous case, this function:
+  1) Tries to create a link in /root as a non-root user
+    
+The erroneous case executes the expected conditions described by 
+the "link" system call manpage for erroneous input.  The link()
+function is called as a non-root user to put a link in the /root
+directory.  This should throw an EACCES errno.
+
+ ---
+
+FILE       : test_lchown16c
+DESCRIPTION: The test_lchown() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"lchown" system call.
+
+In the successful case, this function:
+ 1) Generate a file name and create a 777 test file owned by root
+ 2) Clear the audit trail
+ 3) Execute the "lchown" system call to change ownership to test user
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a test file owned by root and with 777
+permssions and attempts to change the ownership of the file.
+As the file does exist, and the mode is 777, the lchown syscall
+should succeed.
+
+In the erroneous case, this function:
+
+The erroneous case has the executing test user attempt to lchown a
+file for which that user does not have permission to do so.
+This throws an EPERM errno.
+
+ ---
+
+FILE   : test_utime.c
+ ---
+
+FILE       : test_setresgid.c
+DESCRIPTION: The test_setresgid() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setresgid" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setresgid() with egid=-1, rgid=-1, and sgid=-1
+ 3) Verifies that the setresgid call executed successfully.
+
+The successful case passes the setresgid() parameters egid=-1,
+rgid=-1, sgid=-1.  According to the man page, this causes no
+action to be taken while the syscall returns with a successful
+result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an egid that will result in a failure when passed
+    to setresgid() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the egid to the unique, invalid egid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setresgid call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets rgid and sgid to -1 to leave
+them unchanged, and it attempts to set egid to a unique, invalid
+value which will cause setresgid() to return a failure code.
+
+ ---
+
+FILE       : test_setregid32.c
+DESCRIPTION: The test_setregid32() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setregid32" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setregid32() with egid=-1 and rgid=-1
+ 3) Verifies that the setregid32 call executed successfully.
+
+The successful case passes the setregid32() parameters egid=-1 and
+rgid=-1.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an egid that will result in a failure when passed
+    to setregid32() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the egid to the unique, invalid egid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setregid32 call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets rgid to -1 to leave it
+unchanged, and it attempts to set egid to a unique, invalid value
+which will cause setregid32() to return a failure code.
+
+ ---
+
+FILE       : test_iopl.c
+DESCRIPTION: The test_iopl() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"iopl" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Makes the iopl syscall with level=1
+ 3) Verifies that iopl returned with a success result
+ 4) Calls the iopl syscall with level=0.
+
+The successful case executes iopl as superuser with parameter
+level=1.  According to the man page, we can expect a success
+result from iopl given these conditions.
+
+In the erroneous case, this function:
+ 1) Clears the audit trail
+ 2) Sets the euid to the test user
+ 3) Makes the iopl syscall with level=42
+ 4) Sets the euid to the superuser
+ 5) Verifies that iopl returned with a failure result.
+    
+The erroneous case passes 42 as the level to iopl.  According to
+the man page for iopl, this will induce an EINVAL error, since 42
+is greater than 3, which is the maximum allowable level.
+
+ ---
+
+FILE       : test_setfsuid16.c
+DESCRIPTION: The test_setfsuid16() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setfsuid16" system call.
+
+In the successful case, this function:
+ 1) Becomes superuser
+ 2) Sets the fsuid to the test user's gid
+ 3) Verifies that the fsuid was successfully set to the test
+    user's gid
+
+The successful case executes setfsuid16() as the root user,
+guaranteeing success regardless of the parameter passed to
+setfsuid16(), in accordance with the description found in the man
+page for setfsuid16().
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an fsuid that will result in a failure when passed
+    to setfsuid16() by the test user
+ 3) Sets the euid to the superuser
+ 4) Sets the euid to the test user
+ 5) Attempts to set the fsuid to the unique, invalid fsuid
+    determined in step (2)
+ 6) Attempts to set the fsuid to the unique, invalid fsuid
+    determined in step (2) a second time
+ 7) Sets the euid to the superuser
+ 8) Verifies that the fsuid was not set to the unique, invalid
+    fsuid on the first try.
+    
+The erroneous case satisfies the two conditions for failure
+specified in the man page for setfsuid16.  The process does not
+have ruid superuser, and the fsuid does not match the ruid, the
+euid, the fsuid, or the suid.  Thus, when the test user executes
+setfsuid16, we have the erroneous case.
+
+ ---
+
+FILE       : test_mount.c
+DESCRIPTION: The test_mount() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"mount" system call.
+
+In the successful case, this function:
+ 1) Run test as root
+ 2) Create temporary target directory
+ 3) Use mount system call to mount the virtual proc filesystem
+    at the temporary directory created in step 2
+ 4) Unmount the temporary directory
+ 5) Remove the temporary directory
+
+The successful case mounts the virtual proc filesystem at the
+path specified in target.  Since the target directory is 
+created just before the mount and the test user is root we
+can expect mount() to successfully execute.
+
+In the erroneous case, this function:
+ 1) Run test as non-root
+ 2) Attemp to mount a valid test directory
+    
+The erroneous case invokes an error by attempting to call umount()
+as a non-root user which causes an EPERM.
+
+ ---
+
+FILE       : test_setreuid16.c
+DESCRIPTION: The test_setreuid16() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setreuid16" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setreuid16() with egid=-1 and rgid=-1
+ 3) Verifies that the setreuid16 call executed successfully.
+
+The successful case passes the setreuid16() parameters egid=-1 and
+rgid=-1.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an egid that will result in a failure when passed
+    to setreuid16() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the egid to the unique, invalid egid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setreuid16 call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets rgid to -1 to leave it
+unchanged, and it attempts to set egid to a unique, invalid value
+which will cause setreuid16() to return a failure code.
+
+ ---
+
+FILE       : test_fremovexattr.c
+DESCRIPTION: The test_fremovexattr() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"fremovexattr" system call.
+
+In the successful case, this function:
+ 1) Creates a temporary file
+ 2) Opens the temporary file
+ 3) Sets the user.mime_type extended attribute of the newly
+    opened temporary file to ``text/plain''
+ 4) Calls fremovexattr on the newly added attribute of the
+    temporary file
+ 5) Verifies the success result.
+
+The successful case passes a valid file descriptor and name to
+the fremovexattr call, thus satisfying the conditions as given in
+the man page for fremovexattr for a success result.
+
+In the erroneous case, this function:
+ 1) Creates a temporary file
+ 2) Opens the temporary file
+ 3) Calls fremovexattr on the test attribute of the temporary file
+ 5) Verifies the erroneous result.
+    
+The erroneous case causes an ENOATTR by trying to remove an attribute
+which has not been set.
+
+ ---
+
+FILE       : test_msgctl.c
+DESCRIPTION: The test_msgctl() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "lpc" system call.
+
+In the successful case, this function:
+ 1) Allocates a new message queue via msgget()
+ 2) Uses msgctl() to deallocate the newly allocated message queue
+ 3) Tests the result of the call against the expected successful
+    return.
+
+The successful case uses the msgid returned by msgget() in using
+msgctl() to deallocate the memory.  If msgctl() returns 0, we have
+a success, as specified in the man page.
+
+In the erroneous case, this function:
+
+Message queue operations are attempted as a non-root user, thus
+causing an EPERM errno.
+
+ ---
+
+FILE       : test_chown16.c
+DESCRIPTION: The test_chown16() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"chown16" system call.
+
+In the successful case, this function:
+ 1) Generate a file name and create a 777 test file owned by root
+ 2) Clear the audit trail
+ 3) Execute the "chown16" system call to change ownership to test user
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a test file owned by root and with 777
+permssions and attempts to change the ownership of the file.
+As the file does exist, and the mode is 777, the chown16 syscall
+should succeed.
+
+In the erroneous case, this function:
+    
+The erroneous case has a non-root user try to chown a file owned by root.
+This throws an EPERM errno.
+
+
+ ---
+
+FILE       : test_setgroups16.c
+DESCRIPTION: The test_setgroups16() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setgroups16" system call.
+
+In the successful case, this function:
+ 1) Executes the setgroups16 syscall with size=1 and list={0}
+ 3) Verifies success by verifying that setgroups16() did not return
+    a -1 result.
+
+The successful case provides a valid address for list and sets
+list to be just one item long.  It runs setgroups16() as the
+superuser, and so according to the man page, all requirements are
+met for a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Attempts to execute the setgroups16 syscall
+ 3) Sets the euid to the superuser
+ 4) Verifies error by verifying that setgroups16() returned a -1
+    result.
+    
+The erroneous case forces an error by attempting to run
+setgroups16() as someone other than the root user (assuming the
+test user is not root, which is a valid assumption for this suite
+of audit tests).  According to the man page, only the superuser
+may use the setgroups16() function.
+
+ ---
+
+FILE       : test_clone.c
+DESCRIPTION: The test_clone() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"clone" system call.
+
+In the successful case, this function:
+ 1) Malloc some memory for the child process stack
+ 2) Preform the syscall(__NR_clone ...  with the VFORK flag so 
+    the parent waits.
+ 3) Clean up by freeing the child stack.
+
+The successful case does a syscall(__NR_clone ...in the VFORK 
+mode.  The parent will wait and then finish the post_syscall 
+and clean-up stuff.
+
+In the erroneous case, this function:
+ 1) Preforms the syscall(__NR_clone ... with the VFORK flag and 
+    the CLONE_PID a NULL value for the stack.  This will only 
+    fail if user is NOT root.
+
+The erroneous case causes a failure by passing the CLONE_NEWNS flag.
+The error is EPERM(1).
+
+ ---
+
+FILE       : test_umount.c
+DESCRIPTION: The test_umount() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"umount" system call.
+
+In the successful case, this function:
+ 1) Run test as root
+ 2) Create temporary target directory
+ 3) To setup mount system call to mount the virtual proc filesystem
+    at the temporary directory created in step 2
+ 4) Test: umount on temporary directory
+ 5) Remove the temporary directory
+
+The successful case mounts the virtual proc filesystem at the
+path specified in target.  Since the target directory is 
+created just before the mount and the test user is root we
+can expect mount() to successfully execute.
+
+In the erroneous case, this function:
+ 1) Run test as non-root
+ 2) Attemp to umount good, mounted test directory
+    
+The erroneous case invokes an error by attempting to call umount()
+as a non-root user which causes an EPERM.
+
+ ---
+
+FILE       : test_rmdir.c
+DESCRIPTION: The test_rmdir() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"rmdir" system call.
+
+In the successful case, this function:
+ 1) Creates the temporary directory
+ 2) Makes the rmdir syscall on the temporary directory
+
+The successful case removes the directory in the specified in the
+path.  Since the directory is created immediately before removing
+to it, we can expect rmdir() to successfully execute.
+
+In the erroneous case, this function:
+ 1) Makes the rmdir syscall on a directory as a user who does
+    not have permission on that directory.
+    
+The erroneous case invokes an error by trying to remove a directory
+as a user who does not have permission to do so, causing an EPERM 
+errno.
+
+ ---
+
+FILE       : test_fchown16.c
+DESCRIPTION: The test_fchown16() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"fchown16" system call.
+
+In the successful case, this function:
+ 1) Generate a file name and create a 777 test file owned by root
+ 2) Clear the audit trail
+ 3) Execute the "fchown16" system call to change ownership to test user
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a test file owned by root and with 777
+permssions and attempts to change the ownership of the file.
+As the file does exist, and the mode is 777, the fchown16 syscall
+should succeed.
+
+In the erroneous case, this function:
+    
+The erroneous case has a non-root user try to chown a file owned by root.
+This throws an EPERM errno.
+
+ ---
+
+FILE       : test_setresuid32.c
+DESCRIPTION: The test_setresuid32() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setresuid32" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setresuid32() with euid=-1, ruid=-1, and suid=-1
+ 3) Verifies that the setresuid32 call executed successfully.
+
+The successful case passes the setresuid32() parameters euid=-1,
+ruid=-1, suid=-1.  According to the man page, this causes no
+action to be taken while the syscall returns with a successful
+result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an euid that will result in a failure when passed
+    to setresuid32() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the euid to the unique, invalid euid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setresuid32 call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets ruid and suid to -1 to leave
+them unchanged, and it attempts to set euid to a unique, invalid
+value which will cause setresuid32() to return a failure code.
+
+ ---
+
+FILE       : test_setuid.c
+DESCRIPTION: The test_setuid() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setuid" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setuid() with uid=0
+ 3) Verifies that the setuid call executed successfully.
+
+The successful case passes the setuid() parameter
+uid=0.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers a uid that will result in a failure when passed
+    to setuid() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the uid to the unique, invalid uid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setuid call executed erroneously.
+
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It attempts to set uid to a unique,
+invalid value which will cause setuid() to return a failure
+code.
+
+ ---
+
+FILE       : test_msgget.c
+DESCRIPTION: The test_msgget() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "lpc" system call.
+
+In the successful case, this function:
+ 1) Sets the message queue mode flags
+ 2) Sets key to IPC_PRIVATE
+ 3) Executes the "msgget" library call
+ 4) Tests the result of the call against the expected successful
+    return
+ 5) Deallocates the newly allocated message queue.
+
+The successful case executes the expected conditions
+described by the "msgget" library call man page.  That is,
+the msgget() function is called using IPC_PRIVATE for the key
+value.  "mode" is set to ( S_IRWXU | S_IRWXG | S_IRWXO ).  The
+function returns an integer value specifying the message queue
+identifier for the newly allocated message queue; the identifier
+should be a valid value (not NULL or -1).
+
+In the erroneous case, this function:
+
+Message queue operations are attempted as a non-root user, thus
+causing an EACCES errno.
+
+ ---
+
+FILE       : test_clone2.c
+DESCRIPTION: The test_clone2() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"clone2" system call.
+
+In the successful case, this function:
+ 1) Malloc some memory for the child process stack
+ 2) Preform the syscall(__NR_clone2 ...  with the VFORK flag so 
+    the parent waits.
+ 3) Clean up by freeing the child stack.
+
+The successful case does a syscall(__NR_clone2 ...in the VFORK 
+mode.  The parent will wait and then finish the post_syscall 
+and clean-up stuff.
+
+In the erroneous case, this function:
+ 1) Preforms the syscall(__NR_clone2 ... with the VFORK flag and 
+    the CLONE_PID a NULL value for the stack.  This will only 
+    fail if user is NOT root.
+
+The erroneous case causes a failure by passing the CLONE_NEWNS flag.
+The error is EPERM(1).
+
+ ---
+
+FILE       : test_rename.c
+DESCRIPTION: The test_rename() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"rename" system call.
+
+In the successful case, this function:
+ 1) Generates an originating temporary file
+ 2) Generates a target temporary filename
+ 3) Makes the rename syscall 
+
+The successful case renames the originating file to
+the target filename.  Since the originating filename
+is created immediately before renaming it to another unique,
+nonexistent name, we can expect rename() to successfully execute.
+
+The erroneous case invokes an error by trying to rename a file
+into the /root directory as a non-root user.
+According to the man page, an EACCES error is generated.
+
+ ---
+
+FILE   : test_utimes.c
+PURPOSE: The test_utimes() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "utimes" system call.
+
+In the successful case, this function:
+1) Creates the temporary file
+2) Creates the timeval data structure
+3) Executes the "utimes" system call
+
+The successful case executes the expected conditions
+described by the "utimes" system call manpage.  That is,
+the utimes() function is called using a valid filename
+and actually changes the access and modified timestamps
+on the file.
+
+In the erroneous case, this function:
+1) Creates the temporary file
+2) Creates the timeval data structure
+3) Executes the "utimes" system call as helper_uid
+
+The erroneous case executes the faulty conditions
+described by the "EPERM" errno.
+That is, the utimes() function is called on NULL.
+
+ ---
+
+FILE       : test_setxattr.c
+DESCRIPTION: The test_setxattr() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setxattr" system call.
+
+In the successful case, this function:
+ 1) Creates a temporary file
+ 2) Calls setxattr on the temporary file with
+    name="user.mime_type" and value=XATTR_TEST_VALUE
+ 3) Verifies the success result.
+
+The successful case passes a valid path, name, value, size, and
+flag to the  setxattr call, thus satisfying the conditions as
+given in the man page for setxattr for a success result.
+
+In the erroneous case, this function:
+ 1) Calls setxattr with path=NULL
+ 2) Verifies the error result.
+    
+The erroneous case causes an EFAULT as detailed in the man page in
+stat(2) by passing an invalid address (NULL) to setxattr.
+
+ ---
+
+FILE       : test_setgroups.c
+DESCRIPTION: The test_setgroups() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setgroups" system call.
+
+In the successful case, this function:
+ 1) Executes the setgroups syscall with size=1 and list={0}
+ 3) Verifies success by verifying that setgroups() did not return
+    a -1 result.
+
+The successful case provides a valid address for list and sets
+list to be just one item long.  It runs setgroups() as the
+superuser, and so according to the man page, all requirements are
+met for a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Attempts to execute the setgroups syscall
+ 3) Sets the euid to the superuser
+ 4) Verifies error by verifying that setgroups() returned a -1
+    result.
+    
+The erroneous case forces an error by attempting to run
+setgroups() as someone other than the root user (assuming the
+test user is not root, which is a valid assumption for this suite
+of audit tests).  According to the man page, only the superuser
+may use the setgroups() function.
+
+ ---
+
+FILE       : test_setresuid16.c
+DESCRIPTION: The test_setresuid16() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setresuid16" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setresuid16() with euid=-1, ruid=-1, and suid=-1
+ 3) Verifies that the setresuid16 call executed successfully.
+
+The successful case passes the setresuid16() parameters euid=-1,
+ruid=-1, suid=-1.  According to the man page, this causes no
+action to be taken while the syscall returns with a successful
+result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an euid that will result in a failure when passed
+    to setresuid16() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the euid to the unique, invalid euid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setresuid16 call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets ruid and suid to -1 to leave
+them unchanged, and it attempts to set euid to a unique, invalid
+value which will cause setresuid16() to return a failure code.
+
+ ---
+
+FILE       : test_setfsuid32.c
+DESCRIPTION: The test_setfsuid32() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setfsuid32" system call.
+
+In the successful case, this function:
+ 1) Becomes superuser
+ 2) Sets the fsuid to the test user's gid
+ 3) Verifies that the fsuid was successfully set to the test
+    user's gid
+
+The successful case executes setfsuid32() as the root user,
+guaranteeing success regardless of the parameter passed to
+setfsuid32(), in accordance with the description found in the man
+page for setfsuid32().
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an fsuid that will result in a failure when passed
+    to setfsuid32() by the test user
+ 3) Sets the euid to the superuser
+ 4) Sets the euid to the test user
+ 5) Attempts to set the fsuid to the unique, invalid fsuid
+    determined in step (2)
+ 6) Attempts to set the fsuid to the unique, invalid fsuid
+    determined in step (2) a second time
+ 7) Sets the euid to the superuser
+ 8) Verifies that the fsuid was not set to the unique, invalid
+    fsuid on the first try.
+    
+The erroneous case satisfies the two conditions for failure
+specified in the man page for setfsuid32.  The process does not
+have ruid superuser, and the fsuid does not match the ruid, the
+euid, the fsuid, or the suid.  Thus, when the test user executes
+setfsuid32, we have the erroneous case.
+
+ ---
+
+FILE       : test_unlink.c
+DESCRIPTION: The test_unlink() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"unlink" system call.
+
+In the successful case, this function:
+ 1) Generates a unique filename and creates a temporary file
+ 3) Executes the "unlink" system call
+
+The successful case executes the expected conditions described
+by the "unlink" system call manpage.  That is, the unlink() function
+is called with an existing valid file.
+
+In the erroneous case, this function:
+ 1) Execute the "unlink" system call on a file that the euid cannot write
+    
+The erroneous case executes the expected conditions described by 
+the "unlink" system call manpage for the EPERM errno.
+
+ ---
+
+FILE       : test_setresuid.c
+DESCRIPTION: The test_setresuid() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setresuid" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setresuid() with euid=-1, ruid=-1, and suid=-1
+ 3) Verifies that the setresuid call executed successfully.
+
+The successful case passes the setresuid() parameters euid=-1,
+ruid=-1, suid=-1.  According to the man page, this causes no
+action to be taken while the syscall returns with a successful
+result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an euid that will result in a failure when passed
+    to setresuid() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the euid to the unique, invalid euid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setresuid call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets ruid and suid to -1 to leave
+them unchanged, and it attempts to set euid to a unique, invalid
+value which will cause setresuid() to return a failure code.
+
+ ---
+
+FILE       : test_setuid16.c
+DESCRIPTION: The test_setuid16() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setuid16" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setuid16() with uid=0
+ 3) Verifies that the setuid16 call executed successfully.
+
+The successful case passes the setuid16() parameter
+uid=0.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers a uid that will result in a failure when passed
+    to setuid16() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the uid to the unique, invalid uid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setuid16 call executed erroneously.
+
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It attempts to set uid to a unique,
+invalid value which will cause setuid16() to return a failure
+code.
+
+ ---
+
+FILE       : test_semop.c
+DESCRIPTION: The test_semop() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "lpc" system call.
+
+In the successful case, this function:
+ 1) Sets the semaphore mode flags
+ 2) Clears the audit trail
+ 3) Sets key to IPC_PRIVATE
+ 4) Executes the "semop" library call
+ 5) Tests the result of the call against the expected successful
+    return
+ 6) Deallocates the newly allocated semaphore.
+
+The successful case executes the expected conditions
+described by the "semop" library call man page.  That is,
+the semop() function is called using IPC_PRIVATE for the key
+value.  "mode" is set to ( S_IRWXU | S_IRWXG | S_IRWXO ).  "nsems"
+is set to 1.  The function performs an operation on the semaphore.
+
+In the erroneous case, this function:
+ 1) Sets the semaphore mode flags
+ 2) Clears the audit trail
+ 3) Attempts to perform an operation on a semaphore that the test
+    user cannot access. 
+
+The erroneous case forces an error condition due to the test user
+does not have permission to perform operations upon the semaphore.
+This should cause an EACCES error.
+
+ ---
+
+FILE       : test_capset.c
+DESCRIPTION: The test_capset() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"capset" system call.
+
+In the successful case, this function:
+ 1) Gets the current capabilities
+ 2) Executes the capset syscall with the results of the
+    previously executed capget syscall
+ 3) Verifies that the result was successful.
+
+The successful case does not change any of the capabilities.
+Since the arguments are valid and since none of the capabilities
+are changed, there is no possible error condition for the call
+(according to the man page for capset).  We can thus expect a
+success result from capset in the successful case.
+
+In the erroneous case, this function:
+ 1) Gets the current capabilities
+ 2) Bitwise negates the data->permitted value
+ 4) Executes the capset syscall with the modified permitted value
+ 6) Verifies that the result was erroneous.
+    
+The erroneous case attempts to change the permitted capability
+set, which, according to the capset man page, causes an EPERM
+result due to the fact that we try to add a capability to the
+Permitted set.
+
+ ---
+
+FILE   : test_truncate.c
+PURPOSE: The test_truncate() function builds into the laus_test
+framework to verify that the Linux Audit System accurately
+logs both successful and erroneous execution of the
+"truncate" system call.
+
+In the successful case, this function:
+1) Creates the temporary file
+2) Executes the "truncate" system call with valid length
+
+The successful case executes the expected conditions
+described by the "truncate" system call manpage.  That is,
+the truncate() function is called using a valid filename
+and length.
+
+In the erroneous case, this function:
+1) Creates the temporary file
+2) Executes the "truncate" system call as a user without
+permissions on the file.
+
+The erroneous case executes the faulty conditions
+described by the "EACCES" error under the "truncate" system
+system call manpage.  That is, the truncate() function is
+called using a filename which you don't have permission to.
+
+ ---
+
+FILE       : test_semctl.c
+DESCRIPTION: The test_semctl() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "lpc" system call.
+
+In the successful case, this function:
+ 1) Allocates a new semaphore via semget()
+ 2) Uses semctl() to deallocate the newly allocated semaphore
+ 3) Tests the result of the call against the expected successful
+    return.
+
+The successful case uses the semid returned by semget() in using
+semctl() to deallocate the memory.  If semctl() returns 0, we have
+a success, as specified in the man page.
+
+In the erroneous case, this function:
+
+Semphore operations are attempted as a non-root user, thus
+causing an EPERM errno.
+
+ ---
+
+FILE       : test_setfsgid16.c
+DESCRIPTION: The test_setfsgid16() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setfsgid16" system call.
+
+In the successful case, this function:
+ 1) Sets the fsgid to the test user's gid
+
+The successful case executes setfsgid16() as the root user,
+guaranteeing success regardless of the parameter passed to
+setfsgid16(), in accordance with the description found in the man
+page for setfsgid16().
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an fsgid that will result in a failure when passed
+    to setfsgid16() by the test user
+ 3) Sets the euid to the superuser
+ 4) Sets the euid to the test user
+ 5) Attempts to set the fsgid to the unique, invalid fsgid
+    determined in step (2)
+ 6) Sets the euid to the superuser
+ 7) Verifies that the fsgid was not set to the unique, invalid
+    fsgid.
+    
+The erroneous case satisfies the two conditions for failure
+specified in the man page for setfsgid16.  The process does not
+have ruid superuser, and the fsgid does not match the ruid, the
+euid, the fsuid, or the suid.  Thus, when the test user executes
+setfsgid16, we have the erroneous case.
+
+ ---
+
+FILE       : test_chown32.c
+DESCRIPTION: The test_chown32() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"chown32" system call.
+
+In the successful case, this function:
+ 1) Generate a file name and create a 777 test file owned by root
+ 2) Clear the audit trail
+ 3) Execute the "chown32" system call to change ownership to test user
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a test file owned by root and with 777
+permssions and attempts to change the ownership of the file.
+As the file does exist, and the mode is 777, the chown32 syscall
+should succeed.
+
+In the erroneous case, this function:
+ 1) Generate a file name and do not create the test file
+ 2) Clear the audit trail
+ 3) Execute the "chown32" system call on a file that does not exist
+ 4) Tests the results of the system call against the
+    expected successful return
+    
+The erroneous case has a non-root user try to chown32 a file owned by root.
+This throws an EPERM errno.
+
+ ---
+
+FILE       : test_lsetxattr.c
+DESCRIPTION: The test_lsetxattr() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"lsetxattr" system call.
+
+In the successful case, this function:
+ 1) Creates a temporary file
+ 2) Calls lsetxattr on the temporary file with
+    name="user.mime_type" and value=XATTR_TEST_VALUE
+ 3) Verifies the success result.
+
+The successful case passes a valid path, name, value, size, and
+flag to the  lsetxattr call, thus satisfying the conditions as
+given in the man page for lsetxattr for a success result.
+
+In the erroneous case, this function:
+ 1) Calls lsetxattr with path=NULL
+ 2) Verifies the error result.
+    
+The erroneous case causes an EFAULT as detailed in the man page in
+stat(2) by passing an invalid address (NULL) to lsetxattr.
+
+ ---
+
+FILE       : test_ptrace.c
+DESCRIPTION: The test_ptrace() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"ptrace" system call.
+
+In the successful case, this function:
+ 1) Sets the euid to the test user
+ 2) Forks; child calls ptrace with request=PTRACE_TRACEME
+ 3) Parent waits for child to terminate
+ 4) Sets the euid to the superuser
+ 5) Verifies the success result.
+
+The successful case sets up all parameters in such a manner to
+assure success, according to the man page for ptrace.
+
+In the erroneous case, this function:
+ 1) Calls ptrace on pid=1 with a PTRACE_KILL request
+    
+The erroneous case passes in an invalid pid for given request,
+causing an EPERM error condition.
+
+ ---
+
+FILE       : test_removexattr.c
+DESCRIPTION: The test_removexattr() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"removexattr" system call.
+
+In the successful case, this function:
+ 1) Creates a temporary file
+ 2) Sets the user.mime_type extended attribute of the newly
+    created temporary file to text/plain
+ 3) Calls removexattr on the newly added attribute of the
+    temporary file
+ 4) Verifies the success result.
+
+The successful case passes a valid path and name to the
+removexattr call, thus satisfying the conditions as given in the
+man page for removexattr for a success result.
+
+In the erroneous case, this function:
+ 1) Calls removexattr with path=NULL
+ 2) Verifies the error result.
+    
+The erroneous case causes an EFAULT as detailed in the man page in
+stat(2) by passing an invalid address (NULL) to removexattr.
+
+ ---
+
+FILE       : test_settimeofday.c
+DESCRIPTION: The test_settimeofday() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"settimeofday" system call.
+
+In the successful case, this function must run as root.  It 
+creates the necessary time structures and gets the current time to
+fill them in.  It then sets the current time to the current time.
+
+The successful case ...
+ 1) Make the user root. 
+ 2) Malloc the time structures
+ 3) Get the current time.
+ 4) Make the settimeofday() call.
+ 5) Clean up.
+
+In the erroneous case, this function:
+ 1) Makes the settimeofday() call with NULL values
+    
+The erroneous case does not run as root therefore gives the EPERM
+error code.  It passes NULL values as parameters (however I could
+not make it fail with EINVAL or EFAULT.
+
+ ---
+
+FILE       : test_ioperm.c
+DESCRIPTION: The test_ioperm() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"ioperm" system call.
+
+In the successful case, this function:
+ 2) Calls ioperm with from=0x282, num=1, turn_on=1 as the
+    superuser
+ 3) Verifies the success result.
+
+The successful case passes a valid value for from, num, and
+turn_on (respectively) to the ioperm() function.  It also
+executes as the superuser.  We can thus expect a success result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Calls ioperm with from=0x282, num=1, turn_on=1
+ 3) Verifies the error result.
+    
+The erroneous case sets the euid to the test user before making
+the ioperm call.  According to the ioperm man page, the use of
+ioperm requires root privileges.
+
+ ---
+
+FILE       : test_setgid16.c
+DESCRIPTION: The test_setgid16() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setgid16" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setgid16() with gid=0
+ 3) Verifies that the setgid16 call executed successfully.
+
+The successful case passes the setgid16() parameter
+gid=0.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers a gid that will result in a failure when passed
+    to setgid16() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the gid to the unique, invalid gid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setgid16 call executed erroneously.
+
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It attempts to set gid to a unique,
+invalid value which will cause setgid16() to return a failure
+code.
+
+ ---
+
+FILE       : test_fchown.c
+DESCRIPTION: The test_fchown() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"fchown" system call.
+
+In the successful case, this function:
+ 1) Generate a file name and create a 777 test file owned by root
+ 2) Clear the audit trail
+ 3) Execute the "fchown" system call to change ownership to test user
+ 4) Tests the results of the system call against the
+    expected successful return
+
+The successful case creates a test file owned by root and with 777
+permssions and attempts to change the ownership of the file.
+As the file does exist, and the mode is 777, the fchown syscall
+should succeed.
+
+In the erroneous case, this function:
+
+The erroneous case has the executing test user attempt to chown a
+file for which that user does not have permission to do so.
+This throws an EPERM errno.
+
+ ---
+
+FILE       : test_umount2.c
+DESCRIPTION: The test_umount2() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"umount2" system call.
+
+In the successful case, this function:
+ 1) Run test as root
+ 2) Create temporary target directory
+ 3) To setup mount system call to mount the virtual proc filesystem
+    at the temporary directory created in step 2
+ 4) Test: umount2 on temporary directory
+ 5) Remove the temporary directory
+
+The successful case mounts the virtual proc filesystem at the
+path specified in target.  Since the target directory is 
+created just before the mount and the test user is root we
+can expect mount() to successfully execute.
+
+In the erroneous case, this function:
+ 1) Run test as test user
+ 2) Attemp to umount2 good, mounted directory
+    
+The erroneous case invokes an error by attempting to umount2() as
+a non-root user, causing an EPERM error.
+
+ ---
+
+FILE   : test_ioctl.c
+PURPOSE: The test_ioctl() function builds into the laus_test
+framework to verify that the Linux Audit System accurately
+logs both successful and erroneous execution of the
+"ioctl" system call.
+
+In the successful case, this function:
+1) open /dev/tty device
+2) invoke ioctl syscall with TCGETA command
+3) verify successful ioctl audit record is generated
+
+In the erroneous case, this function:
+1) open temporary file
+2) invoke ioctl syscall using temporary file file descriptor
+3) verify unsuccessful audit for ENOTTY device is generated
+
+ ---
+
+FILE       : test_setgid.c
+DESCRIPTION: The test_setgid() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setgid" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setgid() with gid=0
+ 3) Verifies that the setgid call executed successfully.
+
+The successful case passes the setgid() parameter
+gid=0.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers a gid that will result in a failure when passed
+    to setgid() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the gid to the unique, invalid gid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setgid call executed erroneously.
+
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It attempts to set gid to a unique,
+invalid value which will cause setgid() to return a failure
+code.
+
+ ---
+
+FILE       : test_adjtimex.c
+DESCRIPTION: The test_adjtimex() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"adjtimex" system call.
+
+In the successful case, this function:
+ 1) Calls adjtimex() with tbuf.modes=0 (has no effect)
+ 2) Verifies the success result.
+
+The successful case does not modify the timex buffer values, and
+so according to the man page, the call will always succeed.
+
+In the erroneous case, this function:
+ 1) Calls adjtimex() with tbuf.modes != 0 as the test user
+ 2) Verifies the error result.
+    
+In the erroneous case, we call adjtimex as the test user.
+According to the man page, if tbuf.mode is non-zero and the user
+is not the superuser, then we will get an error result from the
+system call.
+
+ ---
+
+FILE       : test_setresgid16.c
+DESCRIPTION: The test_setresgid16() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setresgid16" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setresgid16() with egid=-1, rgid=-1, and sgid=-1
+ 3) Verifies that the setresgid16 call executed successfully.
+
+The successful case passes the setresgid16() parameters egid=-1,
+rgid=-1, sgid=-1.  According to the man page, this causes no
+action to be taken while the syscall returns with a successful
+result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an egid that will result in a failure when passed
+    to setresgid16() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the egid to the unique, invalid egid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setresgid16 call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets rgid and sgid to -1 to leave
+them unchanged, and it attempts to set egid to a unique, invalid
+value which will cause setresgid16() to return a failure code.
+
+ ---
+
+FILE       : test_vfork.c
+DESCRIPTION: The test_vfork() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"vfork" system call.
+
+In the successful case, this function:
+ 1) Calls vfork().  The child process immediately terminates with _exit.
+ 2) Compares the result against the expected result for the
+    success case.
+
+The successful case depends only on there being sufficient
+memory resources in the system for the call in the first place.
+
+This test does not test the erroneous case, since the only two
+errors defined in the man page for vfork() both involve running
+out of  system resources.  Since running out of resources would
+invalidate the test environment, we cannot produce the error
+condition.
+
+ ---
+
+FILE       : test_setgroups32.c
+DESCRIPTION: The test_setgroups32() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setgroups32" system call.
+
+In the successful case, this function:
+ 1) Executes the setgroups32 syscall with size=1 and list={0}
+ 3) Verifies success by verifying that setgroups32() did not return
+    a -1 result.
+
+The successful case provides a valid address for list and sets
+list to be just one item long.  It runs setgroups32() as the
+superuser, and so according to the man page, all requirements are
+met for a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Attempts to execute the setgroups32 syscall
+ 3) Sets the euid to the superuser
+ 4) Verifies error by verifying that setgroups32() returned a -1
+    result.
+    
+The erroneous case forces an error by attempting to run
+setgroups32() as someone other than the root user (assuming the
+test user is not root, which is a valid assumption for this suite
+of audit tests).  According to the man page, only the superuser
+may use the setgroups32() function.
+
+ ---
+
+FILE       : test_lremovexattr.c
+DESCRIPTION: The test_lremovexattr() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"lremovexattr" system call.
+
+In the successful case, this function:
+ 1) Creates a temporary file
+ 2) Sets the user.mime_type extended attribute of the newly
+    created temporary file to ``text/plain''
+ 3) Calls lremovexattr on the newly added attribute of the
+    temporary file
+ 4) Verifies the success result.
+
+The successful case passes a valid path and name to the
+lremovexattr call, thus satisfying the conditions as given in the
+man page for lremovexattr for a success result.
+
+In the erroneous case, this function:
+ 1) Calls lremovexattr on a file for which the test user does not have access
+ 2) Verifies the error result.
+    
+The erroneous case causes an EACCES as detailed in the man page.
+
+ ---
+
+FILE       : test_setfsgid.c
+DESCRIPTION: The test_setfsgid() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setfsgid" system call.
+
+In the successful case, this function:
+ 1) Sets the fsgid to the test user's gid
+
+The successful case executes setfsgid() as the root user,
+guaranteeing success regardless of the parameter passed to
+setfsgid(), in accordance with the description found in the man
+page for setfsgid().
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an fsgid that will result in a failure when passed
+    to setfsgid() by the test user
+ 3) Sets the euid to the superuser
+ 4) Sets the euid to the test user
+ 5) Attempts to set the fsgid to the unique, invalid fsgid
+    determined in step (2)
+ 6) Sets the euid to the superuser
+ 7) Verifies that the fsgid was not set to the unique, invalid
+    fsgid.
+    
+The erroneous case satisfies the two conditions for failure
+specified in the man page for setfsgid.  The process does not
+have ruid superuser, and the fsgid does not match the ruid, the
+euid, the fsuid, or the suid.  Thus, when the test user executes
+setfsgid, we have the erroneous case.
+
+ ---
+
+FILE       : test_setreuid32.c
+DESCRIPTION: The test_setreuid32() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"setreuid32" system call.
+
+In the successful case, this function:
+ 1) Clears the audit trail
+ 2) Calls setreuid32() with egid=-1 and rgid=-1
+ 3) Verifies that the setreuid32 call executed successfully.
+
+The successful case passes the setreuid32() parameters egid=-1 and
+rgid=-1.  According to the man page, this causes no action to be
+taken while the syscall returns with a successful result.
+
+In the erroneous case, this function:
+ 1) Sets the euid to the test user
+ 2) Discovers an egid that will result in a failure when passed
+    to setreuid32() by the test user
+ 3) Sets the euid to the superuser
+ 4) Clears the audit trail
+ 5) Sets the euid to the test user
+ 6) Attempts to set the egid to the unique, invalid egid
+    determined in step (2)
+ 7) Sets the euid to the superuser
+ 8) Verifies that setreuid32 call executed erroneously.
+    
+The erroneous case satisfies the condition for failure as
+detailed in the man page.  It sets rgid to -1 to leave it
+unchanged, and it attempts to set egid to a unique, invalid value
+which will cause setreuid32() to return a failure code.
+
+ ---
+
+FILE       : test_msgrcv.c
+DESCRIPTION: The test_msgrcv() function builds into the laus_test
+framework to verify that the Linux Audit System accurately logs
+both successful and erroneous execution of the "msgrcv" system call.
+
+In the successful case, this function:
+ 1) Allocates a new message queue via msgget()
+ 2) Uses msgrcv to send a message
+ 3) Tests the result of the call against the expected successful
+    return.
+
+In the erroneous case, this function:
+ 1) Uses msgrcv() to attempt to send a message with insufficient
+    access permissions
+ 2) Tests the result of the call against the expected erroneous
+    return.
+
+ ---
+
+FILE       : test_bind.c
+DESCRIPTION: The test_bind() function builds into the
+laus_test framework to verify that the Linux Audit System
+accurately logs both successful and erroneous execution of the
+"bind" system call.
+
+In the successful case, this function:
+ 1) Creates a new socket
+ 2) Finds a valid port for binding
+ 3) Sets the euid to the test user
+ 4) Makes the bind syscall
+ 5) Sets the euid to the superuser
+ 6) Verifies that bind executed successfully
+ 7) Closes the socket.
+
+The successful case creates an ordinary INET TCP socket and binds
+to it.  It sets up the data structures and parameters according
+to the instructions given in the man pages for socket and bind.
+
+In the erroneous case, this function:
+ 1) Creates a new socket
+ 2) Sets the euid to the test user
+ 3) Calls bind() with the sockfd being -1 
+ 4) Sets the euid to the superuser
+ 5) Verifies that bind executed erroneously
+ 6) Closes the socket.
+    
+The erroneous case passes a -1 for socket file descriptor.  Since
+this is a bad file descriptor, bind will return an EBADF error code.
+
+ ---
+
+FILE   : test_creat.c
+PURPOSE: The test_creat() function builds into the laus_test
+framework to verify that the Linux Audit System accurately
+logs both successful and erroneous execution of the
+"creat" system call.
+
+In the successful case, this function:
+1) Generates a unique file name
+2) Clears the audit trail
+3) Executes the "creat" system call
+4) Tests the results of the system call against the expected successful return
+
+The successful case executes the expected conditions
+described by the "creat" system call manpage.  That is,
+the creat() function is called using a unique
+filename, according to a valid mode, and returns a file
+descriptor to be used for subsequent input/output
+operations.
+
+In the erroneous case, this function:
+
+The erroneous case executes the faulty conditions
+described by the "EACCES" error under the "creat" system
+system call manpage.  That is, the creat() function is
+called to try to create a file in /root by a non-root user.

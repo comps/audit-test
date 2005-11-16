@@ -62,5 +62,6 @@ run: all
 
 $(SYSCALLS_EXE): LDLIBS += -laudit
 $(SYSCALLS_EXE): $(ALL_OBJ) $(UTILS_AR) $(TESTS_AR)
+	$(LINK_EXE)
 
 include $(TOPDIR)/rules.mk

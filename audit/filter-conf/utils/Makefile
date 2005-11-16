@@ -45,5 +45,6 @@ ALL_AR		= $(UTILS_AR)
 all: deps $(ALL_AR)
 
 $(UTILS_AR): $(UTILS_OBJS)
+	$(LINK_AR)
 
 include $(TOPDIR)/rules.mk

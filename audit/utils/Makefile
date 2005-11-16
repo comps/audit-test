@@ -84,18 +84,23 @@ ALL_AR		= $(UTILS_AR)
 all: deps $(ALL_AR) $(ALL_EXE)
 
 $(UTILS_AR): $(UTILS_OBJ) $(LAF_OBJ)
+	$(LINK_AR)
 
 $(SEM_EXE): $(SEM_OBJ)
+	$(LINK_EXE)
 
 $(SEM_EXE2): $(SEM_EXE)
 	cp $(SEM_EXE) $(SEM_EXE2)
 	chmod 700 $(SEM_EXE2)
 
 $(EXIT_EXE): $(EXIT_OBJ)
+	$(LINK_EXE)
 
 $(RC_EXE): $(RC_OBJ)
+	$(LINK_EXE)
 
 $(PTS_EXE): $(PTS_OBJ)
+	$(LINK_EXE)
 
 .PHONY: $(PTS_LINK)
 $(PTS_LINK):

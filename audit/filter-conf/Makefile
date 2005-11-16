@@ -51,6 +51,7 @@ all: subdirs deps $(FILTER_EXE)
 
 $(FILTER_EXE): LIBS += -llaus
 $(FILTER_EXE): $(FILTER_OBJ) $(FILTER_ARS)
+	$(LINK_EXE)
 
 run:
 	$(AUDIT_CLEAN_LOG)

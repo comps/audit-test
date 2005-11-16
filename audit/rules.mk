@@ -45,6 +45,9 @@ LDFLAGS         +=
 
 AUDIT_CLEAN_LOG = /etc/init.d/audit stop; /bin/rm -f /var/log/audit.d/*; /etc/init.d/audit start
 
+LINK_AR		= $(AR) rc $@ $^
+LINK_EXE	= $(CC) $(LDFLAGS) -o $@ $^ $(LOADLIBES) $(LDLIBS)
+
 DEPS		= binutils \
 		  cpp \
                   expect \

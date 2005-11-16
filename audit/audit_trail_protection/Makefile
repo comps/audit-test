@@ -43,6 +43,7 @@ ALL_OBJ = $(AUDIT_TRAIL_OBJ)
 all: $(ALL_EXE)
 
 $(AUDIT_TRAIL_EXE): $(AUDIT_TRAIL_OBJS)
+	$(LINK_EXE)
 
 run: all
 	./$(EXE) &> ./$(EXE).run.log

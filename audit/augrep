@@ -284,7 +284,7 @@ augrep - audit.log search tool
 
 =head1 SYNOPSIS
 
-B<sreq> [I<-chqvV>] 
+B<augrep> [I<-chqvV>] 
 [I<--count --help --quiet --raw --version>] 
 [I<-f logfile | --file logfile>] [I<--seek offset>] expression...
 
@@ -359,5 +359,3 @@ If --seek is not specified and AUDIT_SEEK is set in the environemnt, its value
 will be used as the default offset.
 
 =back
-
-__END__

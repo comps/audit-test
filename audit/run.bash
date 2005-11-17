@@ -243,6 +243,7 @@ function cleanup {
     if grep -q "^$u:" /etc/passwd; then
         dmsg "Removing user $u"
         userdel "$u"
+        rm -rf "/home/$u"
     fi
     if grep -q "^$u:" /etc/group; then
         dmsg "Removing group $u"

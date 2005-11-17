@@ -97,7 +97,7 @@ static int common_setfsuid(struct audit_data *context)
     context->fsuid = pre_fsuid;
 
 exit:
-    rc = seteuid(0); /* always clean up */
+    seteuid(0); /* always clean up */
     fprintf(stderr, "seteuid(0) returned %d\n", rc);
     return rc;
 }

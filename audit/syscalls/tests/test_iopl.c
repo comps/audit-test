@@ -1,114 +1,81 @@
-/**********************************************************************
-    **   Copyright (C) International Business Machines  Corp., 2003
-    **
-    **   This program is free software;  you can redistribute it and/or modify
-    **   it under the terms of the GNU General Public License as published by
-    **   the Free Software Foundation; either version 2 of the License, or
-    **   (at your option) any later version.
-    **
-    **   This program is distributed in the hope that it will be useful,
-    **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
-    **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    **   the GNU General Public License for more details.
-    **
-    **   You should have received a copy of the GNU General Public License
-    **   along with this program;  if not, write to the Free Software
-    **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-    **
-    **
-    **
-    **  FILE       : test_iopl.c
-    **
-    **  PURPOSE    : To test the iopl library call auditing.
-    **
-    **  DESCRIPTION: The test_iopl() function builds into the
-    **  laus_test framework to verify that the Linux Audit System
-    **  accurately logs both successful and erroneous execution of the
-    **  "iopl" system call.
-    **
-    **  In the successful case, this function:
-    **   1) Clears the audit trail
-    **   2) Makes the iopl syscall with level=1
-    **   3) Verifies that iopl returned with a success result
-    **   4) Calls the iopl syscall with level=0.
-    **
-    **  The successful case executes iopl as superuser with parameter
-    **  level=1.  According to the man page, we can expect a success
-    **  result from iopl given these conditions.
-    **  
-    **  In the erroneous case, this function:
-    **   1) Clears the audit trail
-    **   2) Sets the euid to the test user
-    **   3) Makes the iopl syscall with level=42
-    **   4) Sets the euid to the superuser
-    **   5) Verifies that iopl returned with a failure result.
-    **      
-    **  The erroneous case passes 42 as the level to iopl.  According to
-    **  the man page for iopl, this will induce an EINVAL error, since 42
-    **  is greater than 3, which is the maximum allowable level.
-    **
-    **  HISTORY    :
-    **    06/03 Originated by Michael A. Halcrow <mike@halcrow.us>
-    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
-    **
-    **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_iopl.c
+ *
+ *  PURPOSE:
+ *  Verify audit of changes to process I/O privilege level.
+ *
+ *  SYSCALLS:
+ *  iopl()
+ *
+ *  TESTCASE: successful
+ *  Set I/O privilege level as root user.
+ *
+ *  TESTCASE: unsuccessful
+ *  Attempt to set I/O privilege level as test user.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
-#include <sys/io.h>
 
 int test_iopl(struct audit_data *context)
 {
     int rc = 0;
-#ifdef __i386__
-    int exp_errno = EINVAL;
+    int success = context->success; /* save intended result */
+    int exit;
 
-    int level;
+    /* To produce failure, attempt to set port perms as unprivileged user */
+    if (!success) {
+	rc = seteuid_test();
+	if (rc < 0)
+	    goto exit;
+	context->experror = EPERM;
+    }
 
-     /**
-      * Do as much setup work as possible right here
-      */
-    context->euid = 0;
-    context->egid = 0;
-    context->fsuid = 0;
-    context->fsgid = 0;
-    if (context->success) {
-	level = 1;
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit;
+
+    fprintf(stderr, "Attempt to set I/O privilege level to: 1\n");
+
+    errno = 0;
+    context_setbegin(context);
+    exit = syscall(context->u.syscall.sysnum, 1);
+    context_setend(context);
+
+    if (exit < 0) {
+	context->success = 0;
+	context->u.syscall.exit = context->error = errno;
     } else {
-	level = 42;
+	context->success = 1;
+	context->u.syscall.exit = exit;
+
+	errno = 0;
+	rc = syscall(context->u.syscall.sysnum, 0);
+	if (rc < 0)
+	    fprintf(stderr, "Error: iopl(): %s\n", strerror(errno));
     }
 
-    // Set up audit argument buffer
-    if ((rc = auditArg1(context,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &level)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call
-    context->u.syscall.exit = syscall(__NR_iopl, level);
-
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-
-
-EXIT_CLEANUP:
-     /**
-      * Do cleanup work here
-      */
-    if (context->success) {
-	iopl(0);
-    }
-
-EXIT:
-    fprintf(stderr, "Returning from test\n");
-#endif
+exit:
+    if (!success)
+	setuid(0); /* clean up from failure case */
     return rc;
 }

@@ -90,7 +90,7 @@ static int common_setgroups(struct audit_data *context)
 
 exit:
     if (!success)
-	rc = seteuid(0); /* clean up from failure case */
+	seteuid(0); /* clean up from failure case */
     return rc;
 }
 

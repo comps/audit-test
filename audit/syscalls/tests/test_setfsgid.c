@@ -46,7 +46,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-static int setfsgid_common(struct audit_data *context)
+static int common_setfsgid(struct audit_data *context)
 {
     int rc = 0;
     int success = context->success; /* save intended result */
@@ -103,10 +103,10 @@ exit:
 
 int test_setfsgid(struct audit_data *context)
 {
-    return setfsgid_common(context);
+    return common_setfsgid(context);
 }
 
 int test_setfsgid32(struct audit_data *context)
 {
-    return setfsgid_common(context);
+    return common_setfsgid(context);
 }

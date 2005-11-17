@@ -38,7 +38,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-static int setuid_common(struct audit_data *context)
+static int common_setuid(struct audit_data *context)
 {
     int rc = 0;
     int success = context->success; /* save intended result */
@@ -92,10 +92,10 @@ exit:
 
 int test_setuid(struct audit_data *context)
 {
-    return setuid_common(context);
+    return common_setuid(context);
 }
 
 int test_setuid32(struct audit_data *context)
 {
-    return setuid_common(context);
+    return common_setuid(context);
 }

@@ -227,10 +227,6 @@ function startup {
         useradd -g "$u" -m "$u" || exit 1
     fi
 
-    # Mark the current position in the audit log
-    export AUDIT_SEEK=$(wc -c /var/log/audit/audit.log 2>/dev/null)
-    [[ -z $AUDIT_SEEK ]] && AUDIT_SEEK=0
-
     startup_hook
 }
 

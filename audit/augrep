@@ -1,0 +1,431 @@
+#!/usr/bin/perl -w
+# =============================================================================
+# (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+# Written by Aron Griffis <aron@hp.com>
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+#   the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program;  if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# =============================================================================
+
+use POSIX;
+use Getopt::Long;
+use strict;
+
+######################################################################
+# Global vars
+######################################################################
+
+(my $version = '$Revision: 1.7 $') =~ s/.*?(\d.*\d).*/augrep version $1\n/;
+my $found = 0;
+my %opt = (
+    'f' => '/var/log/audit/audit.log',
+);
+my $usage = <<EOT;
+usage: augrep [options...] condition...
+
+    -c     --count         Only print a count of matching lines
+    -f     --file=logfile  Search a log other than /var/log/audit/audit.log
+    -h     --help          Show this help message
+    -q     --quiet         No output, just set exit status (like grep)
+           --seek=offset   Seek to offset before starting search
+           --raw           Show raw lines instead of merged record
+    -V     --version       Show version information
+EOT
+
+######################################################################
+# Audit Reader
+######################################################################
+
+package AuditReader;
+
+use FileHandle;
+
+sub new {
+    my ($class, $filename) = @_;
+    my ($self) = {
+        filename => $filename,
+        fh => undef,
+        records => [],
+    };
+    bless $self, $class;
+
+    $self->{'fh'} = FileHandle->new($filename, 'r') 
+        or die "failed to open $filename: $!";
+
+    return $self;
+}
+
+sub seek {
+    my ($self, $pos) = @_;
+    my ($fh) = $self->{'fh'};
+
+    if ($pos == 0) {
+        $fh->seek(0, 0) or die "failed to seek: $!";
+    } else {
+        $fh->seek($pos-1, 0) or die "failed to seek: $!";
+        # move to the next line
+        scalar <$fh>;
+    }
+}
+
+sub next_record {
+    my ($self) = @_;
+    my ($fh) = $self->{'fh'};
+    my ($record);
+
+    # populate the array; low-water=30, high-water=60
+    if (@{$self->{'records'}} < 30) {
+        while (@{$self->{'records'}} < 60 and !$fh->eof) {
+            push @{$self->{'records'}}, AuditRecord->new(scalar <$fh>);
+        }
+    }
+    return undef unless (@{$self->{'records'}});
+
+    # take the top record from the list
+    $record = shift @{$self->{'records'}};
+
+    # merge following records with duplicate ids
+    for (my $i = 0; $i < @{$self->{'records'}}; ) {
+        my ($other) = $self->{'records'}[$i];
+        if ($other->get('msg') eq $record->get('msg')) {
+            $record->merge($other);
+            splice @{$self->{'records'}}, $i, 1;
+        } else {
+            $i++;
+        }
+    }
+
+    # return the merged record
+    return $record;
+}
+
+######################################################################
+# Audit Record
+######################################################################
+
+package AuditRecord;
+
+# our $test = '';
+
+sub new {
+    my ($class, $line) = @_;
+    my ($self) = {
+        _raw => ($line || undef),
+        _order => [],
+        _dups => {},
+    };
+    bless $self, $class;
+
+    $self->parse($line) if (defined $line);
+
+    return $self;
+}
+
+sub parse {
+    my ($self, $line) = @_;
+    while ($line =~ s/([^\s"']+)=(.*?)\s*(?=\z|[^\s"']+=)//) {
+        my ($k, $v) = ($1, $2);
+        $v =~ s/^(['"])(.*)\1$/$2/;
+        $self->{$k} = $v;
+        push @{$self->{'_order'}}, $k;    # for ordering
+    }
+}
+
+sub merge {
+    my ($self, $other) = @_;
+    for my $k ($other->keys) {
+        my ($v) = $other->get($k);
+
+        # append raw lines
+        if ($k eq '_raw') { $self->{$k} .= $v; next; }
+
+        # ignore other special fields
+        elsif (substr($k, 0, 1) eq '_') { next; }
+
+        # handle duplicate keys
+        elsif (exists $self->{$k} and $self->{$k} ne $v) {
+            # simply concatenate types
+            if ($k eq 'type') {
+                $self->{$k} .= ',' . $v;
+                next;
+            }
+
+            # handle other duplicates generically by appending a serial number
+            my ($serial, $new_k) = 1;
+            $serial++ while ($new_k = $k.'_'.$serial and
+                exists $self->{$new_k} and $self->{$new_k} ne $v);
+            $k = $new_k;
+        }
+
+        # remember the order in which fields were seen
+        push @{$self->{'_order'}}, $k unless $self->{$k};
+        
+        # specials cases handled, add to our hash
+        $self->{$k} = $v;
+    }
+}
+
+sub raw {
+    my ($self) = @_;
+    return $self->{'_raw'};
+}
+
+sub get {
+    my ($self, $k) = @_;
+    return $self->{$k};
+}
+
+sub keys {
+    my ($self, $k) = @_;
+    return CORE::keys %$self;
+}
+
+sub to_s {
+    my ($self) = @_;
+    if (%{$self->{'_dups'}}) { 
+        warn "DUPS: ", join(', ', sort $self->dups), "\n";
+    }
+    return join(' ', map {
+            (my $v = $self->{$_}) =~ s/.*\s.*/"$&"/;
+            "$_=$v" } @{$self->{'_order'}});
+}
+
+sub dups {
+    my ($self) = @_;
+    return CORE::keys %{$self->{'_dups'}};
+}
+
+sub test {
+    my ($self) = @_; shift;
+
+    for my $a (@ARGV) {
+        # use string comparison instead of numeric
+        $a =~ s/^(\w+)==(.*)/\$self->{'$1'} eq q{$2}/ or
+        $a =~ s/^(\w+)!=(.*)/\$self->{'$1'} ne q{$2}/ or
+        # use numeric for < <= >= > because string acts differently
+        $a =~ s/^(\w+)([<>])/\$self->{'$1'} $2/ or
+        # quote the pattern
+        $a =~ s/^(\w+)(!~|=~)(.*)/\$self->{'$1'} $2 m{$3}/ or
+        die "Error evaluating expression: $a";
+    }
+    my ($test) = "@ARGV";
+
+    # in theory this should be (significantly) faster than eval'ing
+    # repeatedly
+    local $^W = 0;      # we're redefining test; don't complain
+    eval "sub test { my (\$self) = \@_; local \$^W = 0; $test }";
+    die "Error in expression: $@" if $@;
+
+    # this only *appears* recursive
+    $self->test(@_);
+}
+
+# sub test {
+#     my ($self) = @_; shift;
+#     local $^W = 0;      # we're redefining test; don't complain
+#     if (1) {
+#         # in theory this should be (significantly) faster than eval'ing
+#         # repeatedly
+#         eval 'sub test { my ($self) = @_; local $^W = 0; ' . $test . "}";
+#         $self->test(@_);
+#     } else {
+#         eval $test;
+#     }
+# }
+
+#
+# Following are class methods for working with $test
+#
+
+# sub add {
+#     my ($lhs, $op, $rhs) = @_;
+# 
+#     # The one quoting issue here is that lhs/rhs can't contain a single quote.
+#     # That probably won't be an issue.
+#     if ($op eq '=' || $op eq '==') {
+#         $test .= "(\$self->{'$lhs'} eq '$rhs')";
+#     } elsif ($op eq '!=') {
+#         $test .= "(\$self->{'$lhs'} ne '$rhs')";
+#     } elsif ($op eq '<' || $op eq '>' || $op eq '<=' || $op eq '>=') {
+#         $test .= "(\$self->{'$lhs'} $op '$rhs')";
+#     } elsif ($op eq '=~') {
+#         $test .= "(\$self->{'$lhs'} =~ m'$rhs')";
+#     } elsif ($op eq '!~') {
+#         $test .= "(\$self->{'$lhs'} !~ m'$rhs')";
+#     } else {
+#         die "Unknown op: $op";
+#     }
+# }
+# 
+# sub and { $test .= ' and '; }
+# sub or { $test .= ' or '; }
+# sub open_paren { $test .= '('; }
+# sub close_paren { $test .= ')'; }
+# sub bang { $test .= "! "; }
+
+######################################################################
+# Main
+######################################################################
+
+package main;
+
+# Allow bundling of options
+Getopt::Long::Configure("bundling");
+
+# Parse the options on the cmdline.  Put the short versions first in
+# each optionstring so that the hash keys are created using the short
+# versions.  For example, use 'q|qar', not 'qar|q'.
+my ($result) = GetOptions(
+    \%opt,
+    'c|count',
+    'f|file=s',
+    'h|help',
+    'q|quiet',
+    'raw',
+    'seek=i',
+    'V|version',
+);
+if ($opt{'h'}) { print STDERR $usage; exit 0 }
+if ($opt{'V'}) { print STDERR $version; exit 0 }
+die "augrep: argument required\n$usage" unless @ARGV;
+
+# Parse the conditions into $AuditRecord::test
+# while (@ARGV) {
+#     my ($lhs) = shift @ARGV;
+# 
+#     if ($lhs eq 'and') { AuditRecord::and(); next; }
+#     if ($lhs eq 'or') { AuditRecord::or(); next; }
+#     if ($lhs eq '!') { AuditRecord::bang(); next; }
+#     if ($lhs eq '(') { AuditRecord::open_paren(); next; }
+#     if ($lhs eq ')') { AuditRecord::close_paren(); next; }
+# 
+#     my ($op) = shift @ARGV;
+#     my ($rhs) = shift @ARGV;
+# 
+#     if (!defined $rhs) {
+#         $op = '' unless defined $op;
+#         die "Invalid expression encountered: $lhs $op";
+#     }
+# 
+#     AuditRecord::add($lhs, $op, $rhs);
+# }
+
+my ($reader) = AuditReader->new($opt{'f'});
+$reader->seek($opt{'seek'} || $ENV{'AUDIT_SEEK'} || 0);
+
+while (my $record = $reader->next_record) {
+    next unless $record->test();
+    $found++;
+    last if $opt{'q'};
+    if ($opt{'raw'}) {
+        if ($opt{'c'}) {
+            $found += ($record->raw =~ tr/\n//) - 1;
+        } else {
+            print $record->raw;
+        }
+    } else {
+        print $record->to_s."\n" unless $opt{'c'};
+    }
+}
+
+print $found, "\n" if $opt{'c'};
+exit !$found;
+
+__END__
+
+=head1 NAME
+
+augrep - audit.log search tool
+
+=head1 SYNOPSIS
+
+B<sreq> [I<-chqvV>] 
+[I<--count --help --quiet --raw --version>] 
+[I<-f logfile | --file logfile>] [I<--seek offset>] expression...
+
+=head1 OPTIONS
+
+=over
+
+=item B<-c --count>
+
+Suppress normal output; instead print a count of matching lines.
+
+=item B<-f> I<logfile> B<--file> I<logfile>
+
+Search a logfile other than /var/log/audit/audit.log
+
+=item B<-h --help>
+
+Show usage information
+
+=item B<-q --quiet>
+
+Quiet; do not write anything to standard output.  Exit immediately with zero
+status if any match is found, otherwise exit with non-zero status.
+
+=item B<--raw>
+
+Output the raw lines related to the search, rather than merging them into a
+single record.  Note this means that the search expression might contain keys
+not present in the output (such as inode_1)
+
+=item B<--seek> I<offset>
+
+Start the search at the first line at or after offset (bytes).
+
+=item B<-V --version>
+
+Show version information.
+
+=back
+
+=head1 DESCRIPTION
+
+This tool provides a command-line interface for search audit logs for
+interesting records, similar to ausearch but slower and possibly more flexible.
+
+=head1 EXAMPLES
+
+To count the number of records with type=SYSCALL:
+
+    $ augrep -c type =~ /SYSCALL/
+    537
+
+To find a specific record:
+
+    $ augrep msg=='audit(1124137373.408:565):'
+    type=SYSCALL,FS_WATCH,FS_INODE,CWD,PATH msg=audit(1124137373.408:565):
+    arch=c0000032 syscall=1210 success=yes exit=0 a0=6000000000006388
+    a1=6000000000006390 a2=c00000000000048c a3=2000000000244238 items=1
+    pid=28239 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0
+    comm=chmod exe=/bin/chmod watch_inode=573461 watch=foo perm_mask=1
+    filterkey= perm=1 inode_dev=08:06 inode_gid=0 inode=573461 inode_uid=0
+    inode_rdev=00:00 cwd=/tmp rdev=00:00 ouid=0 dev=08:06 flags=1 mode=0100777
+    name=foo/a ogid=0 inode_1=573504
+
+=head1 ENVIRONMENT VARIABLES
+
+=over
+
+=item AUDIT_SEEK
+
+If --seek is not specified and AUDIT_SEEK is set in the environemnt, its value
+will be used as the default offset.
+
+=back
+
+__END__
+
+$Log: $

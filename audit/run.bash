@@ -60,24 +60,53 @@ function warn {
     msg "Warning: $*"
 }
 
-function msg {
-    $logging && echo "$*" >>"$opt_log"
+function colorize {
+    declare color
+    case $* in
+        '<red>'*) color=31 ;;
+        '<green>'*) color=32 ;;
+        '<yellow>'*) color=33 ;;
+        '<blue>'*) color=34 ;;
+        '<magenta>'*) color=35 ;;
+        '<cyan>'*) color=36 ;;
+    esac
+    if [[ -n $color ]]; then
+        echo -ne "\033[${color}m"
+        echo -n "${*#<*>}"
+        echo -e "\033[0m"
+    else
+        echo "$*"
+    fi
+}
+
+function monoize {
+    declare x
+    for x in red green yellow blue magenta cyan; do
+        [[ $* == \<$x\>* ]] || continue
+        echo "${*#<$x>}"
+        return
+    done
     echo "$*"
 }
 
+function msg {
+    $logging && monoize "$*" >>"$opt_log"
+    colorize "$*"
+}
+
 function vmsg {
-    $logging && echo "$*" >>"$opt_log"
-    $opt_verbose || $opt_debug && echo "$*"
+    $logging && monoize "$*" >>"$opt_log"
+    $opt_verbose || $opt_debug && colorize "$*"
 }
 
 function dmsg {
-    $logging && echo "$*" >>"$opt_log"
-    $opt_debug && echo "$*"
+    $logging && monoize "$*" >>"$opt_log"
+    $opt_debug && colorize "$*"
 }
 
 function prf {
-    $logging && printf "$@" >>"$opt_log"
-    printf "$@"
+    $logging && printf "$(monoize "$1")" "${@:2}" >>"$opt_log"
+    printf "$(colorize "$1")" "${@:2}"
 }
 
 #----------------------------------------------------------------------
@@ -260,7 +289,7 @@ function parse_cmdline {
 
     # Use /usr/bin/getopt which supports GNU-style long options
     args=$(getopt -o df:hl:v \
-        --long config:,debug,help,log:,verbose \
+        --long config:,debug,help,log:,nocolor,verbose \
         -n "$0" -- "$@") || die
     eval set -- "$args"
 
@@ -270,6 +299,7 @@ function parse_cmdline {
             -f|--config) opt_config=$2; shift 2 ;;
             -h|--help) usage; exit 0 ;;
             -l|--log) opt_log=$2; shift 2 ;;
+            --nocolor) colorize() { monoize "$@"; }; shift ;;
             -v|--verbose) opt_verbose=true; shift ;;
             --) shift ; break ;;
             *) die "failed to process cmdline args" ;;
@@ -309,21 +339,27 @@ function run_tests {
         output=$(run_test "$t" 2>&1)
 
         case $? in
-            0)  echo PASS
+            0)  msg "<green>PASS"
                 (( pass++ ))
+                dmsg "<blue>--- begin output -----------------------------------------------------------"
                 dmsg "$output"
+                dmsg "<blue>--- end output -------------------------------------------------------------"
                 dmsg
                 ;;
 
-            1)  echo FAIL
+            1)  msg "<yellow>FAIL"
                 (( fail++ ))
+                vmsg "<blue>--- begin output -----------------------------------------------------------"
                 vmsg "$output"
+                vmsg "<blue>--- end output -------------------------------------------------------------"
                 vmsg
                 ;;
 
-            *)  echo "ERROR ($?)"
+            *)  msg "<red>ERROR ($?)"
                 (( error++ ))
+                vmsg "<blue>--- begin output -----------------------------------------------------------"
                 vmsg "$output"
+                vmsg "<blue>--- end output -------------------------------------------------------------"
                 vmsg
                 ;;
         esac
@@ -331,7 +367,7 @@ function run_tests {
 
 
     (( total = pass + fail + error ))
-    echo
+    msg
     prf "%4d pass (%d%%)\n" $pass $((pass * 100 / total))
     prf "%4d fail (%d%%)\n" $fail $((fail * 100 / total))
     prf "%4d error (%d%%)\n" $error $((error * 100 / total))

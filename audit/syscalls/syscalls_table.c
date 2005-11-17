@@ -83,7 +83,6 @@ static struct syscall_tests syscall_table[] = {
     { &test_setgid, "setgid" }, 
     { &test_setgid32, "setgid32" }, 
     { &test_setgroups, "setgroups" }, 
-    { &test_setgroups16, "setgroups16" }, 
     { &test_setgroups32, "setgroups32" }, 
     { &test_setregid, "setregid" }, 
     { &test_setregid32, "setregid32" }, 

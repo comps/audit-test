@@ -1,90 +1,57 @@
-/**********************************************************************
-    **   Copyright (C) International Business Machines  Corp., 2003
-    **
-    **   This program is free software;  you can redistribute it and/or modify
-    **   it under the terms of the GNU General Public License as published by
-    **   the Free Software Foundation; either version 2 of the License, or
-    **   (at your option) any later version.
-    **
-    **   This program is distributed in the hope that it will be useful,
-    **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
-    **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    **   the GNU General Public License for more details.
-    **
-    **   You should have received a copy of the GNU General Public License
-    **   along with this program;  if not, write to the Free Software
-    **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-    **
-    **
-    **
-    **  FILE       : test_umask.c
-    **
-    **  PURPOSE    : To test the umask library call auditing.
-    **
-    **  DESCRIPTION: The test_umask() function builds into the
-    **  laus_test framework to verify that the Linux Audit System
-    **  accurately logs both successful and erroneous execution of the
-    **  "umask" system call.
-    **
-    **  In the successful case, this function:
-    **   1) Sets the umask to 000
-    **   2) Calls umask with mask=000
-    **   3) Verifies the result against the successful case.
-    **
-    **  The umask system call is always successful, and so we must treat
-    **  it as a special case in the context of this audit test suite.
-    **  
-    **  There is no erroneous case because umask will never fail.
-    **
-    **  HISTORY    :
-    **    06/03 Originated by Michael A. Halcrow <mike@halcrow.us>
-    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
-    **
-    **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_umask.c
+ *
+ *  PURPOSE:
+ *  Verify audit of changes to file creation mask.
+ *
+ *  SYSCALLS:
+ *  umask()
+ *
+ *  TESTCASE: successful
+ *  Set umask to current umask value.
+ *
+ *  NOTES:
+ *  umask() always succeeds.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
 
 int test_umask(struct audit_data *context)
 {
-
-
     int rc = 0;
-    int exp_errno = 0;
-
     int mask;
 
-    if (!context->success) {	//umask never fails
-	rc = SKIP_TEST_CASE;
-	goto EXIT;
-    }
+    /* save the current mask, so the syscall op is also the cleanup */
+    mask = umask(022);
 
-    //Do as much setup work as possible right here
-    mask = 000;
-    umask(mask);
-    // Set up audit argument buffer
-    if ((rc = auditArg1(context, AUDIT_ARG_IMMEDIATE, sizeof(int), &mask)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call
-    context->u.syscall.exit = syscall(__NR_umask, mask);
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+        goto exit;
 
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
+    context_setbegin(context);
+    context->u.syscall.exit = umask(mask);
+    context_setend(context);
 
-EXIT_CLEANUP:
-    // Do cleanup work here
-
-EXIT:
-    fprintf(stderr, "Returning from test\n");
+exit:
     return rc;
 }

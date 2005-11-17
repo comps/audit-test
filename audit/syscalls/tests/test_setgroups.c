@@ -1,113 +1,112 @@
-/**********************************************************************
-    **   Copyright (C) International Business Machines  Corp., 2003
-    **
-    **   This program is free software;  you can redistribute it and/or modify
-    **   it under the terms of the GNU General Public License as published by
-    **   the Free Software Foundation; either version 2 of the License, or
-    **   (at your option) any later version.
-    **
-    **   This program is distributed in the hope that it will be useful,
-    **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
-    **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    **   the GNU General Public License for more details.
-    **
-    **   You should have received a copy of the GNU General Public License
-    **   along with this program;  if not, write to the Free Software
-    **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-    **
-    **
-    **
-    **  FILE       : test_setgroups.c
-    **
-    **  PURPOSE    : To test the setgroups library call auditing.
-    **
-    **  DESCRIPTION: The test_setgroups() function builds into the
-    **  laus_test framework to verify that the Linux Audit System
-    **  accurately logs both successful and erroneous execution of the
-    **  "setgroups" system call.
-    **
-    **  In the successful case, this function:
-    **   1) Executes the setgroups syscall with size=1 and list={0}
-    **   3) Verifies success by verifying that setgroups() did not return
-    **      a -1 result.
-    **
-    **  The successful case provides a valid address for list and sets
-    **  list to be just one item long.  It runs setgroups() as the
-    **  superuser, and so according to the man page, all requirements are
-    **  met for a successful result.
-    **  
-    **  In the erroneous case, this function:
-    **   1) Sets the euid to the test user
-    **   2) Attempts to execute the setgroups syscall
-    **   3) Sets the euid to the superuser
-    **   4) Verifies error by verifying that setgroups() returned a -1
-    **      result.
-    **      
-    **  The erroneous case forces an error by attempting to run
-    **  setgroups() as someone other than the root user (assuming the
-    **  test user is not root, which is a valid assumption for this suite
-    **  of audit tests).  According to the man page, only the superuser
-    **  may use the setgroups() function.
-    **
-    **  HISTORY    :
-    **    06/03 Originated by Michael A. Halcrow <mike@halcrow.us>
-    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
-    **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
-    **
-    **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_setgroups.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to set a process's list of supplementary
+ *  group IDs.
+ *
+ *  SYSCALLS:
+ *  setgroups(), setgroups32()
+ *
+ *  TESTCASE: successful
+ *  As root, set the list of supplementary group IDs to the values in
+ *  the list returned by getgroups().
+ *
+ *  TESTCASE: unsuccessful
+ *  As test user, attempt to set the list of supplementary group IDs
+ *  to the list obtained as root user.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
 #include <grp.h>
 
-int test_setgroups(struct audit_data *context)
+/* expect no more than 20 supplementary groups */
+#define SUPP_GROUPS 20
+
+static int common_setgroups(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EPERM;
+    int success = context->success; /* save intended result */
+    gid_t list[SUPP_GROUPS] = { 0 };
+    size_t size = SUPP_GROUPS;
+    int i, exit;
 
-    size_t size = 1;
-    gid_t list[1] = { 0 };
-    //on 32 bit platforms the gid in the kernel is 16 bits (i.e. logged as such)
-    //u_int16_t log_list[1] = { 0 };           //not needed?
+    errno = 0;
+    rc = getgroups(size, list);
+    if (rc < 0) {
+	fprintf(stderr, "Error:  getgroups(): %s\n", strerror(errno));
+	goto exit;
+    }
+    fprintf(stderr, "Process groups: ");
+    for (i = 0; i < size; i++)
+	fprintf(stderr, "%i ", list[i]);
+    fprintf(stderr, "\n");
 
-     /**
-      * Do as much setup work as possible right here
-      */
-    if (context->success) {
-	context->euid = 0;
-	context->egid = 0;
-	context->fsuid = 0;
-	context->fsgid = 0;
-	// Set up audit argument buffer for success case
-	if ((rc = auditArg1(context,
-			    AUDIT_ARG_POINTER, sizeof(gid_t), list)) != 0) {
-	    fprintf(stderr, "Error setting up audit argument buffer\n");
-	    goto EXIT;
+    /* To produce failure, become test user and attempt to set groups
+     * to list obtained as root user */
+    if (!success) {
+	int testuid = gettestuid();
+	if (testuid < 0) {
+	    rc = -1;
+	    goto exit;
 	}
+	rc = seteuid(testuid);
+	if (rc < 0) {
+	    fprintf(stderr, "Error: seteuid(%d)\n", testuid);
+	    goto exit;
+	}
+	context->experror = EPERM;
+    }
+
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit;
+
+    errno = 0;
+    context_setbegin(context);
+    exit = syscall(context->u.syscall.sysnum, size, &list);
+    context_setend(context);
+
+    if (exit < 0) {
+	context->success = 0;
+	context->u.syscall.exit = context->error = errno;
     } else {
-	// Set up audit argument buffer for fail case
-	if ((rc = auditArg1(context, AUDIT_ARG_NULL, 0, NULL)) != 0) {
-	    fprintf(stderr, "Error setting up audit argument buffer\n");
-	    goto EXIT;
-	}
+	context->success = 1;
+	context->u.syscall.exit = exit;
     }
 
-
-    // Do pre-system call work  
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT;
-    }
-
-    context->u.syscall.exit = syscall(__NR_setgroups, size, &list);
-
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT;
-    }
-
-EXIT:
-    fprintf(stderr, "Returning from test\n");
+exit:
+    if (!success)
+	rc = seteuid(0); /* clean up from failure case */
     return rc;
+}
+
+int test_setgroups(struct audit_data *context)
+{
+    return common_setgroups(context);
+}
+
+int test_setgroups32(struct audit_data *context)
+{
+    return common_setgroups(context);
 }

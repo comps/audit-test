@@ -44,7 +44,6 @@
 #define __NR_chown16 182
 #define __NR_fchown16 95
 #define __NR_lchown16 16
-#define __NR_setgroups16 81
 #endif
 
 /*
@@ -118,7 +117,6 @@ int test_setfsuid32(struct audit_data *);
 int test_setgid(struct audit_data *);
 int test_setgid32(struct audit_data *);
 int test_setgroups(struct audit_data *);
-int test_setgroups16(struct audit_data *);
 int test_setgroups32(struct audit_data *);
 int test_setregid(struct audit_data *);
 int test_setregid32(struct audit_data *);

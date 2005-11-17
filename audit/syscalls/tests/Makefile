@@ -89,8 +89,6 @@ TESTS_OBJ	= test_access.o \
 		  test_setfsuid.o \
 		  test_setgid.o \
 		  test_setgroups.o \
-		  test_setgroups16.o \
-		  test_setgroups32.o \
 		  test_setregid.o \
 		  test_setresgid.o \
 		  test_setresuid.o \

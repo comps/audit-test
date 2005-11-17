@@ -1,130 +1,110 @@
-/**********************************************************************
-    **   Copyright (C) International Business Machines  Corp., 2003
-    **
-    **   This program is free software;  you can redistribute it and/or modify
-    **   it under the terms of the GNU General Public License as published by
-    **   the Free Software Foundation; either version 2 of the License, or
-    **   (at your option) any later version.
-    **
-    **   This program is distributed in the hope that it will be useful,
-    **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
-    **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    **   the GNU General Public License for more details.
-    **
-    **   You should have received a copy of the GNU General Public License
-    **   along with this program;  if not, write to the Free Software
-    **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-    **
-    **
-    **
-    **  FILE       : test_capset.c
-    **
-    **  PURPOSE    : To test the capset library call auditing.
-    **
-    **  DESCRIPTION: The test_capset() function builds into the
-    **  laus_test framework to verify that the Linux Audit System
-    **  accurately logs both successful and erroneous execution of the
-    **  "capset" system call.
-    **
-    **  In the successful case, this function:
-    **   1) Gets the current capabilities
-    **   2) Executes the capset syscall with the results of the
-    **      previously executed capget syscall
-    **   3) Verifies that the result was successful.
-    **
-    **  The successful case does not change any of the capabilities.
-    **  Since the arguments are valid and since none of the capabilities
-    **  are changed, there is no possible error condition for the call
-    **  (according to the man page for capset).  We can thus expect a
-    **  success result from capset in the successful case.
-    **  
-    **  In the erroneous case, this function:
-    **   1) Gets the current capabilities
-    **   2) Bitwise negates the data->permitted value
-    **   4) Executes the capset syscall with the modified permitted value
-    **   6) Verifies that the result was erroneous.
-    **      
-    **  The erroneous case attempts to change the permitted capability
-    **  set, which, according to the capset man page, causes an EPERM
-    **  result due to the fact that we try to add a capability to the
-    **  Permitted set.
-    **
-    **  HISTORY    :
-    **    06/03 Originated by Michael A. Halcrow <mike@halcrow.us>
-    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
-    **
-    **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_capset.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to set process capabilities.
+ *
+ *  SYSCALLS:
+ *  capset()
+ *
+ *  TESTCASE: successful
+ *  Set capabilities as obtained from capget().
+ *
+ *  TESTCASE: unsuccessful
+ *  Attempt to set a capability in the effective set that is not in
+ *  the permitted set.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
 #include <linux/capability.h>
-extern int capget(cap_user_header_t header, const cap_user_data_t data);
+#if !defined(__ia64__)
+#undef _POSIX_SOURCE
+#include <sys/capability.h>
+#define _POSIX_SOURCE
+#else
+extern int capget(cap_user_header_t header, cap_user_data_t data);
+extern int capset(cap_user_header_t header, const cap_user_data_t data);
+#endif
 
 int test_capset(struct audit_data *context)
 {
-
     int rc = 0;
-    int exp_errno = EPERM;
-    __u64 version, pid;
+    int success = context->success; /* save intended result */
+    cap_user_header_t header;
+    cap_user_data_t data;
+    int exit;
 
-    cap_user_header_t header =
-	(cap_user_header_t) malloc(sizeof(struct __user_cap_header_struct));
-    cap_user_data_t data =
-	(cap_user_data_t) malloc(sizeof(struct __user_cap_data_struct));
-
-     /**
-      * Do as much setup work as possible right here
-      */
-    version = header->version = _LINUX_CAPABILITY_VERSION;
-    pid = header->pid = 0;
-    if (capget(header, data) == -1) {
-	fprintf(stderr, "Error calling capget: errno=%i\n", errno);
-	goto EXIT;
+    errno = 0;
+    header = (cap_user_header_t)malloc(sizeof(cap_user_header_t));
+    data = (cap_user_data_t)malloc(sizeof(cap_user_data_t));
+    if (!header || !data) {
+	fprintf(stderr, "Error: malloc(): %s\n", strerror(errno));
+	return -1;
     }
 
-    /*
-     ** Enable capset for this process
-     */
-    data->effective = data->effective | CAP_SETPCAP;
-    if ((rc = syscall(__NR_capset, header, data)) == -1) {
-	fprintf(stderr, "Error initializing effective capabilities\n");
-	goto EXIT_CLEANUP;
+    /* get current process's capabilities */
+    header->version = _LINUX_CAPABILITY_VERSION;
+    header->pid = 0;
+
+    errno = 0;
+    rc = capget(header, data);
+    if (rc < 0) {
+	fprintf(stderr, "Error: capget(): %s\n", strerror(errno));
+	goto exit;
     }
 
-    if (!context->success) {
-	data->permitted = ~data->permitted;
-    }
-    // Set up audit argument buffer
-    if ((rc = auditArg5(context,
-			AUDIT_ARG_IMMEDIATE, sizeof(__u64), &version,
-			AUDIT_ARG_IMMEDIATE, sizeof(__u64), &pid,
-			AUDIT_ARG_POINTER, sizeof(__u32), &data->effective,
-			AUDIT_ARG_POINTER, sizeof(__u32), &data->inheritable,
-			AUDIT_ARG_POINTER, sizeof(__u32),
-			&data->permitted)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call
-    context->u.syscall.exit = syscall(__NR_capset, header, data);
-
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
+    fprintf(stderr, "Effective capabilities: %x\n", data->effective);
+    fprintf(stderr, "Inheritable capabilities: %x\n", data->inheritable);
+    fprintf(stderr, "Permitted capabilities: %x\n", data->permitted);
+     
+    /* To produce failure, attempt to set a capability in the
+     * effective set that is not in the permitted set. */
+    if (!success) {
+	data->effective = ~data->permitted;
+	context->experror = EPERM;
+	fprintf(stderr, "Attempt to set effective capabilities: %x\n", 
+		data->effective);
     }
 
-EXIT_CLEANUP:
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit;
 
-EXIT:
+    errno = 0;
+    context_setbegin(context);
+    exit = capset(header, data);
+    context_setend(context);
+
+    if (exit < 0) {
+	context->success = 0;
+	context->u.syscall.exit = context->error = errno;
+    } else {
+	context->success = 1;
+	context->u.syscall.exit = exit;
+    }
+
+exit:
     free(header);
     free(data);
-    fprintf(stderr, "Returning from test\n");
     return rc;
 }

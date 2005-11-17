@@ -116,8 +116,6 @@ sub next_record {
 
 package AuditRecord;
 
-# our $test = '';
-
 sub new {
     my ($class, $line) = @_;
     my ($self) = {
@@ -231,49 +229,6 @@ sub test {
     $self->test(@_);
 }
 
-# sub test {
-#     my ($self) = @_; shift;
-#     local $^W = 0;      # we're redefining test; don't complain
-#     if (1) {
-#         # in theory this should be (significantly) faster than eval'ing
-#         # repeatedly
-#         eval 'sub test { my ($self) = @_; local $^W = 0; ' . $test . "}";
-#         $self->test(@_);
-#     } else {
-#         eval $test;
-#     }
-# }
-
-#
-# Following are class methods for working with $test
-#
-
-# sub add {
-#     my ($lhs, $op, $rhs) = @_;
-# 
-#     # The one quoting issue here is that lhs/rhs can't contain a single quote.
-#     # That probably won't be an issue.
-#     if ($op eq '=' || $op eq '==') {
-#         $test .= "(\$self->{'$lhs'} eq '$rhs')";
-#     } elsif ($op eq '!=') {
-#         $test .= "(\$self->{'$lhs'} ne '$rhs')";
-#     } elsif ($op eq '<' || $op eq '>' || $op eq '<=' || $op eq '>=') {
-#         $test .= "(\$self->{'$lhs'} $op '$rhs')";
-#     } elsif ($op eq '=~') {
-#         $test .= "(\$self->{'$lhs'} =~ m'$rhs')";
-#     } elsif ($op eq '!~') {
-#         $test .= "(\$self->{'$lhs'} !~ m'$rhs')";
-#     } else {
-#         die "Unknown op: $op";
-#     }
-# }
-# 
-# sub and { $test .= ' and '; }
-# sub or { $test .= ' or '; }
-# sub open_paren { $test .= '('; }
-# sub close_paren { $test .= ')'; }
-# sub bang { $test .= "! "; }
-
 ######################################################################
 # Main
 ######################################################################
@@ -299,27 +254,6 @@ my ($result) = GetOptions(
 if ($opt{'h'}) { print STDERR $usage; exit 0 }
 if ($opt{'V'}) { print STDERR $version; exit 0 }
 die "augrep: argument required\n$usage" unless @ARGV;
-
-# Parse the conditions into $AuditRecord::test
-# while (@ARGV) {
-#     my ($lhs) = shift @ARGV;
-# 
-#     if ($lhs eq 'and') { AuditRecord::and(); next; }
-#     if ($lhs eq 'or') { AuditRecord::or(); next; }
-#     if ($lhs eq '!') { AuditRecord::bang(); next; }
-#     if ($lhs eq '(') { AuditRecord::open_paren(); next; }
-#     if ($lhs eq ')') { AuditRecord::close_paren(); next; }
-# 
-#     my ($op) = shift @ARGV;
-#     my ($rhs) = shift @ARGV;
-# 
-#     if (!defined $rhs) {
-#         $op = '' unless defined $op;
-#         die "Invalid expression encountered: $lhs $op";
-#     }
-# 
-#     AuditRecord::add($lhs, $op, $rhs);
-# }
 
 my ($reader) = AuditReader->new($opt{'f'});
 $reader->seek($opt{'seek'} || $ENV{'AUDIT_SEEK'} || 0);

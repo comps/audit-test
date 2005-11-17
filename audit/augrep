@@ -26,7 +26,7 @@ use strict;
 # Global vars
 ######################################################################
 
-(my $version = '$Revision: 1.7 $') =~ s/.*?(\d.*\d).*/augrep version $1\n/;
+(my $version = '$Revision$') =~ s/.*?(\d.*\d).*/augrep version $1\n/;
 my $found = 0;
 my %opt = (
     'f' => '/var/log/audit/audit.log',
@@ -361,5 +361,3 @@ will be used as the default offset.
 =back
 
 __END__
-
-$Log: $

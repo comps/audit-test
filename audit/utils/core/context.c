@@ -91,6 +91,18 @@ exit:
     return rc;
 }
 
+void context_setbegin(struct audit_data *context)
+{
+    context->begin_time = time(NULL);
+    fprintf(stderr, "Operation began at %s", ctime(&(context->begin_time)));
+}
+
+void context_setend(struct audit_data *context)
+{
+    context->end_time = time(NULL);
+    fprintf(stderr, "Operation ended at %s", ctime(&(context->end_time)));
+}
+
 void context_dump(const struct audit_data *context)
 {
     fprintf(stderr, "\ttype      : %u\n", context->type);
@@ -109,8 +121,8 @@ void context_dump(const struct audit_data *context)
     fprintf(stderr, "\tsgid      : %u\n", context->sgid);
     fprintf(stderr, "\tfsgid     : %u\n", context->fsgid);
     fprintf(stderr, "\tsuccess	 : %u\n", context->success);
-    fprintf(stderr, "\tsuccess	 : %i\n", context->error);
-    fprintf(stderr, "\tsuccess	 : %i\n", context->experror);
+    fprintf(stderr, "\terror     : %i\n", context->error);
+    fprintf(stderr, "\texperror  : %i\n", context->experror);
 
     if (context->type == AUDIT_MSG_SYSCALL) {
         const struct audit_syscall *syscall = &context->u.syscall;

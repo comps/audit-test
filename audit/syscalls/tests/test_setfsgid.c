@@ -1,175 +1,112 @@
-/**********************************************************************
- **   Copyright (C) International Business Machines  Corp., 2003
- **
- **   This program is free software;  you can redistribute it and/or modify
- **   it under the terms of the GNU General Public License as published by
- **   the Free Software Foundation; either version 2 of the License, or
- **   (at your option) any later version.
- **
- **   This program is distributed in the hope that it will be useful,
- **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
- **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
- **   the GNU General Public License for more details.
- **
- **   You should have received a copy of the GNU General Public License
- **   along with this program;  if not, write to the Free Software
- **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- **
- **
- **
- **  FILE       : test_setfsgid.c
- **
- **  PURPOSE    : To test the setfsgid library call auditing.
- **
- **  DESCRIPTION: The test_setfsgid() function builds into the
- **  laus_test framework to verify that the Linux Audit System
- **  accurately logs both successful and erroneous execution of the
- **  "setfsgid" system call.
- **
- **  In the successful case, this function:
- **   1) Sets the fsgid to the test user's gid
- **
- **  The successful case executes setfsgid() as the root user,
- **  guaranteeing success regardless of the parameter passed to
- **  setfsgid(), in accordance with the description found in the man
- **  page for setfsgid().
- **  
- **  In the erroneous case, this function:
- **   1) Sets the euid to the test user
- **   2) Discovers an fsgid that will result in a failure when passed
- **      to setfsgid() by the test user
- **   3) Sets the euid to the superuser
- **   4) Sets the euid to the test user
- **   5) Attempts to set the fsgid to the unique, invalid fsgid
- **      determined in step (2)
- **   6) Sets the euid to the superuser
- **   7) Verifies that the fsgid was not set to the unique, invalid
- **      fsgid.
- **      
- **  The erroneous case satisfies the two conditions for failure
- **  specified in the man page for setfsgid.  The process does not
- **  have ruid superuser, and the fsgid does not match the ruid, the
- **  euid, the fsuid, or the suid.  Thus, when the test user executes
- **  setfsgid, we have the erroneous case.
- **
- **  HISTORY    :
- **    06/03 Originated by Michael A. Halcrow <mike@halcrow.us>
- **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
- **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
- **
- **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_setfsgid.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to set filesystem group identity.
+ *
+ *  SYSCALLS:
+ *  setfsgid(), setfsgid32()
+ *
+ *  TESTCASE: successful 
+ *  As root, attempt to set fsgid to test user's gid.
+ *
+ *  TESTCASE: unsuccessful
+ *  As test user with test user gids, attempt to set fsgid to root's gid.
+ *
+ *  NOTES:
+ *  A process's fsgid is equivalent to its egid, unless 
+ *  explicitly set by setfsgid().
+ *
+ *  setfsgid() fails when the caller's euid is not root, and the
+ *  specified fsgid does not match the caller's current gid, egid,
+ *  sgid or fsgid.
+ *
+ *  setfsgid() does not return any error codes.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
 
-int test_setfsgid(struct audit_data *context)
+static int setfsgid_common(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EPERM;
+    int success = context->success; /* save intended result */
+    int testgid;
+    gid_t fsgid, pre_fsgid;
+    int exit;
 
-    int fsgid;
+    testgid = gettestgid();
+    if (testgid < 0) {
+	rc = -1;
+	goto exit;
+    }
+    fsgid = testgid;
 
-    identifiers_t identifiers;
+    /* To produce failure case, switch to test user 
+     * and attempt to set fsgid to root gid */
+    if (!success) {
+	/* no expected error */
+	fsgid = 0;
 
-	/**
-	 * Do as much setup work as possible right here
-	 */
-    if (context->success) {
-	fsgid = context->egid;
-	context->euid = 0;
-    } else {
-		/**
-		 * To test the failure case, the following conditions must apply:
-		 *  - I am not the superuser
-		 *  - The new fsgid CANNOT match any one of the following:
-		 *   - real group ID
-		 *   - effective group ID
-		 *   - saved set-group-ID
-		 *   - current value of fsgid
-		 */
-	// Pick a nice round ID, test it, and increment it on every
-	// sequential failure until we find something that works
-	fsgid = 42;
-
-	// su to test user
-	fprintf(stderr, "seteuid to %i\n", context->euid);
-	if ((rc = seteuid(context->euid)) != 0) {
-	    fprintf(stderr, "Unable to seteuid to %i: errno=%i\n",
-		    context->euid, errno);
-	    goto EXIT;		// Or possibly EXIT_CLEANUP
-	}
-
-	if ((rc = getIdentifiers(&identifiers) != 0)) {
-	    fprintf(stderr, "Utility getIdentifiers failed\n");
-	    goto EXIT;
-	}
-	while (fsgid == identifiers.rgid || fsgid == identifiers.egid ||
-	       fsgid == identifiers.sgid || fsgid == identifiers.fsgid) {
-	    fsgid++;
-	}
-	// su to superuser
-	fprintf(stderr, "seteuid to root\n");
-	if ((rc = seteuid(0)) != 0) {
-	    fprintf(stderr, "Unable to seteuid to root: errno=%i\n", errno);
-	    goto EXIT_CLEANUP;	// Or possibly EXIT_CLEANUP
-	}
+	rc = setuidresgid_test();
+	if (rc < 0)
+	    goto exit;
     }
 
-    // Set up audit argument buffer
-    if ((rc = auditArg1(context,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &fsgid)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT;
-    }
+    context_setbegin(context);
+    exit = syscall(context->u.syscall.sysnum, fsgid);
+    context_setend(context);
 
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Make system call
-    context->u.syscall.exit = syscall(__NR_setfsgid, fsgid);
+    fprintf(stderr, "setfsgid(%d) returned %d\n", fsgid, exit);
 
-    // Do post-system call work
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit;
 
-    // Manpage for setfsgid says: 
-    // BUGS
-    //    No error messages of any kind are returned to the  caller.
-    //    At  the very least, EPERM should be returned when the call
-    //    fails.
-    // thus, we hardwire actual and expected errnos together
-    errno = exp_errno;
+    /* On success, setfsgid() returns the previous value of fsgid.  
+     * On error, setfsgid() returns the current value of fsgid.  This
+     * interface requires a second call to determine whether the first
+     * call was successful. */
+    pre_fsgid = setfsgid(testgid);
+    fprintf(stderr, "setfsgid(%d) returned %d\n", testgid, pre_fsgid);
 
-    // Manpage also says:
-    // RETURN VALUE
-    //      On success, the previous value of fsgid is returned.  On error, the current value of fsgid is returned.
-    // However, this is stupid, and LAuS recognizes this.
-    // LAuS shows a return of 0 on success, and -1 on error (as any sane system call returns).  The test
-    // has been modified to look for these adjusted return codes.
+    context->success = (pre_fsgid == fsgid);
+    context->u.syscall.exit = exit;
+    /* fsgid was set explicitly, so override the value from
+     * context_setidentifiers() */
+    context->fsgid = pre_fsgid;
 
-    if (!context->success) {
-	context->u.syscall.exit = -1;
-    } else {
-	context->u.syscall.exit = 0;
-	context->fsuid = 0;
-    }
-
-
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-
-EXIT_CLEANUP:
-	/**
-	 * Do cleanup work here
-	 */
-    if (context->success) {
-	setfsgid(0);
-    }
-
-EXIT:
-    fprintf(stderr, "Returning from test\n");
+exit:
+    if (!success)
+	rc = setuidresgid_root();
     return rc;
+}
+
+int test_setfsgid(struct audit_data *context)
+{
+    return setfsgid_common(context);
+}
+
+int test_setfsgid32(struct audit_data *context)
+{
+    return setfsgid_common(context);
 }

@@ -109,7 +109,6 @@ syscall_data syscallTests[] = {
     { &test_setdomainname, "setdomainname" }, 
     { &test_setfsgid, "setfsgid" }, 
 #if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
-    { &test_setfsgid16, "setfsgid16" }, 
     { &test_setfsgid32, "setfsgid32" }, 
 #endif
     { &test_setfsuid, "setfsuid" }, 
@@ -119,7 +118,6 @@ syscall_data syscallTests[] = {
 #endif
     { &test_setgid, "setgid" }, 
 #if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
-    { &test_setgid16, "setgid16" }, 
     { &test_setgid32, "setgid32" }, 
 #endif
     { &test_setgroups, "setgroups" }, 
@@ -132,12 +130,10 @@ syscall_data syscallTests[] = {
     { &test_setpriority, "setpriority" }, 
     { &test_setregid, "setregid" }, 
 #if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
-    { &test_setregid16, "setregid16" },
     { &test_setregid32, "setregid32" }, 
 #endif
     { &test_setresgid, "setresgid" }, 
 #if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)
-    { &test_setresgid16, "setresgid16" }, 
     { &test_setresgid32, "setresgid32" }, 
 #endif
     { &test_setresuid, "setresuid" }, 

@@ -67,6 +67,11 @@ int getLoginUID();
 int getIdentifiers( identifiers_t* identifiers );
 int getPid(char* executable);
 
+uid_t gettestuid(void);
+gid_t gettestgid(void);
+int setuidresgid_root(void);
+int setuidresgid_test(void);
+
 /*
  * File Content Preservation
  */
@@ -89,6 +94,8 @@ int createTempGroupName( char** user, int* uid );
 void context_init(struct audit_data *, int, unsigned int);
 int context_initsyscall(struct audit_data *, char *);
 int context_setidentifiers(struct audit_data *);
+void context_setbegin(struct audit_data *);
+void context_setend(struct audit_data *);
 void context_dump(const struct audit_data *);
 void context_release(struct audit_data *);
 

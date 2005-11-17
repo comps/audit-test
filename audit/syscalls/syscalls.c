@@ -24,7 +24,6 @@
 #include "syscalls.h"
 
 #include <libaudit.h>
-#include <pwd.h>
 
 struct syscall_opts {
     unsigned int help;

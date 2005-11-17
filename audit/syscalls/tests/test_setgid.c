@@ -1,149 +1,98 @@
- /**********************************************************************
-    **   Copyright (C) International Business Machines  Corp., 2003
-    **
-    **   This program is free software;  you can redistribute it and/or modify
-    **   it under the terms of the GNU General Public License as published by
-    **   the Free Software Foundation; either version 2 of the License, or
-    **   (at your option) any later version.
-    **
-    **   This program is distributed in the hope that it will be useful,
-    **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
-    **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    **   the GNU General Public License for more details.
-    **
-    **   You should have received a copy of the GNU General Public License
-    **   along with this program;  if not, write to the Free Software
-    **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-    **
-    **
-    **
-    **  FILE       : test_setgid.c
-    **
-    **  PURPOSE    : To test the setgid library call auditing.
-    **
-    **  DESCRIPTION: The test_setgid() function builds into the
-    **  laus_test framework to verify that the Linux Audit System
-    **  accurately logs both successful and erroneous execution of the
-    **  "setgid" system call.
-    **
-    **  In the successful case, this function:
-    **   1) Clears the audit trail
-    **   2) Calls setgid() with gid=0
-    **   3) Verifies that the setgid call executed successfully.
-    **
-    **  The successful case passes the setgid() parameter
-    **  gid=0.  According to the man page, this causes no action to be
-    **  taken while the syscall returns with a successful result.
-    **  
-    **  In the erroneous case, this function:
-    **   1) Sets the euid to the test user
-    **   2) Discovers a gid that will result in a failure when passed
-    **      to setgid() by the test user
-    **   3) Sets the euid to the superuser
-    **   4) Clears the audit trail
-    **   5) Sets the euid to the test user
-    **   6) Attempts to set the gid to the unique, invalid gid
-    **      determined in step (2)
-    **   7) Sets the euid to the superuser
-    **   8) Verifies that setgid call executed erroneously.
-    **
-    **  The erroneous case satisfies the condition for failure as
-    **  detailed in the man page.  It attempts to set gid to a unique,
-    **  invalid value which will cause setgid() to return a failure
-    **  code.
-    **
-    **  HISTORY    :
-    **    06/03 Originated by Michael A. Halcrow <mike@halcrow.us>
-    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
-    **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
-    **
-    **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_setgid.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to set effective group identity.
+ *
+ *  SYSCALLS:
+ *  setgid(), setgid32()
+ *
+ *  TESTCASE: successful 
+ *  As root, attempt to set egid to test user's gid.
+ *
+ *  TESTCASE: unsuccessful
+ *  As test user with test user gids, attempt to set egid to root's gid.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
 
-int test_setgid(struct audit_data *context)
+static int setgid_common(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EPERM;
+    int success = context->success; /* save intended result */
+    int testgid;
+    gid_t gid;
+    int exit;
 
-    int gid;
+    testgid = gettestgid();
+    if (testgid < 0) {
+	rc = -1;
+	goto exit;
+    }
+    gid = testgid;
 
-     /**
-      * Do as much setup work as possible right here
-      */
-    if (context->success) {
+    /* To produce failure case, switch to test user and 
+     * attempt to set egid to root gid */
+    if (!success) {
+	context->experror = EPERM;
 	gid = 0;
-	context->euid = 0;
-	context->egid = 0;
-	context->fsuid = 0;
-	context->fsgid = 0;
-	fprintf(stderr, "Target gid=%d in success case\n", gid);
+
+	rc = setuidresgid_test();
+	if (rc < 0)
+	    goto exit;
+    }
+
+    context_setbegin(context);
+    errno = 0;
+    exit = syscall(context->u.syscall.sysnum, gid);
+    context_setend(context);
+
+    fprintf(stderr, "setgid(%d) returned %d\n", gid, exit);
+
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit;
+
+    if (exit < 0) {
+	context->success = 0;
+	context->u.syscall.exit = context->error = errno;
     } else {
-	identifiers_t identifiers;
-       /**
-        * To test the failure case, the following conditions must apply:
-        *  - I am not the superuser
-        *  - The new gid CANNOT match any one of the following:
-        *   - effective group ID
-        *   - saved set-group-ID
-        */
-	// Pick a nice round ID, test it, and increment it on every
-	// sequential failure until we find something that works
-	gid = 42;
-
-	// su to test user
-	fprintf(stderr, "seteuid to %i\n", context->euid);
-	if ((rc = seteuid(context->euid)) != 0) {
-	    fprintf(stderr, "Unable to seteuid to %i: errno=%i\n",
-		    context->euid, errno);
-	    goto EXIT;		// Or possibly EXIT_CLEANUP
-	}
-
-	if ((rc = getIdentifiers(&identifiers) != 0)) {
-	    fprintf(stderr, "Utility getIdentifiers failed\n");
-	    goto EXIT;
-	}
-	while (gid == identifiers.egid || gid == identifiers.sgid) {
-	    gid++;
-	}
-
-	// su to superuser
-	fprintf(stderr, "seteuid to root\n");
-	if ((rc = seteuid(0)) != 0) {
-	    fprintf(stderr, "Unable to seteuid to root: errno=%i\n", errno);
-	    goto EXIT_CLEANUP;	// Or possibly EXIT_CLEANUP
-	}
-
+	context->success = 1;
+	context->u.syscall.exit = exit;
     }
 
-    // Set up audit argument buffer
-    if ((rc = auditArg1(context, AUDIT_ARG_IMMEDIATE, sizeof(int), &gid)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call  
-    context->u.syscall.exit = syscall(__NR_setgid, gid);
-    if (context->success) {
-	context->sgid = gid;
-    }
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-
-EXIT_CLEANUP:
-     /**
-      * Do cleanup work here
-      */
-
-EXIT:
-    fprintf(stderr, "Returning from test\n");
+exit:
+    if (!success)
+	rc = setuidresgid_root();
     return rc;
+}
+
+int test_setgid(struct audit_data *context)
+{
+    return setgid_common(context);
+}
+
+int test_setgid32(struct audit_data *context)
+{
+    return setgid_common(context);
 }

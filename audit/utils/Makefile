@@ -51,6 +51,7 @@ UTILS_OBJ	= core/context.o		\
 		  core/get_laus_data.o		\
 		  core/get_login_uid.o		\
 		  core/get_pid.o		\
+		  core/identifiers.o		\
 		  core/mysprintf.o		\
 		  core/run.o			\
 		  core/verify.o

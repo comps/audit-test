@@ -1,166 +1,113 @@
- /**********************************************************************
-    **   Copyright (C) International Business Machines  Corp., 2003
-    **
-    **   This program is free software;  you can redistribute it and/or modify
-    **   it under the terms of the GNU General Public License as published by
-    **   the Free Software Foundation; either version 2 of the License, or
-    **   (at your option) any later version.
-    **
-    **   This program is distributed in the hope that it will be useful,
-    **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
-    **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-    **   the GNU General Public License for more details.
-    **
-    **   You should have received a copy of the GNU General Public License
-    **   along with this program;  if not, write to the Free Software
-    **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-    **
-    **
-    **
-    **  FILE       : test_setfsuid.c
-    **
-    **  PURPOSE    : To test the setfsuid library call auditing.
-    **
-    **  DESCRIPTION: The test_setfsuid() function builds into the
-    **  laus_test framework to verify that the Linux Audit System
-    **  accurately logs both successful and erroneous execution of the
-    **  "setfsuid" system call.
-    **
-    **  In the successful case, this function:
-    **   1) Becomes superuser
-    **   2) Sets the fsuid to the test user's gid
-    **   3) Verifies that the fsuid was successfully set to the test
-    **      user's gid
-    **
-    **  The successful case executes setfsuid() as the root user,
-    **  guaranteeing success regardless of the parameter passed to
-    **  setfsuid(), in accordance with the description found in the man
-    **  page for setfsuid().
-    **  
-    **  In the erroneous case, this function:
-    **   1) Sets the euid to the test user
-    **   2) Discovers an fsuid that will result in a failure when passed
-    **      to setfsuid() by the test user
-    **   3) Sets the euid to the superuser
-    **   4) Sets the euid to the test user
-    **   5) Attempts to set the fsuid to the unique, invalid fsuid
-    **      determined in step (2)
-    **   6) Attempts to set the fsuid to the unique, invalid fsuid
-    **      determined in step (2) a second time
-    **   7) Sets the euid to the superuser
-    **   8) Verifies that the fsuid was not set to the unique, invalid
-    **      fsuid on the first try.
-    **      
-    **  The erroneous case satisfies the two conditions for failure
-    **  specified in the man page for setfsuid.  The process does not
-    **  have ruid superuser, and the fsuid does not match the ruid, the
-    **  euid, the fsuid, or the suid.  Thus, when the test user executes
-    **  setfsuid, we have the erroneous case.
-    **
-    **  HISTORY    :
-    **    06/03 Originated by Michael A. Halcrow <mike@halcrow.us>
-    **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
-    **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
-    **
-    **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_setfsuid.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to set filesystem user identity.
+ *
+ *  SYSCALLS:
+ *  setfsuid(), setfsuid32()
+ *
+ *  TESTCASE: successful 
+ *  As root, attempt to set fsuid to test user's uid.
+ *
+ *  TESTCASE: unsuccessful
+ *  As test user attempt to set fsuid to test user's uid+1;
+ *
+ *  NOTES:
+ *  A process's fsuid is equivalent to its euid, unless 
+ *  explicitly set by setfsuid().
+ *
+ *  setfsuid() fails when the caller's euid is not root, and the
+ *  specified fsuid does not match the caller's current real uid,
+ *  euid, suid or fsuid.
+ *
+ *  The setfsuid() syscalls do not return any error codes.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
 
-int test_setfsuid(struct audit_data *context)
+static int setfsuid_common(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EPERM;
+    int success = context->success; /* save intended result */
+    int testuid;
+    uid_t fsuid, pre_fsuid;
+    int exit;
 
-    int secondFsuid;
+    testuid = gettestuid();
+    if (testuid < 0) {
+	rc = -1;
+	goto exit;
+    }
+    fsuid = testuid;
 
-    //int failureRc;            //not needed?
+    /* To produce failure case, switch to test user 
+     * and attempt to set fsuid to a value different from real
+     * uid, euid, suid, or current fsuid. */
+    if (!success) {
+	/* no expected error */
+	fsuid = testuid + 1;
 
-     /**
-      * Do as much setup work as possible right here
-      */
-    if (context->success) {
-	secondFsuid = context->euid;
-	context->euid = 0;
-    } else {
-	int nonexistentFsuid;
-	identifiers_t identifiers;
-       /**
-        * To test the failure case, the following conditions must apply:
-        *  - I am not the superuser
-        *  - The new fsuid CANNOT match any one of the following:
-        *   - real group ID
-        *   - effective group ID
-        *   - saved set-group-ID
-        *   - current value of fsuid
-        */
-	// Pick a nice round ID, test it, and increment it on every
-	// sequential failure until we find something that works
-	nonexistentFsuid = 42;
-
-	// su to test user
-	fprintf(stderr, "seteuid to %i\n", context->euid);
-	if ((rc = seteuid(context->euid)) != 0) {
-	    fprintf(stderr, "Unable to seteuid to %i: errno=%i\n",
-		    context->euid, errno);
-	    goto EXIT;		// Or possibly EXIT_CLEANUP
-	}
-
-	if ((rc = getIdentifiers(&identifiers) != 0)) {
-	    fprintf(stderr, "Utility getIdentifiers failed\n");
-	    goto EXIT;
-	}
-
-	while (nonexistentFsuid == identifiers.ruid ||
-	       nonexistentFsuid == identifiers.euid ||
-	       nonexistentFsuid == identifiers.suid ||
-	       nonexistentFsuid == identifiers.fsuid) {
-	    nonexistentFsuid++;
-	}
-
-	// su to superuser
-	fprintf(stderr, "seteuid to root\n");
-	if ((rc = seteuid(0)) != 0) {
-	    fprintf(stderr, "Unable to seteuid to root: errno=%i\n", errno);
-	    goto EXIT_CLEANUP;	// Or possibly EXIT_CLEANUP
-	}
-
-	secondFsuid = nonexistentFsuid;	// Both attempts will return msg_euid
+	rc = seteuid(testuid);
+	if (rc < 0)
+	    goto exit;
     }
 
-    // Set up audit argument buffer
-    if ((rc = auditArg1(context,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &secondFsuid)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call
-    context->u.syscall.exit = syscall(__NR_setfsuid, secondFsuid);
+    context_setbegin(context);
+    exit = syscall(context->u.syscall.sysnum, fsuid);
+    context_setend(context);
 
-    // Do post-system call work
-    if (!context->success) {
-	context->u.syscall.exit = -1;
-	errno = exp_errno;
-    }
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
+    fprintf(stderr, "setfsuid(%d) returned %d\n", fsuid, exit);
 
-EXIT_CLEANUP:
-     /**
-      * Do cleanup work here
-      */
-    if (context->success) {
-	setfsuid(0);
-    }
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit;
 
-EXIT:
-    fprintf(stderr, "Returning from test\n");
+    /* On success, setfsuid() returns the previous value of fsuid.  
+     * On error, setfsuid() returns the current value of fsuid.  This
+     * interface requires a second call to determine whether the first
+     * call was successful. */
+    pre_fsuid = setfsuid(testuid);
+    fprintf(stderr, "setfsuid(%d) returned %d\n", testuid, pre_fsuid);
+
+    context->success = (pre_fsuid == fsuid);
+    context->u.syscall.exit = exit;
+    /* fsuid was set explicitly, so override the value from
+     * context_setidentifiers() */
+    context->fsuid = pre_fsuid;
+
+exit:
+    rc = seteuid(0); /* always clean up */
+    fprintf(stderr, "seteuid(0) returned %d\n", rc);
     return rc;
+}
+
+int test_setfsuid(struct audit_data *context)
+{
+    return setfsuid_common(context);
+}
+
+int test_setfsuid32(struct audit_data *context)
+{
+    return setfsuid_common(context);
 }

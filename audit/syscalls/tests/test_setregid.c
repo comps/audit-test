@@ -27,11 +27,11 @@
  *  setregid(), setregid32()
  *
  *  TESTCASE: successful 
- *  As root, attempt to set rgid to the test user's gid.  Effective
- *  gid is left unchanged.
+ *  As root, attempt to set rgid to the test user's gid.  
+ *  Effective gid is left unchanged.
  *
  *  TESTCASE: unsuccessful
- *  AS test user with test user gids, attempt to set rgid to root's
+ *  As test user with test user gids, attempt to set rgid to root's
  *  gid.  Effective gid is left unchanged.
  */
 

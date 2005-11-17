@@ -37,10 +37,10 @@
  *  explicitly set by setfsgid().
  *
  *  setfsgid() fails when the caller's euid is not root, and the
- *  specified fsgid does not match the caller's current gid, egid,
- *  sgid or fsgid.
+ *  specified fsgid does not match the caller's current real gid,
+ *  egid, sgid or fsgid.
  *
- *  setfsgid() does not return any error codes.
+ *  The setfsgid() syscalls do not return any error codes.
  */
 
 #include "includes.h"

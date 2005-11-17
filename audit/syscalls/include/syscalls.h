@@ -44,11 +44,7 @@
 #define __NR_chown16 182
 #define __NR_fchown16 95
 #define __NR_lchown16 16
-#define __NR_setfsuid16 138
 #define __NR_setgroups16 81
-#define __NR_setresuid16 164
-#define __NR_setreuid16 70
-#define __NR_setuid16 23
 #endif
 
 /*
@@ -118,7 +114,6 @@ int test_semtimedop(struct audit_data *);
 int test_setfsgid(struct audit_data *);
 int test_setfsgid32(struct audit_data *);
 int test_setfsuid(struct audit_data *);
-int test_setfsuid16(struct audit_data *);
 int test_setfsuid32(struct audit_data *);
 int test_setgid(struct audit_data *);
 int test_setgid32(struct audit_data *);
@@ -130,14 +125,11 @@ int test_setregid32(struct audit_data *);
 int test_setresgid(struct audit_data *);
 int test_setresgid32(struct audit_data *);
 int test_setresuid(struct audit_data *);
-int test_setresuid16(struct audit_data *);
 int test_setresuid32(struct audit_data *);
 int test_setreuid(struct audit_data *);
-int test_setreuid16(struct audit_data *);
 int test_setreuid32(struct audit_data *);
 int test_settimeofday(struct audit_data *);
 int test_setuid(struct audit_data *);
-int test_setuid16(struct audit_data *);
 int test_setuid32(struct audit_data *);
 int test_setxattr(struct audit_data *);
 int test_shmat(struct audit_data *);

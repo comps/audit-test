@@ -87,8 +87,6 @@ TESTS_OBJ	= test_access.o \
 		  test_semtimedop.o \
 		  test_setfsgid.o \
 		  test_setfsuid.o \
-		  test_setfsuid16.o \
-		  test_setfsuid32.o \
 		  test_setgid.o \
 		  test_setgroups.o \
 		  test_setgroups16.o \
@@ -96,15 +94,9 @@ TESTS_OBJ	= test_access.o \
 		  test_setregid.o \
 		  test_setresgid.o \
 		  test_setresuid.o \
-		  test_setresuid16.o \
-		  test_setresuid32.o \
 		  test_setreuid.o \
-		  test_setreuid16.o \
-		  test_setreuid32.o \
 		  test_settimeofday.o \
 		  test_setuid.o \
-		  test_setuid16.o \
-		  test_setuid32.o \
 		  test_setxattr.o \
 		  test_shmat.o \
 		  test_shmctl.o \

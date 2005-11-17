@@ -65,16 +65,9 @@ static int common_setgroups(struct audit_data *context)
     /* To produce failure, become test user and attempt to set groups
      * to list obtained as root user */
     if (!success) {
-	int testuid = gettestuid();
-	if (testuid < 0) {
-	    rc = -1;
+	rc = seteuid_test();
+	if (rc < 0)
 	    goto exit;
-	}
-	rc = seteuid(testuid);
-	if (rc < 0) {
-	    fprintf(stderr, "Error: seteuid(%d)\n", testuid);
-	    goto exit;
-	}
 	context->experror = EPERM;
     }
 

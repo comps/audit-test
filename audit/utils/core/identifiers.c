@@ -66,13 +66,32 @@ exit:
     return rc;
 }
 
-int setuidresgid_test()
+int seteuid_test()
 {
     int rc = 0;
     int uid = gettestuid();
+
+    if (uid < 0) {
+        rc = -1;
+        goto exit;
+    }
+
+    errno = 0;
+    rc = seteuid(uid);
+    if (rc < 0)
+        fprintf(stderr, "Error: seteuid() to %s: %s\n", TEST_USER,
+                strerror(errno));
+
+exit:
+    return rc;
+}
+
+int setuidresgid_test()
+{
+    int rc = 0;
     int gid = gettestgid();
 
-    if ((uid < 0) || (gid < 0)) {
+    if (gid < 0) {
         rc = -1;
         goto exit;
     }
@@ -85,11 +104,7 @@ int setuidresgid_test()
         goto exit;
     }
 
-    errno = 0;
-    rc = seteuid(uid);
-    if (rc < 0)
-        fprintf(stderr, "Error: seteuid() to %s: %s\n", TEST_USER, 
-                strerror(errno));
+    rc = seteuid_test();
 
 exit:
     return rc;

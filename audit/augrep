@@ -228,7 +228,6 @@ sub test {
         $prev_was_cond = 1;
     }
     my ($test) = "@ARGV";
-    print STDERR "$test\n";
 
     # in theory this should be (significantly) faster than eval'ing
     # repeatedly

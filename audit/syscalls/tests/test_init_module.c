@@ -42,14 +42,15 @@ int test_init_module(struct audit_data *context)
     int rc = 0;
     int success = context->success; /* save intended result */
     char module_path[256] = { 0 };
+    char module_name[20] = { 0 };
     int fd;
     struct stat mstat;
     void *region;
     int exit;
-    char *module_name = "test_module";
 
     /* set up test kernel module */
-    sprintf(module_path, "%s/test_module.ko", getenv("AUDIT_MODULE_PATH") ?: ".");
+    strncpy(module_name, getenv("AUDIT_KMOD_NAME") ?: "dummy", 19);
+    sprintf(module_path, "%s/%s.ko", getenv("AUDIT_KMOD_DIR") ?: ".", module_name);
     fprintf(stderr, "Module path: %s\n", module_path);
     fd = open(module_path, O_RDONLY);
     if (fd < 0) {

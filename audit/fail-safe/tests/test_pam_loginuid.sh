@@ -63,11 +63,20 @@ function setup_env {
      # audit is not running?  well, then start it
      /etc/init.d/auditd start
   fi
+
+  REQUIRE_AUDIT=X`grep pam_loginuid /etc/pam.d/sshd | awk '{print $4}'`
+  if [ $REQUIRE_AUDIT != "Xrequire_auditd" ]; then
+     cp /etc/pam.d/sshd /etc/pam.d/sshd.testsave
+     sed -e "s/pam_loginuid\.so.*/pam_loginuid.so require_auditd/;" /etc/pam.d/sshd.testsave > /etc/pam.d/sshd
+  fi
 }
 
 function clear_env {
   rm -rf /home/$TEST_USER
   /usr/sbin/userdel $TEST_USER
+
+  # if we had saved the old pam config then restore it
+  [ -f /etc/pam.d/sshd.testsave ] && mv /etc/pam.d/sshd.testsave /etc/pam.d/sshd
 }
 
 # main()

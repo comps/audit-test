@@ -41,34 +41,34 @@ typedef struct {
 } trustedprogram_commands;
 
 typedef struct {
-    int		(*testPtr)(laus_data *);
+    int		(*testPtr)(audit_data *);
     char	*testName;
-    laus_data	*dataPtr;
+    audit_data	*dataPtr;
 } trustedprogram_data;
 
-int test_at(laus_data* dataPtr);
-int test_atd(laus_data* dataPtr);
-int test_cron(laus_data* dataPtr);
-int test_crontab(laus_data* dataPtr);
-int test_gpasswd(laus_data* dataPtr);
-int test_groupadd(laus_data* dataPtr);
-int test_groupdel(laus_data* dataPtr);
-int test_groupmod(laus_data* dataPtr);
-int test_passwd(laus_data* dataPtr);
-int test_useradd(laus_data* dataPtr);
-int test_userdel(laus_data* dataPtr);
-int test_usermod(laus_data* dataPtr);
+int test_at(audit_data* dataPtr);
+int test_atd(audit_data* dataPtr);
+int test_cron(audit_data* dataPtr);
+int test_crontab(audit_data* dataPtr);
+int test_gpasswd(audit_data* dataPtr);
+int test_groupadd(audit_data* dataPtr);
+int test_groupdel(audit_data* dataPtr);
+int test_groupmod(audit_data* dataPtr);
+int test_passwd(audit_data* dataPtr);
+int test_useradd(audit_data* dataPtr);
+int test_userdel(audit_data* dataPtr);
+int test_usermod(audit_data* dataPtr);
 
 
 void test_trustedprogram(trustedprogram_commands command_data[],
 			 int array_size,
-			 laus_data* dataPtr);
+			 audit_data* dataPtr);
 
-int preTrustedProgram(laus_data* dataPtr);
-int postTrustedProgram(laus_data* dataPtr);
-int runTrustedProgramAndVerify(laus_data* dataPtr, char* command);
-int runTrustedProgramWithoutVerify( laus_data* dataPtr, char* command );
-int verifyTrustedProgram( laus_data* dataPtr );
+int preTrustedProgram(audit_data* dataPtr);
+int postTrustedProgram(audit_data* dataPtr);
+int runTrustedProgramAndVerify(audit_data* dataPtr, char* command);
+int runTrustedProgramWithoutVerify( audit_data* dataPtr, char* command );
+int verifyTrustedProgram( audit_data* dataPtr );
 
 int ShadowTestSetup(int backupBool);
 int SystemX(char* command);

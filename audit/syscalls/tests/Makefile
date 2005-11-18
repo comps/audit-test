@@ -49,7 +49,6 @@ TESTS_OBJ	= test_access.o \
 		  test_chown32.o \
 		  test_clock_settime.o \
 		  test_clone.o \
-		  test_clone2.o \
 		  test_creat.o \
 		  test_delete_module.o \
 		  test_execve.o \

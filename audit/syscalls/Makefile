@@ -54,7 +54,7 @@ TESTS_AR	= tests/syscall_test.a
 ALL_OBJ		= $(SYSCALLS_OBJ)
 ALL_EXE		= $(SYSCALLS_EXE)
 
-SUB_DIRS	= kmods tests utils ../utils
+SUB_DIRS	= tests utils ../utils
 
 all: subdirs deps $(ALL_EXE) run.bash
 

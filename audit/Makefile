@@ -29,31 +29,40 @@
 
 TOPDIR		= .
 SUB_DIRS        = fail-safe \
-		  syscalls 
-#		  audbin \
-#		  audit_tools \
-#		  audit_trail_protection \
-#		  filter-conf \
-#		  libpam \
-#		  pam_laus \
-#		  trustedprograms
+		  syscalls \
+		  audbin \
+		  audit_tools \
+		  audit_trail_protection \
+		  filter-conf \
+		  libpam \
+		  pam_laus \
+		  trustedprograms
 
+all: SUB_DIRS = fail-safe syscalls
 all: subdirs
 
+run: SUB_DIRS = fail-safe syscalls
 run:
 	$(MAKE) all
 	for x in $(SUB_DIRS); do make -C $$x run; done 2>&1 | ./tally-results.awk
 
-.PHONY: rpm
-rpm:
+.PHONY: dist
+dist:
+	deps=$$($(MAKE) --no-print-directory showrpms | xargs); \
 	rev=$$(svn info | awk '/^Revision:/{print $$2}'); \
-	    sed -i "/^Version:/s/[0-9].*/$$rev/" audit-testsuite.spec; \
-	    mkdir /tmp/audit-testsuite-$$rev || exit; \
-	    rsync -a --exclude=.svn . /tmp/audit-testsuite-$$rev; \
-	    $(MAKE) clobber -C /tmp/audit-testsuite-$$rev; \
-	    cd /tmp; \
-	    tar czf audit-testsuite-$$rev.tar.gz audit-testsuite-$$rev; \
-	    rpmbuild -ta audit-testsuite-$$rev.tar.gz; \
-	    rm -rf /tmp/audit-testsuite-$$rev
+	sed -i "/^Version:/s/[0-9].*/$$rev/; \
+	        s/^\(Requires:[ 	]*\).*/\1$$deps/" \
+		    audit-testsuite.spec; \
+	mkdir ../audit-testsuite-$$rev || exit; \
+	rsync -a --exclude=.svn . ../audit-testsuite-$$rev; \
+	$(MAKE) distclean -C ../audit-testsuite-$$rev; \
+	cd ..; \
+	tar czf audit-testsuite-$$rev.tar.gz audit-testsuite-$$rev; \
+	rm -rf audit-testsuite-$$rev
+
+.PHONY: rpm
+rpm: dist
+	rev=$$(svn info | awk '/^Revision:/{print $$2}'); \
+	rpmbuild -ta ../audit-testsuite-$$rev.tar.gz
 
 include $(TOPDIR)/rules.mk

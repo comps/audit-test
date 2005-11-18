@@ -1,5 +1,5 @@
 Name:           audit-testsuite
-Version:        546
+Version:        576
 Release:        1
 Summary:        Audit testsuite for RHEL4 CAPP evaluation
 Vendor:         Hewlett-Packard
@@ -8,7 +8,7 @@ Source0:        %{name}-%{version}.tar.gz
 License:        GPL v2
 Group:          Development/Tests
 BuildArch:      noarch
-Requires:       bash
+Requires:       binutils cpp expect flex gcc gcc-c++ glibc-devel libattr-devel libstdc++-devel make
 Prefix:         /root
 BuildRoot:      %{_tmppath}/%{name}-root
 

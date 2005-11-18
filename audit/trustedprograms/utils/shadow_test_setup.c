@@ -39,13 +39,15 @@ int ShadowTestSetup( int backupBool ) {
 	backupFile("/etc/default/useradd");
     }
 
+/*  we don't need to chdir do we?
     if(( rc = chdir( cwd ) == -1 )) {
-	printf1( "Error changing to working directory [%s]: errno = [%i]\n", cwd, errno );
+	printf( "Error changing to working directory [%s]: errno = [%i]\n", cwd, errno );
 	goto EXIT;
     }
+*/
     
     if (( rc = system("cp config/useradd /etc/default/useradd")  == -1 )) {
-	printf1( "Error installing /etc/default/useradd: errno = [%i]\n", errno );
+	printf( "Error installing /etc/default/useradd: errno = [%i]\n", errno );
 	goto EXIT;
     }
     

@@ -46,7 +46,7 @@ ALL_OBJS	= $(UTILS_OBJ)
 
 all: $(ALL_AR)
 
-$(UTILS_AR): $(UTILS_OBJS)
-	$(LINK_AR)
+$(UTILS_AR): $(UTILS_OBJ)
+	$(LINK_AR) $(UTILS_OBJ)
 
 include $(TOPDIR)/rules.mk

@@ -37,6 +37,7 @@ usage: augrep [options...] condition...
     -c     --count         Only print a count of matching lines
     -f     --file=logfile  Search a log other than /var/log/audit/audit.log
     -h     --help          Show this help message
+    -m     --max-count=NUM stop after NUM matches
     -q     --quiet         No output, just set exit status (like grep)
            --seek=offset   Seek to offset before starting search
            --raw           Show raw lines instead of merged record
@@ -206,8 +207,13 @@ sub dups {
 
 sub test {
     my ($self) = @_; shift;
+    my ($prev_was_cond) = 0;
 
     for my $a (@ARGV) {
+        if ($a eq 'and' or $a eq 'or' or
+            $a =~ /^\(+$/ or $a =~ /^\)+$/)
+        { $prev_was_cond = 0; next; }
+
         # use string comparison instead of numeric
         $a =~ s/^(\w+)==(.*)/\$self->{'$1'} eq q{$2}/ or
         $a =~ s/^(\w+)!=(.*)/\$self->{'$1'} ne q{$2}/ or
@@ -216,8 +222,13 @@ sub test {
         # quote the pattern
         $a =~ s/^(\w+)(!~|=~)(.*)/\$self->{'$1'} $2 m{$3}/ or
         die "Error evaluating expression: $a";
+
+        # make 'and' implicit, like the find command
+        $a =~ s/^/and / if $prev_was_cond;
+        $prev_was_cond = 1;
     }
     my ($test) = "@ARGV";
+    print STDERR "$test\n";
 
     # in theory this should be (significantly) faster than eval'ing
     # repeatedly
@@ -246,6 +257,7 @@ my ($result) = GetOptions(
     'c|count',
     'f|file=s',
     'h|help',
+    'm|max-count=i',
     'q|quiet',
     'raw',
     'seek=i',
@@ -261,16 +273,16 @@ $reader->seek($opt{'seek'} || $ENV{'AUDIT_SEEK'} || 0);
 while (my $record = $reader->next_record) {
     next unless $record->test();
     $found++;
-    last if $opt{'q'};
     if ($opt{'raw'}) {
         if ($opt{'c'}) {
             $found += ($record->raw =~ tr/\n//) - 1;
         } else {
-            print $record->raw;
+            print $record->raw unless $opt{'q'};
         }
     } else {
-        print $record->to_s."\n" unless $opt{'c'};
+        print $record->to_s."\n" unless $opt{'q'} or $opt{'c'};
     }
+    last if defined($opt{'m'}) and $found >= $opt{'m'};
 }
 
 print $found, "\n" if $opt{'c'};

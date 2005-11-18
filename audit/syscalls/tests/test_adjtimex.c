@@ -29,7 +29,7 @@
  *  TESTCASE: successful
  *  Noop as root user.
  *
- *  TESTCASE: successful
+ *  TESTCASE: unsuccessful
  *  Attempt to set timex mode as test user.
  */
 

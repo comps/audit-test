@@ -26,7 +26,7 @@
  *  TESTCASE: successful
  *  Set system time as root user.
  *
- *  TESTCASE: successful
+ *  TESTCASE: unsuccessful
  *  Attempt to set system time as test user.
  */
 

@@ -28,22 +28,20 @@
 ##########################################################################
 
 TOPDIR		= .
-SUB_DIRS        = utils \
-		  fail-safe \
-		  audbin \
-		  audit_tools \
-		  audit_trail_protection \
-		  filter-conf \
-		  libpam \
-		  pam_laus \
-		  trustedprograms \
+SUB_DIRS        = fail-safe \
 		  syscalls 
-LOG		= run.log
+#		  audbin \
+#		  audit_tools \
+#		  audit_trail_protection \
+#		  filter-conf \
+#		  libpam \
+#		  pam_laus \
+#		  trustedprograms
 
 all: subdirs
 
-run: SUB_DIRS = syscalls fail-safe
 run:
+	$(MAKE) all
 	for x in $(SUB_DIRS); do make -C $$x run; done 2>&1 | ./tally-results.awk
 
 .PHONY: rpm

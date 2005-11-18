@@ -48,6 +48,12 @@ declare opt_config=run.conf
 declare opt_log=run.log
 
 #----------------------------------------------------------------------
+# test environment
+#----------------------------------------------------------------------
+
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+#----------------------------------------------------------------------
 # utility functions
 #----------------------------------------------------------------------
 
@@ -57,7 +63,7 @@ function die {
 }
 
 function warn {
-    msg "Warning: $*"
+    msg "<red>Warning: $*"
 }
 
 function colorize {

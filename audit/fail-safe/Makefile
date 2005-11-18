@@ -47,7 +47,7 @@ ALL_OBJ		= $(FAILSAFE_OBJ)
 ALL_AR		= $(FAILSAFE_AR)
 ALL_EXE		= $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
 
-SUB_DIRS	= utils tests $(TOPDIR)/utils
+SUB_DIRS	= utils tests
 
 all: subdirs deps $(ALL_EXE) run.bash
 
@@ -57,12 +57,5 @@ $(FAILSAFE_EXE): $(FAILSAFE_OBJS) $(FAILSAFE_ARS)
 .PHONY: $(FAILSAFE_NOTIFY)
 $(FAILSAFE_NOTIFY): $(FAILSAFE_EXE)
 	ln -sfn $< $@
-
-.PHONY:
-run.bash:
-	ln -sf $(TOPDIR)/$@ .
-
-run: all
-	./run.bash
 
 include $(TOPDIR)/rules.mk

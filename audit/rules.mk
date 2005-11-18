@@ -48,25 +48,6 @@ AUDIT_CLEAN_LOG = /etc/init.d/audit stop; /bin/rm -f /var/log/audit.d/*; /etc/in
 LINK_AR		= $(AR) rc $@ $^
 LINK_EXE	= $(CC) $(LDFLAGS) -o $@ $^ $(LOADLIBES) $(LDLIBS)
 
-DEPS		= binutils \
-		  cpp \
-                  expect \
-                  flex \
-                  gcc \
-                  gcc-c++ \
-                  glibc-devel \
-                  kernel-source \
-                  laus-devel \
-                  libattr-devel \
-                  libstdc++-devel \
-                  make \
-		  perl-Expect \
-		  perl-IO-Tty \
-		  perl-IO-Stty\
-                  tcl
-PPC64_DEPS	= gcc-64bit 
-WARN_DEPS	=
-
 # If MODE isn't set explicitly, the default for the machine is used
 ifeq ($(MODE), 32)
 	ifneq (,$(findstring $(MACHINE), $(Z64)))
@@ -83,39 +64,113 @@ ifeq ($(MODE), 32)
 	endif
 endif
 ifeq ($(MODE), 64)
-	ifeq (,$(findstring $(MACHINE),($(X),$(IA))))
+	ifeq (,$(findstring $(MACHINE),$(X) $(IA)))
 		CFLAGS += -m64
 		LDFLAGS += -m64
 	endif
 endif
 
-.PHONY: all clean clobber deps depsdir subdirs $(SUB_DIRS) test run \
-	cleanup extract msgque report rmlogs
+##########################################################################
+# Common rules
+##########################################################################
+
+.PHONY: all run \
+	clean clobber distclean _clean _clobber _distclean \
+	msgque rmlogs showrpms showrpms2
 all run:
 
-clean:
-	for x in $(SUB_DIRS); do $(MAKE) clean -C $$x || exit 1; done
+ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard run.conf)),)
+run: all
+	./run.bash
+
+all: run.bash
+
+run.bash:
+	-[[ -f run.bash ]] || ln -sf $(TOPDIR)/run.bash .
+endif
+
+_clean: subdirs
 	$(RM) -r .deps
 	$(RM) $(ALL_OBJ)
 
-clobber: clean
-	for x in $(SUB_DIRS); do $(MAKE) clobber -C $$x || exit 1; done
+clean: _clean
+
+_clobber: subdirs clean
 	$(RM) $(ALL_EXE) $(ALL_AR)
 
-#
+clobber: _clobber
+
+_distclean: subdirs clobber
+	$(RM) run.log
+
+distclean: _distclean
+
+##########################################################################
+# RPM dependency checking
+##########################################################################
+
+# These are assumed to be the base requirements for all the tests.  Requirements
+# can be refined in individual Makefiles by appending (+=) or overriding (=)
+# the RPMS variable.
+RPMS		= binutils \
+		  cpp \
+                  expect \
+                  flex \
+                  gcc \
+                  gcc-c++ \
+                  glibc-devel \
+                  libattr-devel \
+                  libstdc++-devel \
+                  make
+ifneq ($(findstring $(MACHINE),$(IP)),)
+RPMS		+= gcc-64bit 
+endif
+
+# This can be augmented per directory to check things other than the default
+# list in "verify".  (In fact some things should be moved from that list to the
+# appropriate directory)
+verifyme: subdirs
+
+verify:
+	$(MAKE) verifyme
+	@if ! mount | grep -q "^$$(df . | tail -n1 | cut -f1 -d\ ) .*(.*user_xattr"; then \
+		echo "please set 'user_xattr' for this filesystem'"; \
+		exit 1; \
+	fi
+	@if ! mount | grep -q "^$$(df . | tail -n1 | cut -f1 -d\ ) .*(.*acl"; then \
+		echo "please set 'acl' for this filesystem'"; \
+		exit 1; \
+	fi
+	@echo "-----------------------"
+	@echo "Checking installed rpms"
+	@echo "-----------------------"
+	@if ! rpm -q $$($(MAKE) --no-print-directory showrpms); then \
+	    echo "Please install the missing rpms"; \
+	    exit 1; \
+	fi
+	@echo "-----------------------"
+	@echo "Looks good!"
+
+showrpms:
+	@$(MAKE) --no-print-directory _showrpms | xargs -n1 echo | sort -u
+
+_showrpms: subdirs
+	@echo "$(RPMS)"
+
+##########################################################################
 # Dependency rules
-#
-DEP_FILES	= $(addprefix .deps/, $(ALL_OBJS:.o=.d))
+##########################################################################
 
-deps::  headers depsdir $(DEP_FILES)
+.PHONY: deps depsdir
+DEP_FILES = $(addprefix .deps/, $(ALL_OBJS:.o=.d))
 
-depsdir::
+deps: depsdir $(DEP_FILES)
+
+depsdir:
 	@mkdir -p .deps
 
-headers:: 
-
-ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-# Include dependencies if goals do not include 'clean'
+# See http://www.gnu.org/software/make/manual/html_node/make_47.html#SEC51
+# "4.14 Generating Prerequisites Automatically"
 .deps/%.d: %.c
 	@echo Creating dependencies for $<
 	@$(SHELL) -ec '$(CC) $(CFLAGS) $(INCLUDES) -MM $< \
@@ -123,66 +178,25 @@ ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 		[ -s $@ ] || $(RM) $@'
 
 -include .deps/*.d
-endif
 
-#
+# How to build missing things like libraries
+../%:
+	$(MAKE) -C $(dir $@) $(notdir $@)
+
+##########################################################################
 # Sub-directory processing rules
-#
+##########################################################################
+
+.PHONY: subdirs $(SUB_DIRS) 
+
 subdirs: $(SUB_DIRS)
 
 $(SUB_DIRS):
-	$(MAKE) $(COMPILER) -C $@ $(MAKECMDGOALS)
+	@$(MAKE) -C $@ $(MAKECMDGOALS)
 
-#
+##########################################################################
 # Command framework execution rules
-#
-test:: subdirs
-
-#run:: cleanup verifydeps all
-
-rmlogs:: subdirs
-	-find . | grep "run.log" | xargs -i rm -f {}
-
-verifydeps::
-	# MODE must be defined to either MODE=32 or MODE=64
-	@if test -z "$$PASSWD"; \
-	then \
-		echo "ERROR: You must export PASSWD for LTP tests!!"; \
-		exit 1; \
-	fi
-	@if echo $$PATH | grep '\.' >/dev/null; \
-	then :; else \
-		echo "ERROR: You must put '.' in PATH for LTP tests!!"; \
-		exit 1; \
-	fi
-	@if echo $$PATH | grep '/usr/sbin' >/dev/null; \
-	then :; else \
-		echo "ERROR: You must put /sbin and /usr/sbin in PATH for LTP tests!!"; \
-		exit 1; \
-	fi
-	@if sed 's/#.*//' /etc/audit/audit.conf | grep 'sync.*=.*no' >/dev/null; \
-	then :; else \
-		echo "ERROR: put 'sync = no;' in /etc/audit/audit.conf !!"; \
-		exit 1; \
-	fi
-	@if sed 's/#.*//' /etc/audit/audit.conf | grep 'audbin.*-S' >/dev/null; \
-	then \
-		echo "ERROR: remove '-S <filename>' from notify entry in /etc/audit/audit.conf !!"; \
-		exit 1; \
-	fi
-	@if mount | grep '^'`df . | awk '/dev/{print $$1}'` | grep '(.*user_xattr' >/dev/null; \
-	then :; else \
-		echo "ERROR: set 'user_xattr' option for this file system!!"; \
-		exit 1; \
-	fi
-	@if mount | grep '^'`df . | awk '/dev/{print $$1}'` | grep '(.*acl' >/dev/null; \
-	then :; else \
-		echo "ERROR: set 'acl' option for this file system!!"; \
-		exit 1; \
-	fi
-	@rpm -q $(DEPS) >/dev/null
-	@find /usr/lib/perl5/ -type f -name "Expect.pm" | grep "Expect.pm" >/dev/null
-#	-@rpm -q $(WARN_DEPS) >/dev/null
+##########################################################################
 
 systeminfo::
 	echo "==> date <==" > $(SYSTEMINFO)

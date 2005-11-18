@@ -54,16 +54,9 @@ TESTS_AR	= tests/syscall_test.a
 ALL_OBJ		= $(SYSCALLS_OBJ)
 ALL_EXE		= $(SYSCALLS_EXE)
 
-SUB_DIRS	= tests utils ../utils
+SUB_DIRS	= tests utils
 
-all: subdirs deps $(ALL_EXE) run.bash
-
-.PHONY:
-run.bash:
-	ln -sf $(TOPDIR)/$@ .
-
-run: all
-	./run.bash
+all: subdirs deps $(ALL_EXE)
 
 $(SYSCALLS_EXE): LDLIBS += -laudit
 $(SYSCALLS_EXE): $(ALL_OBJ) $(TESTS_AR) $(UTILS_AR) $(TUTILS_AR)

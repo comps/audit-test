@@ -1,5 +1,4 @@
-/*  Copyright (C) International Business Machines  Corp., 2003
- *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+/*  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
  *
  *  This program is free software;  you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,16 +14,14 @@
  *  along with this program;  if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
- *  Implementation written by HP, based on original code from IBM.
- *
  *  FILE:
- *  test_settimeofday.c
+ *  test_stime.c
  *
  *  PURPOSE:
  *  Verify audit of attempts to change system time.
  *
  *  SYSCALLS:
- *  settimeofday()
+ *  stime()
  *
  *  TESTCASE: successful
  *  Set system time as root user.
@@ -37,7 +34,7 @@
 #include "syscalls.h"
 #include <sys/time.h>
 
-int test_settimeofday(struct audit_data *context)
+int test_stime(struct audit_data *context)
 {
     int rc = 0;
     int success = context->success; /* save intended result */
@@ -66,7 +63,7 @@ int test_settimeofday(struct audit_data *context)
 
     errno = 0;
     context_setbegin(context);
-    exit = syscall(context->u.syscall.sysnum, &tv, &tz);
+    exit = syscall(context->u.syscall.sysnum, &tv.tv_sec);
     context_setend(context);
 
     if (exit < 0) {

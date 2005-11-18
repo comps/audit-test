@@ -1,5 +1,4 @@
-/*  Copyright (C) International Business Machines  Corp., 2003
- *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+/*  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
  *
  *  This program is free software;  you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,16 +14,14 @@
  *  along with this program;  if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
- *  Implementation written by HP, based on original code from IBM.
- *
  *  FILE:
- *  test_settimeofday.c
+ *  test_clock_settime.c
  *
  *  PURPOSE:
  *  Verify audit of attempts to change system time.
  *
  *  SYSCALLS:
- *  settimeofday()
+ *  clock_settime()
  *
  *  TESTCASE: successful
  *  Set system time as root user.
@@ -35,24 +32,23 @@
 
 #include "includes.h"
 #include "syscalls.h"
-#include <sys/time.h>
+#include <time.h>
 
-int test_settimeofday(struct audit_data *context)
+int test_clock_settime(struct audit_data *context)
 {
     int rc = 0;
     int success = context->success; /* save intended result */
-    struct timeval tv;
-    struct timezone tz;
+    struct timespec tspec;
     int exit;
 
     /* Get current time */
-    rc = gettimeofday(&tv, &tz);
+    rc = syscall(__NR_clock_gettime, CLOCK_REALTIME, &tspec);
     if (rc < 0) {
 	fprintf(stderr, "Error: getting current time: %s\n", strerror(errno));
 	goto exit;
     }
 
-    /* To produce failure, attempt to set time as unprivileged user */
+    /* To produce failure, attempt to set system time as unprivileged user */
     if (!success) {
 	rc = seteuid_test();
 	if (rc < 0)
@@ -66,7 +62,8 @@ int test_settimeofday(struct audit_data *context)
 
     errno = 0;
     context_setbegin(context);
-    exit = syscall(context->u.syscall.sysnum, &tv, &tz);
+    exit = -1;
+    exit = syscall(context->u.syscall.sysnum, CLOCK_REALTIME, &tspec);
     context_setend(context);
 
     if (exit < 0) {

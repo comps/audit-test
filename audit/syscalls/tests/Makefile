@@ -47,6 +47,7 @@ TESTS_OBJ	= test_access.o \
 		  test_chown.o \
 		  test_chown16.o \
 		  test_chown32.o \
+		  test_clock_settime.o \
 		  test_clone.o \
 		  test_clone2.o \
 		  test_creat.o \
@@ -99,6 +100,7 @@ TESTS_OBJ	= test_access.o \
 		  test_shmat.o \
 		  test_shmctl.o \
 		  test_shmget.o \
+		  test_stime.o \
 		  test_swapon.o \
 		  test_symlink.o \
 		  test_truncate.o \

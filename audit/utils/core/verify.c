@@ -26,21 +26,23 @@ ts_exit verify_opresult(struct audit_data *context, int success)
 
     if (success && !context->success) {
 	rc = TEST_UNEXPECTED;
-	fprintf(stderr, "Expected operation success, got operation failure\n");
+	fprintf(stderr, 
+		"Expected operation success, got operation failure: [%d] %s\n",
+		context->error, strerror(context->error));
 	goto exit;
     }
 
     if (!success && context->success) {
 	rc = TEST_UNEXPECTED;
-	fprintf(stderr, "Expected operation failure, got operation success\n");
+	fprintf(stderr, "Expected operation failure, got operation success.\n");
 	goto exit;
     }
 
     if (context->experror && context->experror != context->error) {
 	rc = TEST_UNEXPECTED;
 	fprintf(stderr,
-		"Expected operation error %d, got operation error %d\n",
-		context->experror, context->error);
+		"Expected operation error [%d], got operation error [%d] %s\n",
+		context->experror, context->error, strerror(context->error));
     }
 
 exit:

@@ -52,8 +52,10 @@ rpm:
 	    sed -i "/^Version:/s/[0-9].*/$$rev/" audit-testsuite.spec; \
 	    mkdir /tmp/audit-testsuite-$$rev || exit; \
 	    rsync -a --exclude=.svn . /tmp/audit-testsuite-$$rev; \
+	    $(MAKE) clobber -C /tmp/audit-testsuite-$$rev; \
 	    cd /tmp; \
 	    tar czf audit-testsuite-$$rev.tar.gz audit-testsuite-$$rev; \
-	    rpmbuild -ta audit-testsuite-$$rev.tar.gz
+	    rpmbuild -ta audit-testsuite-$$rev.tar.gz; \
+	    rm -rf /tmp/audit-testsuite-$$rev
 
 include $(TOPDIR)/rules.mk

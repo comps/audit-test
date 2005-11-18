@@ -64,10 +64,6 @@ LAF_OBJ		= laf/laf_clear.o		\
 		  laf/laf_stop.o		\
 		  laf/laf_verify.o
 
-SEM_EXE		= semaphore_poster
-SEM_EXE2	= semaphore_poster2
-SEM_OBJ		= bin/semaphore_poster.o
-
 RC_EXE		= rc_return
 RC_OBJ		= bin/rc_return.o
 
@@ -78,21 +74,14 @@ PTS_LINK	= /tmp/$(PTS_EXE)
 EXIT_EXE	= exit_with_pid_status
 EXIT_OBJ	= bin/exit_with_pid_status.o
 
-ALL_OBJ		= $(UTILS_OBJ) $(LAF_OBJ) $(SEM_OBJ) $(RC_OBJ) $(PTS_OBJ) $(EXIT_OBJ)
-ALL_EXE		= $(SEM_EXE) $(SEM_EXE2) $(RC_EXE) $(PTS_EXE) $(PTS_LINK) $(EXIT_EXE)
+ALL_OBJ		= $(UTILS_OBJ) $(LAF_OBJ) $(RC_OBJ) $(PTS_OBJ) $(EXIT_OBJ)
+ALL_EXE		= $(RC_EXE) $(PTS_EXE) $(PTS_LINK) $(EXIT_EXE)
 ALL_AR		= $(UTILS_AR)
 
 all: deps $(ALL_AR) $(ALL_EXE)
 
 $(UTILS_AR): $(UTILS_OBJ) $(LAF_OBJ)
 	$(LINK_AR)
-
-$(SEM_EXE): $(SEM_OBJ)
-	$(LINK_EXE)
-
-$(SEM_EXE2): $(SEM_EXE)
-	cp $(SEM_EXE) $(SEM_EXE2)
-	chmod 700 $(SEM_EXE2)
 
 $(EXIT_EXE): $(EXIT_OBJ)
 	$(LINK_EXE)

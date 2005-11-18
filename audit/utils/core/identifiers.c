@@ -45,27 +45,6 @@ gid_t gettestgid(void)
     return pw->pw_gid;
 }
 
-int setuidresgid_root()
-{
-    int rc = 0;
-
-    errno = 0;
-    rc = seteuid(0);
-    if (rc < 0) {
-        fprintf(stderr, "Error: seteuid() to root: %s\n", strerror(errno));
-        goto exit;
-    }
-
-    errno = 0;
-    rc = setresgid(0, 0, 0);
-    if (rc < 0)
-        fprintf(stderr, "Error: setresgid() to root: %s\n", strerror(errno));
-
-
-exit:
-    return rc;
-}
-
 int seteuid_test()
 {
     int rc = 0;
@@ -80,6 +59,28 @@ int seteuid_test()
     rc = seteuid(uid);
     if (rc < 0)
         fprintf(stderr, "Error: seteuid() to %s: %s\n", TEST_USER,
+                strerror(errno));
+
+exit:
+    return rc;
+}
+
+/* set euid, ruid to test user; leave suid alone */
+int setresuid_test()
+{
+    int rc = 0;
+    int uid = gettestuid();
+
+    if (uid < 0) {
+        rc = -1;
+        goto exit;
+    }
+
+    errno = 0;
+    /* don't set saved uid, so we can switch back to root */
+    rc = setresuid(uid, uid, -1);
+    if (rc < 0)
+        fprintf(stderr, "Error: setresuid() to %s: %s\n", TEST_USER,
                 strerror(errno));
 
 exit:
@@ -105,6 +106,27 @@ int setuidresgid_test()
     }
 
     rc = seteuid_test();
+
+exit:
+    return rc;
+}
+
+int setuidresgid_root()
+{
+    int rc = 0;
+
+    errno = 0;
+    rc = seteuid(0);
+    if (rc < 0) {
+        fprintf(stderr, "Error: seteuid() to root: %s\n", strerror(errno));
+        goto exit;
+    }
+
+    errno = 0;
+    rc = setresgid(0, 0, 0);
+    if (rc < 0)
+        fprintf(stderr, "Error: setresgid() to root: %s\n", strerror(errno));
+
 
 exit:
     return rc;

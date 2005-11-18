@@ -281,7 +281,7 @@ while (my $record = $reader->next_record) {
     } else {
         print $record->to_s."\n" unless $opt{'q'} or $opt{'c'};
     }
-    last if defined($opt{'m'}) and $found >= $opt{'m'};
+    last if $opt{'q'} or (defined($opt{'m'}) and $found >= $opt{'m'});
 }
 
 print $found, "\n" if $opt{'c'};

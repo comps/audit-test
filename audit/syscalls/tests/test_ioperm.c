@@ -78,6 +78,6 @@ int test_ioperm(struct audit_data *context)
 
 exit:
     if (!success)
-	setuid(0); /* clean up from failure case */
+	seteuid(0); /* clean up from failure case */
     return rc;
 }

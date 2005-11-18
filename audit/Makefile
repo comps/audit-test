@@ -46,4 +46,14 @@ run: SUB_DIRS = syscalls fail-safe
 run:
 	for x in $(SUB_DIRS); do make -C $$x run; done 2>&1 | ./tally-results.awk
 
+.PHONY: rpm
+rpm:
+	rev=$$(svn info | awk '/^Revision:/{print $$2}'); \
+	    sed -i "/^Version:/s/[0-9].*/$$rev/" audit-testsuite.spec; \
+	    mkdir /tmp/audit-testsuite-$$rev || exit; \
+	    rsync -a --exclude=.svn . /tmp/audit-testsuite-$$rev; \
+	    cd /tmp; \
+	    tar czf audit-testsuite-$$rev.tar.gz audit-testsuite-$$rev; \
+	    rpmbuild -ta audit-testsuite-$$rev.tar.gz
+
 include $(TOPDIR)/rules.mk

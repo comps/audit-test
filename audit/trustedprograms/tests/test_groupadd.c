@@ -42,7 +42,7 @@
 #include "includes.h"
 #include "trustedprograms.h"
 
-int test_groupadd(laus_data* dataPtr) {
+int test_groupadd(audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;
@@ -51,7 +51,7 @@ int test_groupadd(laus_data* dataPtr) {
   int gid;
   FILE* fPtr;
 
-  if (( rc = ShadowTestSetup( TRUE ) == -1 )) {
+  if (( rc = ShadowTestSetup( 1 ) == -1 )) {
       goto EXIT;
   }
 
@@ -70,25 +70,25 @@ int test_groupadd(laus_data* dataPtr) {
    * Test 1 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_1:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Setup
-  dataPtr->msg_euid = 0;
+  dataPtr->euid = 0;
   createTempGroupName( &group, &gid );
 
   // Execution
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "groupadd: group added - group=%s, gid=%d, by=%d",
-	       group, gid, dataPtr->msg_euid );
+	       group, gid, dataPtr->euid );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error during cleanup of groupadd test 1: system() returned -1\n" );
+    printf( "Error during cleanup of groupadd test 1: system() returned -1\n" );
     goto EXIT;
   }
   free( command );
@@ -107,34 +107,34 @@ int test_groupadd(laus_data* dataPtr) {
    * Test 2 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_2:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
 
   // Setup
-  dataPtr->msg_euid = 0;
+  dataPtr->euid = 0;
   backupFile( "/etc/pam.d/shadow" );
   if( ( fPtr = fopen( "/etc/pam.d/shadow", "w" ) ) == NULL ) {
-    printf1( "Error opening /etc/pam.d/shadow for write w/ truncate access\n" );
+    printf( "Error opening /etc/pam.d/shadow for write w/ truncate access\n" );
     rc = -1;
     goto EXIT;
   }
   if( ( rc = fputs( "auth required pam_deny.so", fPtr ) ) == EOF ) {
-    printf1( "Error writing to /etc/pam.d/shadow\n" );
+    printf( "Error writing to /etc/pam.d/shadow\n" );
     goto EXIT;
   }
   if( ( rc = fclose( fPtr ) ) != 0 ) {
-    printf1( "Error closing file /etc/pam.d/shadow\n" );
+    printf( "Error closing file /etc/pam.d/shadow\n" );
     goto EXIT;
   }
 
   // Execution
   command = mysprintf( "/usr/sbin/groupadd %s", group );
-  dataPtr->laus_var_data.textData.data = 
-    mysprintf( "groupadd: PAM authentication failed - by=%d", dataPtr->msg_euid );
+  dataPtr->comm = 
+    mysprintf( "groupadd: PAM authentication failed - by=%d", dataPtr->euid );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
   restoreFile( "/etc/pam.d/shadow" );
   // End Test 2
@@ -146,7 +146,7 @@ int test_groupadd(laus_data* dataPtr) {
  EXIT:
 
   restoreFile("/etc/default/useradd");
-  printf5("Returning from test_groupadd()\n");
+  printf("Returning from test_groupadd()\n");
   return rc;
 }
 

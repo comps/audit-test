@@ -42,7 +42,7 @@
 #include "includes.h"
 #include "trustedprograms.h"
 
-int test_userdel(laus_data* dataPtr) {
+int test_userdel(audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;
@@ -55,10 +55,10 @@ int test_userdel(laus_data* dataPtr) {
   FILE* fPtr;
   // Setup
 
-  dataPtr->msg_euid = 0;
-  dataPtr->msg_egid = 0;
+  dataPtr->euid = 0;
+  dataPtr->egid = 0;
 
-  if (( rc = ShadowTestSetup( TRUE ) == -1 )) {
+  if (( rc = ShadowTestSetup(1) == -1 )) {
       goto EXIT;
   }
 
@@ -84,18 +84,18 @@ int test_userdel(laus_data* dataPtr) {
    */
 
  //TEST_1:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
 
   // Setup
-  dataPtr->msg_euid = 0;
-  dataPtr->msg_egid = 0;
+  dataPtr->euid = 0;
+  dataPtr->egid = 0;
   createTempUserName( &user, &uid, &home );
   createTempGroupName( &group, &gid );
 
   // Create the auxiliary group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating new group [%s] with gid [%d]\n", group, gid );
+    printf( "Error creating new group [%s] with gid [%d]\n", group, gid );
     goto EXIT;
   }
   free( command );
@@ -103,7 +103,7 @@ int test_userdel(laus_data* dataPtr) {
   // Create the user and add him to the group
   command = mysprintf( "/usr/sbin/useradd -u %d -g users -G %s %s", uid, group, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user account [%s] with uid [%d] with initial group [users] and auxiliary group [%s]\n", 
+    printf( "Error creating user account [%s] with uid [%d] with initial group [users] and auxiliary group [%s]\n", 
 	     user, uid, group );
     goto EXIT;
   }
@@ -114,24 +114,23 @@ int test_userdel(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/userdel %s", user );
   runTrustedProgramWithoutVerify(dataPtr, command );
 
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf("userdel: user removed from group - user=%s, uid=%d, group=%s, gid=%d, by=%d",
-	      user, uid, group, gid, dataPtr->msg_egid );
+	      user, uid, group, gid, dataPtr->egid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data =
-    mysprintf("userdel: user deleted - user=%s, uid=%d, by=%d",
-              user, uid, dataPtr->msg_egid );
+  dataPtr->comm = mysprintf("userdel: user deleted - user=%s, uid=%d, by=%d",
+              user, uid, dataPtr->egid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
   free( command );
   sleep( 1 );
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );
@@ -154,14 +153,14 @@ int test_userdel(laus_data* dataPtr) {
    * Test 2 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_2:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Setup
 
   // Create the user
   sleep( 1 );
   command = mysprintf( "/usr/sbin/useradd -u %d %s", uid, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user account [%s] with uid [%d]\n", 
+    printf( "Error creating user account [%s] with uid [%d]\n", 
 	     user, uid );
     goto EXIT;
   }
@@ -170,14 +169,14 @@ int test_userdel(laus_data* dataPtr) {
   // Execution
   sleep( 1 ); // MH: To give time for /etc/passwd to be sync'd
   command = mysprintf( "/usr/sbin/userdel %s", user );
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf("userdel: user deleted - user=%s, uid=%d, by=%d",
-	      user, uid, dataPtr->msg_egid );
+	      user, uid, dataPtr->egid );
   runTrustedProgramWithoutVerify(dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
   // End Test 2
 
@@ -198,13 +197,13 @@ int test_userdel(laus_data* dataPtr) {
    * Test 3 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_3:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Setup
   // Create the user
   sleep( 1 );
   command = mysprintf( "/usr/sbin/useradd -u %d %s", uid, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user account [%s] with uid [%d]\n", 
+    printf( "Error creating user account [%s] with uid [%d]\n", 
 	     user, uid );
     goto EXIT;
   } else {
@@ -215,17 +214,17 @@ int test_userdel(laus_data* dataPtr) {
   // Execution
   sleep( 1 ); // MH: To give time for /etc/passwd to be sync'd
   command = mysprintf( "/usr/sbin/userdel %s", user );
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm =
     mysprintf("userdel: running user pre deletion command - user=%s, uid=%d, cmd=/usr/sbin/userdel-pre.local, by=%d",
-	      user, uid, dataPtr->msg_egid );
+	      user, uid, dataPtr->egid );
   //testing the user defined deletion command runs as a different pid
-  dataPtr->msg_pid = NO_PID_CHECK;
-  printf("pid passed is: [%d]\n", dataPtr->msg_pid);
+  dataPtr->pid = NO_PID_CHECK;
+  printf("pid passed is: [%d]\n", dataPtr->pid);
   runTrustedProgramWithoutVerify(dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
 
   sleep( 1 );
@@ -249,13 +248,13 @@ int test_userdel(laus_data* dataPtr) {
    * Test 4 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_4:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Setup
   // Create the user
   sleep( 1 );
   command = mysprintf( "/usr/sbin/useradd -u %d %s", uid, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user account [%s] with uid [%d]\n", 
+    printf( "Error creating user account [%s] with uid [%d]\n", 
 	     user, uid );
     goto EXIT;
   } else {
@@ -266,18 +265,18 @@ int test_userdel(laus_data* dataPtr) {
   // Execution
   sleep( 2 ); // MH: To give time for /etc/passwd to be sync'd
   command = mysprintf( "/usr/sbin/userdel %s", user );
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf("userdel: running user post deletion command - user=%s, uid=%d, cmd=/usr/sbin/userdel-post.local, by=%d",
-	      user, uid, dataPtr->msg_egid );
+	      user, uid, dataPtr->egid );
   //testing the user defined deletion command runs as a different pid
-  dataPtr->msg_pid = NO_PID_CHECK;
-  printf9("pid passed is: [%d]\n", dataPtr->msg_pid);
+  dataPtr->pid = NO_PID_CHECK;
+  printf("pid passed is: [%d]\n", dataPtr->pid);
   runTrustedProgramWithoutVerify(dataPtr, command );
   sleep( 2 );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
 
   // End Test 4
@@ -304,7 +303,7 @@ int test_userdel(laus_data* dataPtr) {
    */
   // Setup
  //TEST_5:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
 
   // Add user
   sleep( 1 );
@@ -322,23 +321,23 @@ int test_userdel(laus_data* dataPtr) {
   runTrustedProgramWithoutVerify( dataPtr, command );
   sleep( 1 ); 
 
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "userdel: user mail file deleted - user=%s, uid=%d, mailfile=/var/mail/%s, by=%d",
-	       user, uid, user, dataPtr->msg_egid );
+	       user, uid, user, dataPtr->egid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf("userdel: user deleted - user=%s, uid=%d, by=%d",
-              user, uid, dataPtr->msg_egid );
+              user, uid, dataPtr->egid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf("userdel: user home directory deleted - user=%s, uid=%d, home=%s, by=%d",
-              user, uid, home, dataPtr->msg_egid );
+              user, uid, home, dataPtr->egid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
   free( command );
@@ -363,7 +362,7 @@ int test_userdel(laus_data* dataPtr) {
    */
   // Setup
  //TEST_6:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
 
   // Add user
   sleep( 1 );
@@ -379,23 +378,23 @@ int test_userdel(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/userdel -r -f %s", user );
   runTrustedProgramWithoutVerify( dataPtr, command );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "userdel: user mail file deleted - user=%s, uid=%d, mailfile=/var/mail/%s, by=%d",
-               user, uid, user, dataPtr->msg_egid );
+               user, uid, user, dataPtr->egid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf("userdel: user deleted - user=%s, uid=%d, by=%d",
-              user, uid, dataPtr->msg_egid );
+              user, uid, dataPtr->egid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf("userdel: user home directory deleted - user=%s, uid=%d, home=%s, by=%d",
-              user, uid, home, dataPtr->msg_egid );
+              user, uid, home, dataPtr->egid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
   free( command );
@@ -419,7 +418,7 @@ int test_userdel(laus_data* dataPtr) {
    * Test 7 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_7:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
 
   // Add user
   sleep( 1 );
@@ -434,23 +433,23 @@ int test_userdel(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/userdel -r -f %s", user );
   runTrustedProgramWithoutVerify( dataPtr, command );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf("userdel: user home directory deleted - user=%s, uid=%d, home=%s, by=%d",
-              user, uid, home, dataPtr->msg_egid );
+              user, uid, home, dataPtr->egid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "userdel: user mail file deleted - user=%s, uid=%d, mailfile=/var/mail/%s, by=%d",
-               user, uid, user, dataPtr->msg_egid );
+               user, uid, user, dataPtr->egid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf("userdel: user deleted - user=%s, uid=%d, by=%d",
-              user, uid, dataPtr->msg_egid );
+              user, uid, dataPtr->egid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
   free( command );
@@ -471,14 +470,14 @@ int test_userdel(laus_data* dataPtr) {
    * Test 8 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_8:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Setup
 
   // Create the user
   sleep( 1 );
   command = mysprintf( "/usr/sbin/useradd -u %d %s", uid, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user account [%s] with uid [%d]\n", 
+    printf( "Error creating user account [%s] with uid [%d]\n", 
 	     user, uid );
     goto EXIT;
   }
@@ -487,29 +486,29 @@ int test_userdel(laus_data* dataPtr) {
   backupFile( "/etc/pam.d/shadow" );
 
   if( ( fPtr = fopen( "/etc/pam.d/shadow", "w" ) ) == NULL ) {
-    printf1( "Error opening /etc/pam.d/shadow for write w/ truncate access\n" );
+    printf( "Error opening /etc/pam.d/shadow for write w/ truncate access\n" );
     rc = -1;
     goto EXIT;
   }
   if( ( rc = fputs( "auth required pam_deny.so", fPtr ) ) == EOF ) {
-    printf1( "Error writing to /etc/pam.d/shadow\n" );
+    printf( "Error writing to /etc/pam.d/shadow\n" );
     goto EXIT;
   }
   if( ( rc = fclose( fPtr ) ) != 0 ) {
-    printf1( "Error closing file /etc/pam.d/shadow\n" );
+    printf( "Error closing file /etc/pam.d/shadow\n" );
     goto EXIT;
   }
 
   // Execution
   sleep( 1 ); // MH: To give time for /etc/passwd to be sync'd
   command = mysprintf( "/usr/sbin/userdel %s", user );
-  dataPtr->laus_var_data.textData.data = 
-    mysprintf("userdel: PAM authentication failed - by=%d", dataPtr->msg_egid );
+  dataPtr->comm =
+    mysprintf("userdel: PAM authentication failed - by=%d", dataPtr->egid );
   runTrustedProgramWithoutVerify(dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
 
   restoreFile( "/etc/pam.d/shadow" );
@@ -530,7 +529,7 @@ int test_userdel(laus_data* dataPtr) {
  EXIT:
 
   restoreFile( "/etc/default/useradd" );
-  printf5("Returning from test_userdel()\n");
+  printf("Returning from test_userdel()\n");
   return rc;
 }
 

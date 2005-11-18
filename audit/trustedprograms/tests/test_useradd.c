@@ -43,7 +43,7 @@
 #include "includes.h"
 #include "trustedprograms.h"
 
-int test_useradd(laus_data* dataPtr) {
+int test_useradd(audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;
@@ -59,10 +59,10 @@ int test_useradd(laus_data* dataPtr) {
 
   FILE* fPtr;
 
-  dataPtr->msg_euid = 0;
-  dataPtr->msg_egid = 0;
+  dataPtr->euid = 0;
+  dataPtr->egid = 0;
 
-  if (( rc = ShadowTestSetup(TRUE) == -1 )) {
+  if (( rc = ShadowTestSetup(1) == -1 )) {
       goto EXIT;
   }
 
@@ -73,7 +73,7 @@ int test_useradd(laus_data* dataPtr) {
   // Create group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s]\n", group );
+    printf( "Error creating group [%s]\n", group );
     goto EXIT;
   }
   free( command );    
@@ -83,7 +83,7 @@ int test_useradd(laus_data* dataPtr) {
   // Remove group
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );   
@@ -108,12 +108,12 @@ int test_useradd(laus_data* dataPtr) {
   // Defaults are stored in file, create backup
 
  //TEST_1:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
 
   // Create group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s]\n", group );
+    printf( "Error creating group [%s]\n", group );
     goto EXIT;
   }
   free( command );    
@@ -123,7 +123,7 @@ int test_useradd(laus_data* dataPtr) {
 
   command = mysprintf( "/usr/sbin/useradd --save-defaults -g %d -d /tmp -e 2038-01-18 -f 42 -s /bin/sh",
 		       gid );
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "useradd: defaults changed - gid=%d, home=/tmp, shell=/bin/sh, inactive=42, expire=2038-01-18, by=0",
 	       gid );
 
@@ -135,7 +135,7 @@ int test_useradd(laus_data* dataPtr) {
 
   //Don't restore .bak has original values copy our testfile there
   //restoreFile( "/etc/default/useradd" );
-  if (( rc = ShadowTestSetup( FALSE ) == -1 )) {
+  if (( rc = ShadowTestSetup(0) == -1 )) {
       goto EXIT;
   }
 
@@ -144,12 +144,12 @@ int test_useradd(laus_data* dataPtr) {
 	      // the entry is written to the /etc/group file.
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );    
 
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   // End Test 1
 
 
@@ -172,11 +172,11 @@ int test_useradd(laus_data* dataPtr) {
    */
   // Setup
  //TEST_2:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Create supplementary group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", supGid, supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating supplementary group [%s] with gid [%d]\n",
+    printf( "Error creating supplementary group [%s] with gid [%d]\n",
 	     supGroup, supGid );
     goto EXIT;
   }
@@ -187,17 +187,17 @@ int test_useradd(laus_data* dataPtr) {
   runTrustedProgramWithoutVerify( dataPtr, command );
 
   // Verify audit messages
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf("useradd: user added - user=%s, uid=%d, gid=%d, home=%s, shell=%s, by=%d", 
-              user, uid, supGid, home, shell, dataPtr->msg_euid);
+              user, uid, supGid, home, shell, dataPtr->euid);
   verifyTrustedProgram( dataPtr );
-  free(dataPtr->laus_var_data.textData.data );
+  free(dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "useradd: user added to group - user=%s, uid=%d, group=%s, gid=%d, by=%d",
-               user, uid, supGroup, supGid, dataPtr->msg_euid );
+               user, uid, supGroup, supGid, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free(dataPtr->laus_var_data.textData.data );
+  free(dataPtr->comm );
 
   // Cleanup
   free( command );
@@ -207,7 +207,7 @@ int test_useradd(laus_data* dataPtr) {
 	      // the entry is written to the /etc/passwd file.
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -215,7 +215,7 @@ int test_useradd(laus_data* dataPtr) {
   // Delete the supplementary group
   command = mysprintf( "/usr/sbin/groupdel %s", supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", supGroup );
+    printf( "Error deleting group [%s]\n", supGroup );
     goto EXIT;
   }
   free( command );
@@ -242,11 +242,11 @@ int test_useradd(laus_data* dataPtr) {
    */
   // Setup
  //TEST_4:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Create group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s] with gid [%d]\n",
+    printf( "Error creating group [%s] with gid [%d]\n",
 	     group, gid );
     goto EXIT;
   }
@@ -255,14 +255,14 @@ int test_useradd(laus_data* dataPtr) {
   // Execution
   command = mysprintf( "/usr/sbin/useradd -u %d -g %d -d %s -s /bin/true %s", 
 		       uid, gid, home, user );
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "useradd: user added - user=%s, uid=%d, gid=%d, home=%s, shell=/bin/true, by=%d",
-	       user, uid, gid, home, dataPtr->msg_euid );
+	       user, uid, gid, home, dataPtr->euid );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
 
   // Delete the user
@@ -270,7 +270,7 @@ int test_useradd(laus_data* dataPtr) {
 	      // the entry is written to the /etc/passwd file.
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -278,7 +278,7 @@ int test_useradd(laus_data* dataPtr) {
   // Delete the group
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );
@@ -303,11 +303,11 @@ int test_useradd(laus_data* dataPtr) {
    */
   // Setup
  //TEST_5:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Create group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s]\n", group );
+    printf( "Error creating group [%s]\n", group );
     goto EXIT;
   }
   free( command );
@@ -316,17 +316,17 @@ int test_useradd(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/useradd -d %s -g %d -m -u %d %s", home, gid, uid, user );
   runTrustedProgramWithoutVerify( dataPtr, command );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf("useradd: user added - user=%s, uid=%d, gid=%d, home=%s, shell=%s, by=%d",
-              user, uid, gid, home, shell, dataPtr->msg_euid);
+              user, uid, gid, home, shell, dataPtr->euid);
   verifyTrustedProgram( dataPtr );
-  free(dataPtr->laus_var_data.textData.data );
+  free(dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "useradd: user home directory created - user=%s, uid=%d, home=%s, by=%d",
-	       user, uid, home, dataPtr->msg_euid );
+	       user, uid, home, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
   free( command );
@@ -336,14 +336,14 @@ int test_useradd(laus_data* dataPtr) {
 	      // the entry is written to the /etc/passwd file.
   command = mysprintf( "/usr/sbin/userdel -r %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
   // Remove group
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );
@@ -363,34 +363,34 @@ int test_useradd(laus_data* dataPtr) {
    * Test 6 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_6:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Setup
 
   backupFile( "/etc/pam.d/useradd" );
 
   if( ( fPtr = fopen( "/etc/pam.d/useradd", "w" ) ) == NULL ) {
-    printf1( "Error opening /etc/pam.d/useradd for write w/ truncate access\n" );
+    printf( "Error opening /etc/pam.d/useradd for write w/ truncate access\n" );
     rc = -1;
     goto EXIT;
   }
   if( ( rc = fputs( "auth required pam_deny.so", fPtr ) ) == EOF ) {
-    printf1( "Error writing to /etc/pam.d/useradd\n" );
+    printf( "Error writing to /etc/pam.d/useradd\n" );
     goto EXIT;
   }
   if( ( rc = fclose( fPtr ) ) != 0 ) {
-    printf1( "Error closing file /etc/pam.d/useradd\n" );
+    printf( "Error closing file /etc/pam.d/useradd\n" );
     goto EXIT;
   }
 
   // Execution
   command = mysprintf( "/usr/sbin/useradd %s", user );
-  dataPtr->laus_var_data.textData.data = 
-    mysprintf("useradd: PAM authentication failed - by=%d", dataPtr->msg_egid );
+  dataPtr->comm = 
+    mysprintf("useradd: PAM authentication failed - by=%d", dataPtr->egid );
   runTrustedProgramWithoutVerify(dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
 
   restoreFile( "/etc/pam.d/useradd" );
@@ -406,7 +406,7 @@ int test_useradd(laus_data* dataPtr) {
  EXIT:
 
   restoreFile("/etc/default/useradd");
-  printf5("Returning from test_useradd()\n");
+  printf("Returning from test_useradd()\n");
   return rc;
 }
 

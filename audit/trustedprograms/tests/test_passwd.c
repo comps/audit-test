@@ -44,7 +44,7 @@
 #include <time.h>
 #include <pwd.h>
 
-int test_passwd(laus_data* dataPtr) {
+int test_passwd(audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;
@@ -59,43 +59,26 @@ int test_passwd(laus_data* dataPtr) {
   int gid;
 
   char* password = "eal";
-  char* newpassword = "R3PgPaZ_funny_word";
-  //char* newpassword = "R3PgPaZ";
-//  char newpassword[9];
-  //int x;
   // Produced with crypt( "eal", "42" ): 42VmxaOByKwlA
   char* encryptedpassword = "42VmxaOByKwlA";
+  char* newpassword = "R3PgPaZ_funny_word";
   char* badpassword = "anything_but_eal";
 
-  dataPtr->msg_euid = 0;
-  dataPtr->msg_egid = 0;
+  dataPtr->euid = 0;
+  dataPtr->egid = 0;
   if (( rc = createTempUserName( &user, &uid, &home ) == -1 )) {
-    printf1("Out of temp user names\n");
+    printf("Out of temp user names\n");
     goto EXIT;
   }
   if (( rc = createTempGroupName( &group, &gid ) == -1)) {
-    printf1("Out of temp group names\n");
+    printf("Out of temp group names\n");
     goto EXIT;
   }
 
-/*  srand( time(NULL) );
-  for( x = 0; x < 4; x++ ) {
-    newpassword[ x ] = 97+(int)(25.0*rand()/(RAND_MAX+1.0));
-  } 
-  for( x = 4; x < 6; x++ ) {
-    newpassword[ x ] = 48+(int)(9.0*rand()/(RAND_MAX+1.0));
-  }
-  for( x = 6; x < 8; x++ ) {
-    newpassword[ x ] = 97+(int)(25.0*rand()/(RAND_MAX+1.0));
-  }
-  newpassword[ 8 ] = '\0';
-  printf4( "Generated password: [%s]\n", newpassword );
-*/
   // Add group
-  command = mysprintf( "/usr/sbin/groupadd -g %d %s",
-                       gid, group );
+  command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s] with gid [%d]\n",
+    printf( "Error creating group [%s] with gid [%d]\n",
              group, gid );
     goto EXIT;
   }
@@ -107,21 +90,21 @@ int test_passwd(laus_data* dataPtr) {
   // Create user
   command = mysprintf( "/usr/sbin/useradd -u %d -g %d -d %s -m -p %s %s", uid, gid, home, encryptedpassword, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s]\n", user );
+    printf( "Error creating user [%s]\n", user );
     goto EXIT;
   }
   free( command );
   // Set password
   command = mysprintf( "/usr/sbin/usermod -p %s %s", encryptedpassword, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error setting password [%s]/[%s]\n", user, encryptedpassword );
+    printf( "Error setting password [%s]/[%s]\n", user, encryptedpassword );
     goto EXIT;
   }
   free( command );
 
   backupFile("/etc/pam.d/passwd");
   if ( ( rc = system( "cat /etc/pam.d/passwd | grep -v pam_laus.so > /tmp/passwd; mv -f /tmp/passwd /etc/pam.d/passwd; echo \"auth required pam_laus.so detach\" >> /etc/pam.d/passwd") ) == -1 ) {
-    printf1( "Error modifying /etc/pam.d/passwd\n" );
+    printf( "Error modifying /etc/pam.d/passwd\n" );
     goto EXIT;
   }
 
@@ -135,7 +118,7 @@ int test_passwd(laus_data* dataPtr) {
   //
   //
  //TEST_1:
-  printf5("TEST %d\n", test++);
+  printf("TEST %d\n", test++);
   // Setup
   // Set the date forward two years
   RUNCOMMAND( "date +%%m%%d%%H%%M%%Y > date_save.txt" );
@@ -153,17 +136,16 @@ int test_passwd(laus_data* dataPtr) {
   close(fd);
   free( command );
 
-  dataPtr->msg_ruid = uid;
+  dataPtr->uid = uid;
 
   // Execution
   command = mysprintf( "/usr/bin/expect -f %s", filename );
-  dataPtr->msg_pid = NO_FORK;
+  dataPtr->pid = NO_FORK;
   runTrustedProgramWithoutVerify( dataPtr, command );
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->laus_var_data.textData.data =
-    mysprintf( "passwd: password changed - user=%s, uid=%d, by=%d",
+  dataPtr->comm = mysprintf( "passwd: password changed - user=%s, uid=%d, by=%d",
                user, uid, uid );
 
    sleep(6); 
@@ -177,7 +159,7 @@ int test_passwd(laus_data* dataPtr) {
   // Cleanup
   unlink( filename );
   free( filename );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 1
 
@@ -192,7 +174,7 @@ int test_passwd(laus_data* dataPtr) {
   //
 
  //TEST_2:
-  printf5("TEST %d\n", test++);
+  printf("TEST %d\n", test++);
   // Setup
   RUNCOMMAND( "date +%%m%%d%%H%%M%%Y > date_save.txt" );
   RUNCOMMAND( "echo -n \"`date +%%m%%d%%H%%M`\" > notyear.txt" );
@@ -209,17 +191,16 @@ int test_passwd(laus_data* dataPtr) {
   close(fd);
   free( command );
 
-  dataPtr->msg_ruid = uid;
+  dataPtr->uid = uid;
 
   // Execution
   command = mysprintf( "/usr/bin/expect -f %s", filename );
-  dataPtr->msg_pid = NO_FORK;
+  dataPtr->pid = NO_FORK;
   runTrustedProgramWithoutVerify( dataPtr, command );
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->laus_var_data.textData.data =
-    mysprintf( "passwd: password change failed, pam error - user=%s, uid=%d, by=%d",
+  dataPtr->comm = mysprintf( "passwd: password change failed, pam error - user=%s, uid=%d, by=%d",
                user, uid, uid );
 
   // Check for audit record
@@ -232,7 +213,7 @@ int test_passwd(laus_data* dataPtr) {
   // Cleanup
   unlink( filename );
   free( filename );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 2
 
@@ -247,9 +228,9 @@ int test_passwd(laus_data* dataPtr) {
   //
   //
  //TEST_3:
-  printf5("TEST %d\n", test++);
+  printf("TEST %d\n", test++);
   // Setup
-  dataPtr->msg_ruid = uid;
+  dataPtr->uid = uid;
 
   // Execution
   command = mysprintf("/usr/bin/passwd -S -a");
@@ -257,14 +238,14 @@ int test_passwd(laus_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "passwd: password status display for all users denied - by=%d", uid);
 
   // Check for audit record
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 3
 
@@ -279,9 +260,9 @@ int test_passwd(laus_data* dataPtr) {
   //
   //
  //TEST_4:
-  printf5("TEST %d\n", test++);
+  printf("TEST %d\n", test++);
   // Setup
-  dataPtr->msg_ruid = dataPtr->msg_euid = 0;
+  dataPtr->uid = dataPtr->euid = 0;
 
   // Execution
   command = mysprintf("/usr/bin/passwd -S -a");
@@ -289,14 +270,14 @@ int test_passwd(laus_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->laus_var_data.textData.data =
-    mysprintf( "passwd: password status displayed for all users - by=%d", dataPtr->msg_euid);
+  dataPtr->comm =
+    mysprintf( "passwd: password status displayed for all users - by=%d", dataPtr->euid);
 
   // Check for audit record
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 4
 
@@ -311,9 +292,9 @@ int test_passwd(laus_data* dataPtr) {
   //
   //
  //TEST_5:
-  printf5("TEST %d\n", test++);
+  printf("TEST %d\n", test++);
   // Setup
-  dataPtr->msg_ruid = uid;
+  dataPtr->uid = uid;
 
   // Execution
   command = mysprintf("/usr/bin/passwd -k root");
@@ -321,14 +302,14 @@ int test_passwd(laus_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "passwd: password change denied - user=root, uid=0, by=%d", uid);
 
   // Check for audit record
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 5
 
@@ -343,9 +324,9 @@ int test_passwd(laus_data* dataPtr) {
   //
   //
  //TEST_6:
-  printf5("TEST %d\n", test++);
+  printf("TEST %d\n", test++);
   // Setup
-  dataPtr->msg_ruid = uid;
+  dataPtr->uid = uid;
 
   // Execution
   command = mysprintf("/usr/bin/passwd -l root");
@@ -353,14 +334,14 @@ int test_passwd(laus_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "passwd: password change denied - user=root, uid=0, by=%d", uid);
 
   // Check for audit record
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 6
 
@@ -375,9 +356,9 @@ int test_passwd(laus_data* dataPtr) {
   //
   //
  //TEST_7:
-  printf5("TEST %d\n", test++);
+  printf("TEST %d\n", test++);
   // Setup
-  dataPtr->msg_ruid = 0;
+  dataPtr->uid = 0;
 
   // Execution
   command = mysprintf("/usr/bin/passwd -l %s", user);
@@ -385,14 +366,14 @@ int test_passwd(laus_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "passwd: password changed - user=%s, uid=%d, by=0", user, uid);
 
   // Check for audit record
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 7
 
@@ -407,9 +388,9 @@ int test_passwd(laus_data* dataPtr) {
   //
   //
  //TEST_8:
-  printf5("TEST %d\n", test++);
+  printf("TEST %d\n", test++);
   // Setup
-  dataPtr->msg_ruid = 0;
+  dataPtr->uid = 0;
 
   // Execution
   command = mysprintf("/usr/bin/passwd -S");
@@ -417,14 +398,14 @@ int test_passwd(laus_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "passwd: password status displayed - user=root, uid=0, by=0");
 
   // Check for audit record
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 8
 
@@ -436,15 +417,15 @@ int test_passwd(laus_data* dataPtr) {
   restoreFile("/etc/pam.d/passwd");
   command = mysprintf( "/usr/sbin/userdel -r %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
   }
   free( command );
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
   }
   free( command );
-  printf5("Returning from test_passwd()\n");
+  printf("Returning from test_passwd()\n");
   return rc;
 }
 

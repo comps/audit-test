@@ -41,7 +41,7 @@
 #include "includes.h"
 #include "trustedprograms.h"
 
-int test_usermod(laus_data* dataPtr) {
+int test_usermod(audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;
@@ -71,7 +71,7 @@ int test_usermod(laus_data* dataPtr) {
 
   FILE* fPtr;
 
-  if (( rc = ShadowTestSetup( TRUE ) == -1 )) {
+  if (( rc = ShadowTestSetup(1) == -1 )) {
       goto EXIT;
   }
       
@@ -93,17 +93,17 @@ int test_usermod(laus_data* dataPtr) {
    * Test 1 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_1:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
 
   // Setup
-  dataPtr->msg_euid = 0;
-  dataPtr->msg_egid = 0;
+  dataPtr->euid = 0;
+  dataPtr->egid = 0;
   createTempUserName( &user, &uid, &home );
 
   // Create user
   command = mysprintf( "/usr/sbin/useradd -u %d %s", uid, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s]\n", user );
+    printf( "Error creating user [%s]\n", user );
     goto EXIT;
   }
   free( command );  
@@ -115,7 +115,7 @@ int test_usermod(laus_data* dataPtr) {
   // Create group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s]\n", group );
+    printf( "Error creating group [%s]\n", group );
     goto EXIT;
   }
   free( command );    
@@ -125,7 +125,7 @@ int test_usermod(laus_data* dataPtr) {
   // Create supplementary group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", supGid, supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s]\n", supGroup );
+    printf( "Error creating group [%s]\n", supGroup );
     goto EXIT;
   }
   free( command );    
@@ -135,7 +135,7 @@ int test_usermod(laus_data* dataPtr) {
   // Create second supplementary group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", secondSupGid, secondSupGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s]\n", secondSupGroup );
+    printf( "Error creating group [%s]\n", secondSupGroup );
     goto EXIT;
   }
   free( command );    
@@ -145,7 +145,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -153,7 +153,7 @@ int test_usermod(laus_data* dataPtr) {
   // Remove group
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );    
@@ -161,7 +161,7 @@ int test_usermod(laus_data* dataPtr) {
   // Remove supplemantary group
   command = mysprintf( "/usr/sbin/groupdel %s", supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", supGroup );
+    printf( "Error deleting group [%s]\n", supGroup );
     goto EXIT;
   }
   free( command );    
@@ -169,7 +169,7 @@ int test_usermod(laus_data* dataPtr) {
   // Remove second supplementary group
   command = mysprintf( "/usr/sbin/groupdel %s", secondSupGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", secondSupGroup );
+    printf( "Error deleting group [%s]\n", secondSupGroup );
     goto EXIT;
   }
   free( command );
@@ -188,7 +188,7 @@ int test_usermod(laus_data* dataPtr) {
 
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s] with gid [%d]\n",
+    printf( "Error creating group [%s] with gid [%d]\n",
 	     group, gid );
     goto EXIT;
   }
@@ -196,15 +196,16 @@ int test_usermod(laus_data* dataPtr) {
 
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", supGid, supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s] with gid [%d]\n",
+    printf( "Error creating group [%s] with gid [%d]\n",
 	     supGroup, supGid );
     goto EXIT;
   }
   free( command );
 
-  command = mysprintf( "/usr/sbin/useradd -g %d -u %d -d %s -G %s %s", gid, uid, home, supGroup, user );
+  command = mysprintf( "/usr/sbin/useradd -g %d -u %d -d %s -G %s %s",
+                       gid, uid, home, supGroup, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d], homedir [%s], and initial gid [%d]\n",
+    printf( "Error creating user [%s] with uid [%d], homedir [%s], and initial gid [%d]\n",
 	     user, uid, home, gid );
     goto EXIT;
   }
@@ -216,37 +217,37 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "usermod: user name changed in group - user=%s, olduser=%s, group=%s, gid=%d, by=%d",
-	      userNew, user, supGroup, supGid, dataPtr->msg_euid );
+	      userNew, user, supGroup, supGid, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "usermod: user name changed - user=%s, olduser=%s, by=%d",
-              userNew, user, dataPtr->msg_euid );
+              userNew, user, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", userNew );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", userNew );
+    printf( "Error deleting user [%s]\n", userNew );
     goto EXIT;
   }
   free( command );
 
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );
 
   command = mysprintf( "/usr/sbin/groupdel %s", supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", supGroup );
+    printf( "Error deleting group [%s]\n", supGroup );
     goto EXIT;
   }
   free( command );
@@ -270,11 +271,11 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_2:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Create initial group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s] with gid [%d]\n",
+    printf( "Error creating group [%s] with gid [%d]\n",
 	     group, gid );
     goto EXIT;
   }
@@ -283,7 +284,7 @@ int test_usermod(laus_data* dataPtr) {
   // Create first supplementary group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", supGid, supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating supplementary group [%s] with gid [%d]\n",
+    printf( "Error creating supplementary group [%s] with gid [%d]\n",
 	     supGroup, supGid );
     goto EXIT;
   }
@@ -292,7 +293,7 @@ int test_usermod(laus_data* dataPtr) {
   // Create second supplementary group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", secondSupGid, secondSupGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating second supplementary group [%s] with gid [%d]\n",
+    printf( "Error creating second supplementary group [%s] with gid [%d]\n",
 	     secondSupGroup, secondSupGid );
     goto EXIT;
   }
@@ -302,7 +303,7 @@ int test_usermod(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/useradd -g %d -u %d -d %s -G %s,%s %s", 
 		       gid, uid, home, supGroup, secondSupGroup, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d], homedir [%s], supplemenary groups [%s] and [%s], and initial gid [%d]\n",
+    printf( "Error creating user [%s] with uid [%d], homedir [%s], supplemenary groups [%s] and [%s], and initial gid [%d]\n",
 	     user, uid, home, supGroup, secondSupGroup, gid );
     goto EXIT;
   }
@@ -314,11 +315,11 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "usermod: user removed from group - user=%s, group=%s, gid=%d, by=%d",
-               user, secondSupGroup, secondSupGid, dataPtr->msg_euid );
+               user, secondSupGroup, secondSupGid, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -326,7 +327,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -334,7 +335,7 @@ int test_usermod(laus_data* dataPtr) {
   // Delete the initial group
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );
@@ -342,7 +343,7 @@ int test_usermod(laus_data* dataPtr) {
   // Delete the supplementary group
   command = mysprintf( "/usr/sbin/groupdel %s", supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", supGroup );
+    printf( "Error deleting group [%s]\n", supGroup );
     goto EXIT;
   }
   free( command );
@@ -350,7 +351,7 @@ int test_usermod(laus_data* dataPtr) {
   // Delete the second supplementary group
   command = mysprintf( "/usr/sbin/groupdel %s", secondSupGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", secondSupGroup );
+    printf( "Error deleting group [%s]\n", secondSupGroup );
     goto EXIT;
   }
   free( command );
@@ -374,11 +375,11 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_3:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Create initial group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s] with gid [%d]\n",
+    printf( "Error creating group [%s] with gid [%d]\n",
 	     group, gid );
     goto EXIT;
   }
@@ -387,7 +388,7 @@ int test_usermod(laus_data* dataPtr) {
   // Create supplementary group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", supGid, supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating supplementary group [%s] with gid [%d]\n",
+    printf( "Error creating supplementary group [%s] with gid [%d]\n",
 	     supGroup, supGid );
     goto EXIT;
   }
@@ -397,7 +398,7 @@ int test_usermod(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/useradd -g %d -u %d -d %s %s", 
 		       gid, uid, home, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d], homedir [%s], and initial gid [%d]\n",
+    printf( "Error creating user [%s] with uid [%d], homedir [%s], and initial gid [%d]\n",
 	     user, uid, home, gid );
     goto EXIT;
   }
@@ -409,17 +410,17 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-   dataPtr->laus_var_data.textData.data =
+   dataPtr->comm =
     mysprintf( "usermod: user name changed - user=%s, olduser=%s, by=%d",
-              userNew, user, dataPtr->msg_euid );
+              userNew, user, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "usermod: user added to group - user=%s, group=%s, gid=%d, by=%d",
-	       user, supGroup, supGid, dataPtr->msg_euid );
+	       user, supGroup, supGid, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -427,7 +428,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", userNew );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", userNew );
+    printf( "Error deleting user [%s]\n", userNew );
     goto EXIT;
   }
   free( command );
@@ -435,7 +436,7 @@ int test_usermod(laus_data* dataPtr) {
   // Delete the initial group
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );
@@ -443,7 +444,7 @@ int test_usermod(laus_data* dataPtr) {
   // Delete the supplementary group
   command = mysprintf( "/usr/sbin/groupdel %s", supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", supGroup );
+    printf( "Error deleting group [%s]\n", supGroup );
     goto EXIT;
   }
   free( command );
@@ -468,12 +469,12 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_4:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Add user
   command = mysprintf( "/usr/sbin/useradd -u %d -d %s -m %s", 
 		       uid, home, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d], and homedir [%s]\n",
+    printf( "Error creating user [%s] with uid [%d], and homedir [%s]\n",
 	     user, uid, home );
     goto EXIT;
   }
@@ -485,17 +486,17 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "usermod: user home directory changed - user=%s, uid=%d, home=%s_t04, oldhome=%s, by=%d",
-               user, uid, homeNew, home, dataPtr->msg_euid );
+               user, uid, homeNew, home, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "usermod: user home directory moved - user=%s, uid=%d, home=%s_t04, oldhome=%s, by=%d",
-	       user, uid, homeNew, home, dataPtr->msg_euid );
+	       user, uid, homeNew, home, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -503,7 +504,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel -r %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -530,12 +531,12 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_5:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Add group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", 
 		       gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s] with gid [%d]\n",
+    printf( "Error creating group [%s] with gid [%d]\n",
 	     group, gid );
     goto EXIT;
   }
@@ -545,7 +546,7 @@ int test_usermod(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/useradd -u %d -d %s -m -g %d %s", 
 		       uid, home, gid, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d], gid [%d], and homedir [%s]\n",
+    printf( "Error creating user [%s] with uid [%d], gid [%d], and homedir [%s]\n",
 	     user, uid, gid, home );
     goto EXIT;
   }
@@ -554,7 +555,7 @@ int test_usermod(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", 
 		       supGid, supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s] with gid [%d]\n",
+    printf( "Error creating group [%s] with gid [%d]\n",
 	     supGroup, supGid );
     goto EXIT;
   }
@@ -569,17 +570,17 @@ int test_usermod(laus_data* dataPtr) {
 
   // Check for audit records
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "usermod: user home directory moved - user=%s, uid=%d, home=%s_t05, oldhome=%s, by=%d",
-            user, uid, homeNew, home, dataPtr->msg_euid );
+            user, uid, homeNew, home, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "usermod: user home directory tree owner(s) changed - user=%s, uid=%d, olduid=%d, gid=%d, oldgid=%d, home=%s_t05, by=%d",
-	       user, uidNew, uid, gid, gid, homeNew, dataPtr->msg_euid );
+	       user, uidNew, uid, gid, gid, homeNew, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -587,7 +588,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel -r %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -595,14 +596,14 @@ int test_usermod(laus_data* dataPtr) {
   // Delete the groups
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );
 
   command = mysprintf( "/usr/sbin/groupdel %s", supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", supGroup );
+    printf( "Error deleting group [%s]\n", supGroup );
     goto EXIT;
   }
   free( command );
@@ -632,12 +633,12 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_6:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Add group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", 
 		       gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s] with gid [%d]\n",
+    printf( "Error creating group [%s] with gid [%d]\n",
 	     group, gid );
     goto EXIT;
   }
@@ -647,7 +648,7 @@ int test_usermod(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/useradd -u %d -d %s -m -g %d %s", 
 		       uid, home, gid, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d], gid [%d], and homedir [%s]\n",
+    printf( "Error creating user [%s] with uid [%d], gid [%d], and homedir [%s]\n",
 	     user, uid, gid, home );
     goto EXIT;
   }
@@ -659,17 +660,17 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "usermod: user home directory tree owner(s) changed - user=%s, uid=%d, olduid=%d, gid=%d, oldgid=%d, home=%s, by=%d",
-	       user, uidNew, uid, gid, gid, home, dataPtr->msg_euid );
+	       user, uidNew, uid, gid, gid, home, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
-  dataPtr->laus_var_data.textData.data =
+  dataPtr->comm =
     mysprintf( "usermod: user uid changed - user=%s, uid=%d, olduid=%d, by=%d",
-               user, uidNew, uid, dataPtr->msg_euid );
+               user, uidNew, uid, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -677,7 +678,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel -r %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -685,7 +686,7 @@ int test_usermod(laus_data* dataPtr) {
   // Delete the group
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );
@@ -707,12 +708,12 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_7:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Add user
   command = mysprintf( "/usr/sbin/useradd -u %d %s", 
 		       uid, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d]\n",
+    printf( "Error creating user [%s] with uid [%d]\n",
 	     user, uid );
     goto EXIT;
   }
@@ -725,11 +726,11 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "usermod: user password changed - user=%s, uid=%d, by=%d",
-	       user, uid, dataPtr->msg_euid );
+	       user, uid, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -737,7 +738,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -760,12 +761,12 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_8:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Add user
   command = mysprintf( "/usr/sbin/useradd %s", 
 		       user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s]\n",
+    printf( "Error creating user [%s]\n",
 	     user );
     goto EXIT;
   }
@@ -777,11 +778,11 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "usermod: user name changed - user=%s, olduser=%s, by=%d",
-	       userNew, user, dataPtr->msg_euid );
+	       userNew, user, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -789,7 +790,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", userNew );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", userNew );
+    printf( "Error deleting user [%s]\n", userNew );
     goto EXIT;
   }
   free( command );
@@ -814,12 +815,12 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_9:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Add group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", 
 		       gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s] with gid [%d]\n",
+    printf( "Error creating group [%s] with gid [%d]\n",
 	     group, gid );
     goto EXIT;
   }
@@ -829,7 +830,7 @@ int test_usermod(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", 
 		       supGid, supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s] with gid [%d]\n",
+    printf( "Error creating group [%s] with gid [%d]\n",
 	     supGroup, supGid );
     goto EXIT;
   }
@@ -839,7 +840,7 @@ int test_usermod(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/useradd -u %d -d %s -g %d %s", 
 		       uid, home, gid, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d], gid [%d], and homedir [%s]\n",
+    printf( "Error creating user [%s] with uid [%d], gid [%d], and homedir [%s]\n",
 	     user, uid, gid, home );
     goto EXIT;
   }
@@ -851,11 +852,11 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "usermod: user default gid changed - user=%s, uid=%d, gid=%d, oldgid=%d, by=%d",
-	       user, uid, supGid, gid, dataPtr->msg_euid );
+	       user, uid, supGid, gid, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -863,7 +864,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -871,7 +872,7 @@ int test_usermod(laus_data* dataPtr) {
   // Delete the group
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );
@@ -879,7 +880,7 @@ int test_usermod(laus_data* dataPtr) {
   // Delete the supplementary group
   command = mysprintf( "/usr/sbin/groupdel %s", supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting supplementary group [%s]\n", supGroup );
+    printf( "Error deleting supplementary group [%s]\n", supGroup );
     goto EXIT;
   }
   free( command );
@@ -904,12 +905,12 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_10:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Add user
   command = mysprintf( "/usr/sbin/useradd -u %d -c '%s' %s", 
 		       uid, comment, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d] and comment [%s]\n",
+    printf( "Error creating user [%s] with uid [%d] and comment [%s]\n",
 	     user, uid, comment );
     goto EXIT;
   }
@@ -921,11 +922,11 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "usermod: user comment changed - user=%s, uid=%d, comment='%s', oldcomment='%s', by=%d",
-	       user, uid, commentNew, comment, dataPtr->msg_euid );
+	       user, uid, commentNew, comment, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -933,7 +934,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -958,12 +959,12 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_11:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Add user
   command = mysprintf( "/usr/sbin/useradd -u %d -d %s %s", 
 		       uid, home, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d] and homedir [%s]\n",
+    printf( "Error creating user [%s] with uid [%d] and homedir [%s]\n",
 	     user, uid, home );
     goto EXIT;
   }
@@ -975,11 +976,11 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm =
     mysprintf( "usermod: user home directory changed - user=%s, uid=%d, home=%s_t11, oldhome=%s, by=%d",
-	       user, uid, homeNew, home, dataPtr->msg_euid );
+	       user, uid, homeNew, home, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -987,7 +988,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -1012,12 +1013,12 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_12:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Add user
   command = mysprintf( "/usr/sbin/useradd -u %d -d %s -s %s %s", 
 		       uid, home, shell, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d], homedir [%s], and shell [%s]\n",
+    printf( "Error creating user [%s] with uid [%d], homedir [%s], and shell [%s]\n",
 	     user, uid, home, shell );
     goto EXIT;
   }
@@ -1029,11 +1030,11 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "usermod: user shell changed - user=%s, uid=%d, shell=%s, oldshell=%s, by=%d",
-	       user, uid, shellNew, shell, dataPtr->msg_euid );
+	       user, uid, shellNew, shell, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -1041,7 +1042,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -1066,12 +1067,12 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_13:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Add user
   command = mysprintf( "/usr/sbin/useradd -u %d -d %s -f %d %s", 
 		       uid, home, inactiveTime, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d], homedir [%s], and inactive time [%d]\n",
+    printf( "Error creating user [%s] with uid [%d], homedir [%s], and inactive time [%d]\n",
 	     user, uid, home, inactiveTime );
     goto EXIT;
   }
@@ -1083,11 +1084,11 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "usermod: user inactive days changed - user=%s, uid=%d, inactive=%d, oldinactive=%d, by=%d",
-	       user, uid, inactiveTimeNew, inactiveTime, dataPtr->msg_euid );
+	       user, uid, inactiveTimeNew, inactiveTime, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -1095,7 +1096,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -1120,12 +1121,12 @@ int test_usermod(laus_data* dataPtr) {
    */
   // Setup
  //TEST_14:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Add user
   command = mysprintf( "/usr/sbin/useradd -u %d -d %s -e %s %s", 
 		       uid, home, expire, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s] with uid [%d], homedir [%s], and expiration date [%s]\n",
+    printf( "Error creating user [%s] with uid [%d], homedir [%s], and expiration date [%s]\n",
 	     user, uid, home, expire );
     goto EXIT;
   }
@@ -1138,11 +1139,11 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm =
     mysprintf( "usermod: user expiration date changed - user=%s, uid=%d, expire=%s, oldexpire=%s, by=%d",
-	       user, uid, expireNew, expire, dataPtr->msg_euid );
+	       user, uid, expireNew, expire, dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -1150,7 +1151,7 @@ int test_usermod(laus_data* dataPtr) {
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -1171,13 +1172,13 @@ int test_usermod(laus_data* dataPtr) {
    * Test 15 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_15:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Setup
 
   // Create the user
   command = mysprintf( "/usr/sbin/useradd -u %d %s", uid, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user account [%s] with uid [%d]\n", 
+    printf( "Error creating user account [%s] with uid [%d]\n", 
 	     user, uid );
     goto EXIT;
   }
@@ -1186,16 +1187,16 @@ int test_usermod(laus_data* dataPtr) {
   backupFile( "/etc/pam.d/shadow" );
 
   if( ( fPtr = fopen( "/etc/pam.d/shadow", "w" ) ) == NULL ) {
-    printf1( "Error opening /etc/pam.d/shadow for write w/ truncate access\n" );
+    printf( "Error opening /etc/pam.d/shadow for write w/ truncate access\n" );
     rc = -1;
     goto EXIT;
   }
   if( ( rc = fputs( "auth required pam_deny.so", fPtr ) ) == EOF ) {
-    printf1( "Error writing to /etc/pam.d/shadow\n" );
+    printf( "Error writing to /etc/pam.d/shadow\n" );
     goto EXIT;
   }
   if( ( rc = fclose( fPtr ) ) != 0 ) {
-    printf1( "Error closing file /etc/pam.d/shadow\n" );
+    printf( "Error closing file /etc/pam.d/shadow\n" );
     goto EXIT;
   }
 
@@ -1205,10 +1206,10 @@ int test_usermod(laus_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->laus_var_data.textData.data = 
-    mysprintf("usermod: PAM authentication failed - by=%d", dataPtr->msg_euid );
+  dataPtr->comm =
+    mysprintf("usermod: PAM authentication failed - by=%d", dataPtr->euid );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // Cleanup
 
@@ -1240,6 +1241,6 @@ int test_usermod(laus_data* dataPtr) {
  EXIT:
 
   restoreFile( "/etc/default/useradd" );
-  printf5("Returning from test_usermod()\n");
+  printf("Returning from test_usermod()\n");
   return rc;
 }

@@ -37,11 +37,7 @@ TESTDIR		= ..
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= trustedprogram_test.a
-TESTS_OBJ	= test_at.o \
-		  test_atd.o \
-		  test_cron.o \
-		  test_crontab.o \
-		  test_gpasswd.o \
+TESTS_OBJ	= test_gpasswd.o \
 		  test_groupadd.o \
 		  test_groupdel.o \
 		  test_groupmod.o \
@@ -55,7 +51,7 @@ ALL_OBJ		= $(TESTS_OBJ)
 
 all: $(ALL_AR)
 
-$(TESTS_AR): $(OBJ)
-	$(LINK_AR)
+$(TESTS_AR): $(TESTS_OBJ)
+	$(LINK_AR) $(TEST_OBJ)
 
 include $(TOPDIR)/rules.mk

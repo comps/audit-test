@@ -42,12 +42,13 @@
 
 #include "includes.h"
 #include "trustedprograms.h"
+#include "context.h"
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <asm/page.h>
 #include <grp.h>
 
-int test_gpasswd(laus_data* dataPtr) {
+int test_gpasswd(audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;
@@ -62,24 +63,24 @@ int test_gpasswd(laus_data* dataPtr) {
   int supGid;
   int secondSupGid;
   int trustedGid;
-  int uidSave = dataPtr->msg_euid;
-  //int gidSave = dataPtr->msg_egid;
+  int uidSave = dataPtr->euid;
+  //int gidSave = dataPtr->egid;
 
   int shmid = -1;
   int* pidShared = 0;
 
   struct group* group_data = NULL;
 
-  dataPtr->msg_euid = 0;
-  dataPtr->msg_egid = 0;
+  dataPtr->euid = 0;
+  dataPtr->egid = 0;
 
   
-  if (( rc = ShadowTestSetup( TRUE ) == -1 )) {
+  if (( rc = ShadowTestSetup(1) == -1 )) {
       goto EXIT;
   }
 
   if ((group_data = getgrnam("trusted")) == NULL) {
-    printf1("ERROR: Unable to get trusted group info.\n");
+    printf("ERROR: Unable to get trusted group info.\n");
     goto EXIT;
   }
 
@@ -92,7 +93,7 @@ int test_gpasswd(laus_data* dataPtr) {
   // Create group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s]\n", group );
+    printf( "Error creating group [%s]\n", group );
     goto EXIT;
   }
   free( command );    
@@ -102,7 +103,7 @@ int test_gpasswd(laus_data* dataPtr) {
   // Create supplementary group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", supGid, supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s]\n", supGroup );
+    printf( "Error creating group [%s]\n", supGroup );
     goto EXIT;
   }
   free( command );    
@@ -112,7 +113,7 @@ int test_gpasswd(laus_data* dataPtr) {
   // Create second supplementary group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", secondSupGid, secondSupGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating group [%s]\n", secondSupGroup );
+    printf( "Error creating group [%s]\n", secondSupGroup );
     goto EXIT;
   }
   free( command );    
@@ -122,7 +123,7 @@ int test_gpasswd(laus_data* dataPtr) {
   // Remove group
   command = mysprintf( "/usr/sbin/groupdel %s", group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", group );
+    printf( "Error deleting group [%s]\n", group );
     goto EXIT;
   }
   free( command );    
@@ -130,7 +131,7 @@ int test_gpasswd(laus_data* dataPtr) {
   // Remove supplemantary group
   command = mysprintf( "/usr/sbin/groupdel %s", supGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", supGroup );
+    printf( "Error deleting group [%s]\n", supGroup );
     goto EXIT;
   }
   free( command );    
@@ -138,18 +139,18 @@ int test_gpasswd(laus_data* dataPtr) {
   // Remove second supplementary group
   command = mysprintf( "/usr/sbin/groupdel %s", secondSupGroup );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting group [%s]\n", secondSupGroup );
+    printf( "Error deleting group [%s]\n", secondSupGroup );
     goto EXIT;
   }
   free( command );
 
   // Get some shared memory
   if( ( shmid = shmget( IPC_PRIVATE, PAGE_SIZE, 0 ) ) == -1 ) {
-    printf1( "Error getting shared memory\n" );
+    printf( "Error getting shared memory\n" );
     goto EXIT_CLEANUP;
   }
   if( (long)( pidShared = (int*)shmat( shmid, NULL, 0 ) ) == -1 ) {
-    printf1( "Error attaching to shared memory segment with shmid = [%d]: errno = [%i]\n", 
+    printf( "Error attaching to shared memory segment with shmid = [%d]: errno = [%i]\n", 
 	     shmid, errno );
     goto EXIT_CLEANUP;
   }
@@ -169,29 +170,28 @@ int test_gpasswd(laus_data* dataPtr) {
    * Test 1 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_1:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Create a group
   RUNCOMMANDORDIE( "/usr/sbin/groupadd -g %d %s", gid, group );
 
   // Execute: remove the password from the group
-  dataPtr->msg_ruid = dataPtr->msg_euid = uidSave;
-  dataPtr->msg_rgid = dataPtr->msg_egid = trustedGid;
+  dataPtr->uid = dataPtr->euid = uidSave;
+  dataPtr->gid = dataPtr->egid = trustedGid;
   command = mysprintf( "/usr/bin/gpasswd %s", group );
-  dataPtr->laus_var_data.textData.data = 
-    mysprintf( "gpasswd: group modification denied - group=%s, by=%d", 
-	       group, dataPtr->msg_euid );
+  dataPtr->comm = mysprintf( "gpasswd: group modification denied - group=%s, by=%d", 
+	       group, dataPtr->euid );
   runTrustedProgramWithoutVerify(dataPtr, command);
 
   //setuid program funkiness
-  dataPtr->msg_suid = dataPtr->msg_fsuid = dataPtr->msg_euid = 0;
+  dataPtr->suid = dataPtr->fsuid = dataPtr->euid = 0;
 
   verifyTrustedProgram( dataPtr );
 
-  dataPtr->msg_ruid = dataPtr->msg_euid = 0;
-  dataPtr->msg_rgid = dataPtr->msg_egid = 0;
+  dataPtr->uid = dataPtr->euid = 0;
+  dataPtr->gid = dataPtr->egid = 0;
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
   RUNCOMMANDORDIE( "/usr/sbin/groupdel %s", group );  
   // End Test 1
@@ -211,20 +211,19 @@ int test_gpasswd(laus_data* dataPtr) {
    * Test 2 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_2:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Create a group
   RUNCOMMANDORDIE( "/usr/sbin/groupadd -g %d %s", gid, group );
 
   // Execute: remove the password from the group
   command = mysprintf( "/usr/bin/gpasswd -r %s", group );
-  dataPtr->laus_var_data.textData.data = 
-    mysprintf( "gpasswd: group password removed - group=%s, by=%d", 
-	       group, dataPtr->msg_euid );
+  dataPtr->comm = mysprintf( "gpasswd: group password removed - group=%s, by=%d", 
+	       group, dataPtr->euid );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
   RUNCOMMANDORDIE( "/usr/sbin/groupdel %s", group );  
   // End Test 2
@@ -244,7 +243,7 @@ int test_gpasswd(laus_data* dataPtr) {
    * Test 3 written by Michael A. Halcrow <mike@halcrow.us>
    */
  //TEST_3:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
   // Setup
   RUNCOMMANDORDIE( "/usr/sbin/groupadd -g %d %s", gid, group );
 
@@ -253,16 +252,16 @@ int test_gpasswd(laus_data* dataPtr) {
 		       group );
   
   //gpasswd uses another process to do this task
-  dataPtr->msg_pid = NO_PID_CHECK;
+  dataPtr->pid = NO_PID_CHECK;
 
-  dataPtr->laus_var_data.textData.data = 
+  dataPtr->comm = 
     mysprintf( "gpasswd: group password changed - group=%s, by=%d",
-	       group, dataPtr->msg_euid );
+	       group, dataPtr->euid );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
   RUNCOMMANDORDIE( "/usr/sbin/groupdel %s", group );  
   // End Test 3 
@@ -276,11 +275,11 @@ int test_gpasswd(laus_data* dataPtr) {
   free( secondSupGroup );
 
   if( shmdt( pidShared ) == -1 ) {
-    printf1( "Error detaching from shared memory segment: errno = [%i]\n", errno );
+    printf( "Error detaching from shared memory segment: errno = [%i]\n", errno );
     goto EXIT_CLEANUP;
   }
   if( shmctl( shmid, IPC_RMID, NULL ) == -1 ) {
-    printf1( "Error removing shared memory with shmid = [%d]: errno = [%i]\n",
+    printf( "Error removing shared memory with shmid = [%d]: errno = [%i]\n",
 	     shmid, errno );
     goto EXIT_CLEANUP;
   }
@@ -289,7 +288,7 @@ int test_gpasswd(laus_data* dataPtr) {
 
   restoreFile("/etc/default/useradd");
 
-  printf5("Returning from test_gpasswd()\n");
+  printf("Returning from test_gpasswd()\n");
   return rc;
 }
 

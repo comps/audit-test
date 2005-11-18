@@ -42,7 +42,7 @@
 #include "includes.h"
 #include "trustedprograms.h"
 
-int test_groupmod(laus_data* dataPtr) {
+int test_groupmod(audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;
@@ -59,7 +59,7 @@ int test_groupmod(laus_data* dataPtr) {
   //int tmp;
   FILE* fPtr;
 
-  if (( rc = ShadowTestSetup( TRUE ) == -1 )) {
+  if (( rc = ShadowTestSetup(1) == -1 )) {
       goto EXIT;
   }
 
@@ -75,16 +75,16 @@ int test_groupmod(laus_data* dataPtr) {
    * Test 1 written by Jerone Young <jyoung5@us.ibm.com> 
    */
  //TEST_1:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
 
   // Setup
-  dataPtr->msg_euid = 0;
+  dataPtr->euid = 0;
   createTempGroupName( &Group, &gid );
   new_gid=897; //Some random integer value number
 
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, Group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error adding group [name %s; gid %d] prior to testing group deletion audit record\n",
+    printf( "Error adding group [name %s; gid %d] prior to testing group deletion audit record\n",
 	     Group, gid );
     goto EXIT;
   }
@@ -93,18 +93,17 @@ int test_groupmod(laus_data* dataPtr) {
 
   // Execution
   command = mysprintf( "/usr/sbin/groupmod -g %d %s", new_gid, Group );
-  dataPtr->laus_var_data.textData.data = 
-    mysprintf( "groupmod: group gid changed - group=%s, gid=%d, oldgid=%d, by=%d",
-	        Group, new_gid, gid, dataPtr->msg_euid );
+  dataPtr->comm = mysprintf( "groupmod: group gid changed - group=%s, gid=%d, oldgid=%d, by=%d",
+	        Group, new_gid, gid, dataPtr->euid );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
   command = mysprintf( "/usr/sbin/groupdel %s", Group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error during cleanup of groupadd test 1: system() returned -1\n" );
+    printf( "Error during cleanup of groupadd test 1: system() returned -1\n" );
     goto EXIT;
   }
   free( command );
@@ -121,16 +120,16 @@ int test_groupmod(laus_data* dataPtr) {
    *     Test 2 written by Jerone Young <jyoung5@us.ibm.com>
    */
    //TEST_2:
-   printf5(" TEST %d\n", test++);
+   printf(" TEST %d\n", test++);
    
    // Setup
-   dataPtr->msg_euid = 0;
+   dataPtr->euid = 0;
    createTempGroupName( &Group, &gid );  
    new_password = "7ijlxihgxUs"; //some random password 
 
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, Group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error adding group [name %s; gid %d] prior to testing group deletion audit record\n",
+    printf( "Error adding group [name %s; gid %d] prior to testing group deletion audit record\n",
              Group, gid );
     goto EXIT;
   }
@@ -138,18 +137,17 @@ int test_groupmod(laus_data* dataPtr) {
 
   // Execution
   command = mysprintf( "/usr/sbin/groupmod -p %s %s", new_password, Group );
-  dataPtr->laus_var_data.textData.data =
-    mysprintf( "groupmod: group password changed - group=%s, gid=%d, by=%d",
-                Group, gid, dataPtr->msg_euid );
+  dataPtr->comm = mysprintf( "groupmod: group password changed - group=%s, gid=%d, by=%d",
+                Group, gid, dataPtr->euid );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
  
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
   command = mysprintf( "/usr/sbin/groupdel %s", Group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error during cleanup of groupadd test 1: system() returned -1\n" );
+    printf( "Error during cleanup of groupadd test 1: system() returned -1\n" );
     goto EXIT;
   }
   free( command );
@@ -165,17 +163,17 @@ int test_groupmod(laus_data* dataPtr) {
   // groupmod: user added to group - user=user, group=group, gid=gid, by=uid
   // groupmod: user removed from group - user=user, group=group, gid=gid, by=uid
   //TEST_4:
-  printf5(" TEST %d\n", test++);
+  printf(" TEST %d\n", test++);
   
   // Setup
-  dataPtr->msg_euid = 0;
+  dataPtr->euid = 0;
   createTempGroupName( &Group, &gid );
   createTempUserName( &user, &uid, &home );
 
   // Create user
   command = mysprintf( "/usr/sbin/useradd -u %d %s", uid, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s]\n", user );
+    printf( "Error creating user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -183,7 +181,7 @@ int test_groupmod(laus_data* dataPtr) {
   // Create group
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, Group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error adding group [name %s; gid %d] prior to testing group deletion audit record\n",
+    printf( "Error adding group [name %s; gid %d] prior to testing group deletion audit record\n",
              Group, gid );
     goto EXIT;
   }
@@ -193,37 +191,35 @@ int test_groupmod(laus_data* dataPtr) {
   command = mysprintf( "/usr/sbin/groupmod -A %s %s", user, Group);
 
   //check audit record
-  dataPtr->laus_var_data.textData.data =
-    mysprintf( "groupmod: user added to group - user=%s, group=%s, gid=%d, by=%d", user,
-                Group, gid, dataPtr->msg_euid );
+  dataPtr->comm = mysprintf( "groupmod: user added to group - user=%s, group=%s, gid=%d, by=%d",
+                user, Group, gid, dataPtr->euid );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free ( command );
 
   //execution
   command = mysprintf( "/usr/sbin/groupmod -R %s %s", user, Group);
   
   //check audit record
-  dataPtr->laus_var_data.textData.data =
-    mysprintf( "groupmod: user removed from group - user=%s, group=%s, gid=%d, by=%d",
-                user, Group, gid, dataPtr->msg_euid );
+  dataPtr->comm = mysprintf( "groupmod: user removed from group - user=%s, group=%s, gid=%d, by=%d",
+                user, Group, gid, dataPtr->euid );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
   command = mysprintf( "/usr/sbin/groupdel %s", Group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error during cleanup of groupadd test 1: system() returned -1\n" );
+    printf( "Error during cleanup of groupadd test 1: system() returned -1\n" );
     goto EXIT;
   }
   free( command );
   
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -243,14 +239,14 @@ int test_groupmod(laus_data* dataPtr) {
             modified by Jerone Young <jeroney@us.ibm.com>
    */
  //TEST_5:
-  printf5("  TEST %d\n", test++);
+  printf("  TEST %d\n", test++);
 
   // Setup
-  dataPtr->msg_euid = 0;
+  dataPtr->euid = 0;
 
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, Group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error adding group [name %s; gid %d] prior to testing group deletion audit record\n",
+    printf( "Error adding group [name %s; gid %d] prior to testing group deletion audit record\n",
 	     Group, gid );
     goto EXIT;
   }
@@ -258,34 +254,33 @@ int test_groupmod(laus_data* dataPtr) {
 
   backupFile( "/etc/pam.d/shadow" );
   if( ( fPtr = fopen( "/etc/pam.d/shadow", "w" ) ) == NULL ) {
-    printf1( "Error opening /etc/pam.d/shadow for write w/ truncate access\n" );
+    printf( "Error opening /etc/pam.d/shadow for write w/ truncate access\n" );
     rc = -1;
     goto EXIT;
   }
   if( ( rc = fputs( "auth required pam_deny.so", fPtr ) ) == EOF ) {
-    printf1( "Error writing to /etc/pam.d/shadow\n" );
+    printf( "Error writing to /etc/pam.d/shadow\n" );
     goto EXIT;
   }
   if( ( rc = fclose( fPtr ) ) != 0 ) {
-    printf1( "Error closing file /etc/pam.d/shadow\n" );
+    printf( "Error closing file /etc/pam.d/shadow\n" );
     goto EXIT;
   }
 
   // Execution
   command = mysprintf( "/usr/sbin/groupmod -g %d %s", gid, Group );
-  dataPtr->laus_var_data.textData.data = 
-    mysprintf("groupmod: PAM authentication failed - by=%d",
-	      dataPtr->msg_euid );
+  dataPtr->comm = mysprintf("groupmod: PAM authentication failed - by=%d",
+	      dataPtr->euid );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
   // Cleanup
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
   free( command );
   restoreFile( "/etc/pam.d/shadow" );
   command = mysprintf( "/usr/sbin/groupdel %s", Group );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error during cleanup of groupadd test 1: system() returned -1\n" );
+    printf( "Error during cleanup of groupadd test 1: system() returned -1\n" );
     goto EXIT;
   }
   free( command );
@@ -296,7 +291,7 @@ int test_groupmod(laus_data* dataPtr) {
 
   restoreFile("/etc/default/useradd");
 
-  printf5("Returning from test_groupmod()\n");
+  printf("Returning from test_groupmod()\n");
   return rc;
 }
 

@@ -30,31 +30,33 @@
 
 #include "includes.h"
 #include "libpam.h"
-#include "logoptions.h"
 
-int runPAMProgram( laus_data* dataPtr, char* command ) {
+extern int pass_testcases;
+extern int fail_testcases;
+
+int runPAMProgram( audit_data* dataPtr, char* command ) {
   int rc = 0;
   int pid = 0;
 
   if ((rc = prePAMProgram(dataPtr) != 0)) {
-    printf1("ERROR: prePAMProgram failed\n");
+    printf("ERROR: prePAMProgram failed\n");
     goto EXIT;
   }
 
   // Get pid of exec'd pam program
-   if ( dataPtr->msg_pid != NO_FORK ) {
+   if ( dataPtr->pid != NO_FORK ) {
      pid = run(command);
    } else {
      system( command );
-     dataPtr->msg_pid = NO_PID_CHECK;
+     dataPtr->pid = NO_PID_CHECK;
    }
 
-   if ( dataPtr->msg_pid != NO_PID_CHECK ) {
-       dataPtr->msg_pid = pid;
+   if ( dataPtr->pid != NO_PID_CHECK ) {
+       dataPtr->pid = pid;
    }
        
   if(( rc = postPAMProgram( dataPtr ) != 0 )) {
-    printf1( "ERROR: postPAMProgram failed\n" );
+    printf( "ERROR: postPAMProgram failed\n" );
     goto EXIT;
   }
 
@@ -62,23 +64,19 @@ EXIT:
   return rc;
 }
 
-int verifyPAMProgram(laus_data *dataPtr) {
+int verifyPAMProgram(audit_data *dataPtr) {
     int rc = 0;
 
-    rc = audit_verify_log(dataPtr, logOptions[LOGOPTION_INDEX_ALL]);
+    rc = audit_verify_log(dataPtr);
 
-    printf2("Verify record\n");
+    printf("Verify record\n");
     if (rc > 0) {
         pass_testcases++;
-        printf2("AUDIT PASS ");
+        printf("AUDIT PASS ");
     } else {
         fail_testcases++;
-        debug_expected(dataPtr);
-        printf2("AUDIT FAIL ");
+        printf("AUDIT FAIL ");
     }
-    printf2prime(
-        ": '%s' [logSuccess=1, logFailure=1, successCase=%x]\n",
-        dataPtr->testName, dataPtr->successCase);
 
     return rc;
 }

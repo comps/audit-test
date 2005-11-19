@@ -32,26 +32,26 @@
 #include "includes.h"
 #include <time.h>
 
-int postPAMProgram(laus_data* dataPtr) {
+int postPAMProgram(audit_data* dataPtr) {
 
   int rc = 0;
 
-  printf5( "Setting end timestamp\n" );
+  printf( "Setting end timestamp\n" );
 #ifndef NOSLEEP
   sleep(2);
 #endif
-  dataPtr->end_r_time = time( NULL );
+  dataPtr->end_time = time( NULL );
 
   // su back to root
-  printf5( "setresuid to root\n" );
+  printf( "setresuid to root\n" );
   if ( ( rc = setresuid( 0, 0, 0 ) ) != 0 ) {
-    printf1( "Unable to setresuid to root: errno=%i\n", errno );
+    printf( "Unable to setresuid to root: errno=%i\n", errno );
     goto EXIT;
   }
 
-  printf5( "setresgid to root\n" );
+  printf( "setresgid to root\n" );
   if ( ( rc = setresgid( 0, 0, 0 ) ) != 0 ) {
-    printf1( "Unable to setresgid to root: errno=%i\n", errno );
+    printf( "Unable to setresgid to root: errno=%i\n", errno );
     goto EXIT;
   }
 

@@ -32,46 +32,46 @@
 #include "includes.h"
 #include <time.h>
 
-int prePAMProgram(laus_data* dataPtr) {
+int prePAMProgram(audit_data* dataPtr) {
 
   int rc = 0;
 
   // su to test user
-  printf5( "setresgid to %i, %i, %i\n", dataPtr->msg_rgid, dataPtr->msg_egid, 0 );
-  if( ( rc = setresgid( dataPtr->msg_rgid, dataPtr->msg_egid, 0 ) ) != 0 ) {
-    printf1( "Unable to setresgid to %i, %i, %i: errno=%i\n",
-            dataPtr->msg_rgid, dataPtr->msg_egid, 0, errno );
+  printf( "setresgid to %i, %i, %i\n", dataPtr->rgid, dataPtr->egid, 0 );
+  if( ( rc = setresgid( dataPtr->rgid, dataPtr->egid, 0 ) ) != 0 ) {
+    printf( "Unable to setresgid to %i, %i, %i: errno=%i\n",
+            dataPtr->rgid, dataPtr->egid, 0, errno );
     goto EXIT;
   }
-  printf5( "setresuid to %i, %i, %i\n", dataPtr->msg_ruid, dataPtr->msg_euid, 0 );
-  if( ( rc = setresuid( dataPtr->msg_ruid, dataPtr->msg_euid, 0 ) ) != 0 ) {
-    printf1( "Unable to setresuid to %i, %i, %i: errno=%i\n",
-            dataPtr->msg_ruid, dataPtr->msg_euid, 0, errno );
+  printf( "setresuid to %i, %i, %i\n", dataPtr->ruid, dataPtr->euid, 0 );
+  if( ( rc = setresuid( dataPtr->ruid, dataPtr->euid, 0 ) ) != 0 ) {
+    printf( "Unable to setresuid to %i, %i, %i: errno=%i\n",
+            dataPtr->ruid, dataPtr->euid, 0, errno );
     goto EXIT;
   }
 
   // Fill in laus_data structure
-  printf5( "Calling getLAUSData\n" );
+  printf( "Calling getLAUSData\n" );
   if( ( rc = getLAUSData( dataPtr ) ) != 0 ) {
-    printf1( "Error returned from getLAUSData( dataPtr ): rc=%i\n", rc );
+    printf( "Error returned from getLAUSData( dataPtr ): rc=%i\n", rc );
     goto EXIT;
   }
 
   //Forking a process will cause the saved ids to become that of the effective user
   //so a child cannot escalate its privledges
-  dataPtr->msg_suid = dataPtr->msg_euid;
-  dataPtr->msg_sgid = dataPtr->msg_egid;
+  dataPtr->suid = dataPtr->euid;
+  dataPtr->sgid = dataPtr->egid;
 
   //The fs(u|g)id fields needed initializing
-  dataPtr->msg_fsgid = dataPtr->msg_egid;
-  dataPtr->msg_fsuid = dataPtr->msg_euid;
+  dataPtr->fsgid = dataPtr->egid;
+  dataPtr->fsuid = dataPtr->euid;
 
-  printf5( "Setting begin timestamp\n" );
+  printf( "Setting begin timestamp\n" );
 #ifndef NOSLEEP
   sleep(2);
 #endif
-  dataPtr->begin_r_time = time( NULL );
-  printf5( "Performing PAM program test\n" );
+  dataPtr->begin_time = time( NULL );
+  printf( "Performing PAM program test\n" );
 
  EXIT:
   return rc;

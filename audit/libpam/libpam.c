@@ -95,7 +95,7 @@ Arguments:\n\
 
   struct passwd* passwd_data = NULL;
   struct passwd* login_uid_data = NULL;
-  laus_data* successDataPtr = NULL;
+  audit_data* successDataPtr = NULL;
 
 #if defined(__i386__)
 	int arch = AUDIT_ARCH_I386;
@@ -122,7 +122,7 @@ Arguments:\n\
     {&test_vsftpd, "vsftpd", NULL}
   };
 
-  backupFile("/etc/audit/filter.conf");
+  //backupFile("/etc/audit/filter.conf");
 
   // Iterate through command line options
   while (1) {
@@ -142,14 +142,14 @@ Arguments:\n\
       case 'u':
         // User option specified, try to get passwd info, exit if none
         if ((passwd_data = getpwnam(optarg)) == NULL) {
-          printf1("ERROR: Unable to get %s passwd info.\n", optarg);
+          printf("ERROR: Unable to get %s passwd info.\n", optarg);
           goto EXIT_ERROR;
         }
         break;
       case 'l':
         // login uid specified, try to get passwd info, exit if none
         if ((login_uid_data = getpwnam(optarg)) == NULL) {
-          printf1("ERROR: Unable to get %s passwd info.\n", optarg);
+          printf("ERROR: Unable to get %s passwd info.\n", optarg);
           goto EXIT_ERROR;
         }
 	login_uid = login_uid_data->pw_uid;
@@ -164,7 +164,7 @@ Arguments:\n\
           }
         }
         if ( rc != 0 ) {
-          printf1("ERROR: System call '%s' not tested by laustest\n", testcase);
+          printf("ERROR: System call '%s' not tested by laustest\n", testcase);
           goto EXIT_ERROR;
         }
         break;
@@ -174,7 +174,7 @@ Arguments:\n\
         // BUGBUG: This if statement needs to be modified to handle
         // non-numeric input correctly.
         if ( (debug < 0) || (debug > 9) ) {
-          printf1("ERROR: Debug level %s is invalid\n", optarg);
+          printf("ERROR: Debug level %s is invalid\n", optarg);
           goto EXIT_ERROR;
         }
         break;
@@ -194,7 +194,7 @@ Arguments:\n\
 
   if (passwd_data == NULL) {
     // Must enter a valid user to run tests as
-    printf1("ERROR: Please enter a test user name with the -u option.\n");
+    printf("ERROR: Please enter a test user name with the -u option.\n");
     goto EXIT_ERROR;
   }
 
@@ -211,11 +211,11 @@ Arguments:\n\
 
   /*
   ** For these tests, we want to log all success and failures
-  */
   if ( ( rc = system("echo \"event user-message = always;\nevent process-login = always;\" > /etc/audit/filter.conf") ) != 0 ) {
-    printf1("Could not configure filter.conf\n");
+    printf("Could not configure filter.conf\n");
     goto EXIT_ERROR;
   }
+  */
 
   if ((rc = audit_reload()) != 0) {
     goto EXIT_ERROR;
@@ -225,7 +225,7 @@ Arguments:\n\
   ** Loop through pam programs
   **
   */
-  successDataPtr = (laus_data*)malloc(sizeof(laus_data));
+  successDataPtr = (audit_data*)malloc(sizeof(audit_data));
 
   for (k = 0; k < sizeof(pamTests)/sizeof(pam_data); k++) {
     // Run exactly one test case?
@@ -234,18 +234,18 @@ Arguments:\n\
       continue;
     }
 
-    printf2("%s()\n", pamTests[k].testName);
+    printf("%s()\n", pamTests[k].testName);
 
-    memset(successDataPtr,'\0',sizeof(laus_data));
+    memset(successDataPtr,'\0',sizeof(audit_data));
 
-    successDataPtr->successCase = TRUE;
-    successDataPtr->msg_arch = arch;
-    successDataPtr->msg_type = AUDIT_MSG_TEXT;
-    successDataPtr->msg_euid = uid;
-    successDataPtr->msg_egid = gid;
+    successDataPtr->success = 1;
+    successDataPtr->u.syscall.arch = arch;
+    successDataPtr->type = AUDIT_MSG_TEXT;
+    successDataPtr->euid = uid;
+    successDataPtr->egid = gid;
     successDataPtr->testName = pamTests[k].testName;
     
-    printf4("Performing test on %s\n", pamTests[k].testName);
+    printf("Performing test on %s\n", pamTests[k].testName);
 
     if ((rc = pamTests[k].testPtr(successDataPtr)) != 0) {
       goto EXIT_ERROR;
@@ -256,13 +256,14 @@ Arguments:\n\
   free(successDataPtr);
 
   if (test_rc != 0) {
-    printf2("ERROR: At least 1 pam program did not execute as expected\n");
+    printf("ERROR: At least 1 pam program did not execute as expected\n");
     rc = -1;
   }
 
-  printf2("PASSED = %i, FAILED = %i\n", pass_testcases, fail_testcases);
+  printf("PASSED = %i, FAILED = %i\n", pass_testcases, fail_testcases);
 
-  restoreFile("/etc/audit/filter.conf");
+ //XXXX
+  //restoreFile("/etc/audit/filter.conf");
   audit_reload();
 
 EXIT_HELP:
@@ -271,9 +272,9 @@ EXIT_HELP:
   return rc;
 
 EXIT_ERROR:
-  restoreFile("/etc/audit/filter.conf");
+//  restoreFile("/etc/audit/filter.conf");
   audit_reload();
-  printf1("ERROR: Test aborted: errno = %i\n", errno);
+  printf("ERROR: Test aborted: errno = %i\n", errno);
   return rc;
 
 }

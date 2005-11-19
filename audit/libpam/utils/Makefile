@@ -42,7 +42,7 @@ UTILS_OBJS	= post_pam_program.o		\
 		  pam_program.o
 
 ALL_AR		= $(UTILS_AR)
-ALL_OBJ		= $(UTILS_OBJ)
+ALL_OBJ		= $(UTILS_OBJS)
 
 all: $(ALL_AR)
 

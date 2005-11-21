@@ -280,7 +280,7 @@ Usage: ${0##*/} [OPTION]...
 Run a set of test cases, reporting pass/fail and tallying results.
 
     -f --config=FILE  Use a config file other than harness.conf
-    -l --log=FILE     Output to a log other than run.log
+    -l --log=FILE     Output to a log other than harness.log
     -h --help         Show this help
 
 Output modes:

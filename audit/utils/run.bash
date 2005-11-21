@@ -44,8 +44,8 @@ declare exit_status
 declare logging=false
 declare opt_verbose=false
 declare opt_debug=false
-declare opt_config=harness.conf
-declare opt_log=harness.log
+declare opt_config=run.conf
+declare opt_log=run.log
 
 #----------------------------------------------------------------------
 # utility functions
@@ -114,13 +114,13 @@ function prf {
 #----------------------------------------------------------------------
 
 # make_variation(char *cmdline, char *variation)
-# This is just the default implementation; it can be overridden in harness.conf
+# This is just the default implementation; it can be overridden in run.conf
 function make_variation {
     echo "$1 $2"
 }
 
 # run_test(char *cmdline)
-# This is just the default implementation; it can be overridden in harness.conf
+# This is just the default implementation; it can be overridden in run.conf
 function run_test {
     eval "$1"
 }
@@ -197,12 +197,12 @@ function - {
 
 trap 'cleanup; close_log; exit' 0 1 2 3 15
 
-# this can be overridden in harness.conf
+# this can be overridden in run.conf
 function startup_hook {
     true
 }
 
-# this can be overridden in harness.conf
+# this can be overridden in run.conf
 function cleanup_hook {
     true
 }
@@ -279,8 +279,8 @@ function usage {
 Usage: ${0##*/} [OPTION]...
 Run a set of test cases, reporting pass/fail and tallying results.
 
-    -f --config=FILE  Use a config file other than harness.conf
-    -l --log=FILE     Output to a log other than harness.log
+    -f --config=FILE  Use a config file other than run.conf
+    -l --log=FILE     Output to a log other than run.log
     -h --help         Show this help
 
 Output modes:

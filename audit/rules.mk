@@ -81,7 +81,7 @@ all run:
 
 ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard run.conf)),)
 run: all
-	TOPDIR="$(TOPDIR)" $(TOPDIR)/utils/run.bash
+	@TOPDIR="$(TOPDIR)" $(TOPDIR)/utils/run.bash
 endif
 
 _clean: subdirs

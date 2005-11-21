@@ -45,7 +45,4 @@ all: $(ALL_EXE)
 $(AUDIT_TRAIL_EXE): $(AUDIT_TRAIL_OBJ)
 	$(LINK_EXE)
 
-run: all
-	./$(EXE) &> ./$(EXE).run.log
-
 include $(TOPDIR)/rules.mk

@@ -37,10 +37,10 @@ SUB_DIRS        = fail-safe \
 		  pam_laus \
 		  trustedprograms
 
-all: SUB_DIRS = fail-safe syscalls
+all: SUB_DIRS = audit_trail_protection fail-safe syscalls
 all: subdirs
 
-run: SUB_DIRS = fail-safe syscalls
+run: SUB_DIRS = audit_trail_protection fail-safe syscalls
 run:
 	$(MAKE) all
 	for x in $(SUB_DIRS); do make -C $$x run; done 2>&1 \

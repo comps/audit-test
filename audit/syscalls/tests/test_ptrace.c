@@ -1,217 +1,90 @@
-/**********************************************************************
- **   Copyright (C) International Business Machines  Corp., 2003
- **
- **   This program is free software;  you can redistribute it and/or modify
- **   it under the terms of the GNU General Public License as published by
- **   the Free Software Foundation; either version 2 of the License, or
- **   (at your option) any later version.
- **
- **   This program is distributed in the hope that it will be useful,
- **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
- **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
- **   the GNU General Public License for more details.
- **
- **   You should have received a copy of the GNU General Public License
- **   along with this program;  if not, write to the Free Software
- **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- **
- **
- **
- **  FILE       : test_ptrace.c
- **
- **  PURPOSE    : To test the ptrace library call auditing.
- **
- **  DESCRIPTION: The test_ptrace() function builds into the
- **  laus_test framework to verify that the Linux Audit System
- **  accurately logs both successful and erroneous execution of the
- **  "ptrace" system call.
- **
- **  In the successful case, this function:
- **   1) Sets the euid to the test user
- **   2) Forks; child calls ptrace with request=PTRACE_TRACEME
- **   3) Parent waits for child to terminate
- **   4) Sets the euid to the superuser
- **   5) Verifies the success result.
- **
- **  The successful case sets up all parameters in such a manner to
- **  assure success, according to the man page for ptrace.
- **  
- **  In the erroneous case, this function:
- **   1) Calls ptrace on pid=1 with a PTRACE_KILL request
- **      
- **  The erroneous case passes in an invalid pid for given request,
- **  causing an EPERM error condition.
- **
- **  HISTORY    :
- **    06/03 Originated by Michael A. Halcrow <mike@halcrow.us>
- **    10/03 Furthered by Kylene J. Smith <kylene@us.ibm.com>
- **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
- **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
- **
- **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_ptrace.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to trace a process.
+ *
+ *  SYSCALLS:
+ *  ptrace()
+ *
+ *  TESTCASE: successful
+ *  Perform a PTRACE_ATTACH to a new child process.
+ *
+ *  TESTCASE: unsuccessful
+ *  Attempt to PTRACE_ATTACH to the init process.
+ */
 
 #include "includes.h"
-#include "syscalls.h"
+#include <signal.h>
 #include <sys/ptrace.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
 #include <sys/wait.h>
-
-typedef struct errnoAndReturnValue_s {
-    int returnValue;
-    int savedErrno;
-} errnoAndReturnValue_t;
 
 int test_ptrace(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EPERM;
-
-    enum __ptrace_request request;
+    int success = context->success; /* save intended result */
     pid_t pid;
-    void *addr;
-    void *data;
+    int exit;
 
-    //key_t shmkey;    // variables not needed?
-    //int shmsize;
-    //int shmflg;
-    int shmid;
-
-    errnoAndReturnValue_t *earv;
-    int savedErrno;
-
-    int placeHolder;
-
-  /**
-   * Do as much setup work as possible right here
-   */
-    // Initialize IPC
-    // Shared memory
-    if ((rc = seteuid(context->euid)) != 0) {
-	fprintf(stderr, "Unable to seteuid to %i: errno=%i\n",
-		context->euid, errno);
-	goto EXIT;
-    }
-    if ((shmid = shmget(IPC_PRIVATE, sizeof(errnoAndReturnValue_t),
-			IPC_CREAT | 0x777)) == -1) {
-	fprintf(stderr, "Error getting shared memory: errno=%i\n", errno);
-	goto EXIT;		// TODO: Explicitely account for the fact that the semaphore has been created at this point
-    }
-    if ((rc = seteuid(0)) != 0) {
-	fprintf(stderr, "Unable to seteuid to %i: errno=%i\n", 0, errno);
-	goto EXIT;
-    }
-    pid = 0;
-    addr = &placeHolder;
-    data = &placeHolder;
-    request = PTRACE_TRACEME;
-    if (!context->success) {
-	request = PTRACE_KILL;
-	pid = 1;
-    }
-    // Set up audit argument buffer
-    if ((rc = auditArg4(context,
-			AUDIT_ARG_IMMEDIATE, sizeof(enum __ptrace_request),
-			&request, AUDIT_ARG_IMMEDIATE, sizeof(int), &pid,
-			AUDIT_ARG_POINTER, 0, addr, AUDIT_ARG_POINTER, 0,
-			data)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT;
-    }
-    // Execute system call
-    if (context->success) {
-	int pid;
-	if ((pid = fork()) == 0) {
-	    errnoAndReturnValue_t *childEarv;
-	    // In child
-	    if ((rc = seteuid(0)) != 0) {
-		fprintf(stderr, "Unable to seteuid to %i: errno=%i\n",
-			context->euid, errno);
-		goto EXIT;
-	    }
-	    if (((long)(childEarv = shmat(shmid, NULL, 0))) == -1) {
-		fprintf
-		    (stderr,
-		     "Error attaching to shared memory segment with id %d: errno=%i\n",
-		     shmid, errno);
-		// TODO: Something a bit more drastic should happen at this point
-		_exit(0);
-	    }
-	    if ((rc = seteuid(context->euid)) != 0) {
-		fprintf(stderr, "Unable to seteuid to %i: errno=%i\n",
-			context->euid, errno);
-		goto EXIT;
-	    }
-	    childEarv->returnValue =
-		syscall(__NR_ptrace, request, pid, addr, data);
-	    childEarv->savedErrno = errno;
-	    if ((rc = seteuid(0)) != 0) {
-		fprintf(stderr, "Unable to seteuid to %i: errno=%i\n",
-			context->euid, errno);
-		goto EXIT;
-	    }
-	    if (shmdt(childEarv) == -1) {
-		fprintf
-		    (stderr,
-		     "Error detaching from shared memory segment at address 0x%p: errno=%i\n",
-		     childEarv, errno);
-		_exit(0);
-	    }
-	    _exit(0);
-	} else {
-	    // In parent
-	    context->pid = pid;
-	    if (waitpid(pid, NULL, 0) == -1) {
-		fprintf(stderr, "Error waiting on pid %d: errno=%i\n", pid, errno);
-		goto EXIT_CLEANUP;
-	    }
-	    if ((rc = seteuid(0)) != 0) {
-		fprintf(stderr, "Unable to seteuid to %i: errno=%i\n", 0, errno);
-		goto EXIT;
-	    }
-	    if (((long)(earv = shmat(shmid, NULL, 0))) == -1) {
-		fprintf
-		    (stderr,
-		     "Error attaching to shared memory segment with id %d: errno=%i\n",
-		     shmid, errno);
-		goto EXIT_CLEANUP;
-	    }
-	    context->u.syscall.exit = earv->returnValue;
-	    savedErrno = earv->savedErrno;
-	    if (shmdt(earv) == -1) {
-		fprintf
-		    (stderr,
-		     "Error detaching from shared memory segment at address 0x%p: errno=%i\n",
-		     earv, errno);
-		goto EXIT_CLEANUP;
-	    }
+    if (success) {
+	pid = fork();
+	if (pid < 0) {
+	    fprintf(stderr, "Error: fork(): %s\n", strerror(errno));
+	    rc = -1;
+	    goto exit;
 	}
+	if (pid == 0) {
+	    while (1) { ; }
+	    _exit(0);
+	}
+	fprintf(stderr, "Created process: %d\n", pid);
+    } else  {
+	pid = 1;
+	context->experror = EPERM;
+    }
+
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit;
+
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Calling ptrace(PTRACE_ATTACH, %d)\n", pid);
+    exit = ptrace(PTRACE_ATTACH, pid, NULL, NULL);
+    if (exit >= 0)
+	wait(NULL);
+    context_setend(context);
+
+    if (exit < 0) {
+	context->success = 0;
+	context->error = context->u.syscall.exit = errno;
     } else {
-	context->u.syscall.exit =
-	    syscall(__NR_ptrace, request, pid, addr, data);
-	savedErrno = errno;
+	context->success = 1;
+	context->u.syscall.exit = exit;
     }
 
-    // Do post-system call work
-    if ((rc = postSysCall(context, savedErrno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT;
-    }
+    if (exit >= 0 && ptrace(PTRACE_KILL, pid, NULL, NULL) < 0)
+	fprintf(stderr, "Error: ptrace(): %s\n", strerror(errno));
 
-EXIT_CLEANUP:
-    // Release the shared memory
-    if (shmctl(shmid, 0, IPC_RMID) == -1) {
-	fprintf(stderr, "Error removing shared memory with id %d: errno=%i\n", shmid,
-		errno);
-	goto EXIT;
-    }
-
-EXIT:
-    fprintf(stderr, "Returning from test\n");
+exit:
     return rc;
 }

@@ -54,13 +54,14 @@ enum audit_arg {
  * Context Value Types
  */
 
-/* msg_type */
-#define AUDIT_MSG_LOGIN		1
-#define AUDIT_MSG_SYSCALL	2
-#define AUDIT_MSG_EXIT		3
-#define AUDIT_MSG_NETLINK	4
-#define AUDIT_MSG_TEXT          256
-#define AUDIT_MSG_USERBASE	256     /* user land messages start here */
+/* message type */
+#define AUDIT_MSG_LOGIN         0x0001
+#define AUDIT_MSG_SYSCALL	0x0010
+#define AUDIT_MSG_CWD           0x0020
+#define AUDIT_MSG_IPC           0x0040
+#define AUDIT_MSG_SOCKADDR      0x0080
+#define AUDIT_MSG_USER          0x0100
+#define AUDIT_MSG_DAEMON        0x1000
 
 /* syscall arch */
 #if defined(__i386__)

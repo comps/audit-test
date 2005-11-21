@@ -248,7 +248,7 @@ Arguments:\n\
 
     successDataPtr->success = 1;
     successDataPtr->u.syscall.arch = arch;
-    successDataPtr->type = AUDIT_MSG_USERBASE;
+    successDataPtr->type = AUDIT_MSG_USER;
     successDataPtr->euid = uid;
     successDataPtr->egid = gid;
     successDataPtr->testName = trustedprogramTests[k].testName;

@@ -224,7 +224,6 @@ int test_rollover(laus_data *ld, uid_t uid, gid_t gid) {
 			printf5("Log file rollover successful, checking log file contents\n");
 
 			// Set the data
-			ld->msg_type = AUDIT_MSG_TEXT;
 			ld->laus_var_data.textData.data = mysprintf(AUDIT_USER_MSG, AUDIT_SWITCH_COUNT);
 			// Verify the last message is present
 			audit_verify_log(ld, log_opt);

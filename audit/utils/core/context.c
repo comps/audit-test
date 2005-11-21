@@ -135,7 +135,7 @@ void context_dump(const struct audit_data *context)
 
         /* TODO add object of operation */
 
-    } else if (context->type == AUDIT_MSG_TEXT) {
+    } else if (context->type == AUDIT_MSG_USER) {
 	fprintf(stderr, "\ttext: %s\n", context->u.user.buf);
     }
 }

@@ -240,7 +240,7 @@ Arguments:\n\
 
     successDataPtr->success = 1;
     successDataPtr->u.syscall.arch = arch;
-    successDataPtr->type = AUDIT_MSG_TEXT;
+    successDataPtr->type = AUDIT_MSG_LOGIN;
     successDataPtr->euid = uid;
     successDataPtr->egid = gid;
     successDataPtr->testName = pamTests[k].testName;

@@ -73,7 +73,7 @@ int test_user_msg(laus_data *ld, uid_t uid, gid_t gid) {
 	ld->msg_pid = pid;
 
 	// Set the data
-	ld->msg_type = AUDIT_MSG_TEXT;
+	ld->msg_type = AUDIT_MSG_USER;
 	ld->laus_var_data.textData.data = mysprintf(GROUP_ADD_MSG, ld->msg_ruid);
 
 	// Remove the group

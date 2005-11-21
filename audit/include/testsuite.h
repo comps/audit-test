@@ -32,6 +32,4 @@ typedef enum {
     TEST_ERROR,         /* test did not complete due to error */
 } ts_exit;
 
-#define SKIP_TEST_CASE 256
-
 #endif	/* _TESTSUITE_H */

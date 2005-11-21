@@ -107,8 +107,7 @@ TESTS_OBJ	= test_access.o \
 		  test_umask.o \
 		  test_unlink.o \
 		  test_utime.o \
-		  test_utimes.o \
-		  test_vfork.o \
+		  test_utimes.o
 
 ALL_OBJ		= $(TESTS_OBJ)
 ALL_AR		= $(TESTS_AR)

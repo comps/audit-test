@@ -34,7 +34,6 @@ SUB_DIRS        = fail-safe \
 		  audit_trail_protection \
 		  filter-conf \
 		  libpam \
-		  pam_laus \
 		  trustedprograms
 
 all: SUB_DIRS = audit_trail_protection fail-safe syscalls

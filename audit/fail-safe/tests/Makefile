@@ -44,7 +44,7 @@ ALL_AR		= $(TESTS_AR)
 
 all: deps $(ALL_AR)
 
-$(TESTS_AR): $(TESTS_OBJS)
+$(TESTS_AR): $(TESTS_OBJ)
 	$(LINK_AR)
 
 include $(TOPDIR)/rules.mk

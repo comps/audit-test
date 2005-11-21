@@ -54,7 +54,7 @@ SUB_DIRS        = tests utils ../utils
 
 all: deps $(ALL_EXE)
 
-$(PAM_LAUS_EXE): $(ALL_OBJS) $(UTILS_AR)
+$(PAM_LAUS_EXE): $(ALL_OBJ) $(UTILS_AR)
 	$(MAKE) subdirs
 	$(CC) $(LDFLAGS) -o $@ $^ tests/*.o utils/*.o $(LOADLIBES) $(LDLIBS)
 

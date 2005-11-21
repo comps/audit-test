@@ -57,7 +57,7 @@ SUB_DIRS	= tests utils ../utils
 all: deps $(ALL_EXE)
 
 $(TP_EXE): LDLIBS += -llaus
-$(TP_EXE): $(TP_OBJS) $(UTILS_AR)
+$(TP_EXE): $(TP_OBJ) $(UTILS_AR)
 	$(CC) $(LDFLAGS) -o $@ $^ tests/*.o utils/*.o $(LOADLIBES) $(LDLIBS)
 
 run: all

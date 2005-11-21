@@ -42,7 +42,7 @@ UTILS_OBJ	= post_trustedprogram.o		\
 		  shadow_test_setup.o
 
 ALL_AR		= $(UTILS_AR)
-ALL_OBJS	= $(UTILS_OBJ)
+ALL_OBJ		= $(UTILS_OBJ)
 
 all: $(ALL_AR)
 

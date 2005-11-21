@@ -39,7 +39,7 @@ UTILS_AR	= filter_conf_utils.a
 UTILS_OBJ	= filter_call_utils.o		\
 		  set_config.o
 
-ALL_OBJ		= $(UTILS_OBJS)
+ALL_OBJ		= $(UTILS_OBJ)
 ALL_AR		= $(UTILS_AR)
 
 all: deps $(ALL_AR)

@@ -37,16 +37,16 @@ TESTDIR		= ..
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 UTILS_AR	= libpam_test_utils.a
-UTILS_OBJS	= post_pam_program.o		\
+UTILS_OBJ	= post_pam_program.o		\
 		  pre_pam_program.o		\
 		  pam_program.o
 
 ALL_AR		= $(UTILS_AR)
-ALL_OBJ		= $(UTILS_OBJS)
+ALL_OBJ		= $(UTILS_OBJ)
 
 all: $(ALL_AR)
 
-$(UTILS_AR): $(UTILS_OBJS)
+$(UTILS_AR): $(UTILS_OBJ)
 	$(LINK_AR)
 
 include $(TOPDIR)/rules.mk

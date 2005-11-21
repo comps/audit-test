@@ -51,7 +51,7 @@ SUB_DIRS	= utils tests
 
 all: subdirs deps $(ALL_EXE) run.bash
 
-$(FAILSAFE_EXE): $(FAILSAFE_OBJS) $(FAILSAFE_ARS)
+$(FAILSAFE_EXE): $(FAILSAFE_OBJ) $(FAILSAFE_ARS)
 	$(LINK_EXE)
 
 .PHONY: $(FAILSAFE_NOTIFY)

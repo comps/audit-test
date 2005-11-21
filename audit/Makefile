@@ -30,7 +30,6 @@
 TOPDIR		= .
 SUB_DIRS        = fail-safe \
 		  syscalls \
-		  audbin \
 		  audit_tools \
 		  audit_trail_protection \
 		  filter-conf \

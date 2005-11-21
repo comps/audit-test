@@ -48,17 +48,19 @@ TP_EXE		= trustedprograms
 TP_OBJ		= trustedprograms.o
 
 UTILS_AR	= $(TOPDIR)/utils/testutils.a
+TESTS_AR	= $(TESTDIR)/tests/trustedprogram_test.a
+TPUTILS_AR	= $(TESTDIR)/utils/trustedprogram_test_utils.a
 
 ALL_OBJ		= $(TP_OBJ)
 ALL_EXE		= $(TP_EXE)
 
 SUB_DIRS	= tests utils ../utils
 
-all: deps $(ALL_EXE)
+all: subdirs deps $(ALL_EXE) 
 
-$(TP_EXE): LDLIBS += -llaus
-$(TP_EXE): $(TP_OBJ) $(UTILS_AR)
-	$(CC) $(LDFLAGS) -o $@ $^ tests/*.o utils/*.o $(LOADLIBES) $(LDLIBS)
+$(TP_EXE): $(LDLIBS)
+$(TP_EXE): $(TP_OBJ)  $(TESTS_AR) $(TPUTILS_AR) $(UTILS_AR)
+	$(CC) $(LDFLAGS) -o $@ $^ 
 
 run: all
 	$(AUDIT_CLEAN_LOG)

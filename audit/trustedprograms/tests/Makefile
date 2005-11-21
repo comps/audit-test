@@ -46,12 +46,14 @@ TESTS_OBJ	= test_gpasswd.o \
 		  test_userdel.o \
 		  test_usermod.o 
 
+TPUTILS_A	= ../utils/trustedprogram_test_utils.a
+
 ALL_AR		= $(TESTS_AR)
 ALL_OBJ		= $(TESTS_OBJ)
 
 all: $(ALL_AR)
 
 $(TESTS_AR): $(TESTS_OBJ)
-	$(LINK_AR) $(TEST_OBJ)
+	$(LINK_AR) $(TEST_OBJ) $(TPUTILS_A)
 
 include $(TOPDIR)/rules.mk

@@ -110,7 +110,7 @@ Arguments:\n\
 
   struct passwd* passwd_data = NULL;
   struct passwd* login_uid_data = NULL;
-  laus_data* successDataPtr = NULL;
+  audit_data* successDataPtr = NULL;
 
   // Array contains data for each trusted program test.
   trustedprogram_data trustedprogramTests[] = {
@@ -151,14 +151,14 @@ Arguments:\n\
       case 'u':
         // User option specified, try to get passwd info, exit if none
         if ((passwd_data = getpwnam(optarg)) == NULL) {
-          printf1("ERROR: Unable to get %s passwd info.\n", optarg);
+          printf("ERROR: Unable to get %s passwd info.\n", optarg);
           goto EXIT_ERROR;
         }
         break;
       case 'l':
         // login uid specified, try to get passwd info, exit if none
         if ((login_uid_data = getpwnam(optarg)) == NULL) {
-          printf1("ERROR: Unable to get %s passwd info.\n", optarg);
+          printf("ERROR: Unable to get %s passwd info.\n", optarg);
           goto EXIT_ERROR;
         }
 	login_uid = login_uid_data->pw_uid;
@@ -173,7 +173,7 @@ Arguments:\n\
           }
         }
         if ( rc != 0 ) {
-          printf1("ERROR: System call '%s' not tested by laustest\n", testcase);
+          printf("ERROR: System call '%s' not tested by laustest\n", testcase);
           goto EXIT_ERROR;
         }
         break;
@@ -183,7 +183,7 @@ Arguments:\n\
         // BUGBUG: This if statement needs to be modified to handle
         // non-numeric input correctly.
         if ( (debug < 0) || (debug > 9) ) {
-          printf1("ERROR: Debug level %s is invalid\n", optarg);
+          printf("ERROR: Debug level %s is invalid\n", optarg);
           goto EXIT_ERROR;
         }
         break;
@@ -203,7 +203,7 @@ Arguments:\n\
 
   if (passwd_data == NULL) {
     // Must enter a valid user to run tests as
-    printf1("ERROR: Please enter a test user name with the -u option.\n");
+    printf("ERROR: Please enter a test user name with the -u option.\n");
     goto EXIT_ERROR;
   }
 
@@ -218,12 +218,12 @@ Arguments:\n\
   // Save the CWD for audit_set_filters()
   getcwd(cwd, PATH_MAX);
 
-  /*
+  /* XXX
   ** Save the current filter.conf file
   */
   backupFile("/etc/audit/filter.conf");
 
-  /*
+  /* XXX
   ** Create a filter.conf file to audit user messages
   */
   system("echo \"event user-message = always;\" >/etc/audit/filter.conf");
@@ -233,7 +233,7 @@ Arguments:\n\
   ** Loop through trustedprograms
   **
   */
-  successDataPtr = (laus_data*)malloc(sizeof(laus_data));
+  successDataPtr = (audit_data*)malloc(sizeof(audit_data));
 
   for (k = 0; k < sizeof(trustedprogramTests)/sizeof(trustedprogram_data); k++) {
     // Run exactly one test case?
@@ -242,18 +242,18 @@ Arguments:\n\
       continue;
     }
 
-    printf2("%s()\n", trustedprogramTests[k].testName);
+    printf("%s()\n", trustedprogramTests[k].testName);
 
-    memset(successDataPtr,'\0',sizeof(laus_data));
+    memset(successDataPtr,'\0',sizeof(audit_data));
 
-    successDataPtr->successCase = TRUE;
-    successDataPtr->msg_arch = arch;
-    successDataPtr->msg_type = AUDIT_MSG_USERBASE;
-    successDataPtr->msg_euid = uid;
-    successDataPtr->msg_egid = gid;
+    successDataPtr->success = 1;
+    successDataPtr->u.syscall.arch = arch;
+    successDataPtr->type = AUDIT_MSG_USERBASE;
+    successDataPtr->euid = uid;
+    successDataPtr->egid = gid;
     successDataPtr->testName = trustedprogramTests[k].testName;
     
-    printf4("Performing test on %s\n", trustedprogramTests[k].testName);
+    printf("Performing test on %s\n", trustedprogramTests[k].testName);
 
     if ((rc = trustedprogramTests[k].testPtr(successDataPtr)) != 0) {
       goto EXIT_ERROR;
@@ -264,13 +264,15 @@ Arguments:\n\
   free(successDataPtr);
 
   if (test_rc != 0) {
-    printf2("ERROR: At least 1 trusted program did not execute as expected\n");
+    printf("ERROR: At least 1 trusted program did not execute as expected\n");
     rc = -1;
   }
 
+  /* XXX
   restoreFile("/etc/audit/filter.conf");
+  */
 
-  printf2("PASSED = %i, FAILED = %i\n", pass_testcases, fail_testcases);
+  printf("PASSED = %i, FAILED = %i\n", pass_testcases, fail_testcases);
 
 EXIT_HELP:
 
@@ -281,7 +283,7 @@ EXIT_HELP:
 
 EXIT_ERROR:
 
-  printf1("ERROR: Test aborted: errno = %i\n", errno);
+  printf("ERROR: Test aborted: errno = %i\n", errno);
   return rc;
 
 }

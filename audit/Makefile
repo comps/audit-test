@@ -44,7 +44,8 @@ all: subdirs
 run: SUB_DIRS = fail-safe syscalls
 run:
 	$(MAKE) all
-	for x in $(SUB_DIRS); do make -C $$x run; done 2>&1 | ./tally-results.awk
+	for x in $(SUB_DIRS); do make -C $$x run; done 2>&1 \
+	    | utils/tally-results.awk | tee run.log
 
 .PHONY: dist
 dist:

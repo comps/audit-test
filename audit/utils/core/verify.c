@@ -50,9 +50,35 @@ exit:
 }
 
 /* Verify presence or absence of log record */
-ts_exit verify_logresult(struct audit_data *context, int expfind)
+ts_exit verify_logresult(struct audit_data *context)
 {
     ts_exit rc = TEST_EXPECTED;
 
+    if (context->type & AUDIT_MSG_SYSCALL) {
+	/* log fields to check:
+	 *
+	 * type =~ SYSCALL
+	 * syscall == context->u.syscall.sysnum
+	 * success == context->success ? "yes" : "no"
+	 * exit == context->u.syscall.exit
+	 * pid == context->pid
+	 * auid == context->loginuid
+	 * uid == context->uid
+	 * gid == context->gid
+	 * euid == context->euid
+	 * suid == context->suid
+	 * fsuid == context->fsuid
+	 * egid == context->egid
+	 * sgid == context->sgid
+	 * fsgid == context->fsgid
+	 */
+
+	/* if record found goto exit */
+    }
+
+    rc = TEST_UNEXPECTED;
+    fprintf(stderr, "Expected record not found in log\n");
+
+//exit:
     return rc;
 }

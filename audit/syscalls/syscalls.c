@@ -118,8 +118,7 @@ int main(int argc, char **argv)
     if (ecode != TEST_EXPECTED)
 	goto exit;
 
-    /* 1 = always want to find log record matching specified context */
-    ecode = verify_logresult(&context, 1);
+    ecode = verify_logresult(&context);
 
 exit:
     context_release(&context);

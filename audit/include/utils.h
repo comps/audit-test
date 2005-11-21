@@ -135,7 +135,7 @@ int postSysCall(struct audit_data* dataPtr, int resultErrno, int errorRC,
  * Test Verification
  */
 ts_exit verify_opresult(struct audit_data *, int);
-ts_exit verify_logresult(struct audit_data *, int);
+ts_exit verify_logresult(struct audit_data *);
 
 /*
  * Shell Command Utilities

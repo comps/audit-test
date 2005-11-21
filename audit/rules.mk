@@ -79,14 +79,9 @@ endif
 	msgque rmlogs showrpms showrpms2
 all run:
 
-ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard run.conf)),)
+ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard harness.conf)),)
 run: all
-	./run.bash
-
-all: run.bash
-
-run.bash:
-	-[[ -f run.bash ]] || ln -sf $(TOPDIR)/run.bash .
+	TOPDIR="$(TOPDIR)" $(TOPDIR)/utils/harness
 endif
 
 _clean: subdirs
@@ -101,7 +96,7 @@ _clobber: subdirs clean
 clobber: _clobber
 
 _distclean: subdirs clobber
-	$(RM) run.log
+	$(RM) harness.log
 
 distclean: _distclean
 

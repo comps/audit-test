@@ -1,5 +1,5 @@
-Name:           audit-testsuite
-Version:        576
+Name:           audit-test
+Version:        596
 Release:        1
 Summary:        Audit testsuite for RHEL4 CAPP evaluation
 Vendor:         Hewlett-Packard
@@ -9,7 +9,7 @@ License:        GPL v2
 Group:          Development/Tests
 BuildArch:      noarch
 Requires:       binutils cpp expect flex gcc gcc-c++ glibc-devel libattr-devel libstdc++-devel make
-Prefix:         /root
+Prefix:         /usr/local/eal3_testing
 BuildRoot:      %{_tmppath}/%{name}-root
 
 %description
@@ -24,12 +24,12 @@ systems, then it was torn apart and mostly rewritten by HP engineers.
 
 %install
 [ "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/root/%{name}-%{version}
-cp -a . $RPM_BUILD_ROOT/root/%{name}-%{version}
+mkdir -p $RPM_BUILD_ROOT/%{prefix}/%{name}
+cp -a . $RPM_BUILD_ROOT/%{prefix}/%{name}
 
 %clean
 [ "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/root/%{name}-%{version}
+%{prefix}/%{name}

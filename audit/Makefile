@@ -52,17 +52,17 @@ dist:
 	rev=$$(svn info | awk '/^Revision:/{print $$2}'); \
 	sed -i "/^Version:/s/[0-9].*/$$rev/; \
 	        s/^\(Requires:[ 	]*\).*/\1$$deps/" \
-		    audit-testsuite.spec; \
-	mkdir ../audit-testsuite-$$rev || exit; \
-	rsync -a --exclude=.svn . ../audit-testsuite-$$rev; \
-	$(MAKE) distclean -C ../audit-testsuite-$$rev; \
+		    audit-test.spec; \
+	mkdir ../audit-test-$$rev || exit; \
+	rsync -a --exclude=.svn . ../audit-test-$$rev; \
+	$(MAKE) distclean -C ../audit-test-$$rev; \
 	cd ..; \
-	tar czf audit-testsuite-$$rev.tar.gz audit-testsuite-$$rev; \
-	rm -rf audit-testsuite-$$rev
+	tar czf audit-test-$$rev.tar.gz audit-test-$$rev; \
+	rm -rf audit-test-$$rev
 
 .PHONY: rpm
 rpm: dist
 	rev=$$(svn info | awk '/^Revision:/{print $$2}'); \
-	rpmbuild -ta ../audit-testsuite-$$rev.tar.gz
+	rpmbuild -ta ../audit-test-$$rev.tar.gz
 
 include $(TOPDIR)/rules.mk

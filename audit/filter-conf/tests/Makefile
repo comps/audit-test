@@ -41,8 +41,6 @@ TESTS_OBJ	= test_int_cmp.o	\
 		  test_syscall_attrs.o	\
 		  test_process_attrs.o	\
 		  test_file_attrs.o	\
-		  test_socket_attrs.o	\
-		  test_netlink_attrs.o	\
 		  test_user_msg.o	\
 		  test_login.o
 

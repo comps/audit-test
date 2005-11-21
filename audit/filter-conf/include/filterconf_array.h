@@ -136,25 +136,6 @@ filterconf_data filterconf_tests[] = {
 	{ &test_dev, "file dev-minor true",  NULL, { TRUE, TRUE },   "syscall open = is-dev-devminorA(arg0);" },
 	{ &test_dev, "file dev-minor false", NULL, { FALSE, FALSE }, "syscall open = is-dev-devminorB(arg0);" },
 
-	// Socket attribute tests...
-	// Socket family
-	{ &test_socket, "socket family true",  NULL, { TRUE, TRUE },   "syscall bind = is-sock-inet(arg0);" },
-	{ &test_socket, "socket family false", NULL, { FALSE, FALSE }, "syscall bind = is-sock-inet6(arg0);" },
-	// Socket type
-	{ &test_socket, "socket type true",  NULL, { TRUE, TRUE },   "syscall bind = is-sock-stream(arg0);" },
-	{ &test_socket, "socket type false", NULL, { FALSE, FALSE }, "syscall bind = is-sock-dgram(arg0);" },
-
-	// Netlink attribute tests...
-	// Netlink family
-	{ &test_netlink, "netlink family true",  NULL, { TRUE, TRUE },   "event network-config = is-inet(netlink-family);" },
-	{ &test_netlink, "netlink family false", NULL, { FALSE, FALSE }, "event network-config = is-inet6(netlink-family);" },
-	// Netlink type
-	{ &test_netlink, "netlink type true",  NULL, { TRUE, TRUE },   "event network-config = is-nl-newroute(netlink-type);" },
-	{ &test_netlink, "netlink type false", NULL, { FALSE, FALSE }, "event network-config = is-nl-newaddr(netlink-type);" },
-	// Netlink flags
-	{ &test_netlink, "netlink flags true",  NULL, { TRUE, TRUE },   "event network-config = is-nl-request(netlink-flags);" },
-	{ &test_netlink, "netlink flags false", NULL, { FALSE, FALSE }, "event network-config = is-nl-norequest(netlink-flags);" },
-
 	// Userspace tests...
 	{ &test_user_msg, "user message true",  NULL, { TRUE, TRUE },   "event user-message = always;" },
 	{ &test_user_msg, "user message false", NULL, { FALSE, FALSE }, "event user-message = never;" },

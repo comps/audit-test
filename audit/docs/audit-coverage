@@ -190,9 +190,6 @@ fail-safe/tests/test_pam_loginuid.c
     When auditing is disabled that the pam_loginuid disallows users to login to the system
      -- could be a manual test
 
-filter-conf/tests/test_socket_attrs.c
- Tests the sock-family, sock-type socket attribute filtering support.
-
 filter-conf/tests/test_int_cmp.c
  Tests the integer comparison support in the audit filter
 
@@ -202,10 +199,6 @@ filter-conf/tests/test_login.c
 filter-conf/tests/test_syscall_attrs.c
  Tests the argN system call support.
  Tests the syscall-minor system call support. (on certain arches only)
-
-filter-conf/tests/test_netlink_attrs.c
- Tests the netlink-family, netlink-type, netlink-flags socket attribute support.
- runs a route add then a route delete
 
 filter-conf/tests/test_str_cmp.c
  Tests the string comparison filtering support.

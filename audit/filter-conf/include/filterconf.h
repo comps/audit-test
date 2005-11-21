@@ -89,8 +89,6 @@ int test_process_exit_signal(laus_data *ld, uid_t uid, gid_t gid);
 int test_file(laus_data *ld, uid_t uid, gid_t gid);
 int test_file_owner(laus_data *ld, uid_t uid, gid_t gid);
 int test_dev(laus_data *ld, uid_t uid, gid_t gid);
-int test_socket(laus_data *ld, uid_t uid, gid_t gid);
-int test_netlink(laus_data *ld, uid_t uid, gid_t gid);
 int test_user_msg(laus_data *ld, uid_t uid, gid_t gid);
 int test_login(laus_data *ld, uid_t uid, gid_t gid);
 

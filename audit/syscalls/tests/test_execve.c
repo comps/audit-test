@@ -24,52 +24,56 @@
  *  execve()
  *
  *  TESTCASE: successful
- *  Execute auditctl program as root user.
+ *  Execute /bin/true.
  *
  *  TESTCASE: unsuccessful
- *  Attempt to execute auditctl program as test user.
+ *  Attempt to execute a file which does have execute access
+ *  permission.
  */
 
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/wait.h>
 
-char *argv[] = { "auditctl", "-v", NULL };
-
 int test_execve(struct audit_data *context)
 {
     int rc = 0;
     int success = context->success; /* save intended result */
+    char *cmd = NULL;
     pid_t pid;
     int status, exit;
-
-    /* To produce failure, attempt to execute auditctl as unprivileged user */
-    if (!success) {
-	rc = setresuid_test();
-	if (rc < 0)
-	    goto exit;
-	context->experror = -EINTR;
-    }
 
     rc = context_setidentifiers(context);
     if (rc < 0)
 	goto exit;
+
+    if (success)
+	cmd = "/bin/true";
+    else {
+	rc = createTempFile(&cmd, S_IRUSR|S_IRGRP|S_IROTH,
+			    context->euid, context->egid);
+	if (rc < 0) {
+	    fprintf(stderr, "Error: cannot create tmp file: %s\n", strerror(errno));
+	    goto exit;
+	}
+	context->experror = -EACCES;
+    }
 
     context_setbegin(context);
     pid = fork();
     if (pid < 0) {
 	rc = -1;
 	fprintf(stderr, "Error: fork(): %s\n", strerror(errno));
-	goto exit;
+	goto exit_free;
     }
     if (pid == 0) {
-	execve("/sbin/auditctl", argv, NULL);
-	/* not reached due to EINTR */
+	execve(cmd, NULL, NULL);
+	_exit(errno);
     } else {
 	if (waitpid(pid, &status, 0) < 0) {
 	    rc = -1;
 	    fprintf(stderr, "Error: waitpid(): %s\n", strerror(errno));
-	    goto exit;
+	    goto exit_free;
 	}
     }
     context_setend(context);
@@ -77,11 +81,12 @@ int test_execve(struct audit_data *context)
     exit = WEXITSTATUS(status);
     context->pid = pid;
     context->success = (exit == 0);
-    context->error = context->u.syscall.exit = exit;
+    context->error = context->u.syscall.exit = -exit;
+
+exit_free:
+    if (!success)
+	free(cmd);
 
 exit:
-    if (!success)
-	if (setresuid(0, 0, 0) < 0) /* clean up from failure case */
-	    fprintf(stderr, "Warning: can't switch back to root\n");
     return rc;
 }

@@ -46,12 +46,6 @@
 #define __NR_lchown16 16
 #endif
 
-/*
- * Limits
- */
-#define MAX_ARG_SIZE 30                 /* test_execve */
-#define MAX_WAIT_TIME_FOR_CHILD 60      /* test_execve */
-
 /* 
  * Global variables
  */

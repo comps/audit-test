@@ -35,25 +35,6 @@ TOPDIR		= ..
 TESTDIR		= .
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
-# FAILSAFE_EXE	= failsafe
-# FAILSAFE_OBJ	= failsafe.o
-# FAILSAFE_AR	= $(TOPDIR)/utils/testutils.a	\
-# 		  $(TESTDIR)/utils/failsafe_utils.a	\
-# 		  $(TESTDIR)/tests/failsafe_tests.a
-# 
-# FAILSAFE_NOTIFY	= failsafe_notify
-
-ALL_OBJ		= $(FAILSAFE_OBJ)
-ALL_AR		= $(FAILSAFE_AR)
-ALL_EXE		= $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
-
 SUB_DIRS	= utils tests
 
 include $(TOPDIR)/rules.mk
-
-$(FAILSAFE_EXE): $(FAILSAFE_OBJ) $(FAILSAFE_ARS)
-	$(LINK_EXE)
-
-.PHONY: $(FAILSAFE_NOTIFY)
-$(FAILSAFE_NOTIFY): $(FAILSAFE_EXE)
-	ln -sfn $< $@

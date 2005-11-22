@@ -265,7 +265,11 @@ function close_log {
 #----------------------------------------------------------------------
 
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-[[ -z $TOPDIR ]] && export TOPDIR=$(readlink run.bash | sed 's|/[^/]*$||')
+if [[ -z $TOPDIR ]]; then
+    TOPDIR=$(readlink run.bash)
+    TOPDIR=${TOPDIR%/utils/*}
+    export TOPDIR
+fi
 pushd $TOPDIR >/dev/null || die "Can't access TOPDIR ($TOPDIR)"
 PATH=$PWD/utils:$PATH
 popd >/dev/null

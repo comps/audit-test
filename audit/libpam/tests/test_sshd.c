@@ -104,7 +104,16 @@ int test_sshd(audit_data* dataPtr) {
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);
-  command = mysprintf( "expect -c \"spawn /usr/bin/ssh %s@localhost \nsleep 1 \nexpect -re \\\"password: \\\" \nsleep 1 \nsend \\\"%s\\r\\n\\\" \nsleep 1 \nexpect -re \\\"$ \\\" \nsleep 1 \nsend \\\"exit\\\" \nsend_user \\\"exit\\n\\\"\"", user, password);
+  command = mysprintf( "expect -c \"spawn /usr/bin/ssh %s@localhost \n"
+"sleep 1 \n"
+"expect -re \\\"password: \\\" \n"
+"sleep 1 \n"
+"send \\\"%s\\r\\n\\\" \n"
+"sleep 1 \n"
+"expect -re \\\"> \\\" \n"
+"sleep 1 \n"
+"send \\\"exit\\\" \n"
+"send_user \\\"exit\\n\\\"\"", user, password);
   write(fd, command, strlen(command));
   close(fd);
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -125,11 +134,11 @@ int test_sshd(audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM session open: user=%s (hostname=localhost, addr=127.0.0.1, terminal=ssh)", user);
+  dataPtr->comm = mysprintf("PAM setcred: user=%s exe=\"/usr/sbin/sshd\" (hostname=localhost.localdomain, addr=127.0.0.1, terminal=ssh result=Success)", user);
   verifyPAMProgram( dataPtr );
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM accounting: user=%s (hostname=localhost, addr=127.0.0.1, terminal=ssh)", user);
+  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=\"/usr/sbin/sshd\" (hostname=localhost.localdomain, addr=127.0.0.1, terminal=ssh result=Success)", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
@@ -157,7 +166,16 @@ int test_sshd(audit_data* dataPtr) {
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);
-  command = mysprintf( "expect -c \"spawn /usr/bin/ssh %s@localhost \nsleep 1 \nexpect -re \\\"password: \\\" \nsleep 1 \nsend \\\"%s\\r\\n\\\" \nsleep 1 \nexpect -re \\\"$ \\\" \nsleep 1 \nsend \\\"exit\\\" \nsend_user \\\"exit\\n\\\"\"", user, badpassword);
+  command = mysprintf( "expect -c \"spawn /usr/bin/ssh %s@localhost \n"
+"sleep 1 \n"
+"expect -re \\\"password: \\\" \n"
+"sleep 1 \n"
+"send \\\"%s\\r\\n\\\" \n"
+"sleep 1 \n"
+"expect -re \\\"> \\\" \n"
+"sleep 1 \n"
+"send \\\"exit\\\" \n"
+"send_user \\\"exit\\n\\\"\"", user, badpassword);
   write(fd, command, strlen(command));
   close(fd);
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -178,7 +196,7 @@ int test_sshd(audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
 
   strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s (hostname=localhost, addr=127.0.0.1, terminal=ssh)", user);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/usr/sbin/sshd\" (hostname=localhost.localdomain, addr=127.0.0.1, terminal=ssh result=Authentication failure)", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup

@@ -111,7 +111,11 @@ int test_vsftpd(audit_data* dataPtr) {
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);
-  command = mysprintf( "spawn /usr/bin/ftp localhost\nsleep 1 \nexpect \": $\" { exp_send \"%s\\r\\n\"} \nexpect \"Password:\" { exp_send \"%s\\r\\n\"} \nexpect \"ftp> $\" { exp_send \"quit\\r\"; send_user \"quit\\n\"} ", user, password);
+  command = mysprintf( "spawn /usr/bin/ftp localhost\n"
+"sleep 1 \n"
+"expect \": $\" { exp_send \"%s\\r\\n\"} \n"
+"expect \"Password:\" { exp_send \"%s\\r\\n\"} \n"
+"expect \"ftp> $\" { exp_send \"quit\\r\"; send_user \"quit\\n\"} ", user, password);
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
   close(fd);

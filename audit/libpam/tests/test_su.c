@@ -100,8 +100,13 @@ int test_su(audit_data* dataPtr) {
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);
-//command = mysprintf( "spawn /bin/su - %s\nsleep 1 \nexpect -re \"Password: $\" { sleep 1; exp_send \"%s\\r\\n\"} \nsleep 1 \nexpect -re \" $\" { sleep 1; exp_send \"/usr/bin/tty > %s\\r\\n\"} \nsleep 1 \nexpect \" $\" { sleep 1; exp_send \"exit\\r\"; send_user \"exit\\n\"} ", user, password, pts_filename);
-  command = mysprintf( "spawn /bin/su - %s\nsleep 1 \nexpect -re \"Password: $\" { sleep 1; exp_send \"%s\\r\\n\"} \nsleep 1 \nexpect -re \" $\" { sleep 1; exp_send \"/tmp/get_pts %s\\r\\n\"} \nsleep 1 \nexpect \" $\" { sleep 1; exp_send \"exit\\r\"; send_user \"exit\\n\"} ", user, password, pts_filename);
+  command = mysprintf( "spawn /bin/su - %s\n"
+"sleep 1 \n"
+"expect -re \"Password: $\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
+"sleep 1 \n"
+"expect -re \" $\" { sleep 1; exp_send \"/tmp/get_pts %s\\r\\n\"} \n"
+"sleep 1 \n"
+"expect \" $\" { sleep 1; exp_send \"exit\\r\"; send_user \"exit\\n\"} ", user, password, pts_filename);
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
   close(fd);
@@ -147,11 +152,13 @@ int test_su(audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s (hostname=?, addr=?, terminal=pts/%d)", user, pts);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/bin/su\" (hostname=?, addr=?, terminal=pts/%d result=Success)",
+				user, pts);
   verifyPAMProgram( dataPtr );
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM accounting: user=%s (hostname=?, addr=?, terminal=pts/%d)", user, pts);
+  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=\"/bin/su\" (hostname=?, addr=?, terminal=pts/%d result=Success)",
+				user, pts);
   verifyPAMProgram( dataPtr );
 
 
@@ -181,7 +188,11 @@ int test_su(audit_data* dataPtr) {
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);
-  command = mysprintf( "spawn /bin/su - %s\nsleep 1 \nexpect -re \"Password: $\" { exp_send \"%s\\r\\n\"} \nsleep 1 \nexpect \" $\" { exp_send \"exit\\r\"; send_user \"exit\\n\"} ", user, badpassword, pts_filename);
+  command = mysprintf( "spawn /bin/su - %s\n"
+"sleep 1 \n"
+"expect -re \"Password: $\" { exp_send \"%s\\r\\n\"} \n"
+"sleep 1 \n"
+"expect \" $\" { exp_send \"exit\\r\"; send_user \"exit\\n\"} ", user, badpassword, pts_filename);
 
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -204,7 +215,7 @@ int test_su(audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
 
   strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s (hostname=?, addr=?, terminal=pts/%d)", user, pts);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/bin/su\" (hostname=?, addr=?, terminal=pts/%d result=Authentication failure)", user, pts);
   verifyPAMProgram( dataPtr );
   // NOTE: We're using the same pts number as in the success case.
   //       We don't know of a good way to definitively determine the pts of a user whose session connection failed.

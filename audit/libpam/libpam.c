@@ -116,7 +116,7 @@ Arguments:\n\
   // Array contains data for each pam program test.
   pam_data pamTests[] = {
     /* fnptr, testname, dataptr */
-    //{&test_login, "login", NULL},
+    {&test_login, "login", NULL},
     {&test_sshd, "sshd", NULL},
     {&test_su, "su", NULL},
     {&test_vsftpd, "vsftpd", NULL}

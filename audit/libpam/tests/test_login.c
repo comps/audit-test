@@ -133,7 +133,15 @@ int test_login(audit_data* dataPtr) {
     printf("test_login: unable to make temp file %s\n", filename);
     exit(-1);
   }
-  command = mysprintf( "spawn /bin/login \n sleep 1 \n expect \"login: $\";\n  exp_send \"%s\r\";\n  expect \"Password: $\";\n  exp_send \"%s\r\";\n  expect \"~]$ $\";\n  exp_send \"/usr/bin/tty | /bin/sed \\\"s/.*\\\\///\\\" > %s; exit\\r\";", user, password, pts_filename);
+  command = mysprintf( "spawn /bin/login \n sleep 1 \n"
+"  expect \"login: $\";\n"
+"  exp_send \"%s\r\";\n"
+"  expect \"Password: $\";\n"
+"  exp_send \"%s\r\";\n"
+"  expect \"> $\";\n"
+"  exp_send \"/usr/bin/tty | /bin/sed 's,.*/,,' > %s; exit\r\";\n"
+"  expect \"\n\";"
+"  expect \".\"; ", user, password, pts_filename);
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
   close(fd);
@@ -155,7 +163,7 @@ int test_login(audit_data* dataPtr) {
     free(pts_filename);
   } else {
     printf("test_login: unable to open %s - %s\n", pts_filename, strerror(errno));
-    exit(errno);
+    goto TEST_2;
   }
 
   // Check for audit record(s)
@@ -165,15 +173,15 @@ int test_login(audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts); 
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/bin/login\" (hostname=?, addr=?, terminal=pts/%d result=Success)", user, pts); 
   verifyPAMProgram( dataPtr );
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM accounting: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts);
+  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=\"/bin/login\" (hostname=?, addr=?, terminal=pts/%d result=Success)", user, pts);
   verifyPAMProgram( dataPtr );
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM session open: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts);
+  dataPtr->comm = mysprintf("PAM session open: user=%s exe=\"/bin/login\" (hostname=?, addr=?, terminal=pts/%d result=Success)", user, pts);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
@@ -192,7 +200,7 @@ int test_login(audit_data* dataPtr) {
   // PAM authentication: user=USERNAME (hostname=?, addr=?, terminal=/dev/pts/PTS)
   //
   //
- //TEST_2:
+ TEST_2:
   printf("TEST %d\n", test++);
   // Setup
   // Create expect script file to execute login session
@@ -235,7 +243,7 @@ expect -re \"Password: \" { exp_send \"%s\\r\"} \n",
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
 
   strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/bin/login\" (hostname=?, addr=?, terminal=pts/%d result=Authentication failure)", user, pts);
   verifyPAMProgram( dataPtr );
 
   // Cleanup

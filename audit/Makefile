@@ -30,20 +30,27 @@
 TOPDIR		= .
 SUB_DIRS        = fail-safe \
 		  syscalls \
-		  audit_tools \
 		  audit_trail_protection \
-		  filter-conf \
-		  libpam \
-		  trustedprograms
+#		  audit_tools \
+#		  filter-conf \
+#		  libpam \
+#		  trustedprograms
 
-all: SUB_DIRS = audit_trail_protection fail-safe syscalls
 all: subdirs
 
-run: SUB_DIRS = audit_trail_protection fail-safe syscalls
 run:
 	$(MAKE) all
-	for x in $(SUB_DIRS); do make -C $$x run; done 2>&1 \
-	    | utils/tally-results.awk | tee run.log
+	for x in $(SUB_DIRS); do make -C $$x run; done 2>&1 | utils/tally-results.awk
+	@# tty output has color, generated run.logs don't, so collect them
+	@# instead of redirecting output of the above loop.
+	@for x in $(SUB_DIRS); do \
+	    echo; \
+	    echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
+	    printf "::: %-52s :::" "$$x"; \
+	    echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
+	    echo; \
+	    cat $$x/run.log; \
+	done 2>&1 | utils/tally-results.awk > run.log
 
 .PHONY: dist
 dist:

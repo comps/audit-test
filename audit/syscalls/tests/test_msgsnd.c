@@ -1,141 +1,113 @@
-/**********************************************************************
- **   Copyright (C) International Business Machines  Corp., 2003
- **
- **   This program is free software;  you can redistribute it and/or modify
- **   it under the terms of the GNU General Public License as published by
- **   the Free Software Foundation; either version 2 of the License, or
- **   (at your option) any later version.
- **
- **   This program is distributed in the hope that it will be useful,
- **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
- **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
- **   the GNU General Public License for more details.
- **
- **   You should have received a copy of the GNU General Public License
- **   along with this program;  if not, write to the Free Software
- **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- **
- **
- **
- **  FILE       : test_msgsnd.c
- **
- **  PURPOSE    : To test the msgsnd library call auditing.
- **
- **  DESCRIPTION: The test_msgsnd() function builds into the laus_test
- **  framework to verify that the Linux Audit System accurately logs
- **  both successful and erroneous execution of the "msgsnd" system call.
- **
- **  In the successful case, this function:
- **   1) Allocates a new message queue via msgget()
- **   2) Uses msgsnd to send a message
- **   3) Tests the result of the call against the expected successful
- **      return.
- **  
- **  In the erroneous case, this function:
- **   1) Uses msgsnd() to attempt to send a message with insufficient
- **      access permissions
- **   2) Tests the result of the call against the expected erroneous
- **      return.
- **
- **  HISTORY    :
- **    06/03 Originated by Michael Halcrow <mike@halcrow.us>
- **    06/03 Furthered by Dustin Kirkland  (k1rkland@us.ibm.com)
- **    10/03 Extended to invoke EPERM errno by Michael A. Halcrow
- **          <mike@halcrow.us>
- **    10/03 Modified by Dustin Kirkland (k1rkland@us.ibm.com) 
- **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
- **    04/04 Increased msgsz variable and size for AUDIT_ARG_POINTER for 32-bit and 64-bit,
- ** 	     modified #ifndef by Kimberly D. Simon <kdsimon@us.ibm.com>
- **
- **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_msgsnd.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to append messages to a message queue.
+ *
+ *  SYSCALLS:
+ *  msgsnd()
+ *
+ *  TESTCASE: successful
+ *  Append a message to a message queue.
+ *
+ *  TESTCASE: unsuccessful
+ *  Attempt to append a message to a message queue with insufficient
+ *  access permissions.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
 #include <sys/ipc.h>
-#include <sys/msg.h>
 #if defined(__powerpc64__)
 #include <asm-ppc64/ipc.h>
 #elif !defined(__ia64__)
 #include <asm/ipc.h>
 #endif
+#include <sys/msg.h>
 
 int test_msgsnd(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = -EACCES;
-    int msgid = 0;
-    int msgsz;
-    int msgflg;
-    int mode;
-    struct msgbuf {
-	long mtype;
-	char mtext[10];
-    } buf;
+    int success = context->success; /* save intended result */
+    int qid;
+    char *msg = "test message";
+    struct msgbuf *buf;
+    int buflen;
+    int exit;
 
-    mode = S_IRWXU;
-    if ((msgid = msgget(IPC_PRIVATE, mode)) == -1) {
-	fprintf(stderr, "ERROR: Unable to allocate new message queue: errno=%i\n",
-		errno);
-	goto EXIT;
+    errno = 0;
+    rc = qid = msgget(TEST_IPC_KEY, S_IRWXU|IPC_CREAT);
+    if (rc < 0) {
+	fprintf(stderr, "Error: can't create message queue: %s\n",
+		strerror(errno));
+        goto exit;
+    }
+    fprintf(stderr, "Message queue key: %d id: %d\n", TEST_IPC_KEY, qid);
+
+    if (!success) {
+	rc = seteuid_test();
+	if (rc < 0)
+	    goto exit_queue;
+	context->experror = -EACCES;
     }
 
-    msgsz = 3;			// Determines how much data will actually be in the msgbuf structure
-    msgflg = IPC_NOWAIT;
-    buf.mtype = 1;
-    memset(buf.mtext, '\0', sizeof(buf.mtext));
-    buf.mtext[0] = 'a';
-    buf.mtext[1] = 'b';
-    buf.mtext[2] = 'c';
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+        goto exit_root;
 
+    buflen = sizeof(struct msgbuf) + strlen(msg) + 1;
+    buf = (struct msgbuf *)malloc(buflen);
+    if (!buf) {
+	fprintf(stderr, "Error: malloc(): %s\n", strerror(errno));
+	rc = -1;
+	goto exit_root;
+    }
+    buf->mtype = TEST_MSG_TYPE;
+    strcpy(buf->mtext, msg);
 
-    printf(" >>> buf address: %p <<< \n", &buf);
-    if (context->success) {
-	context->euid = context->fsuid = 0;
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting msgsnd(%i, {%li, \"%s\"}, %i, IPC_NOWAIT)\n", 
+	    qid, buf->mtype, buf->mtext, buflen);
+    exit = msgsnd(qid, buf, buflen, IPC_NOWAIT);
+    context_setend(context);
+
+    if (exit < 0) {
+        context->success = 0;
+        context->error = context->u.syscall.exit = -errno;
     } else {
-    }
-    // Set up audit argument buffer
-    if ((rc = auditArg4(context, AUDIT_ARG_IMMEDIATE, sizeof(int), &msgid,
-			AUDIT_ARG_POINTER, sizeof(long) + msgsz, &buf,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgsz,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &msgflg)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT_CLEANUP;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call
-#if (defined(__x86_64__) || defined(__ia64__))
-    context->u.syscall.exit =
-	syscall(__NR_msgsnd, msgid, &buf, msgsz, msgflg);
-#else
-    context->u.syscall.exit =
-	syscall(__NR_ipc, MSGSND, msgid, msgsz, msgflg, &buf);
-#endif
-
-    //  context->u.syscall.exit = msgsnd( msgid, &buf, msgsz, msgflg ); 
-
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
+        context->success = 1;
+        context->u.syscall.exit = exit;
     }
 
+    free(buf);
+exit_root:
+    if (!success && seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
 
-EXIT_CLEANUP:
+exit_queue:
+    if (msgctl(qid, IPC_RMID, 0) < 0)
+	fprintf(stderr, "Error: removing message queue: %s\n", strerror(errno));
 
-    if (!context->success && msgid && (msgid != -1)) {
-	if ((rc = msgctl(msgid, IPC_RMID, 0)) == -1) {
-	    fprintf
-		(stderr,
-		 "Error removing message queue with ID = [%d]: errno = [%i]\n",
-		 msgid, errno);
-	    goto EXIT;
-	}
-    }
-
-EXIT:
+exit:
     return rc;
 }

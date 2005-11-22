@@ -1,60 +1,38 @@
-/**********************************************************************
- **   Copyright (C) International Business Machines  Corp., 2003
- **
- **   This program is free software;  you can redistribute it and/or modify
- **   it under the terms of the GNU General Public License as published by
- **   the Free Software Foundation; either version 2 of the License, or
- **   (at your option) any later version.
- **
- **   This program is distributed in the hope that it will be useful,
- **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
- **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
- **   the GNU General Public License for more details.
- **
- **   You should have received a copy of the GNU General Public License
- **   along with this program;  if not, write to the Free Software
- **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- **
- **
- **
- **  FILE       : test_msgget.c
- **
- **  PURPOSE    : To test the msgget library call auditing.
- **
- **  DESCRIPTION: The test_msgget() function builds into the laus_test
- **  framework to verify that the Linux Audit System accurately logs
- **  both successful and erroneous execution of the "lpc" system call.
- **
- **  In the successful case, this function:
- **   1) Sets the message queue mode flags
- **   2) Sets key to IPC_PRIVATE
- **   3) Executes the "msgget" library call
- **   4) Tests the result of the call against the expected successful
- **      return
- **   5) Deallocates the newly allocated message queue.
- **  
- **  The successful case executes the expected conditions
- **  described by the "msgget" library call man page.  That is,
- **  the msgget() function is called using IPC_PRIVATE for the key
- **  value.  "mode" is set to ( S_IRWXU | S_IRWXG | S_IRWXO ).  The
- **  function returns an integer value specifying the message queue
- **  identifier for the newly allocated message queue; the identifier
- **  should be a valid value (not NULL or -1).
- **
- **  In the erroneous case, this function:
- **
- **  Message queue operations are attempted as a non-root user, thus
- **  causing an EACCES errno.
- **
- **  HISTORY    :
- **    06/03 Originated by Michael Halcrow <mike@halcrow.us>
- **    06/03 Furthered by Dustin Kirkland (k1rkland@us.ibm.com)
- **    10/03 Extended to invoke EACCES errno by Michael A. Halcrow
- **          <mike@halcrow.us>
- **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
- **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
- **
- **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_msgget.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to create message queues.
+ *
+ *  SYSCALLS:
+ *  msgget()
+ *
+ *  TESTCASE: successful
+ *  Get identifier for an existing message queue.
+ *
+ *  TESTCASE: unsuccessful
+ *  Attempt to create a new message queue with the key of an existing
+ *  message queue (specifying IPC_EXCL).
+ */
 
 #include "includes.h"
 #include "syscalls.h"
@@ -69,81 +47,49 @@
 int test_msgget(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = -EACCES;
-    int key = 0;
-    int firstMsgid = 0;
-    int secondMsgid = 0;
-    //int doNotDeallocate = 0;   // not needed?
-    int mode;
+    int success = context->success; /* save intended result */
+    int msgflag = S_IRWXU|IPC_CREAT;
+    int qid;
+    int exit;
 
-    // Set the mode flags
-    mode = S_IRWXU | S_IRWXG | S_IRWXO;
+    errno = 0;
+    rc = qid = msgget(TEST_IPC_KEY, msgflag);
+    if (rc < 0) {
+        fprintf(stderr, "Error: can't create message queue: %s\n",
+                strerror(errno));
+        goto exit;
+    }
+    fprintf(stderr, "Message queue key: %d id: %d\n", TEST_IPC_KEY, qid);
 
-    // Set the key value.
-    // If successCase == 0, then we will be double-allocating the memory
-    // to force an error condition. 
-    if (context->success) {
-	key = IPC_PRIVATE;
+    if (!success) {
+        msgflag |= IPC_EXCL;
+        context->experror = -EEXIST;
+    }
+
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+        goto exit_queue;
+
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting msgget(%d, %d)\n", TEST_IPC_KEY, msgflag);
+    exit = msgget(TEST_IPC_KEY, msgflag);
+    context_setend(context);
+
+    fprintf(stderr, "Message queue id: %d [%d]\n", exit, errno);
+
+    if (exit < 0) {
+        context->success = 0;
+        context->error = context->u.syscall.exit = -errno;
     } else {
-	mode = 0600 | IPC_CREAT;
-	key = -1;
-	if ((firstMsgid = msgget(key, mode)) == -1) {
-	    fprintf
-		(stderr,
-		 "Cannot create the message queue with key = -1: errno = [%i]\n",
-		 errno);
-	    goto EXIT;
-	}
+        context->success = 1;
+        context->u.syscall.exit = exit;
     }
 
-    // Set up audit argument buffer
-    if ((rc = auditArg2(context,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &key,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &mode)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT_CLEANUP;
-    }
+exit_queue:
+    if (msgctl(qid, IPC_RMID, 0) < 0)
+        fprintf(stderr, "Error: removing message queue: %s\n", strerror(errno));
 
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call
-    //     context->u.syscall.exit = secondMsgid = msgget( key, mode );
-#if (defined(__x86_64__) || defined(__ia64__))
-    context->u.syscall.exit = secondMsgid =
-	syscall(__NR_msgget, key, mode);
-#else
-    context->u.syscall.exit = secondMsgid =
-	syscall(__NR_ipc, MSGGET, key, mode);
-#endif
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-
-EXIT_CLEANUP:
-
-    if (firstMsgid && (firstMsgid != -1)) {
-	if ((msgctl(firstMsgid, IPC_RMID, 0)) == -1) {
-	    fprintf
-		(stderr,
-		 "ERROR: Cannot deallocate message memory with msgid=%d: errno=%i\n",
-		 firstMsgid, errno);
-	}
-    }
-    if (secondMsgid && (secondMsgid != -1)) {
-	if ((msgctl(secondMsgid, IPC_RMID, 0)) == -1) {
-	    fprintf
-		(stderr,
-		 "ERROR: Cannot deallocate message memory with msgid=%d: errno=%i\n",
-		 secondMsgid, errno);
-	    goto EXIT;
-	}
-    }
-
-EXIT:
+exit:
     return rc;
 }

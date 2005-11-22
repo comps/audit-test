@@ -75,7 +75,7 @@ _syscall6(int, ipc, int, minor, int, msgqid, size_t, msgsz, int, msgflg, struct 
 int test_msgrcv(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
     int msgid;
     int msgsz;
     int msgflg;

@@ -70,7 +70,7 @@
 int test_semget(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
     int key = 0;
     int firstSemid = 0;
     int secondSemid = 0;

@@ -59,7 +59,7 @@ int test_ptrace(struct audit_data *context)
 	fprintf(stderr, "Created process: %d\n", pid);
     } else  {
 	pid = 1;
-	context->experror = EPERM;
+	context->experror = -EPERM;
     }
 
     rc = context_setidentifiers(context);
@@ -76,7 +76,7 @@ int test_ptrace(struct audit_data *context)
 
     if (exit < 0) {
 	context->success = 0;
-	context->error = context->u.syscall.exit = errno;
+	context->error = context->u.syscall.exit = -errno;
     } else {
 	context->success = 1;
 	context->u.syscall.exit = exit;

@@ -62,7 +62,7 @@
 int test_creat(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
     int mode = S_IRWXO;
 #if defined(__powerpc64__) || defined(__x86_64__) || defined(__s390x__)
     int flags = O_WRONLY | O_CREAT | O_TRUNC | O_LARGEFILE;

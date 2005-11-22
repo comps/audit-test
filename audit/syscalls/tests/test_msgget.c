@@ -69,7 +69,7 @@
 int test_msgget(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
     int key = 0;
     int firstMsgid = 0;
     int secondMsgid = 0;

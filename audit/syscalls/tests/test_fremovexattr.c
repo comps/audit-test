@@ -63,7 +63,7 @@ int test_fremovexattr(struct audit_data *context)
 {
 
     int rc = 0;
-    int exp_errno = ENOATTR;
+    int exp_errno = -ENOATTR;
     size_t size;
     char *path = NULL;
 

@@ -58,7 +58,7 @@ int test_lsetxattr(struct audit_data *context)
 {
 
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
 
     char *path = NULL;
     char *name = "user.mime_type";

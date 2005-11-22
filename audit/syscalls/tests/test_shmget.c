@@ -69,7 +69,7 @@
 int test_shmget(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
     int key = 0;
     int firstShmid = 0;
     int secondShmid = 0;

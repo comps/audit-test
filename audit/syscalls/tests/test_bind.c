@@ -69,9 +69,9 @@ int test_bind(struct audit_data *context)
 
     int rc = 0;
 #if defined(__s390x__) || defined(__powerpc64__) || defined(__x86_64__) || defined(__ia64__)
-    __s64 exp_errno = EBADF;
+    __s64 exp_errno = -EBADF;
 #else
-    int exp_errno = EBADF;
+    int exp_errno = -EBADF;
 #endif
     int sockfd;
     struct sockaddr_in my_addr;

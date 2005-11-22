@@ -69,7 +69,7 @@ int common_fork(struct audit_data *context, int op)
 		    strerror(errno));
 	    goto exit;
 	}
-	context->experror = EAGAIN;
+	context->experror = -EAGAIN;
     }
 
     rc = context_setidentifiers(context);
@@ -92,7 +92,7 @@ int common_fork(struct audit_data *context, int op)
 
     if (pid < 0) {
 	context->success = 0;
-	context->error = context->u.syscall.exit = errno;
+	context->error = context->u.syscall.exit = -errno;
     } else {
 	context->success = 1;
 	context->u.syscall.exit = pid;

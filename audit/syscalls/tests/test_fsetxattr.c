@@ -63,7 +63,7 @@ int test_fsetxattr(struct audit_data *context)
 {
 
     int rc = 0;
-    int exp_errno = ENOATTR;
+    int exp_errno = -ENOATTR;
     char *path = NULL;
 
     int filedes;

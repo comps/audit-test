@@ -51,7 +51,7 @@ int test_ioperm(struct audit_data *context)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit;
-	context->experror = EPERM;
+	context->experror = -EPERM;
     }
 
     rc = context_setidentifiers(context);
@@ -70,7 +70,7 @@ int test_ioperm(struct audit_data *context)
 
     if (exit < 0) {
 	context->success = 0;
-	context->u.syscall.exit = context->error = errno;
+	context->u.syscall.exit = context->error = -errno;
     } else {
 	context->success = 1;
 	context->u.syscall.exit = exit;

@@ -62,7 +62,7 @@
 int test_msgsnd(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
     int msgid = 0;
     int msgsz;
     int msgflg;

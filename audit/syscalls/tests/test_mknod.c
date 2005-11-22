@@ -58,7 +58,7 @@
 int test_mknod(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
     mode_t mode = S_IRWXO | S_IFIFO;
     dev_t dev = 0;
     char *fileName = NULL;

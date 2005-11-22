@@ -81,7 +81,7 @@ int test_capset(struct audit_data *context)
      * effective set that is not in the permitted set. */
     if (!success) {
 	data->effective = ~data->permitted;
-	context->experror = EPERM;
+	context->experror = -EPERM;
 	fprintf(stderr, "Attempt to set effective capabilities: %x\n", 
 		data->effective);
     }
@@ -97,7 +97,7 @@ int test_capset(struct audit_data *context)
 
     if (exit < 0) {
 	context->success = 0;
-	context->u.syscall.exit = context->error = errno;
+	context->u.syscall.exit = context->error = -errno;
     } else {
 	context->success = 1;
 	context->u.syscall.exit = exit;

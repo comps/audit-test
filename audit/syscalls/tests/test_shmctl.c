@@ -65,7 +65,7 @@
 int test_shmctl(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EPERM;
+    int exp_errno = -EPERM;
     int shmctlrc = 0;
     int shmid = 0;
     //int third_arg = 0;

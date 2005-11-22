@@ -59,7 +59,7 @@ int test_lremovexattr(struct audit_data *context)
 {
 
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
     size_t size;
 
     char *path = NULL;

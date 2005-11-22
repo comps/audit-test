@@ -62,7 +62,7 @@
 int test_semctl(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EPERM;
+    int exp_errno = -EPERM;
     int semctlrc = 0;
     int semid = 0;
     int mode;

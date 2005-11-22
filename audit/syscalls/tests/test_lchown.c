@@ -58,7 +58,7 @@ int test_lchown(struct audit_data *context)
 
 
     int rc = 0;
-    int exp_errno = EPERM;
+    int exp_errno = -EPERM;
 
     char *fileName = NULL;
     char *linkName = NULL;

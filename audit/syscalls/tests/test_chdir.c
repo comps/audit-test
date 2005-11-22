@@ -63,7 +63,7 @@ int test_chdir(struct audit_data *context)
 
 
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
     char *path = NULL;
 
     // dynamically create test directory

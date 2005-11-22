@@ -48,7 +48,7 @@ int test_execve(struct audit_data *context)
 	rc = setresuid_test();
 	if (rc < 0)
 	    goto exit;
-	context->experror = EINTR;
+	context->experror = -EINTR;
     }
 
     rc = context_setidentifiers(context);

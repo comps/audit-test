@@ -64,7 +64,7 @@
 int test_msgctl(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EPERM;
+    int exp_errno = -EPERM;
     int msgid = 0;
     int mode;
     static int cmd = IPC_RMID;

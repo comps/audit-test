@@ -58,7 +58,7 @@
 int test_symlink(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
 
     char *source = NULL;
     char *destination = NULL;

@@ -56,7 +56,7 @@ static int common_setregid(struct audit_data *context)
     /* To produce failure case, switch to test user and 
      * attempt to set the real gid to root's gid */
     if (!success) {
-	context->experror = EPERM;
+	context->experror = -EPERM;
 	gid = 0;
 
 	rc = setuidresgid_test();
@@ -77,7 +77,7 @@ static int common_setregid(struct audit_data *context)
 
     if (exit < 0) {
 	context->success = 0;
-	context->u.syscall.exit = context->error = errno;
+	context->u.syscall.exit = context->error = -errno;
     } else {
 	context->success = 1;
 	context->u.syscall.exit = exit;

@@ -61,7 +61,7 @@
 int test_swapon(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EPERM;
+    int exp_errno = -EPERM;
     //int length;           // variables not needed?
     //size_t count = 80;
     char *fileName = NULL;

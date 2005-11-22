@@ -72,7 +72,7 @@
 int test_semop(struct audit_data *context)
 {
     int rc = 0;
-    int exp_errno = EACCES;
+    int exp_errno = -EACCES;
     int semid = -1;
     int mode;
     int nsems = 1;

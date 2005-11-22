@@ -57,7 +57,7 @@ static int common_setreuid(struct audit_data *context)
      * attempt to set saved uid to a value different from any of the
      * current process user ids */
     if (!success) {
-	context->experror = EPERM;
+	context->experror = -EPERM;
 	uid = testuid + 1;
 
 	rc = seteuid(testuid);
@@ -78,7 +78,7 @@ static int common_setreuid(struct audit_data *context)
 
     if (exit < 0) {
 	context->success = 0;
-	context->u.syscall.exit = context->error = errno;
+	context->u.syscall.exit = context->error = -errno;
     } else {
 	context->success = 1;
 	context->u.syscall.exit = exit;

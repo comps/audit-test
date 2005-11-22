@@ -53,32 +53,37 @@ exit:
 ts_exit verify_logresult(struct audit_data *context)
 {
     ts_exit rc = TEST_EXPECTED;
+    char cmd[512] = {0};
 
     if (context->type & AUDIT_MSG_SYSCALL) {
-	/* log fields to check:
-	 *
-	 * type =~ SYSCALL
-	 * syscall == context->u.syscall.sysnum
-	 * success == context->success ? "yes" : "no"
-	 * exit == context->u.syscall.exit
-	 * pid == context->pid
-	 * auid == context->loginuid
-	 * uid == context->uid
-	 * gid == context->gid
-	 * euid == context->euid
-	 * suid == context->suid
-	 * fsuid == context->fsuid
-	 * egid == context->egid
-	 * sgid == context->sgid
-	 * fsgid == context->fsgid
-	 */
-
-	/* if record found goto exit */
+	if (snprintf(cmd, sizeof(cmd), "augrep -m1 'type=~SYSCALL' "
+		     "syscall==%d 'success==%s' "
+		     "exit==%d pid==%d auid==%u uid==%d gid==%d "
+		     "euid==%d suid==%d fsuid==%d "
+		     "egid==%d sgid==%d fsgid==%d", 
+		     context->u.syscall.sysnum,
+		     context->success ? "yes" : "no",
+		     context->u.syscall.exit,
+		     context->pid,
+		     context->loginuid,
+		     context->uid,
+		     context->gid,
+		     context->euid,
+		     context->suid,
+		     context->fsuid,
+		     context->egid,
+		     context->sgid,
+		     context->fsgid) == sizeof(cmd)) {
+	    fprintf(stderr, "ERROR: verify_logresult: cmd too long\n");
+	    exit(1);
+	}
+	if (system(cmd) == 0)
+	    goto exit;
     }
 
     rc = TEST_UNEXPECTED;
-    fprintf(stderr, "Expected record not found in log\n");
+    fprintf(stderr, "Expected record not found in log:\n%s\n", cmd);
 
-//exit:
+exit:
     return rc;
 }

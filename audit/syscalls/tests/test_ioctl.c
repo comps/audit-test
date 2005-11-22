@@ -57,7 +57,7 @@ int test_ioctl(struct audit_data *context)
 	    goto exit;
 	}
     } else
-	context->experror = EBADF;
+	context->experror = -EBADF;
 
     rc = context_setidentifiers(context);
     if (rc < 0)
@@ -72,7 +72,7 @@ int test_ioctl(struct audit_data *context)
 
     if (exit < 0) {
 	context->success = 0;
-	context->u.syscall.exit = context->error = errno;
+	context->u.syscall.exit = context->error = -errno;
     } else {
 	context->success = 1;
 	context->u.syscall.exit = exit;

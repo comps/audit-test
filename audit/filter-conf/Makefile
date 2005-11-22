@@ -47,14 +47,11 @@ ALL_AR		= $(FILTER_AR)
 
 SUB_DIRS	= utils tests
 
-all: subdirs deps $(FILTER_EXE)
+include $(TOPDIR)/rules.mk
 
-$(FILTER_EXE): LIBS += -llaus
-$(FILTER_EXE): $(FILTER_OBJ) $(FILTER_ARS)
+$(FILTER_EXE): $(FILTER_OBJ) $(FILTER_AR)
 	$(LINK_EXE)
 
 run:
 	$(AUDIT_CLEAN_LOG)
 	./$(FILTER_EXE) $(DEBUG_ARG) $(USER_ARG) $(LOGIN_ARG) &> ./$(FILTER_EXE).run.log
-
-include $(TOPDIR)/rules.mk

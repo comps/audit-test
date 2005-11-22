@@ -77,7 +77,10 @@ endif
 .PHONY: all run \
 	clean clobber distclean _clean _clobber _distclean \
 	msgque rmlogs showrpms showrpms2
-all run:
+
+all: deps subdirs $(ALL_AR) $(ALL_EXE)
+
+run:
 
 ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard run.conf)),)
 all: run.bash
@@ -122,7 +125,8 @@ RPMS		= binutils \
                   glibc-devel \
                   libattr-devel \
                   libstdc++-devel \
-                  make
+                  make \
+		  audit-libs-devel
 ifneq ($(findstring $(MACHINE),$(IP)),)
 RPMS		+= gcc-64bit 
 endif

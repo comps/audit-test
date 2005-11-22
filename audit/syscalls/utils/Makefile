@@ -42,9 +42,7 @@ UTILS_OBJ	= post_syscall.o		\
 ALL_AR		= $(UTILS_AR)
 ALL_OBJ		= $(UTILS_OBJ)
 
-all: $(ALL_AR)
+include $(TOPDIR)/rules.mk
 
 $(UTILS_AR): $(UTILS_OBJ)
 	$(LINK_AR)
-
-include $(TOPDIR)/rules.mk

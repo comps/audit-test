@@ -78,7 +78,7 @@ ALL_OBJ		= $(UTILS_OBJ) $(LAF_OBJ) $(RC_OBJ) $(PTS_OBJ) $(EXIT_OBJ)
 ALL_EXE		= $(RC_EXE) $(PTS_EXE) $(PTS_LINK) $(EXIT_EXE)
 ALL_AR		= $(UTILS_AR)
 
-all: deps $(ALL_AR) $(ALL_EXE)
+include $(TOPDIR)/rules.mk
 
 $(UTILS_AR): $(UTILS_OBJ) $(LAF_OBJ)
 	$(LINK_AR)
@@ -95,5 +95,3 @@ $(PTS_EXE): $(PTS_OBJ)
 .PHONY: $(PTS_LINK)
 $(PTS_LINK):
 	-ln -sfn `pwd`/$(PTS_EXE) $@
-
-include $(TOPDIR)/rules.mk

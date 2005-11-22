@@ -40,9 +40,7 @@ AUDIT_TRAIL_OBJ	= audit_trail_protection.o
 ALL_EXE = $(AUDIT_TRAIL_EXE)
 ALL_OBJ = $(AUDIT_TRAIL_OBJ)
 
-all: $(ALL_EXE)
+include $(TOPDIR)/rules.mk
 
 $(AUDIT_TRAIL_EXE): $(AUDIT_TRAIL_OBJ)
 	$(LINK_EXE)
-
-include $(TOPDIR)/rules.mk

@@ -42,9 +42,7 @@ CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 ALL_AR		= $(UTILS_AR)
 ALL_OBJ		= $(UTILS_OBJ)
 
-all: deps $(ALL_AR)
+include $(TOPDIR)/rules.mk
 
 $(UTILS_AR): $(UTILS_OBJ)
 	$(LINK_AR)
-
-include $(TOPDIR)/rules.mk

@@ -36,7 +36,7 @@ SUB_DIRS        = fail-safe \
 #		  libpam \
 #		  trustedprograms
 
-all: subdirs
+include $(TOPDIR)/rules.mk
 
 run:
 	$(MAKE) all
@@ -77,5 +77,3 @@ rpm: dist
 	mv /usr/src/redhat/SRPMS/audit-test-$$rev-1.* . && \
 	echo && \
 	ls -l audit-test-$$rev-1.*
-
-include $(TOPDIR)/rules.mk

@@ -47,9 +47,7 @@ TESTS_OBJ	= test_int_cmp.o	\
 ALL_OBJ		= $(TESTS_OBJ)
 ALL_AR		= $(TESTS_AR)
 
-all: deps $(ALL_AR)
+include $(TOPDIR)/rules.mk
 
 $(TESTS_AR): $(TESTS_OBJ)
 	$(LINK_AR)
-
-include $(TOPDIR)/rules.mk

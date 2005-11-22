@@ -35,18 +35,16 @@ TOPDIR		= ../..
 TESTDIR		= ..
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
-UTILS_AR	= trustedprogram_test_utils.a
-UTILS_OBJ	= post_trustedprogram.o		\
+TP_UTILS_AR	= trustedprogram_test_utils.a
+TP_UTILS_OBJ	= post_trustedprogram.o		\
 		  pre_trustedprogram.o		\
 		  trusted_program.o 	       \
 		  shadow_test_setup.o
 
-ALL_AR		= $(UTILS_AR)
-ALL_OBJ		= $(UTILS_OBJ)
-
-all: $(ALL_AR)
-
-$(UTILS_AR): $(UTILS_OBJ)
-	$(LINK_AR) $(UTILS_OBJ)
+ALL_AR		= $(TP_UTILS_AR)
+ALL_OBJ		= $(TP_UTILS_OBJ)
 
 include $(TOPDIR)/rules.mk
+
+$(TP_UTILS_AR): $(TP_UTILS_OBJ)
+	$(LINK_AR)

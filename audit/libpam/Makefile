@@ -43,24 +43,23 @@ TESTDIR		= .
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 UTILS_AR 	= $(TOPDIR)/utils/testutils.a
-TESTS_A		= tests/libpam_test.a
-UTILS_A		= utils/libpam_test_utils.a
+LIBPAM_TESTS_AR	= tests/libpam_test.a
+LIBPAM_UTILS_AR = utils/libpam_test_utils.a
 
 LIBPAM_EXE	= libpam
 LIBPAM_OBJ	= libpam.o
 
 ALL_EXE		= $(LIBPAM_EXE)
 ALL_OBJ		= $(LIBPAM_OBJ)
-ALL_AR		= $(TESTS_A) $(UTILS_A)
+ALL_AR		= $(LIBPAM_TESTS_AR) $(LIBPAM_UTILS_AR)
 
 SUB_DIRS        = tests utils
 
-all: subdirs deps $(ALL_EXE)
+include $(TOPDIR)/rules.mk
 
 $(LIBPAM_EXE): $(LIBPAM_OBJ) $(ALL_AR) $(UTILS_AR)
+	$(LINK_EXE)
 
 run: all
 	$(AUDIT_CLEAN_LOG)
 	./$(EXE) &> ./$(EXE).run.log
-
-include $(TOPDIR)/rules.mk

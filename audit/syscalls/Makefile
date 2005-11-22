@@ -56,10 +56,8 @@ ALL_EXE		= $(SYSCALLS_EXE)
 
 SUB_DIRS	= tests utils
 
-all: subdirs deps $(ALL_EXE)
+include $(TOPDIR)/rules.mk
 
 $(SYSCALLS_EXE): LDLIBS += -laudit
 $(SYSCALLS_EXE): $(ALL_OBJ) $(TESTS_AR) $(UTILS_AR) $(TUTILS_AR)
 	$(LINK_EXE)
-
-include $(TOPDIR)/rules.mk

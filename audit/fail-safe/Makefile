@@ -49,7 +49,7 @@ ALL_EXE		= $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
 
 SUB_DIRS	= utils tests
 
-all: subdirs deps $(ALL_EXE)
+include $(TOPDIR)/rules.mk
 
 $(FAILSAFE_EXE): $(FAILSAFE_OBJ) $(FAILSAFE_ARS)
 	$(LINK_EXE)
@@ -57,5 +57,3 @@ $(FAILSAFE_EXE): $(FAILSAFE_OBJ) $(FAILSAFE_ARS)
 .PHONY: $(FAILSAFE_NOTIFY)
 $(FAILSAFE_NOTIFY): $(FAILSAFE_EXE)
 	ln -sfn $< $@
-
-include $(TOPDIR)/rules.mk

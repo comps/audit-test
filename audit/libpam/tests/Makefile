@@ -47,4 +47,4 @@ ALL_OBJ		= $(TESTS_OBJ)
 include $(TOPDIR)/rules.mk
 
 $(TESTS_AR): $(TESTS_OBJ)
-	$(LINK_AR) $(TESTS_OBJ)
+	$(LINK_AR)

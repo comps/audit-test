@@ -41,24 +41,24 @@ typedef struct {
 } pamprogram_commands;
 
 typedef struct {
-    int		(*testPtr)(audit_data *);
-    char	*testName;
-    audit_data	*dataPtr;
+    int			(*testPtr)(struct audit_data *);
+    char		*testName;
+    struct audit_data	*dataPtr;
 } pam_data;
 
-int test_login(audit_data* dataPtr);
-int test_sshd(audit_data* dataPtr);
-int test_su(audit_data* dataPtr);
-int test_vsftpd(audit_data* dataPtr);
+int test_login(struct audit_data* dataPtr);
+int test_sshd(struct audit_data* dataPtr);
+int test_su(struct audit_data* dataPtr);
+int test_vsftpd(struct audit_data* dataPtr);
 
 void test_pamprogram(pamprogram_commands command_data[],
 			 int array_size,
-			 audit_data* dataPtr);
+			 struct audit_data* dataPtr);
 
-int prePAMProgram(audit_data* dataPtr);
-int postPAMProgram(audit_data* dataPtr);
-int runPAMProgram( audit_data* dataPtr, char* command );
-int verifyPAMProgram( audit_data* dataPtr );
+int prePAMProgram(struct audit_data* dataPtr);
+int postPAMProgram(struct audit_data* dataPtr);
+int runPAMProgram(struct audit_data* dataPtr, char* command );
+int verifyPAMProgram(struct audit_data* dataPtr );
 
 #endif
 

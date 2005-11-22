@@ -95,7 +95,7 @@ Arguments:\n\
 
   struct passwd* passwd_data = NULL;
   struct passwd* login_uid_data = NULL;
-  audit_data* successDataPtr = NULL;
+  struct audit_data* successDataPtr = NULL;
 
 #if defined(__i386__)
 	int arch = AUDIT_ARCH_I386;
@@ -225,7 +225,7 @@ Arguments:\n\
   ** Loop through pam programs
   **
   */
-  successDataPtr = (audit_data*)malloc(sizeof(audit_data));
+  successDataPtr = (struct audit_data*)malloc(sizeof(struct audit_data));
 
   for (k = 0; k < sizeof(pamTests)/sizeof(pam_data); k++) {
     // Run exactly one test case?
@@ -236,14 +236,14 @@ Arguments:\n\
 
     printf("%s()\n", pamTests[k].testName);
 
-    memset(successDataPtr,'\0',sizeof(audit_data));
+    memset(successDataPtr,'\0',sizeof(struct audit_data));
 
     successDataPtr->success = 1;
     successDataPtr->u.syscall.arch = arch;
     successDataPtr->type = AUDIT_MSG_LOGIN;
     successDataPtr->euid = uid;
     successDataPtr->egid = gid;
-    successDataPtr->testName = pamTests[k].testName;
+    //successDataPtr->testName = pamTests[k].testName;
     
     printf("Performing test on %s\n", pamTests[k].testName);
 

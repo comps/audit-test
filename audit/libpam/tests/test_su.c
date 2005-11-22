@@ -45,7 +45,7 @@
 #include <time.h>
 #include <pwd.h>
 
-int test_su(audit_data* dataPtr) {
+int test_su(struct audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;
@@ -112,8 +112,8 @@ int test_su(audit_data* dataPtr) {
   close(fd);
   free( command );
 
-  dataPtr->euid = dataPtr->ruid = uid;
-  dataPtr->egid = dataPtr->rgid = 42;
+  dataPtr->euid = dataPtr->uid = uid;
+  dataPtr->egid = dataPtr->gid = 42;
 
   // Execution
   command = mysprintf( "/usr/bin/expect -f %s", filename );
@@ -148,15 +148,15 @@ int test_su(audit_data* dataPtr) {
   // Check for audit record(s)
 
   // uid/gid's are DONT CARES for the libpam tests, luid not yet set
-  dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->ruid = dataPtr->fsuid = NO_ID_CHECK;
-  dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->uid = dataPtr->fsuid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
 
-  strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
+  //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
   dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/bin/su\" (hostname=?, addr=?, terminal=pts/%d result=Success)",
 				user, pts);
   verifyPAMProgram( dataPtr );
 
-  strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
+  //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
   dataPtr->comm = mysprintf("PAM accounting: user=%s exe=\"/bin/su\" (hostname=?, addr=?, terminal=pts/%d result=Success)",
 				user, pts);
   verifyPAMProgram( dataPtr );
@@ -199,8 +199,8 @@ int test_su(audit_data* dataPtr) {
   close(fd);
   free( command );
 
-  dataPtr->euid = dataPtr->ruid = uid;
-  dataPtr->egid = dataPtr->rgid = 42;
+  dataPtr->euid = dataPtr->uid = uid;
+  dataPtr->egid = dataPtr->gid = 42;
 
   // Execution
   command = mysprintf( "/usr/bin/expect -f %s", filename );
@@ -211,10 +211,10 @@ int test_su(audit_data* dataPtr) {
   // Check for audit record(s)
 
   // uid/gid's are DONT CARES for the libpam tests, luid not yet set
-  dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->ruid = dataPtr->fsuid = NO_ID_CHECK;
-  dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->uid = dataPtr->fsuid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
 
-  strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
+  //strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
   dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/bin/su\" (hostname=?, addr=?, terminal=pts/%d result=Authentication failure)", user, pts);
   verifyPAMProgram( dataPtr );
   // NOTE: We're using the same pts number as in the success case.

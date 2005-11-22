@@ -32,7 +32,7 @@
 #include "includes.h"
 #include <time.h>
 
-int postPAMProgram(audit_data* dataPtr) {
+int postPAMProgram(struct audit_data* dataPtr) {
 
   int rc = 0;
 

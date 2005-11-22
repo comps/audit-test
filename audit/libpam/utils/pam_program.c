@@ -34,7 +34,7 @@
 extern int pass_testcases;
 extern int fail_testcases;
 
-int runPAMProgram( audit_data* dataPtr, char* command ) {
+int runPAMProgram(struct audit_data* dataPtr, char* command ) {
   int rc = 0;
   int pid = 0;
 
@@ -64,7 +64,7 @@ EXIT:
   return rc;
 }
 
-int verifyPAMProgram(audit_data *dataPtr) {
+int verifyPAMProgram(struct audit_data *dataPtr) {
     int rc = 0;
 
     rc = audit_verify_log(dataPtr);

@@ -32,21 +32,21 @@
 #include "includes.h"
 #include <time.h>
 
-int prePAMProgram(audit_data* dataPtr) {
+int prePAMProgram(struct audit_data* dataPtr) {
 
   int rc = 0;
 
   // su to test user
-  printf( "setresgid to %i, %i, %i\n", dataPtr->rgid, dataPtr->egid, 0 );
-  if( ( rc = setresgid( dataPtr->rgid, dataPtr->egid, 0 ) ) != 0 ) {
+  printf( "setresgid to %i, %i, %i\n", dataPtr->gid, dataPtr->egid, 0 );
+  if( ( rc = setresgid( dataPtr->gid, dataPtr->egid, 0 ) ) != 0 ) {
     printf( "Unable to setresgid to %i, %i, %i: errno=%i\n",
-            dataPtr->rgid, dataPtr->egid, 0, errno );
+            dataPtr->gid, dataPtr->egid, 0, errno );
     goto EXIT;
   }
-  printf( "setresuid to %i, %i, %i\n", dataPtr->ruid, dataPtr->euid, 0 );
-  if( ( rc = setresuid( dataPtr->ruid, dataPtr->euid, 0 ) ) != 0 ) {
+  printf( "setresuid to %i, %i, %i\n", dataPtr->uid, dataPtr->euid, 0 );
+  if( ( rc = setresuid( dataPtr->uid, dataPtr->euid, 0 ) ) != 0 ) {
     printf( "Unable to setresuid to %i, %i, %i: errno=%i\n",
-            dataPtr->ruid, dataPtr->euid, 0, errno );
+            dataPtr->uid, dataPtr->euid, 0, errno );
     goto EXIT;
   }
 

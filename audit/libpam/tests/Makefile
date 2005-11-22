@@ -33,12 +33,13 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
-CPPFLAGS	= -I$(TOPDIR)/include -I$(TESTDIR)/include
+CPPFLAGS        += -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= libpam_test.a
 TESTS_OBJ	= test_sshd.o \
 		  test_su.o \
-		  test_vsftpd.o 
+		  test_vsftpd.o \
+		  test_login.o
 
 ALL_AR		= $(TESTS_AR)
 ALL_OBJ		= $(TESTS_OBJ)
@@ -46,4 +47,4 @@ ALL_OBJ		= $(TESTS_OBJ)
 include $(TOPDIR)/rules.mk
 
 $(TESTS_AR): $(TESTS_OBJ)
-	$(LINK_AR)
+	$(LINK_AR) $(TESTS_OBJ)

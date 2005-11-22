@@ -41,11 +41,12 @@
 
 #include "includes.h"
 #include "libpam.h"
+#include "../include/context.h"
 #include "tempname.h"
 #include <time.h>
 #include <pwd.h>
 
-int test_sshd(laus_data* dataPtr) {
+int test_sshd(audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;
@@ -64,25 +65,25 @@ int test_sshd(laus_data* dataPtr) {
   char* badpassword = "anything_but_eal";
 
 
-  dataPtr->msg_euid = 0;
-  dataPtr->msg_egid = 0;
+  dataPtr->euid = 0;
+  dataPtr->egid = 0;
 
   if (( rc = createTempUserName( &user, &uid, &home ) == -1 )) {
-    printf1("Out of temp user names\n");
+    printf("Out of temp user names\n");
     goto EXIT;
   }
 
   // Create user
-  command = mysprintf( "/usr/sbin/useradd -u %d -d %s -m -g trusted -G trusted -p %s %s", uid, home, encryptedpassword, user );
+  command = mysprintf( "/usr/sbin/useradd -u %d -d %s -m -g wheel -G wheel -p %s %s", uid, home, encryptedpassword, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s]\n", user );
+    printf( "Error creating user [%s]\n", user );
     goto EXIT;
   }
   free( command );
   // Modify configuration files
   file_exists = backupFile("/etc/ssh/ssh_known_hosts");
   if ( ( rc = system( "cat /etc/ssh/ssh_host_rsa_key.pub | awk -F\" \" '{print \"localhost \" $1 \" \" $2}' > /etc/ssh/ssh_known_hosts") ) == -1 ) {
-    printf1( "Error modifying /etc/ssh/ssh_known_hosts\n" );
+    printf( "Error modifying /etc/ssh/ssh_known_hosts\n" );
     goto EXIT;
   }
 
@@ -97,13 +98,13 @@ int test_sshd(laus_data* dataPtr) {
   //
   //
  //TEST_1:
-  printf5("TEST %d\n", test++);
+  printf("TEST %d\n", test++);
   // Setup
   // Create expect script file to execute ssh session
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);
-  command = mysprintf( "expect -c \"spawn /usr/bin/ssh %s@localhost \nsleep 1 \nexpect -re \\\"password: \\\" \nsleep 1 \nsend \\\"%s\\r\\n\\\" \nsleep 1 \nexpect -re \\\"> \\\" \nsleep 1 \nsend \\\"exit\\\" \nsend_user \\\"exit\\n\\\"\"", user, password);
+  command = mysprintf( "expect -c \"spawn /usr/bin/ssh %s@localhost \nsleep 1 \nexpect -re \\\"password: \\\" \nsleep 1 \nsend \\\"%s\\r\\n\\\" \nsleep 1 \nexpect -re \\\"$ \\\" \nsleep 1 \nsend \\\"exit\\\" \nsend_user \\\"exit\\n\\\"\"", user, password);
   write(fd, command, strlen(command));
   close(fd);
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -111,30 +112,30 @@ int test_sshd(laus_data* dataPtr) {
 
   // Execution
   command = mysprintf( "/bin/sh %s", filename ); 
-  dataPtr->msg_euid = dataPtr->msg_suid = dataPtr->msg_ruid = dataPtr->msg_fsuid = 0;
-  dataPtr->msg_egid = dataPtr->msg_sgid = dataPtr->msg_rgid = dataPtr->msg_fsgid = 0;
-  dataPtr->msg_pid = NO_FORK;
+  dataPtr->euid = dataPtr->suid = dataPtr->ruid = dataPtr->fsuid = 0;
+  dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = 0;
+  dataPtr->pid = NO_FORK;
   runPAMProgram( dataPtr, command );
   free( command );
 
   // Check for audit record
 
   // uid/gid's are DONT CARES for the libpam tests, luid not yet set
-  dataPtr->msg_login_uid = dataPtr->msg_euid = dataPtr->msg_suid = dataPtr->msg_ruid = dataPtr->msg_fsuid = NO_ID_CHECK;
-  dataPtr->msg_login_uid = dataPtr->msg_egid = dataPtr->msg_sgid = dataPtr->msg_rgid = dataPtr->msg_fsgid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->ruid = dataPtr->fsuid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->laus_var_data.textData.data = mysprintf("PAM session open: user=%s (hostname=localhost, addr=127.0.0.1, terminal=ssh)", user);
+  dataPtr->comm = mysprintf("PAM session open: user=%s (hostname=localhost, addr=127.0.0.1, terminal=ssh)", user);
   verifyPAMProgram( dataPtr );
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->laus_var_data.textData.data = mysprintf("PAM accounting: user=%s (hostname=localhost, addr=127.0.0.1, terminal=ssh)", user);
+  dataPtr->comm = mysprintf("PAM accounting: user=%s (hostname=localhost, addr=127.0.0.1, terminal=ssh)", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
   unlink( filename );
   free( filename );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 1
 
@@ -150,13 +151,13 @@ int test_sshd(laus_data* dataPtr) {
   //
   //
  //TEST_2:
-  printf5("TEST %d\n", test++);
+  printf("TEST %d\n", test++);
   // Setup
   // Create expect script file to execute ssh session
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);
-  command = mysprintf( "expect -c \"spawn /usr/bin/ssh %s@localhost \nsleep 1 \nexpect -re \\\"password: \\\" \nsleep 1 \nsend \\\"%s\\r\\n\\\" \nsleep 1 \nexpect -re \\\"> \\\" \nsleep 1 \nsend \\\"exit\\\" \nsend_user \\\"exit\\n\\\"\"", user, badpassword);
+  command = mysprintf( "expect -c \"spawn /usr/bin/ssh %s@localhost \nsleep 1 \nexpect -re \\\"password: \\\" \nsleep 1 \nsend \\\"%s\\r\\n\\\" \nsleep 1 \nexpect -re \\\"$ \\\" \nsleep 1 \nsend \\\"exit\\\" \nsend_user \\\"exit\\n\\\"\"", user, badpassword);
   write(fd, command, strlen(command));
   close(fd);
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -164,32 +165,33 @@ int test_sshd(laus_data* dataPtr) {
 
   // Execution
   command = mysprintf( "/bin/sh %s", filename );
-  dataPtr->msg_euid = dataPtr->msg_suid = dataPtr->msg_ruid = dataPtr->msg_fsuid = 0;
-  dataPtr->msg_egid = dataPtr->msg_sgid = dataPtr->msg_rgid = dataPtr->msg_fsgid = 0;
-  dataPtr->msg_pid = NO_FORK;
+  dataPtr->euid = dataPtr->suid = dataPtr->ruid = dataPtr->fsuid = 0;
+  dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = 0;
+  dataPtr->pid = NO_FORK;
   runPAMProgram( dataPtr, command );
   free( command );
 
   // Check for audit record
 
   // uid/gid's are DONT CARES for the libpam tests
-  dataPtr->msg_login_uid = dataPtr->msg_euid = dataPtr->msg_suid = dataPtr->msg_ruid = dataPtr->msg_fsuid = NO_ID_CHECK;
-  dataPtr->msg_login_uid = dataPtr->msg_egid = dataPtr->msg_sgid = dataPtr->msg_rgid = dataPtr->msg_fsgid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->ruid = dataPtr->fsuid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
 
   strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->laus_var_data.textData.data = mysprintf("PAM authentication: user=%s (hostname=localhost, addr=127.0.0.1, terminal=ssh)", user);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s (hostname=localhost, addr=127.0.0.1, terminal=ssh)", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
   unlink( filename );
   free( filename );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 2
 
 
 
  EXIT:
+  printf("exit: in test_sshd()\n");
   if ( file_exists == -1 ) {
     unlink("/etc/ssh/ssh_known_hosts");
   } else {
@@ -198,10 +200,10 @@ int test_sshd(laus_data* dataPtr) {
   restoreFile("/etc/login.defs");
   command = mysprintf( "/usr/sbin/userdel -r %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
   }
   free( command );
-  printf5("Returning from test_sshd()\n");
+  printf("Returning from test_sshd()\n");
   return rc;
 }
 

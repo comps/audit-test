@@ -42,6 +42,7 @@
 #include "includes.h"
 #include "libpam.h"
 #include "tempname.h"
+#include "context.h"
 #include <time.h>
 #include <pwd.h>
 
@@ -75,7 +76,7 @@ int userdel_utmp(char* user) {
 }
 
 
-int test_login(laus_data* dataPtr) {
+int test_login(audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;
@@ -95,16 +96,17 @@ int test_login(laus_data* dataPtr) {
   char* encryptedpassword = "42VmxaOByKwlA";
   char* badpassword = "anything_but_eal";
 
-  dataPtr->msg_euid = 0;
-  dataPtr->msg_egid = 0;
-  if ( rc = createTempUserName( &user, &uid, &home ) == -1 ) {
-    printf1("Out of temp user names\n");
+  dataPtr->euid = 0;
+  dataPtr->egid = 0;
+  if (( rc = createTempUserName( &user, &uid, &home )) == -1 ) {
+    printf("Out of temp user names\n");
     goto EXIT;
   }
   // Create user
-  command = mysprintf( "/usr/sbin/useradd -u %d -d %s -m -p %s %s; echo \"export TERM=vt100\" >> ~%s/.profile", uid, home, encryptedpassword, user, user );
+  command = mysprintf( "/usr/sbin/useradd -u %d -d %s -m -p %s %s; echo \"export TERM=vt100\" >> ~%s/.profile",
+			uid, home, encryptedpassword, user, user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf1( "Error creating user [%s]\n", user );
+    printf( "Error creating user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -120,25 +122,18 @@ int test_login(laus_data* dataPtr) {
   // PAM session open: user=USERNAME (hostname=?, addr=?, terminal=/dev/pts/PTS
   //
   //
- TEST_1:
-  printf5("TEST %d\n", test++);
+ //TEST_1:
+  printf("TEST %d\n", test++);
   // Setup
   // Create expect script file to execute login session
   createTempFileName(&pts_filename);
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
-  fd = mkstemp(filename);
-  command = mysprintf( "\
-spawn /bin/login \n\
-sleep 1 \n\
-expect {
- -re \"login: $\" { exp_send \"%s\\r\"; exp_continue } \n\
- -re \"Password: $\" { exp_send \"%s\\r\"; exp_continue } \n\
- -re \"Terminal type. $\" { exp_send \"vt100\\r\"; exp_continue } \n\
- -re \"> $\" { exp_send \"/usr/bin/tty | /usr/bin/awk -F/ '{print \\$4}' > %s; exit\\r\"; exp_continue } \n\
-} \
-",
-			user, password, pts_filename);
+  if ((fd = mkstemp(filename)) == -1) {
+    printf("test_login: unable to make temp file %s\n", filename);
+    exit(-1);
+  }
+  command = mysprintf( "spawn /bin/login \n sleep 1 \n expect \"login: $\";\n  exp_send \"%s\r\";\n  expect \"Password: $\";\n  exp_send \"%s\r\";\n  expect \"~]$ $\";\n  exp_send \"/usr/bin/tty | /bin/sed \\\"s/.*\\\\///\\\" > %s; exit\\r\";", user, password, pts_filename);
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
   close(fd);
@@ -146,41 +141,45 @@ expect {
 
   // Execution
   command = mysprintf( "/usr/bin/expect -f %s", filename );
-  dataPtr->msg_pid = NO_FORK;
-  dataPtr->msg_euid = dataPtr->msg_suid = dataPtr->msg_ruid = dataPtr->msg_fsuid = 0;
-  dataPtr->msg_egid = dataPtr->msg_sgid = dataPtr->msg_rgid = dataPtr->msg_fsgid = 0;
+  dataPtr->pid = NO_FORK;
+  dataPtr->euid = dataPtr->suid = dataPtr->ruid = dataPtr->fsuid = 0;
+  dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = 0;
   runPAMProgram( dataPtr, command );
   free( command );
 
   // Get the pts used
-  fPtr = fopen(pts_filename, "r");
-  fscanf(fPtr, "%d", &pts);
-  fclose(fPtr);
-  unlink(pts_filename);
-  free(pts_filename);
+  if ((fPtr = fopen(pts_filename, "r")) != NULL) {
+    fscanf(fPtr, "%d", &pts);
+    fclose(fPtr);
+    unlink(pts_filename);
+    free(pts_filename);
+  } else {
+    printf("test_login: unable to open %s - %s\n", pts_filename, strerror(errno));
+    exit(errno);
+  }
 
   // Check for audit record(s)
 
   // uid/gid's are DONT CARES for the libpam tests, luid not yet set
-  dataPtr->msg_login_uid = dataPtr->msg_euid = dataPtr->msg_suid = dataPtr->msg_ruid = dataPtr->msg_fsuid = NO_ID_CHECK;
-  dataPtr->msg_login_uid = dataPtr->msg_egid = dataPtr->msg_sgid = dataPtr->msg_rgid = dataPtr->msg_fsgid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->ruid = dataPtr->fsuid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->laus_var_data.textData.data = mysprintf("PAM authentication: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts); 
+  dataPtr->comm = mysprintf("PAM authentication: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts); 
   verifyPAMProgram( dataPtr );
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->laus_var_data.textData.data = mysprintf("PAM accounting: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts);
+  dataPtr->comm = mysprintf("PAM accounting: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts);
   verifyPAMProgram( dataPtr );
 
   strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->laus_var_data.textData.data = mysprintf("PAM session open: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts);
+  dataPtr->comm = mysprintf("PAM session open: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
   unlink( filename );
   free( filename );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 1
 
@@ -193,8 +192,8 @@ expect {
   // PAM authentication: user=USERNAME (hostname=?, addr=?, terminal=/dev/pts/PTS)
   //
   //
- TEST_2:
-  printf5("TEST %d\n", test++);
+ //TEST_2:
+  printf("TEST %d\n", test++);
   // Setup
   // Create expect script file to execute login session
   createTempFileName(&pts_filename);
@@ -223,26 +222,26 @@ expect -re \"Password: \" { exp_send \"%s\\r\"} \n",
 
   // Execution
   command = mysprintf( "/usr/bin/expect -f %s", filename );
-  dataPtr->msg_euid = dataPtr->msg_suid = dataPtr->msg_ruid = dataPtr->msg_fsuid = 0;
-  dataPtr->msg_egid = dataPtr->msg_sgid = dataPtr->msg_rgid = dataPtr->msg_fsgid = 0;
-  dataPtr->msg_pid = NO_FORK;
+  dataPtr->euid = dataPtr->suid = dataPtr->ruid = dataPtr->fsuid = 0;
+  dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = 0;
+  dataPtr->pid = NO_FORK;
   runPAMProgram( dataPtr, command );
   free( command );
 
   // Check for audit record(s)
 
   // uid/gid's are DONT CARES for the libpam tests, luid not yet set
-  dataPtr->msg_login_uid = dataPtr->msg_euid = dataPtr->msg_suid = dataPtr->msg_ruid = dataPtr->msg_fsuid = NO_ID_CHECK;
-  dataPtr->msg_login_uid = dataPtr->msg_egid = dataPtr->msg_sgid = dataPtr->msg_rgid = dataPtr->msg_fsgid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->ruid = dataPtr->fsuid = NO_ID_CHECK;
+  dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->rgid = dataPtr->fsgid = NO_ID_CHECK;
 
   strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->laus_var_data.textData.data = mysprintf("PAM authentication: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s (hostname=?, addr=?, terminal=/dev/pts/%d)", user, pts);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
   unlink( filename );
   free( filename );
-  free( dataPtr->laus_var_data.textData.data );
+  free( dataPtr->comm );
 
   // End Test 2
 
@@ -251,10 +250,10 @@ expect -re \"Password: \" { exp_send \"%s\\r\"} \n",
   userdel_utmp( user );			// See the HACK note in the function definition above
   command = mysprintf( "/usr/sbin/userdel -r %s", user );
   if( ( rc = system( command ) ) != 0 ) {
-    printf1( "Error deleting user [%s]\n", user );
+    printf( "Error deleting user [%s]\n", user );
   }
   free( command );
-  printf5("Returning from test_login()\n");
+  printf("Returning from test_login()\n");
   return rc;
 }
 

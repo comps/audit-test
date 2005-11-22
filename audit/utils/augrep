@@ -345,7 +345,7 @@ interesting records, similar to ausearch but slower and possibly more flexible.
 
 To count the number of records with type=SYSCALL:
 
-    $ augrep -c type =~ /SYSCALL/
+    $ augrep -c type=~SYSCALL
     537
 
 To find a specific record:

@@ -45,7 +45,7 @@ ALL_OBJ		= $(FILTER_OBJ)
 ALL_EXE		= $(FILTER_EXE)
 ALL_AR		= $(FILTER_AR)
 
-SUB_DIRS	= utils tests ../utils
+SUB_DIRS	= utils tests
 
 all: subdirs deps $(FILTER_EXE)
 

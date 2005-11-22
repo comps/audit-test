@@ -265,7 +265,7 @@ function close_log {
 #----------------------------------------------------------------------
 
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-[[ -n $TOPDIR ]] || die "Please set TOPDIR in environment"
+[[ -z $TOPDIR ]] && export TOPDIR=$(readlink run.bash | sed 's|/[^/]*$||')
 pushd $TOPDIR >/dev/null || die "Can't access TOPDIR ($TOPDIR)"
 PATH=$PWD/utils:$PATH
 popd >/dev/null
@@ -326,12 +326,20 @@ function parse_cmdline {
 
     # Additional cmdline indicates test adds/removes
     if [[ -n $* ]]; then
+        declare remove_all=true
         dmsg "Loading additional test cases from cmdline"
         while [[ -n $1 ]]; do
-            # make sure there's a space
-            tcase="${1:0:1} ${1:1}"
+            if [[ $1 == [+-]* ]]; then
+                # make sure there's a space
+                tcase="${1:0:1} ${1:1}"
+            else
+                # bare tests on the cmdline imply to start from scratch
+                $remove_all && - ALL
+                tcase="+ $1"
+            fi
             eval -- "$tcase" || die "Error evaluating \"$tcase\""
             shift
+            remove_all=false
         done
     fi
 }

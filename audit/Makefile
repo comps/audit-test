@@ -54,21 +54,28 @@ run:
 
 .PHONY: dist
 dist:
-	deps=$$($(MAKE) --no-print-directory showrpms | xargs); \
-	rev=$$(svn info | awk '/^Revision:/{print $$2}'); \
+	deps=$$($(MAKE) --no-print-directory showrpms | xargs) && \
+	rev=$$(svn info | awk '/^Revision:/{print $$2}') && \
 	sed -i "/^Version:/s/[0-9].*/$$rev/; \
 	        s/^\(Requires:[ 	]*\).*/\1$$deps/" \
-		    audit-test.spec; \
-	mkdir ../audit-test-$$rev || exit; \
-	rsync -a --exclude=.svn . ../audit-test-$$rev; \
-	$(MAKE) distclean -C ../audit-test-$$rev; \
-	cd ..; \
-	tar czf audit-test-$$rev.tar.gz audit-test-$$rev; \
-	rm -rf audit-test-$$rev
+		    audit-test.spec && \
+	mkdir ../audit-test-$$rev && \
+	rsync -a --exclude=.svn . ../audit-test-$$rev && \
+	$(MAKE) distclean -C ../audit-test-$$rev && \
+	cd .. && \
+	tar czf audit-test-$$rev.tar.gz audit-test-$$rev && \
+	rm -rf audit-test-$$rev && \
+	echo && \
+	ls -l audit-test-$$rev.tar.gz
 
 .PHONY: rpm
 rpm: dist
-	rev=$$(svn info | awk '/^Revision:/{print $$2}'); \
-	rpmbuild -ta ../audit-test-$$rev.tar.gz
+	rev=$$(svn info | awk '/^Revision:/{print $$2}') && \
+	cd .. && \
+	rpmbuild -ta audit-test-$$rev.tar.gz && \
+	mv /usr/src/redhat/RPMS/noarch/audit-test-$$rev-1.* . && \
+	mv /usr/src/redhat/SRPMS/audit-test-$$rev-1.* . && \
+	echo && \
+	ls -l audit-test-$$rev-1.*
 
 include $(TOPDIR)/rules.mk

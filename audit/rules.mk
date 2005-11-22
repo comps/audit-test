@@ -80,8 +80,13 @@ endif
 all run:
 
 ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard run.conf)),)
+all: run.bash
+
+run.bash:
+	[[ -f run.bash ]] || ln -sfn $(TOPDIR)/utils/run.bash run.bash
+
 run: all
-	@TOPDIR="$(TOPDIR)" $(TOPDIR)/utils/run.bash
+	./run.bash
 endif
 
 _clean: subdirs
@@ -97,6 +102,7 @@ clobber: _clobber
 
 _distclean: subdirs clobber
 	$(RM) run.log
+	if [[ -L run.bash ]]; then $(RM) run.bash; fi
 
 distclean: _distclean
 

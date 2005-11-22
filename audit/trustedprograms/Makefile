@@ -54,7 +54,7 @@ TPUTILS_AR	= $(TESTDIR)/utils/trustedprogram_test_utils.a
 ALL_OBJ		= $(TP_OBJ)
 ALL_EXE		= $(TP_EXE)
 
-SUB_DIRS	= tests utils ../utils
+SUB_DIRS	= tests utils
 
 all: subdirs deps $(ALL_EXE) 
 

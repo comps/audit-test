@@ -50,7 +50,7 @@ LIBPAM_OBJ	= libpam.o
 ALL_EXE		= $(LIBPAM_EXE)
 ALL_OBJ		= $(LIBPAM_OBJ)
 
-SUB_DIRS        = tests utils ../utils
+SUB_DIRS        = tests utils
 
 all: deps $(EXE)
 

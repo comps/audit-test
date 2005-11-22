@@ -35,9 +35,9 @@ TOPDIR		= ../..
 TESTDIR		= ..
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
-TESTS_AR	= failsafe_tests.a
-TESTS_OBJ	= test_rollover.o		\
-		  test_rollover_failure.o
+# TESTS_AR	= failsafe_tests.a
+# TESTS_OBJ	= test_rollover.o		\
+# 		  test_rollover_failure.o
 
 ALL_OBJ		= $(TESTS_OBJ)
 ALL_AR		= $(TESTS_AR)

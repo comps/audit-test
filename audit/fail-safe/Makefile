@@ -49,7 +49,7 @@ ALL_EXE		= $(FAILSAFE_EXE) $(FAILSAFE_NOTIFY)
 
 SUB_DIRS	= utils tests
 
-all: subdirs deps $(ALL_EXE) run.bash
+all: subdirs deps $(ALL_EXE)
 
 $(FAILSAFE_EXE): $(FAILSAFE_OBJ) $(FAILSAFE_ARS)
 	$(LINK_EXE)

@@ -8,29 +8,20 @@ sudo make run
 It's not actually necessary to build as root.  If you'd prefer to build as a
 normal user, you can do:
 
-make -C syscalls
-make -C fail-safe
+make all
 sudo make run
-
-This avoids the directories that don't actually build yet.
 
 | Using run.bash
 +---------------
 
-From the top level, you just want to use "make run".  run.bash will tell you
-this if you try to use it directly.  The "run" target will execute run.bash in
-each subdirectory then tally the results.
+From the top level, you just want to use "make run".  The "run" target will
+execute run.bash in each subdirectory then tally the results.
 
 To run an individual set of tests, you can use "make run" or call run.bash.
 Using the latter gives you control over which tests are executed.  For example:
 
     cd syscalls
-    sudo ./run.bash -- -ALL +chown
-
-It's a little cryptic, but here's why: First, run.bash takes arguments of its
-own, for example --verbose.  After those arguments, i.e. following --, you can
-add or remove tests.  -ALL removes all the tests that were listed in run.conf.
-Then you add back the test that you want to run, in this case +chown
+    sudo ./run.bash chown
 
 | Writing run.conf
 +-----------------

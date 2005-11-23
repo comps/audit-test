@@ -136,11 +136,11 @@ int test_vsftpd(struct audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s (hostname=127.0.0.1, addr=127.0.0.1, terminal=?)", user);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/usr/sbin/vsftpd\" (hostname=127.0.0.1, addr=127.0.0.1, terminal=? result=Success)", user);
   verifyPAMProgram( dataPtr );
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM accounting: user=%s (hostname=127.0.0.1, addr=127.0.0.1, terminal=?)", user);
+  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=\"/usr/sbin/vsftpd\" (hostname=127.0.0.1, addr=127.0.0.1, terminal=? result=Success)", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
@@ -188,7 +188,7 @@ int test_vsftpd(struct audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
 
   //strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s (hostname=127.0.0.1, addr=127.0.0.1, terminal=?)", user);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/usr/sbin/vsftpd\" (hostname=127.0.0.1, addr=127.0.0.1, terminal=? result=Authentication failure)", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup

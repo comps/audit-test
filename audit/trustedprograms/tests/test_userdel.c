@@ -149,8 +149,7 @@ int test_userdel(struct audit_data* dataPtr) {
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  // XXX failed?  I don't think so
-  dataPtr->comm = mysprintf("userdel: op=deleting mail file acct=%s res=failed", user);
+  dataPtr->comm = mysprintf("userdel: op=deleting mail file acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 

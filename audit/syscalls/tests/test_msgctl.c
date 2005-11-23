@@ -78,7 +78,7 @@ static int test_msgctl_setperms(struct audit_data *context, int success)
     context_setbegin(context);
     fprintf(stderr, "Attempting msgctl(%d, IPC_SET, { uid = %d })\n", 
 	    qid, buf.msg_perm.uid);
-    exit = msgctl(qid, IPC_RMID, &buf);
+    exit = msgctl(qid, IPC_SET, &buf);
     context_setend(context);
 
     if (exit < 0) {
@@ -94,7 +94,7 @@ exit_root:
 	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
 
 exit_queue:
-    if (msgctl(qid, IPC_RMID, 0) < 0)
+    if (msgctl(qid, IPC_RMID, NULL) < 0)
 	fprintf(stderr, "Error: removing message queue: %s\n", strerror(errno));
 
 exit:
@@ -147,7 +147,7 @@ exit_root:
 	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
 
 exit_queue:
-    if (exit < 0 && msgctl(qid, IPC_RMID, 0) < 0)
+    if (exit < 0 && msgctl(qid, IPC_RMID, NULL) < 0)
 	fprintf(stderr, "Error: removing message queue: %s\n", strerror(errno));
 
 exit:

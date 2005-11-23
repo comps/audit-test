@@ -34,7 +34,7 @@
 #include "context.h"
 #include <sys/wait.h>
 
-int runTrustedProgramAndVerify(audit_data* dataPtr, char* command) {
+int runTrustedProgramAndVerify(struct audit_data* dataPtr, char* command) {
 
   int rc  = 0;
 
@@ -50,7 +50,7 @@ EXIT:
 
 }
 
-int runTrustedProgramWithoutVerify( audit_data* dataPtr, char* command ) {
+int runTrustedProgramWithoutVerify(struct audit_data* dataPtr, char* command ) {
   int rc = 0;
   int pid = 0;
 
@@ -81,7 +81,7 @@ EXIT:
   return rc;
 }
 
-int verifyTrustedProgram(audit_data *dataPtr) {
+int verifyTrustedProgram(struct audit_data *dataPtr) {
     int rc = 0;
 
 //    rc = audit_verify_log(dataPtr, logOptions[LOGOPTION_INDEX_ALL]);

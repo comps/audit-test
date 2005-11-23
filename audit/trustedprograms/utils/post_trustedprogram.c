@@ -33,7 +33,7 @@
 #include "context.h"
 #include <time.h>
 
-int postTrustedProgram(audit_data* dataPtr) {
+int postTrustedProgram(struct audit_data* dataPtr) {
 
   int rc = 0;
 

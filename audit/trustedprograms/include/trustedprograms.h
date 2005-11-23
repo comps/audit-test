@@ -41,34 +41,34 @@ typedef struct {
 } trustedprogram_commands;
 
 typedef struct {
-    int		(*testPtr)(audit_data *);
-    char	*testName;
-    audit_data	*dataPtr;
+    int			(*testPtr)(struct audit_data *);
+    char		*testName;
+    struct audit_data	*dataPtr;
 } trustedprogram_data;
 
-int test_at(audit_data* dataPtr);
-int test_atd(audit_data* dataPtr);
-int test_cron(audit_data* dataPtr);
-int test_crontab(audit_data* dataPtr);
-int test_gpasswd(audit_data* dataPtr);
-int test_groupadd(audit_data* dataPtr);
-int test_groupdel(audit_data* dataPtr);
-int test_groupmod(audit_data* dataPtr);
-int test_passwd(audit_data* dataPtr);
-int test_useradd(audit_data* dataPtr);
-int test_userdel(audit_data* dataPtr);
-int test_usermod(audit_data* dataPtr);
+int test_at(struct audit_data* dataPtr);
+int test_atd(struct audit_data* dataPtr);
+int test_cron(struct audit_data* dataPtr);
+int test_crontab(struct audit_data* dataPtr);
+int test_gpasswd(struct audit_data* dataPtr);
+int test_groupadd(struct audit_data* dataPtr);
+int test_groupdel(struct audit_data* dataPtr);
+int test_groupmod(struct audit_data* dataPtr);
+int test_passwd(struct audit_data* dataPtr);
+int test_useradd(struct audit_data* dataPtr);
+int test_userdel(struct audit_data* dataPtr);
+int test_usermod(struct audit_data* dataPtr);
 
 
 void test_trustedprogram(trustedprogram_commands command_data[],
 			 int array_size,
-			 audit_data* dataPtr);
+			 struct audit_data* dataPtr);
 
-int preTrustedProgram(audit_data* dataPtr);
-int postTrustedProgram(audit_data* dataPtr);
-int runTrustedProgramAndVerify(audit_data* dataPtr, char* command);
-int runTrustedProgramWithoutVerify( audit_data* dataPtr, char* command );
-int verifyTrustedProgram( audit_data* dataPtr );
+int preTrustedProgram(struct audit_data* dataPtr);
+int postTrustedProgram(struct audit_data* dataPtr);
+int runTrustedProgramAndVerify(struct audit_data* dataPtr, char* command);
+int runTrustedProgramWithoutVerify(struct audit_data* dataPtr, char* command );
+int verifyTrustedProgram(struct audit_data* dataPtr );
 
 int ShadowTestSetup(int backupBool);
 int SystemX(char* command);

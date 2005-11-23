@@ -43,7 +43,7 @@
 #include "includes.h"
 #include "trustedprograms.h"
 
-int test_useradd(audit_data* dataPtr) {
+int test_useradd(struct audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;

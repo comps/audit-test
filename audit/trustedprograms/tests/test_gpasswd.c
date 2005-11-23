@@ -48,7 +48,7 @@
 #include <asm/page.h>
 #include <grp.h>
 
-int test_gpasswd(audit_data* dataPtr) {
+int test_gpasswd(struct audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;

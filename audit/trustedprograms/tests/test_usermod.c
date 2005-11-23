@@ -41,7 +41,7 @@
 #include "includes.h"
 #include "trustedprograms.h"
 
-int test_usermod(audit_data* dataPtr) {
+int test_usermod(struct audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;

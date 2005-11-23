@@ -42,7 +42,7 @@
 #include "includes.h"
 #include "trustedprograms.h"
 
-int test_groupdel(audit_data* dataPtr) {
+int test_groupdel(struct audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;

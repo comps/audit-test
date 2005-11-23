@@ -44,7 +44,7 @@
 #include <time.h>
 #include <pwd.h>
 
-int test_passwd(audit_data* dataPtr) {
+int test_passwd(struct audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;

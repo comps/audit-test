@@ -42,7 +42,7 @@
 #include "includes.h"
 #include "trustedprograms.h"
 
-int test_groupmod(audit_data* dataPtr) {
+int test_groupmod(struct audit_data* dataPtr) {
 
   int rc = 0;
   int test = 1;

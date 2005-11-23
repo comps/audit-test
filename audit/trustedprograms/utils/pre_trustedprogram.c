@@ -34,7 +34,7 @@
 #include "trustedprograms.h"
 #include <time.h>
 
-int preTrustedProgram(audit_data* dataPtr) {
+int preTrustedProgram(struct audit_data* dataPtr) {
 
   int rc = 0;
 

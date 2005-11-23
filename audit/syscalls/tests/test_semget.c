@@ -47,7 +47,7 @@
 int test_semget(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int msgflag = S_IRWXU|IPC_CREAT;
+    int flag = S_IRWXU|IPC_CREAT;
     int semid;
     int nsems = 1;
     int exit;
@@ -62,7 +62,7 @@ int test_semget(struct audit_data *context, int variation, int success)
     fprintf(stderr, "Semaphore set key: %d id: %d\n", TEST_IPC_KEY, semid);
 
     if (!success) {
-        msgflag |= IPC_EXCL;
+        flag |= IPC_EXCL;
         context->experror = -EEXIST;
     }
 
@@ -73,9 +73,9 @@ int test_semget(struct audit_data *context, int variation, int success)
     errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting semget(%d, %d, %d)\n", TEST_IPC_KEY, nsems, 
-            msgflag);
+            flag);
     /* using library routine makes it portable between arches */
-    exit = semget(TEST_IPC_KEY, nsems, msgflag);
+    exit = semget(TEST_IPC_KEY, nsems, flag);
     context_setend(context);
 
     fprintf(stderr, "Semaphore set id: %d [%d]\n", exit, errno);

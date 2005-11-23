@@ -130,15 +130,16 @@ int test_passwd(struct audit_data* dataPtr) {
   fd = mkstemp(filename);
   command = mysprintf( "spawn /usr/bin/passwd\n"
 "sleep 1 \n"
-"expect -re \"Enter current password:\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
-"sleep 1 \n"
-"expect -re \"(current) UNIX password:\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
+"expect -re \"UNIX password: $\"\n"
+"exp_send \"%s\\r\\n\" \n"
 "sleep 1\n"
-"expect -re \"New UNIX password:\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
+"expect -re \"New UNIX password: $\"\n"
 "sleep 1\n"
-"expect -re \"Retype new UNIX password:\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
+"exp_send \"%s\\r\\n\" \n"
+"expect -re \"Retype new UNIX password: $\"\n"
 "sleep 1\n"
-"send_user \"\\n\"\n" , password, password, newpassword, newpassword, newpassword, newpassword);
+"exp_send \"%s\\r\\n\" \n"
+"expect \".\" \n", password, newpassword, newpassword);
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
   close(fd);
@@ -194,8 +195,10 @@ int test_passwd(struct audit_data* dataPtr) {
   fd = mkstemp(filename);
   command = mysprintf( "spawn /usr/bin/passwd\n"
 "sleep 1 \n"
-"expect -re \"(current) UNIX password: $\" { exp_send \"%s\\r\\n\"} \n"
-"sleep 1\n", badpassword);
+"expect -re \"UNIX password: $\"\n"
+"exp_send \"%s\\r\\n\" \n"
+"sleep 1\n"
+"expect \".\"", badpassword);
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
   close(fd);

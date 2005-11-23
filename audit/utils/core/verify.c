@@ -75,23 +75,18 @@ ts_exit verify_logresult(struct audit_data *context)
 			 context->egid, 
 			 context->sgid, 
 			 context->fsgid);
-	if (count == sizeof(cmd)) {
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_IPC) {
+	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
+			      " iuid==%u mode==%x qbytes==%x igid==%u", 
+			      context->u.syscall.ipc_uid, 
+			      context->u.syscall.ipc_mode, 
+			      context->u.syscall.ipc_qbytes, 
+			      context->u.syscall.ipc_gid);
+	}
+	if (count >= sizeof(cmd)) {
 	    fprintf(stderr, "ERROR: verify_logresult: cmd too long\n");
 	    rc = TEST_ERROR;
 	    goto exit;
-	}
-	if (context->type & AUDIT_MSG_IPC) {
-	    count = snprintf(&cmd[count], sizeof(cmd)-count, 
-			     " iuid==%u mode==%x qbytes==%x igid==%u", 
-			     context->u.syscall.ipc_uid, 
-			     context->u.syscall.ipc_mode, 
-			     context->u.syscall.ipc_qbytes, 
-			     context->u.syscall.ipc_gid);
-	    if (count == sizeof(cmd)) {
-		fprintf(stderr, "ERROR: verify_logresult: cmd too long\n");
-		rc = TEST_ERROR;
-		goto exit;
-	    }
 	}
     }
 

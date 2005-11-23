@@ -25,6 +25,7 @@
 auditd_conf=/etc/auditd.conf
 auditd_orig=$(mktemp $auditd_conf.XXXXXX)
 audit_log=/var/log/audit/audit.log
+eal_mail=/var/mail/eal
 messages=/var/log/messages
 tmp1=$(mktemp)
 tmp2=$(mktemp)
@@ -146,6 +147,68 @@ function check_keep_logs {
     return 0
 }
 
+function pre_halt {
+    declare mask_runlevel=${1:-0}
+    old_runlevel=$(runlevel | cut -d' ' -f2)
+
+    # prepend to the cleanup function because it's very important this
+    # happens...
+    eval "function cleanup {
+	if [[ -s /etc/inittab.agriffis ]]; then
+	    mv /etc/inittab.agriffis /etc/inittab
+	fi
+	init $old_runlevel
+	$(type cleanup | sed '1,3d')"
+
+    # now remove the runlevel from inittab
+    sed -i.agriffis "/:$mask_runlevel:/s/^/#/" /etc/inittab
+    init q
+}
+
+function check_halt {
+    declare want_runlevel=${1:-0}
+    declare runlevel=$(runlevel) || return 2
+    if [[ $runlevel == *" $want_runlevel" ]]; then
+	echo "Great, the runlevel changed to $want_runlevel"
+	return 0
+    else
+	echo "Failed to change runlevels"
+	return 1
+    fi
+}
+
+function pre_single {
+    pre_halt 1
+}
+
+function check_single {
+    check_halt 1
+}
+
+function pre_email {
+    if [[ -f /var/mail/eal ]]; then
+	eal_mail_lines=$(wc -l < "$eal_mail")
+    else
+	eal_mail_lines=0
+    fi
+}
+
+function check_email {
+    sleep 2	# wait for the mail to arrive
+    if [[ ! -f "$eal_mail" ]]; then
+	echo "check_email: "$eal_mail" does not exist"
+	return 2
+    fi
+    if sed "1,${eal_mail_lines}d" "$eal_mail" | \
+	    grep -m1 '^Subject: Audit Disk Space Alert'; then
+	echo "check_email: found out magic email"
+	return 0
+    else
+	echo "check_email: email never arrived"
+	return 1
+    fi
+}
+
 ######################################################################
 # common startup
 ######################################################################
@@ -167,9 +230,9 @@ write_auditd_conf \
     num_logs=5 \
     max_log_file=1024 \
     max_log_file_action=IGNORE \
+    action_mail_acct=eal \
     space_left=2 \
     space_left_action=IGNORE \
-    action_mail_acct=eal \
     admin_space_left=1 \
     admin_space_left_action=IGNORE \
     disk_full_action=IGNORE \

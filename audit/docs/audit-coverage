@@ -1,16 +1,11 @@
 ./trustedprograms/tests/test_groupmod.c
 1: When a group's gid is changed // groupmod -g gid
-2: When a groups's password is changed // groupmod -p password
-4: When a user is added to a group and when user is removed from a group
-  // groupmod -A username
-  // groupmod -R username
-5: FAILURE When PAM authentication fails for the user.  // groupmod
 
 ./trustedprograms/tests/test_usermod.c
 1: When a user name is changed in a group.  // usermod -l
 2: When a user is removed from a group.  // usermod -G
   // The user must be a member of a group that is not in the list of groups (-G) supplied on the command to create this record.
-3: When a user name is added to a group.  // usermod -l -G
+3: When a user name is added to a group.  // usermod -G
   // The user must not already be a member of a group that is in the list of groups (-G) supplied on the command to create this record.
 4: When a user's home directory is moved.  // usermod -d -m
   // This record can be generated in two different ways.  The first is if the old and new home directory are on the same filesystem.
@@ -19,47 +14,30 @@
 6: When a user's uid is changed. & When a user's home directory tree owner(s) is changed.  // usermod -u
   // Although the default group gid will be changed along with the uid, this record will only be generated if the uid is changed.
 7: When a user's password is changed.  // usermod -p
-8: When a user's name is changed.  // usermod -l
 9: When a user's default group is changed.  // usermod -g
+10: When a user's comment is changed. // usermod -c
+11: When a user's home directory is moved. // usermod -d
+12: When a user's shell is changed. // usermod -s
+13: When a user's inactivity is changed. //usermod -f
+14: When a user's expiration date is changed. // usermod -e
 
 ./trustedprograms/tests/test_passwd.c
 1: When a user successfully uses the passwd program.  // passwd 
 2: FAILURE When a user unsuccessfully uses the passwd program.  // passwd
-3: FAILURE When a non-root user tries to list all passwd status.  // passwd -S -a
-4: When root lists all passwd status.  // passwd -S -a
-5: FAILURE When non-root user tries to change shadow data // passwd -k root
-6: FAILURE When non-root user tries to lock root's password // passwd -l root
-7: When root locks a user's password // passwd -l USER
-8: When user tries to display own password information // passwd -S
 
 ./trustedprograms/tests/test_useradd.c
 1: When the defaults for useradd are changed.  // /usr/sbin/useradd --save-defaults -g GID -d HOMEDIR -e EXPIRE -f INACTIVE -s SHELL
 2: When a user is added to a group.  // useradd -G GID USER
 4: When a user is added.  // useradd 
 5: When a user's home directory is created.  // useradd -m USER
-6: FAILURE When PAM authentication fails for the user.  // useradd
 
 ./trustedprograms/tests/test_groupadd.c
 1: When a group is added.  // groupadd
-2: FAILURE When PAM authentication fails for the user.  // groupadd
 
 ./trustedprograms/tests/test_userdel.c
-1: When a user is removed from a group.  // userdel
 2: When a user is deleted.  // userdel
-3: When a user deletion command is run.  // userdel
-  // If a user deletion command is defined this record will be generated.
-  // The user deletion command can be defined through the login defs file, /etc/login.defs (default).
-4: When a user deletion command is run.  // userdel
-  // If a user deletion command is defined this record will be generated.
-  // The user deletion command can be defined through the login defs file, /etc/login.defs (default).
 5: When a user's mail file is deleted.  // userdel -r
-  // Various situations can cause this record to not be generated, such as the owner of the file being different than the user being deleted,
-  // the file not existing or the unlink call failing.  The mail file name is created based on the login definitions file, /etc/login.defs,
-  // or how the program was built, configure.
-6: When a user's mail file is forcefully deleted.  // userdel -r -f
-  // The mail file name is created based on the login definitions file, /etc/login.defs, or how the program was built, configure.
 7: When a user's home directory is deleted.  // userdel -r
-8: FAILURE When PAM authentication fails for the user.  // userdel
 
 ./trustedprograms/tests/test_gpasswd.c
 1: FAILURE When attempting to modify a group when the user is not "root" or an administrator.  // gpasswd
@@ -68,7 +46,6 @@
 
 ./trustedprograms/tests/test_groupdel.c
 1: When a group is deleted.  // groupdel
-2: FAILURE When PAM authentication fails for the user.  // groupdel
 
 
 

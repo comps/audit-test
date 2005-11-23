@@ -52,6 +52,8 @@ int test_umask(struct audit_data *context, int variation, int success)
     context->u.syscall.exit = umask(mask);
     context_setend(context);
 
+    context->success = 1;
+
 exit:
     return rc;
 }

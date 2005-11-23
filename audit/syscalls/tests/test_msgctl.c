@@ -21,17 +21,24 @@
  *  test_msgctl.c
  *
  *  PURPOSE:
- *  Verify audit of attempts to remove message queues.
+ *  Verify audit of attempts perform message control operations.
  *
  *  SYSCALLS:
  *  msgctl()
  *
- *  TESTCASE: successful
+ *  TESTCASE: remove successful
  *  Remove a message queue.
  *
- *  TESTCASE: unsuccessful
+ *  TESTCASE: remove unsuccessful
  *  Attempt to remove a message queue with insufficient access
  *  permissions.
+ *
+ *  TESTCASE: setperms successful
+ *  Change message queue permissions.
+ *
+ *  TESTCASE: setperms unsuccessful
+ *  Attempt to change message queue permissions, while having
+ *  insufficient access permissions.
  */
 
 #include "includes.h"

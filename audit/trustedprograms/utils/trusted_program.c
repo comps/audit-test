@@ -34,6 +34,9 @@
 #include "context.h"
 #include <sys/wait.h>
 
+extern int pass_testcases;
+extern int fail_testcases;
+
 int runTrustedProgramAndVerify(struct audit_data* dataPtr, char* command) {
 
   int rc  = 0;
@@ -84,14 +87,16 @@ EXIT:
 int verifyTrustedProgram(struct audit_data *dataPtr) {
     int rc = 0;
 
-//    rc = audit_verify_log(dataPtr, logOptions[LOGOPTION_INDEX_ALL]);
+    rc = audit_verify_log(dataPtr);
 
     printf("Verify record\n");
     if (rc > 0) {
         printf("AUDIT PASS ");
+        pass_testcases++;
     } else {
 //        debug_expected(dataPtr);
         printf("AUDIT FAIL ");
+        fail_testcases++;
     }
 
     return rc;

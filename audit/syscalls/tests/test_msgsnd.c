@@ -54,13 +54,13 @@ int test_msgsnd(struct audit_data *context, int variation, int success)
     int exit;
 
     errno = 0;
-    rc = qid = msgget(TEST_IPC_KEY, S_IRWXU|IPC_CREAT);
+    rc = qid = msgget(IPC_PRIVATE, S_IRWXU|IPC_CREAT);
     if (rc < 0) {
 	fprintf(stderr, "Error: can't create message queue: %s\n",
 		strerror(errno));
         goto exit;
     }
-    fprintf(stderr, "Message queue key: %d id: %d\n", TEST_IPC_KEY, qid);
+    fprintf(stderr, "Message queue key: %d id: %d\n", IPC_PRIVATE, qid);
 
     if (!success) {
 	rc = seteuid_test();

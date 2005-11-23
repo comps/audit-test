@@ -55,7 +55,7 @@ static int parse_command_line(int argc, char **argv,
 
     memset(options, 0, sizeof(struct syscall_opts));
 
-    while ((opt = getopt(argc, argv, "u:t:hs")) != -1) {
+    while ((opt = getopt(argc, argv, "t:v:hs")) != -1) {
 	switch(opt) {
 	    case 'h':
 		options->help = 1;

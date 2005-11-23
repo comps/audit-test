@@ -52,37 +52,52 @@ exit:
 /* Verify presence or absence of log record */
 ts_exit verify_logresult(struct audit_data *context)
 {
-    ts_exit rc = TEST_EXPECTED;
+    ts_exit rc;
     char cmd[512] = {0};
+    int count;
 
     if (context->type & AUDIT_MSG_SYSCALL) {
-	if (snprintf(cmd, sizeof(cmd), "augrep -m1 'type=~SYSCALL' "
-		     "syscall==%d 'success==%s' "
-		     "exit==%d pid==%d auid==%u uid==%d gid==%d "
-		     "euid==%d suid==%d fsuid==%d "
-		     "egid==%d sgid==%d fsgid==%d", 
-		     context->u.syscall.sysnum,
-		     context->success ? "yes" : "no",
-		     context->u.syscall.exit,
-		     context->pid,
-		     context->loginuid,
-		     context->uid,
-		     context->gid,
-		     context->euid,
-		     context->suid,
-		     context->fsuid,
-		     context->egid,
-		     context->sgid,
-		     context->fsgid) == sizeof(cmd)) {
+	count = snprintf(cmd, sizeof(cmd), "augrep -m1 'type=~SYSCALL' "
+			 "syscall==%d 'success==%s' " 
+			 "exit==%d pid==%d auid==%u uid==%u gid==%u " 
+			 "euid==%u suid==%u fsuid==%u " 
+			 "egid==%u sgid==%u fsgid==%u", 
+			 context->u.syscall.sysnum, 
+			 context->success ? "yes" : "no", 
+			 context->u.syscall.exit, 
+			 context->pid, 
+			 context->loginuid, 
+			 context->uid, 
+			 context->gid, 
+			 context->euid, 
+			 context->suid, 
+			 context->fsuid, 
+			 context->egid, 
+			 context->sgid, 
+			 context->fsgid);
+	if (count == sizeof(cmd)) {
 	    fprintf(stderr, "ERROR: verify_logresult: cmd too long\n");
-	    exit(1);
-	}
-	if (system(cmd) == 0)
+	    rc = TEST_ERROR;
 	    goto exit;
+	}
+	if (context->type & AUDIT_MSG_IPC) {
+	    count = snprintf(&cmd[count], sizeof(cmd)-count, 
+			     " iuid==%u mode==%x qbytes==%x igid==%u", 
+			     context->u.syscall.ipc_uid, 
+			     context->u.syscall.ipc_mode, 
+			     context->u.syscall.ipc_qbytes, 
+			     context->u.syscall.ipc_gid);
+	    if (count == sizeof(cmd)) {
+		fprintf(stderr, "ERROR: verify_logresult: cmd too long\n");
+		rc = TEST_ERROR;
+		goto exit;
+	    }
+	}
     }
 
-    rc = TEST_UNEXPECTED;
-    fprintf(stderr, "Expected record not found in log:\n%s\n", cmd);
+    rc = (system(cmd) == 0) ? TEST_EXPECTED : TEST_UNEXPECTED;
+    if (rc == TEST_UNEXPECTED)
+	fprintf(stderr, "Expected record not found in log:\n%s\n", cmd);
 
 exit:
     return rc;

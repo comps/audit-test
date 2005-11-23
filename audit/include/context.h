@@ -87,7 +87,14 @@ struct audit_syscall {
     int           sysnum;
     int           arch;
     int           exit;
+    /* ipc */
+    unsigned int  ipc_qbytes;
+    unsigned int  ipc_uid;
+    unsigned int  ipc_gid;
+    unsigned int  ipc_mode;
+    /* filesystem */
     char          cwd[PATH_MAX];
+    /* will be deprecated */
     unsigned int  arglen;
     char          *args;
 };

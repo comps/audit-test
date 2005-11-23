@@ -47,7 +47,6 @@
 static int test_msgctl_setperms(struct audit_data *context, int success)
 {
     int rc = 0;
-    int msgflag = S_IRWXU|IPC_CREAT;
     int qid;
     struct msqid_ds buf;
     int exit;
@@ -55,7 +54,7 @@ static int test_msgctl_setperms(struct audit_data *context, int success)
     buf.msg_perm.uid = gettestuid();
 
     errno = 0;
-    rc = qid = msgget(TEST_IPC_KEY, msgflag);
+    rc = qid = msgget(TEST_IPC_KEY, S_IRWXU|IPC_CREAT);
     if (rc < 0) {
 	fprintf(stderr, "Error: can't create message queue: %s\n",
 		strerror(errno));
@@ -73,6 +72,7 @@ static int test_msgctl_setperms(struct audit_data *context, int success)
     rc = context_setidentifiers(context);
     if (rc < 0)
         goto exit_root;
+    context_setipc(context, 0, buf.msg_perm.uid, 0, 0);
 
     errno = 0;
     context_setbegin(context);
@@ -104,12 +104,11 @@ exit:
 static int test_msgctl_remove(struct audit_data *context, int success)
 {
     int rc = 0;
-    int msgflag = S_IRWXU|IPC_CREAT;
     int qid;
     int exit = -1; /* pre-set for proper cleanup */
 
     errno = 0;
-    rc = qid = msgget(TEST_IPC_KEY, msgflag);
+    rc = qid = msgget(TEST_IPC_KEY, S_IRWXU|IPC_CREAT);
     if (rc < 0) {
 	fprintf(stderr, "Error: can't create message queue: %s\n",
 		strerror(errno));

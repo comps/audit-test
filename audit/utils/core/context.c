@@ -102,6 +102,18 @@ void context_setend(struct audit_data *context)
     fprintf(stderr, "Operation ended at %s", ctime(&(context->end_time)));
 }
 
+/* context_setipc() should be called after context_setidentifiers() if
+ * not explicitly setting uid and gid */
+void context_setipc(struct audit_data *context, int qbytes, 
+		    int uid, int gid, long msgflg)
+{
+    context->type |= AUDIT_MSG_IPC;
+    context->u.syscall.ipc_qbytes = qbytes;
+    context->u.syscall.ipc_uid = uid;
+    context->u.syscall.ipc_gid = gid;
+    context->u.syscall.ipc_mode = msgflg;
+}
+
 void context_dump(const struct audit_data *context)
 {
     fprintf(stderr, "\ttype      : %u\n", context->type);
@@ -123,17 +135,26 @@ void context_dump(const struct audit_data *context)
     fprintf(stderr, "\terror     : %i\n", context->error);
     fprintf(stderr, "\texperror  : %i\n", context->experror);
 
-    if (context->type == AUDIT_MSG_SYSCALL) {
+    if (context->type & AUDIT_MSG_SYSCALL) {
         const struct audit_syscall *syscall = &context->u.syscall;
 
 	fprintf(stderr, "\tsyscall   : %s\n", syscall->sysname ?: "(null)");
 	fprintf(stderr, "\tsysnum    : %i\n", syscall->sysnum);
 	fprintf(stderr, "\tarch      : %x\n", syscall->arch);
 	fprintf(stderr, "\texit      : %i\n", syscall->exit);
-	fprintf(stderr, "\tcwd       : %s\n", syscall->cwd);
 
-        /* TODO add object of operation */
-
+	if (context->type & AUDIT_MSG_IPC) {
+	    fprintf(stderr, "\tipc_qbytes: %x\n", syscall->ipc_qbytes); 
+	    fprintf(stderr, "\tipc_uid   : %u\n", syscall->ipc_uid);
+	    fprintf(stderr, "\tipc_gid   : %u\n", syscall->ipc_gid);
+	    fprintf(stderr, "\tipc_mode  : %x\n", syscall->ipc_mode);
+	}
+	if (context->type & AUDIT_MSG_CWD) {
+	    fprintf(stderr, "\tcwd       : %s\n", syscall->cwd ?: "(null)");
+	}
+	if (context->type & AUDIT_MSG_SOCKADDR) {
+	    /* fprintf(stderr, "\tsockaddr  : %s\n", syscall->sockaddr); */
+	}
     } else if (context->type == AUDIT_MSG_USER) {
 	fprintf(stderr, "\ttext: %s\n", context->u.user.buf);
     }

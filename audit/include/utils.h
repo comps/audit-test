@@ -98,6 +98,7 @@ int context_initsyscall(struct audit_data *, char *);
 int context_setidentifiers(struct audit_data *);
 void context_setbegin(struct audit_data *);
 void context_setend(struct audit_data *);
+void context_setipc(struct audit_data *, int, int, int, long);
 void context_dump(const struct audit_data *);
 void context_release(struct audit_data *);
 

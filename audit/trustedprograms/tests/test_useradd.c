@@ -91,10 +91,11 @@ int test_useradd(struct audit_data* dataPtr) {
   // Test 1:
   // When the defaults for useradd are changed.
   // The record is generated with the following commands:
-  // /usr/sbin/useradd --save-defaults -g GID -d HOMEDIR -e EXPIRE -f INACTIVE -s SHELL
+  // old SuSE way /usr/sbin/useradd --save-defaults -g GID -d HOMEDIR -e EXPIRE -f INACTIVE -s SHELL
+  // /usr/sbin/useradd -D -g GID -b HOMEDIR -e EXPIRE -f INACTIVE -s SHELL
   // 
   // In addition to the standard audit information, the following string will be logged
-  // useradd: defaults changed - gid=GID, home=HOMEDIR, shell=SHELL, inactive=INACTIVE, expire=EXPIRE, by=ROOT 
+  // old SuSE way useradd: defaults changed - gid=GID, home=HOMEDIR, shell=SHELL, inactive=INACTIVE, expire=EXPIRE, by=ROOT 
   // 
   // gid = the gid of the default group
   // home = the path of the default home directory
@@ -121,7 +122,7 @@ int test_useradd(struct audit_data* dataPtr) {
   //Don't backup here .bak is the original we already put a test file out there
   //backupFile( "/etc/default/useradd" );
 
-  command = mysprintf( "/usr/sbin/useradd --save-defaults -g %d -d /tmp -e 2038-01-18 -f 42 -s /bin/sh",
+  command = mysprintf( "/usr/sbin/useradd -D -g %d -b /tmp -e 2038-01-18 -f 42 -s /bin/sh",
 		       gid );
   dataPtr->comm = 
     mysprintf( "useradd: defaults changed - gid=%d, home=/tmp, shell=/bin/sh, inactive=42, expire=2038-01-18, by=0",

@@ -200,7 +200,7 @@ function check_email {
 	return 2
     fi
     if sed "1,${eal_mail_lines}d" "$eal_mail" | \
-	    grep -m1 '^Subject: Audit Disk Space Alert'; then
+	    grep -E -m1 '^Subject: Audit (Disk|Admin) Space Alert'; then
 	echo "check_email: found out magic email"
 	return 0
     else

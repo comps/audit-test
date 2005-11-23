@@ -1,81 +1,54 @@
 #!/bin/bash -e
+# =============================================================================
+# (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+# Written by Aron Griffis <aron@hp.com>
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+#   the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program;  if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# =============================================================================
+#
+# PURPOSE:
+# Verify max_log_file and max_log_file_action auditd configuration items are
+# effective.  Test all possible values of max_log_file_action: ignore, syslog,
+# suspend, rotate, keep_logs
 
-auditd_conf=/etc/auditd.conf
-auditd_orig=$(mktemp $auditd_conf.XXXXXX)
-audit_log=/var/log/audit/audit.log
-audit_log_1=/var/log/audit/audit.log.1
-max_log_file=1  # 1M
-tmp1=$(mktemp)
-tmp2=$(mktemp)
-ctr=0
+source $(dirname "$0")/auditd_common.bash
 
-function startup {
-    # Shut down auditing before making config changes
-    auditctl -D
-    service auditd stop ||:
-    rm -f ${audit_log}*
+action=$1	# ignore, syslog, suspend, rotate, keep_logs
+max_log_file=1	# 1 megabyte, that is
 
-    # Set the max log size
-    cp "$auditd_conf" "$auditd_orig"
-    grep -vEe '^(log_file|log_format|num_logs|max_log_file|max_log_file_action)[[:blank:]]*=' \
-        "$auditd_orig" > "$auditd_conf"
-    cat >>$auditd_conf <<-EOF
-	log_file = $audit_log
-	log_format = RAW
-	num_logs = 2
-	max_log_file = $max_log_file
-	max_log_file_action = ROTATE
-	EOF
-    echo "auditd.conf log settings:"
-    grep log "$auditd_conf"
+write_auditd_conf \
+    num_logs=2 \
+    max_log_file=$max_log_file \
+    max_log_file_action=$action
 
-    # Prepopulate log with max_log_file minus 10k
-    max_log_file=$max_log_file perl -e 'print "type=AGRIFFIS" . 
-	(" " x (($ENV{max_log_file}*1024-10)*1024)) . "\n"' >"$audit_log"
-    stat "$audit_log"
+# Prepopulate log with max_log_file minus 10k
+max_log_file=$max_log_file perl -e '
+    $mystring = sprintf "%-1023s\n", "type=AGRIFFIS";
+    for ($x = 0; $x < $ENV{max_log_file} * 1024 - 10; $x++) {
+	print $mystring;
+    }' >"$audit_log"
+stat "$audit_log"
 
-    # Start up auditing with the new configuration
-    service auditd start
-}
+if [[ $(type -t pre_$action) == function ]]; then
+    pre_$action
+fi
 
-function cleanup {
-    auditctl -D
-    mv -f "$auditd_orig" "$auditd_conf"
-    killall -HUP auditd
-    rm -f "$tmp1" "$tmp2"
-}
+service auditd start
 
-trap "cleanup;exit" 0 1 2 3 15
+# each record is at least 150 bytes (based on empirical evidence), so writing
+# 100 records should always take us over (150 * 100 =~ 14k)
+write_records 100
 
-function write_records {
-    echo "Writing records to audit log ($ctr)"
-    while true; do
-	(( ctr++ ))
-	auditctl -m "Testing log rotation $ctr"
-	if (( ctr % $1 == 0 )); then break; fi
-    done
-}
-
-function force_rotate {
-    # write batches of 100 message to the log until it rotates
-    while [[ ! -f "$audit_log_1" ]]; do
-	write_records 100
-	if [[ $(stat -c %s "$audit_log") -gt $((max_log_file * 1024 * 1024 * 2)) ]]; then
-	    echo "Log never rotated"
-	    exit 1
-	fi
-    done
-    echo "Log rotated"
-    # write one more batch so there's guaranteed to be some in the new log
-    write_records 100
-}
-
-function verify {
-    grep -aho 'Testing log rotation [[:digit:]]*' "$audit_log_1" "$audit_log" >"$tmp1"
-    seq 1 $ctr | sed 's/^/Testing log rotation /' >"$tmp2"
-    diff "$tmp1" "$tmp2"
-}
-
-startup
-force_rotate
-verify
+check_$action

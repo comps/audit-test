@@ -24,6 +24,7 @@
 #define TEST_USER "testuser"
 
 #define MAX_TESTCASE_NAME 25
+#define MAX_VARIATION_NAME 25
 
 /* Testsuite exit codes */
 typedef enum {

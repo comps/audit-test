@@ -37,10 +37,9 @@
 #include "syscalls.h"
 #include <sys/timex.h>
 
-int test_adjtimex(struct audit_data *context)
+int test_adjtimex(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     struct timex timex;
     int exit;
 

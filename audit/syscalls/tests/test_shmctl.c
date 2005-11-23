@@ -62,7 +62,7 @@
 #include <sys/shm.h>
 #include <asm/page.h>
 
-int test_shmctl(struct audit_data *context)
+int test_shmctl(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int exp_errno = -EPERM;

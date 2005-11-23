@@ -20,13 +20,12 @@
 #include <libaudit.h>
 #include <time.h>
 
-void context_init(struct audit_data *context, int evtype, unsigned int success)
+void context_init(struct audit_data *context, int evtype)
 {
     memset(context, 0, sizeof(struct audit_data));
     context->type     = evtype;
     context->pid      = getpid();
     context->loginuid = audit_getloginuid();
-    context->success  = success;
 }
 
 int context_initsyscall(struct audit_data *context, char *testname)

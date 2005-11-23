@@ -42,10 +42,9 @@
 #define TEST_FORK  0
 #define TEST_VFORK 1
 
-int common_fork(struct audit_data *context, int op)
+int common_fork(struct audit_data *context, int op, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     struct rlimit slimit, limit;
     pid_t pid = -1;
 
@@ -108,12 +107,12 @@ exit:
     return rc;
 }
 
-int test_fork(struct audit_data *context)
+int test_fork(struct audit_data *context, int variation, int success)
 {
-    return common_fork(context, TEST_FORK);
+    return common_fork(context, TEST_FORK, success);
 }
 
-int test_vfork(struct audit_data *context)
+int test_vfork(struct audit_data *context, int variation, int success)
 {
-    return common_fork(context, TEST_VFORK);
+    return common_fork(context, TEST_VFORK, success);
 }

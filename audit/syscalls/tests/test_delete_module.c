@@ -37,10 +37,9 @@
 #include "syscalls.h"
 #include <sys/mman.h>
 
-int test_delete_module(struct audit_data *context)
+int test_delete_module(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     char module_path[256] = { 0 };
     char module_name[20] = { 0 };
     int fd;

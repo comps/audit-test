@@ -51,7 +51,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_chmod(struct audit_data *context)
+int test_chmod(struct audit_data *context, int variation, int success)
 {
 
 

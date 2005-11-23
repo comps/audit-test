@@ -54,7 +54,7 @@
 #include "syscalls.h"
 #include <attr/xattr.h>
 
-int test_lsetxattr(struct audit_data *context)
+int test_lsetxattr(struct audit_data *context, int variation, int success)
 {
 
     int rc = 0;

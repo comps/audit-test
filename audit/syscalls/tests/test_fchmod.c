@@ -52,7 +52,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_fchmod(struct audit_data *context)
+int test_fchmod(struct audit_data *context, int variation, int success)
 {
 
     int rc = 0;

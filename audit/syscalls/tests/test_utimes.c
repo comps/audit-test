@@ -61,7 +61,7 @@
 /*
  ** execute a utimes operation
  */
-int test_utimes(struct audit_data *context)
+int test_utimes(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
 #ifdef __NR_utimes

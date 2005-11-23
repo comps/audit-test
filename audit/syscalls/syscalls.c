@@ -29,6 +29,7 @@ struct syscall_opts {
     unsigned int help;
     unsigned int success;
     char	 testcase[MAX_TESTCASE_NAME + 1];
+    char	 variation[MAX_VARIATION_NAME + 1];
 };
 
 /* global to syscalls tests */
@@ -37,11 +38,12 @@ int helper_uid;
 static void usage()
 {
     char *usage = "Usage:\n\
-  syscalls -t <syscall_name> [-s]\n\n\
+  syscalls -t <syscall_name> [-v <variation>] [-s]\n\n\
 Arguments:\n\
   -h                  Display this message.\n\
   -t <syscall_name>   Specify name of system call to test.\n\
-  -s                  Specify testcase expected success (yes when present)\n";
+  -v <test_variation> Specify testcase variation.\n\
+  -s                  Specify testcase expected success (yes when present).\n";
     fprintf(stderr, "%s\n", usage);
 }
 
@@ -67,6 +69,12 @@ static int parse_command_line(int argc, char **argv,
 		else
 		    strncpy(options->testcase, optarg, MAX_TESTCASE_NAME);
 		break;
+	    case 'v':
+		if (strlen(optarg) + 1 > MAX_VARIATION_NAME)
+		    rc = -1;
+		else
+		    strncpy(options->variation, optarg, MAX_VARIATION_NAME);
+		break;
 	    default:
 		rc = -1;
 	}
@@ -78,13 +86,24 @@ static int parse_command_line(int argc, char **argv,
     return rc;
 }
 
+static int lookup_variation(char *varstr)
+{
+    if (!varstr || (strcmp(varstr, "basic") == 0))
+	return SYSCALL_BASIC;
+    if (strcmp(varstr, "remove") == 0)
+	return SYSCALL_REMOVE;
+    if (strcmp(varstr, "setperms") == 0)
+	return SYSCALL_SETPERMS;
+    return -1;
+}
+
 int main(int argc, char **argv)
 {
     int			rc = 0;
     ts_exit		ecode = TEST_EXPECTED;
     struct syscall_opts options;
     struct audit_data 	context;
-    int			(*test_handle)(struct audit_data *);
+    int			(*test_handle)(struct audit_data *, int, int);
 
     rc = parse_command_line(argc, argv, &options);
     if (rc || options.help) {
@@ -93,7 +112,7 @@ int main(int argc, char **argv)
 	goto exit;
     }
 
-    context_init(&context, AUDIT_MSG_SYSCALL, options.success);
+    context_init(&context, AUDIT_MSG_SYSCALL);
     rc = context_initsyscall(&context, options.testcase);
     if (rc) {
 	ecode = TEST_ERROR;
@@ -107,7 +126,8 @@ int main(int argc, char **argv)
 	goto exit;
     }
 
-    rc = test_handle(&context);
+    rc = test_handle(&context, lookup_variation(options.variation), 
+		     options.success);
     if (rc) {
 	ecode = TEST_ERROR;
 	fprintf(stderr, "Error: testcase unable to complete\n");

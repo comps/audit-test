@@ -24,7 +24,7 @@
  * Syscall Test Lookup Table
  */
 struct syscall_tests {
-    int         (*testp)(struct audit_data *);
+    int         (*testp)(struct audit_data *, int, int);
     char        *testname;
 };
 

@@ -36,10 +36,9 @@
 #include "includes.h"
 #include "syscalls.h"
 
-static int common_setgid(struct audit_data *context)
+static int common_setgid(struct audit_data *context, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     int testgid;
     gid_t gid;
     int exit;
@@ -87,12 +86,12 @@ exit:
     return rc;
 }
 
-int test_setgid(struct audit_data *context)
+int test_setgid(struct audit_data *context, int variation, int success)
 {
-    return common_setgid(context);
+    return common_setgid(context, success);
 }
 
-int test_setgid32(struct audit_data *context)
+int test_setgid32(struct audit_data *context, int variation, int success)
 {
-    return common_setgid(context);
+    return common_setgid(context, success);
 }

@@ -44,10 +44,9 @@
 #endif
 #include <sys/msg.h>
 
-int test_msgrcv(struct audit_data *context)
+int test_msgrcv(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     int qid;
     char *msg = "test message";
     struct msgbuf *buf;	/* used both to send & recv message */

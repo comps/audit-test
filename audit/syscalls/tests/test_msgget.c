@@ -44,10 +44,9 @@
 #endif
 #include <sys/msg.h>
 
-int test_msgget(struct audit_data *context)
+int test_msgget(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     int msgflag = S_IRWXU|IPC_CREAT;
     int qid;
     int exit;

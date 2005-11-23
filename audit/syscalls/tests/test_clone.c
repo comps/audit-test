@@ -39,10 +39,9 @@
 
 #define CHILD_STACK_MEM 65536
 
-static int common_clone(struct audit_data *context)
+static int common_clone(struct audit_data *context, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     int flags = CLONE_NEWNS|CLONE_VFORK; /* wait for child exit */
     char *cstack;
     pid_t pid;
@@ -95,12 +94,12 @@ exit:
     return rc;
 }
 
-int test_clone(struct audit_data *context)
+int test_clone(struct audit_data *context, int variation, int success)
 {
-    return common_clone(context);
+    return common_clone(context, success);
 }
 
-int test_clone2(struct audit_data *context)
+int test_clone2(struct audit_data *context, int variation, int success)
 {
-    return common_clone(context);
+    return common_clone(context, success);
 }

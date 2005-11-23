@@ -58,7 +58,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_chdir(struct audit_data *context)
+int test_chdir(struct audit_data *context, int variation, int success)
 {
 
 

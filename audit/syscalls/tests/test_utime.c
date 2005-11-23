@@ -60,7 +60,7 @@
 /*
  ** execute a utime operation
  */
-int test_utime(struct audit_data *context)
+int test_utime(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
 #ifdef __NR_utime

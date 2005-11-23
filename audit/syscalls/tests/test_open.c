@@ -63,7 +63,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_open(struct audit_data *context)
+int test_open(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int exp_errno = -EACCES;

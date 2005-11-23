@@ -93,7 +93,7 @@ int createTempGroupName( char** user, int* uid );
 /*
  * System context accessor routines
  */
-void context_init(struct audit_data *, int, unsigned int);
+void context_init(struct audit_data *, int);
 int context_initsyscall(struct audit_data *, char *);
 int context_setidentifiers(struct audit_data *);
 void context_setbegin(struct audit_data *);

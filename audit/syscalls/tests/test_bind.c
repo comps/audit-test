@@ -63,7 +63,7 @@
 #include <netinet/in.h>
 #include <linux/net.h>
 
-int test_bind(struct audit_data *context)
+int test_bind(struct audit_data *context, int variation, int success)
 {
 
 

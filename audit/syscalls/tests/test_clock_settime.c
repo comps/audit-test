@@ -34,10 +34,9 @@
 #include "syscalls.h"
 #include <time.h>
 
-int test_clock_settime(struct audit_data *context)
+int test_clock_settime(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     struct timespec tspec;
     int exit;
 

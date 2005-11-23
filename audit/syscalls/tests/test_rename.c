@@ -51,7 +51,7 @@
 #include "syscalls.h"
 #include <libgen.h>
 
-int test_rename(struct audit_data *context)
+int test_rename(struct audit_data *context, int variation, int success)
 {
 
     int rc = 0;

@@ -66,7 +66,7 @@
 #include <asm/page.h>
 #include <sys/shm.h>
 
-int test_shmget(struct audit_data *context)
+int test_shmget(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int exp_errno = -EACCES;

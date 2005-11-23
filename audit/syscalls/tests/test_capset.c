@@ -46,10 +46,9 @@ extern int capget(cap_user_header_t header, cap_user_data_t data);
 extern int capset(cap_user_header_t header, const cap_user_data_t data);
 #endif
 
-int test_capset(struct audit_data *context)
+int test_capset(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     cap_user_header_t header;
     cap_user_data_t data;
     int exit;

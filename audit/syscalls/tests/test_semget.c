@@ -67,7 +67,7 @@
 #endif
 #include <sys/sem.h>
 
-int test_semget(struct audit_data *context)
+int test_semget(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int exp_errno = -EACCES;

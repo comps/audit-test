@@ -59,7 +59,7 @@
 #include "syscalls.h"
 #include <sys/mount.h>
 
-int test_mount(struct audit_data *context)
+int test_mount(struct audit_data *context, int variation, int success)
 {
 
     int rc = 0;

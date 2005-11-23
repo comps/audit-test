@@ -57,7 +57,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_chown32(struct audit_data *context)
+int test_chown32(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
 #if !defined(__powerpc__) && !defined(__x86_64__) && !defined(__s390x__) && !defined(__ia64__)

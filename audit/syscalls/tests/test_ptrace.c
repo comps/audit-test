@@ -38,10 +38,9 @@
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
-int test_ptrace(struct audit_data *context)
+int test_ptrace(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     pid_t pid;
     int exit;
 

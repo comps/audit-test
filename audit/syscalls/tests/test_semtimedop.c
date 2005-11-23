@@ -75,7 +75,7 @@
 #define TIMEOUTSIZE 16
 #endif
 
-int test_semtimedop(struct audit_data *context)
+int test_semtimedop(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int exp_errno = -EACCES;

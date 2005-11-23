@@ -43,10 +43,9 @@
 /* expect no more than 20 supplementary groups */
 #define SUPP_GROUPS 20
 
-static int common_setgroups(struct audit_data *context)
+static int common_setgroups(struct audit_data *context, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     gid_t list[SUPP_GROUPS] = { 0 };
     size_t size = SUPP_GROUPS;
     int i, exit;
@@ -94,12 +93,12 @@ exit:
     return rc;
 }
 
-int test_setgroups(struct audit_data *context)
+int test_setgroups(struct audit_data *context, int variation, int success)
 {
-    return common_setgroups(context);
+    return common_setgroups(context, success);
 }
 
-int test_setgroups32(struct audit_data *context)
+int test_setgroups32(struct audit_data *context, int variation, int success)
 {
-    return common_setgroups(context);
+    return common_setgroups(context, success);
 }

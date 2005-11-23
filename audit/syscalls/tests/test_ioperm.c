@@ -40,10 +40,9 @@
 #define TEST_PORT_PERMS 1
 #define TEST_NUM_BYTES 1
 
-int test_ioperm(struct audit_data *context)
+int test_ioperm(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     int exit;
 
     /* To produce failure, attempt to set port perms as unprivileged user */

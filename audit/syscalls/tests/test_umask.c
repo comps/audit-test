@@ -36,7 +36,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_umask(struct audit_data *context)
+int test_umask(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int mask;

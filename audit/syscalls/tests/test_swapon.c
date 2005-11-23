@@ -58,7 +58,7 @@
    /*
     ** execute a swapon operation
     */
-int test_swapon(struct audit_data *context)
+int test_swapon(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int exp_errno = -EPERM;

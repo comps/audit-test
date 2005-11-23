@@ -40,10 +40,9 @@
 
 #define DEFAULT_DEVICE_FILE "/dev/tty"
 
-int test_ioctl(struct audit_data *context)
+int test_ioctl(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     int fd = -1;
     struct termio tio;
     int exit;

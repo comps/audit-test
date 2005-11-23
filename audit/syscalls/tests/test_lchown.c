@@ -53,7 +53,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_lchown(struct audit_data *context)
+int test_lchown(struct audit_data *context, int variation, int success)
 {
 
 

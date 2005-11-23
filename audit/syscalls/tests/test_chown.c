@@ -57,7 +57,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int test_chown(struct audit_data *context)
+int test_chown(struct audit_data *context, int variation, int success)
 {
 
 

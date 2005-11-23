@@ -55,7 +55,7 @@
 #include "syscalls.h"
 #include <attr/xattr.h>
 
-int test_lremovexattr(struct audit_data *context)
+int test_lremovexattr(struct audit_data *context, int variation, int success)
 {
 
     int rc = 0;

@@ -46,10 +46,9 @@
 #include "includes.h"
 #include "syscalls.h"
 
-static int common_setfsuid(struct audit_data *context)
+static int common_setfsuid(struct audit_data *context, int success)
 {
     int rc = 0;
-    int success = context->success; /* save intended result */
     int testuid;
     uid_t fsuid, pre_fsuid;
     int exit;
@@ -102,12 +101,12 @@ exit:
     return rc;
 }
 
-int test_setfsuid(struct audit_data *context)
+int test_setfsuid(struct audit_data *context, int variation, int success)
 {
-    return common_setfsuid(context);
+    return common_setfsuid(context, success);
 }
 
-int test_setfsuid32(struct audit_data *context)
+int test_setfsuid32(struct audit_data *context, int variation, int success)
 {
-    return common_setfsuid(context);
+    return common_setfsuid(context, success);
 }

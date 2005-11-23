@@ -69,7 +69,7 @@ int test_usermod(struct audit_data* dataPtr) {
   char* expire;
   char* expireNew;
 
-  FILE* fPtr;
+  //FILE* fPtr;
 
   if (( rc = ShadowTestSetup(1) == -1 )) {
       goto EXIT;

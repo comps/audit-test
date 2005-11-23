@@ -53,12 +53,13 @@ TUTILS_AR	= $(TESTDIR)/utils/trustedprogram_test_utils.a
 
 ALL_OBJ		= $(TP_OBJ)
 ALL_EXE		= $(TP_EXE)
-ALL_AR		= $(TP_TESTS_AR) $(TP_UTILS_AR)
+ALL_AR		= $(TESTS_AR) $(TUTILS_AR)
 
 SUB_DIRS	= tests utils
 
 include $(TOPDIR)/rules.mk
 
+$(TP_EXE): LDLIBS += -laudit
 $(TP_EXE): $(TP_OBJ) $(TESTS_AR) $(TUTILS_AR) $(UTILS_AR)
 	$(LINK_EXE)
 

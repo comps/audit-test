@@ -50,14 +50,14 @@ int test_groupmod(struct audit_data* dataPtr) {
   //char* oldGroup;
   //char* newGroup; 
   char* Group;
-  char* new_password;
-  char* user;
-  char* home;
-  int uid;
+  //char* new_password;
+  //char* user;
+  //char* home;
+  //int uid;
   int gid;
   int new_gid;
   //int tmp;
-  FILE* fPtr;
+  //FILE* fPtr;
 
   if (( rc = ShadowTestSetup(1) == -1 )) {
       goto EXIT;

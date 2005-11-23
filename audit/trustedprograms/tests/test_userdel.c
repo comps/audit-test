@@ -52,7 +52,7 @@ int test_userdel(struct audit_data* dataPtr) {
   char* home;
   int uid;
   int gid;
-  FILE* fPtr;
+  //FILE* fPtr;
   // Setup
 
   dataPtr->euid = 0;

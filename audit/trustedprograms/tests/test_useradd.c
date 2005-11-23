@@ -43,6 +43,8 @@
 #include "includes.h"
 #include "trustedprograms.h"
 
+#include <libaudit.h>
+
 int test_useradd(struct audit_data* dataPtr) {
 
   int rc = 0;
@@ -50,7 +52,7 @@ int test_useradd(struct audit_data* dataPtr) {
   char* command;
   char* user;
   char* home;  
-  char* shell = "/bin/sh";
+  //char* shell = "/bin/sh";
   char* group;
   char* supGroup;
   int uid;
@@ -58,7 +60,7 @@ int test_useradd(struct audit_data* dataPtr) {
   int supGid;
   int auid;
 
-  FILE* fPtr;
+  //FILE* fPtr;
 
   dataPtr->euid = 0;
   dataPtr->egid = 0;

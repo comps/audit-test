@@ -49,7 +49,7 @@ int test_groupadd(struct audit_data* dataPtr) {
   char* command;
   char* group;
   int gid;
-  FILE* fPtr;
+  //FILE* fPtr;
 
   if (( rc = ShadowTestSetup( 1 ) == -1 )) {
       goto EXIT;

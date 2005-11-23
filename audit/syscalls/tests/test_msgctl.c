@@ -44,7 +44,64 @@
 #endif
 #include <sys/msg.h>
 
-int test_msgctl(struct audit_data *context, int variation, int success)
+static int test_msgctl_setperms(struct audit_data *context, int success)
+{
+    int rc = 0;
+    int msgflag = S_IRWXU|IPC_CREAT;
+    int qid;
+    struct msqid_ds buf;
+    int exit;
+
+    buf.msg_perm.uid = gettestuid();
+
+    errno = 0;
+    rc = qid = msgget(TEST_IPC_KEY, msgflag);
+    if (rc < 0) {
+	fprintf(stderr, "Error: can't create message queue: %s\n",
+		strerror(errno));
+        goto exit;
+    }
+    fprintf(stderr, "Message queue key: %d id: %d\n", TEST_IPC_KEY, qid);
+
+    if (!success) {
+	rc = seteuid_test();
+	if (rc < 0)
+	    goto exit_queue;
+        context->experror = -EPERM;
+    }
+
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+        goto exit_root;
+
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting msgctl(%d, IPC_SET, { uid = %d })\n", 
+	    qid, buf.msg_perm.uid);
+    exit = msgctl(qid, IPC_RMID, &buf);
+    context_setend(context);
+
+    if (exit < 0) {
+        context->success = 0;
+        context->error = context->u.syscall.exit = -errno;
+    } else {
+        context->success = 1;
+        context->u.syscall.exit = exit;
+    }
+
+exit_root:
+    if (!success && seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+
+exit_queue:
+    if (msgctl(qid, IPC_RMID, 0) < 0)
+	fprintf(stderr, "Error: removing message queue: %s\n", strerror(errno));
+
+exit:
+    return rc;
+}
+
+static int test_msgctl_remove(struct audit_data *context, int success)
 {
     int rc = 0;
     int msgflag = S_IRWXU|IPC_CREAT;
@@ -95,4 +152,18 @@ exit_queue:
 
 exit:
     return rc;
+}
+
+int test_msgctl(struct audit_data *context, int variation, int success)
+{
+    switch(variation) {
+    case SYSCALL_REMOVE:
+	return test_msgctl_remove(context, success);
+    case SYSCALL_SETPERMS:
+	return test_msgctl_setperms(context, success);
+    default:
+	fprintf(stderr, "Test variation [%i] unsupported for %s()\n", 
+		variation, context->u.syscall.sysname);
+	return -1;
+    }
 }

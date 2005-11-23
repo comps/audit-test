@@ -1,53 +1,45 @@
-/**********************************************************************
- **   Copyright (C) International Business Machines  Corp., 2003
- **
- **   This program is free software;  you can redistribute it and/or modify
- **   it under the terms of the GNU General Public License as published by
- **   the Free Software Foundation; either version 2 of the License, or
- **   (at your option) any later version.
- **
- **   This program is distributed in the hope that it will be useful,
- **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
- **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
- **   the GNU General Public License for more details.
- **
- **   You should have received a copy of the GNU General Public License
- **   along with this program;  if not, write to the Free Software
- **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- **
- **
- **
- **  FILE       : test_semctl.c
- **
- **  PURPOSE    : To test the semctl library call auditing.
- **
- **  DESCRIPTION: The test_semctl() function builds into the laus_test
- **  framework to verify that the Linux Audit System accurately logs
- **  both successful and erroneous execution of the "lpc" system call.
- **
- **  In the successful case, this function:
- **   1) Allocates a new semaphore via semget()
- **   2) Uses semctl() to deallocate the newly allocated semaphore
- **   3) Tests the result of the call against the expected successful
- **      return.
- **  
- **  The successful case uses the semid returned by semget() in using
- **  semctl() to deallocate the memory.  If semctl() returns 0, we have
- **  a success, as specified in the man page.
- **
- **  In the erroneous case, this function:
- **
- **  Semphore operations are attempted as a non-root user, thus
- **  causing an EPERM errno.
- **
- **  HISTORY    :
- **    06/03 Originated by Michael Halcrow <mike@halcrow.us>
- **    06/03 Furthered by Dustin Kirkland (k1rkland@us.ibm.com)
- **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
- **    04/04 Updated test for 2.6 LAuS implementation by Kimberly D. Simon <kdsimon@us.ibm.com>
- **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
- **
- **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_semctl.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to perform semaphore control operations.
+ *
+ *  SYSCALLS:
+ *  semctl()
+ *
+ *  TESTCASE: remove successful
+ *  Remove a semaphore set.
+ *
+ *  TESTCASE: remove unsuccessful
+ *  Attempt to remove a semaphore set with insufficient access
+ *  permissions.
+ *
+ *  TESTCASE: setperms successful
+ *  Change semaphore set permissions.
+ *
+ *  TESTCASE: setperms unsuccessful
+ *  Attempt to change semaphore set permissions, while having
+ *  insufficient access permissions.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
@@ -59,75 +51,129 @@
 #endif
 #include <sys/sem.h>
 
-int test_semctl(struct audit_data *context, int variation, int success)
+static int test_semctl_setperms(struct audit_data *context, int success)
 {
     int rc = 0;
-    int exp_errno = -EPERM;
-    int semctlrc = 0;
-    int semid = 0;
-    int mode;
-    int semnum = 0;		// this is ignored by semctl when we remove
-    static int cmd = IPC_RMID;
-    char *buf = NULL;
+    int semid;
+    int nsems = 1;
+    struct semid_ds buf;
+    int exit;
 
-    // Allocate shared memory space so that we can test deallocation via
-    // semctl
-    mode = S_IRWXU;
-    if ((semid = semget(IPC_PRIVATE, 1, mode)) == -1) {
-	fprintf(stderr, "ERROR: Unable to allocate new semaphore: errno=%i\n", errno);
-	goto EXIT;
+    errno = 0;
+    rc = semid = semget(IPC_PRIVATE, nsems, S_IRWXU|IPC_CREAT);
+    if (rc < 0) {
+	fprintf(stderr, "Error: can't create semaphore set: %s\n",
+		strerror(errno));
+        goto exit;
     }
-    if (context->success) {
-	context->euid = 0;
-	context->egid = 0;
-	context->fsuid = 0;
-	context->fsgid = 0;
-    }
-    // Set up audit argument buffer
-    if ((rc = auditArg4(context,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &semid,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &semnum,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &cmd,
-#if (defined(__x86_64__) || defined(__ia64__))
-			AUDIT_ARG_POINTER, 0, &buf
-#else
-			AUDIT_ARG_NULL, 0, NULL
-#endif
-	 )) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT_CLEANUP;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call
-#if (defined(__x86_64__) || defined(__ia64__))
-    context->u.syscall.exit = semctlrc =
-	syscall(__NR_semctl, semid, 0, cmd, &buf);
-#else
-    context->u.syscall.exit = semctlrc =
-	syscall(__NR_ipc, SEMCTL, semid, 0, cmd, &buf);
-#endif
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
+    fprintf(stderr, "Semaphore set key: %d id: %d\n", IPC_PRIVATE, semid);
+
+    if (!success) {
+	rc = seteuid_test();
+	if (rc < 0)
+	    goto exit_set;
+        context->experror = -EPERM;
     }
 
-EXIT_CLEANUP:
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+        goto exit_root;
 
-    if (!context->success && semid && (semid != -1)) {
-	if ((rc = semctl(semid, 0, IPC_RMID)) == -1) {
-	    fprintf
-		(stderr,
-		 "Error removing semaphore set with ID = [%d]: errno = [%i]\n",
-		 semid, errno);
-	    goto EXIT;
-	}
+    memset(&buf, 0, sizeof(buf));
+    buf.sem_perm.uid = gettestuid();
+    /* semid_ds does not have a qbytes field */
+    context_setipc(context, 0, buf.sem_perm.uid, 
+		   buf.sem_perm.gid, buf.sem_perm.mode);
+
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting semctl(%d, %d, IPC_SET\n", semid, nsems);
+    exit = semctl(semid, nsems, IPC_SET, &buf);
+    context_setend(context);
+
+    if (exit < 0) {
+        context->success = 0;
+        context->error = context->u.syscall.exit = -errno;
+    } else {
+        context->success = 1;
+        context->u.syscall.exit = exit;
     }
 
-EXIT:
+exit_root:
+    if (!success && seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+
+exit_set:
+    if (semctl(semid, nsems, IPC_RMID, NULL) < 0)
+	fprintf(stderr, "Error: removing semaphore set: %s\n", strerror(errno));
+
+exit:
     return rc;
+}
+
+static int test_semctl_remove(struct audit_data *context, int success)
+{
+    int rc = 0;
+    int semid;
+    int nsems = 1;
+    int exit = -1; /* pre-set for proper cleanup */
+
+    errno = 0;
+    rc = semid = semget(IPC_PRIVATE, nsems, S_IRWXU|IPC_CREAT);
+    if (rc < 0) {
+	fprintf(stderr, "Error: can't create semaphore set: %s\n",
+		strerror(errno));
+        goto exit;
+    }
+    fprintf(stderr, "Semaphore set key: %d id: %d\n", IPC_PRIVATE, semid);
+
+    if (!success) {
+	rc = seteuid_test();
+	if (rc < 0)
+	    goto exit_set;
+        context->experror = -EPERM;
+    }
+
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+        goto exit_root;
+
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting semctl(%d, %d, IPC_RMID)\n", semid, nsems);
+    exit = semctl(semid, nsems, IPC_RMID, NULL);
+    context_setend(context);
+
+    if (exit < 0) {
+        context->success = 0;
+        context->error = context->u.syscall.exit = -errno;
+    } else {
+        context->success = 1;
+        context->u.syscall.exit = exit;
+    }
+
+exit_root:
+    if (!success && seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+
+exit_set:
+    if (exit < 0 && semctl(semid, nsems, IPC_RMID, NULL) < 0)
+	fprintf(stderr, "Error: removing semaphore set: %s\n", strerror(errno));
+
+exit:
+    return rc;
+}
+
+int test_semctl(struct audit_data *context, int variation, int success)
+{
+    switch(variation) {
+    case SYSCALL_REMOVE:
+	return test_semctl_remove(context, success);
+    case SYSCALL_SETPERMS:
+	return test_semctl_setperms(context, success);
+    default:
+	fprintf(stderr, "Test variation [%i] unsupported for %s()\n", 
+		variation, context->u.syscall.sysname);
+	return -1;
+    }
 }

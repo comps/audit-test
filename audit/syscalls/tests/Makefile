@@ -83,8 +83,7 @@ TESTS_OBJ	= test_access.o \
 		  test_rmdir.o \
 		  test_semctl.o \
 		  test_semget.o \
-		  test_semop.o \
-		  test_semtimedop.o \
+		  test_semops.o \
 		  test_setfsgid.o \
 		  test_setfsuid.o \
 		  test_setgid.o \

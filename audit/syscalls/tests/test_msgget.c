@@ -21,7 +21,7 @@
  *  test_msgget.c
  *
  *  PURPOSE:
- *  Verify audit of attempts to create message queues.
+ *  Verify audit of attempts to create/get message queue identifiers.
  *
  *  SYSCALLS:
  *  msgget()

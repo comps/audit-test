@@ -87,8 +87,8 @@ int test_groupdel(struct audit_data* dataPtr) {
   
   // Execution
   command = mysprintf( "/usr/sbin/groupdel %s", group );
-  dataPtr->comm = mysprintf( "groupdel: group deleted - group=%s, gid=%d, by=%d",
-	       group, gid, dataPtr->euid );
+
+  dataPtr->comm = mysprintf( "groupdel: op=deleting group acct=%s res=success", group );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
   
@@ -97,66 +97,6 @@ int test_groupdel(struct audit_data* dataPtr) {
   free( command );
   //
   // End Test 1
-
-
-  // Test 2:
-  // When PAM authentication fails for the user.
-  // The program must be built with PAM authentication enabled.  The record is generated with the following commands:
-  // groupdel
-  // 
-  // In addition to the standard audit information, the following string will be logged:
-  // groupdel: PAM authentication failed - by=uid
-  // 
-  // by = the uid of the user executing the command
-  // 
-  /**
-   * Test 2 written by Michael A. Halcrow <mike@halcrow.us>
-   */
- //TEST_2:
-  printf("  TEST %d\n", test++);
-
-  // Setup
-  dataPtr->euid = 0;
-  command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
-  if( ( rc = system( command ) ) == -1 ) {
-    printf( "Error adding group [name %s; gid %d] prior to testing group deletion audit record\n",
-	     group, gid );
-    goto EXIT;
-  }
-  free( command );
-
-  backupFile( "/etc/pam.d/shadow" );
-  if( ( fPtr = fopen( "/etc/pam.d/shadow", "w" ) ) == NULL ) {
-    printf( "Error opening /etc/pam.d/shadow for write w/ truncate access\n" );
-    rc = -1;
-    goto EXIT;
-  }
-  if( ( rc = fputs( "auth required pam_deny.so", fPtr ) ) == EOF ) {
-    printf( "Error writing to /etc/pam.d/shadow\n" );
-    goto EXIT;
-  }
-  if( ( rc = fclose( fPtr ) ) != 0 ) {
-    printf( "Error closing file /etc/pam.d/shadow\n" );
-    goto EXIT;
-  }  
-
-  // Execution
-  command = mysprintf( "/usr/sbin/groupdel %s", group );
-  dataPtr->comm = mysprintf( "groupdel: PAM authentication failed - by=%d",
-	       dataPtr->euid );
-  runTrustedProgramWithoutVerify( dataPtr, command );
-  verifyTrustedProgram( dataPtr );
-  
-  // Cleanup
-  free( dataPtr->comm );
-  restoreFile( "/etc/pam.d/shadow" );
-
-  //Test is to not be able to run the groupdel MUST cleanup  
-  system(command);
-  free(command);
-
-  //
-  // End Test 2
 
   free( group );
 

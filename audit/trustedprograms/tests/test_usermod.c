@@ -142,7 +142,7 @@ int test_usermod(struct audit_data* dataPtr) {
 
   // Remove users and groups
   // Remove user
-  sleep( 2 ); // MH: To give time for /etc/passwd to sync
+  sleep( 1 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
     printf( "Error deleting user [%s]\n", user );
@@ -217,20 +217,12 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = 
-    mysprintf( "usermod: user name changed in group - user=%s, olduser=%s, group=%s, gid=%d, by=%d",
-	      userNew, user, supGroup, supGid, dataPtr->euid );
-  verifyTrustedProgram( dataPtr );
-  free( dataPtr->comm );
-
-  dataPtr->comm =
-    mysprintf( "usermod: user name changed - user=%s, olduser=%s, by=%d",
-              userNew, user, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=changing name acct=%s res=success", userNew );
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
   // Cleanup
-  sleep( 2 ); // MH: To give time for /etc/passwd to sync
+  sleep( 1 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", userNew );
   if( ( rc = system( command ) ) == -1 ) {
     printf( "Error deleting user [%s]\n", userNew );
@@ -315,9 +307,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm =
-    mysprintf( "usermod: user removed from group - user=%s, group=%s, gid=%d, by=%d",
-               user, secondSupGroup, secondSupGid, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=removing user from shadow group acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -405,20 +395,12 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Execution
-  command = mysprintf( "/usr/sbin/usermod -l %s -G %s %s", userNew, supGroup, user );
+  command = mysprintf( "/usr/sbin/usermod -G %s %s", supGroup, user );
   runTrustedProgramWithoutVerify(dataPtr, command );
   free( command );
 
   // Check for audit records
-   dataPtr->comm =
-    mysprintf( "usermod: user name changed - user=%s, olduser=%s, by=%d",
-              userNew, user, dataPtr->euid );
-  verifyTrustedProgram( dataPtr );
-  free( dataPtr->comm );
-
-  dataPtr->comm = 
-    mysprintf( "usermod: user added to group - user=%s, group=%s, gid=%d, by=%d",
-	       user, supGroup, supGid, dataPtr->euid );
+   dataPtr->comm = mysprintf("usermod: op=adding user to shadow group acct=%s res=success", user );
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -486,15 +468,11 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm =
-    mysprintf( "usermod: user home directory changed - user=%s, uid=%d, home=%s_t04, oldhome=%s, by=%d",
-               user, uid, homeNew, home, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=changing home directory acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  dataPtr->comm = 
-    mysprintf( "usermod: user home directory moved - user=%s, uid=%d, home=%s_t04, oldhome=%s, by=%d",
-	       user, uid, homeNew, home, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=moving home directory acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -569,16 +547,19 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-
-  dataPtr->comm =
-    mysprintf( "usermod: user home directory moved - user=%s, uid=%d, home=%s_t05, oldhome=%s, by=%d",
-            user, uid, homeNew, home, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=changing uid acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  dataPtr->comm = 
-    mysprintf( "usermod: user home directory tree owner(s) changed - user=%s, uid=%d, olduid=%d, gid=%d, oldgid=%d, home=%s_t05, by=%d",
-	       user, uidNew, uid, gid, gid, homeNew, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=chaning home directory acct=%s res=success", user);
+  verifyTrustedProgram( dataPtr );
+  free( dataPtr->comm );
+
+  dataPtr->comm = mysprintf("usermod: op=moving home directory acct=%s res=success", user);
+  verifyTrustedProgram( dataPtr );
+  free( dataPtr->comm );
+
+  dataPtr->comm = mysprintf("usermod: op=chaning home directory owner acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -660,15 +641,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = 
-    mysprintf( "usermod: user home directory tree owner(s) changed - user=%s, uid=%d, olduid=%d, gid=%d, oldgid=%d, home=%s, by=%d",
-	       user, uidNew, uid, gid, gid, home, dataPtr->euid );
-  verifyTrustedProgram( dataPtr );
-  free( dataPtr->comm );
-
-  dataPtr->comm =
-    mysprintf( "usermod: user uid changed - user=%s, uid=%d, olduid=%d, by=%d",
-               user, uidNew, uid, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=changing uid acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -726,9 +699,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = 
-    mysprintf( "usermod: user password changed - user=%s, uid=%d, by=%d",
-	       user, uid, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=changing password acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -743,58 +714,6 @@ int test_usermod(struct audit_data* dataPtr) {
   }
   free( command );
   // End Test 7 
-
-  // Test 8:
-  // When a user's name is changed.
-  // The record is generated with the following commands:
-  // usermod -l
-  // 
-  // In addition to the standard audit information, the following string will be logged:
-  // usermod: user name changed - user=name, olduser=name, by=uid
-  // 
-  // user = the name of the user
-  // olduser = the previous name of the user
-  // by = the uid of the user executing the command
-  // 
-  /**
-   * Test 8 written by Michael A. Halcrow <mike@halcrow.us>
-   */
-  // Setup
- //TEST_8:
-  printf("  TEST %d\n", test++);
-  // Add user
-  command = mysprintf( "/usr/sbin/useradd %s", 
-		       user );
-  if( ( rc = system( command ) ) == -1 ) {
-    printf( "Error creating user [%s]\n",
-	     user );
-    goto EXIT;
-  }
-  free( command );
-
-  // Execution
-  command = mysprintf( "/usr/sbin/usermod -l %s %s", userNew, user );
-  runTrustedProgramWithoutVerify(dataPtr, command );
-  free( command );
-
-  // Check for audit records
-  dataPtr->comm = 
-    mysprintf( "usermod: user name changed - user=%s, olduser=%s, by=%d",
-	       userNew, user, dataPtr->euid );
-  verifyTrustedProgram( dataPtr );
-  free( dataPtr->comm );
-
-  // Cleanup
-
-  // Delete the user
-  sleep( 2 ); // MH: To give time for /etc/passwd to sync
-  command = mysprintf( "/usr/sbin/userdel %s", userNew );
-  if( ( rc = system( command ) ) == -1 ) {
-    printf( "Error deleting user [%s]\n", userNew );
-    goto EXIT;
-  }
-  free( command );
-  // End Test 8 
 
   // Test 9:
   // When a user's default group is changed.
@@ -852,9 +771,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = 
-    mysprintf( "usermod: user default gid changed - user=%s, uid=%d, gid=%d, oldgid=%d, by=%d",
-	       user, uid, supGid, gid, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=changing primary group acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -922,16 +839,14 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = 
-    mysprintf( "usermod: user comment changed - user=%s, uid=%d, comment='%s', oldcomment='%s', by=%d",
-	       user, uid, commentNew, comment, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=changing comment acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
   // Cleanup
 
   // Delete the user
-  sleep( 2 ); // MH: To give time for /etc/passwd to sync
+  sleep( 1 ); // MH: To give time for /etc/passwd to sync
   command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
     printf( "Error deleting user [%s]\n", user );
@@ -976,9 +891,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm =
-    mysprintf( "usermod: user home directory changed - user=%s, uid=%d, home=%s_t11, oldhome=%s, by=%d",
-	       user, uid, homeNew, home, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=changing home directory acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -1030,9 +943,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = 
-    mysprintf( "usermod: user shell changed - user=%s, uid=%d, shell=%s, oldshell=%s, by=%d",
-	       user, uid, shellNew, shell, dataPtr->euid );
+  dataPtr->comm = mysprintf("usermod: op=changing user shell acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -1084,9 +995,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = 
-    mysprintf( "usermod: user inactive days changed - user=%s, uid=%d, inactive=%d, oldinactive=%d, by=%d",
-	       user, uid, inactiveTimeNew, inactiveTime, dataPtr->euid );
+  dataPtr->comm = mysprintf( "usermod: op=changing inactive days acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -1139,9 +1048,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm =
-    mysprintf( "usermod: user expiration date changed - user=%s, uid=%d, expire=%s, oldexpire=%s, by=%d",
-	       user, uid, expireNew, expire, dataPtr->euid );
+  dataPtr->comm = mysprintf( "usermod: op=changing expiration date acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -1156,69 +1063,6 @@ int test_usermod(struct audit_data* dataPtr) {
   }
   free( command );
   // End Test 14
-
-  // Test 15:
-  // When PAM authentication fails for the user.
-  // The program must be built with PAM authentication enabled.  The record is generated with the following commands:
-  // usermod
-  // 
-  // In addition to the standard audit information, the following string will be logged:
-  // usermod: PAM authentication failed - by=uid
-  // 
-  // by = the uid of the user executing the command
-  // 
-  // 
-  /**
-   * Test 15 written by Michael A. Halcrow <mike@halcrow.us>
-   */
- //TEST_15:
-  printf("  TEST %d\n", test++);
-  // Setup
-
-  // Create the user
-  command = mysprintf( "/usr/sbin/useradd -u %d %s", uid, user );
-  if( ( rc = system( command ) ) == -1 ) {
-    printf( "Error creating user account [%s] with uid [%d]\n", 
-	     user, uid );
-    goto EXIT;
-  }
-  free( command );
-
-  backupFile( "/etc/pam.d/shadow" );
-
-  if( ( fPtr = fopen( "/etc/pam.d/shadow", "w" ) ) == NULL ) {
-    printf( "Error opening /etc/pam.d/shadow for write w/ truncate access\n" );
-    rc = -1;
-    goto EXIT;
-  }
-  if( ( rc = fputs( "auth required pam_deny.so", fPtr ) ) == EOF ) {
-    printf( "Error writing to /etc/pam.d/shadow\n" );
-    goto EXIT;
-  }
-  if( ( rc = fclose( fPtr ) ) != 0 ) {
-    printf( "Error closing file /etc/pam.d/shadow\n" );
-    goto EXIT;
-  }
-
-  // Execution
-  command = mysprintf( "/usr/sbin/usermod -s /bin/false %s", user );
-  runTrustedProgramWithoutVerify(dataPtr, command );
-  free( command );
-
-  // Check for audit records
-  dataPtr->comm =
-    mysprintf("usermod: PAM authentication failed - by=%d", dataPtr->euid );
-  verifyTrustedProgram( dataPtr );
-  free( dataPtr->comm );
-
-  // Cleanup
-
-  restoreFile( "/etc/pam.d/shadow" );
-  sleep( 2 ); // MH: To give time for /etc/passwd to sync
-  command = mysprintf( "/usr/sbin/userdel %s", user );
-  system( command );
-  free( command );
-  // End Test 15
 
  //EXIT_CLEANUP:
 

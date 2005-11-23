@@ -56,6 +56,7 @@ int test_useradd(struct audit_data* dataPtr) {
   int uid;
   int gid;
   int supGid;
+  int auid;
 
   FILE* fPtr;
 
@@ -95,7 +96,7 @@ int test_useradd(struct audit_data* dataPtr) {
   // /usr/sbin/useradd -D -g GID -b HOMEDIR -e EXPIRE -f INACTIVE -s SHELL
   // 
   // In addition to the standard audit information, the following string will be logged
-  // old SuSE way useradd: defaults changed - gid=GID, home=HOMEDIR, shell=SHELL, inactive=INACTIVE, expire=EXPIRE, by=ROOT 
+  // useradd: op=changing user defaults id=<auid> res=success
   // 
   // gid = the gid of the default group
   // home = the path of the default home directory
@@ -119,14 +120,15 @@ int test_useradd(struct audit_data* dataPtr) {
   }
   free( command );    
 
+  // Capture the audit uid
+  auid = audit_getloginuid();
+
   //Don't backup here .bak is the original we already put a test file out there
   //backupFile( "/etc/default/useradd" );
 
   command = mysprintf( "/usr/sbin/useradd -D -g %d -b /tmp -e 2038-01-18 -f 42 -s /bin/sh",
 		       gid );
-  dataPtr->comm = 
-    mysprintf( "useradd: defaults changed - gid=%d, home=/tmp, shell=/bin/sh, inactive=42, expire=2038-01-18, by=0",
-	       gid );
+  dataPtr->comm = mysprintf( "useradd: op=changing user defaults id=%d res=success", auid );
 
   // Execution
   runTrustedProgramWithoutVerify( dataPtr, command );
@@ -188,15 +190,15 @@ int test_useradd(struct audit_data* dataPtr) {
   runTrustedProgramWithoutVerify( dataPtr, command );
 
   // Verify audit messages
-  dataPtr->comm = 
-    mysprintf("useradd: user added - user=%s, uid=%d, gid=%d, home=%s, shell=%s, by=%d", 
-              user, uid, supGid, home, shell, dataPtr->euid);
+  dataPtr->comm = mysprintf("useradd: op=adding user acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free(dataPtr->comm );
 
-  dataPtr->comm =
-    mysprintf( "useradd: user added to group - user=%s, uid=%d, group=%s, gid=%d, by=%d",
-               user, uid, supGroup, supGid, dataPtr->euid );
+  dataPtr->comm = mysprintf( "useradd: op=adding user to group acct=%s res=success", user);
+  verifyTrustedProgram( dataPtr );
+  free(dataPtr->comm );
+
+  dataPtr->comm = mysprintf( "useradd: op=adding user to shadow group acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free(dataPtr->comm );
 
@@ -256,9 +258,9 @@ int test_useradd(struct audit_data* dataPtr) {
   // Execution
   command = mysprintf( "/usr/sbin/useradd -u %d -g %d -d %s -s /bin/true %s", 
 		       uid, gid, home, user );
-  dataPtr->comm = 
-    mysprintf( "useradd: user added - user=%s, uid=%d, gid=%d, home=%s, shell=/bin/true, by=%d",
-	       user, uid, gid, home, dataPtr->euid );
+
+  // Check
+  dataPtr->comm = mysprintf( "useradd: op=adding user acct=%s res=success", user);
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
@@ -317,15 +319,12 @@ int test_useradd(struct audit_data* dataPtr) {
   command = mysprintf( "/usr/sbin/useradd -d %s -g %d -m -u %d %s", home, gid, uid, user );
   runTrustedProgramWithoutVerify( dataPtr, command );
 
-  dataPtr->comm =
-    mysprintf("useradd: user added - user=%s, uid=%d, gid=%d, home=%s, shell=%s, by=%d",
-              user, uid, gid, home, shell, dataPtr->euid);
+  // Check
+  dataPtr->comm = mysprintf("useradd: op=adding user acct=%s", user);
   verifyTrustedProgram( dataPtr );
   free(dataPtr->comm );
 
-  dataPtr->comm = 
-    mysprintf( "useradd: user home directory created - user=%s, uid=%d, home=%s, by=%d",
-	       user, uid, home, dataPtr->euid );
+  dataPtr->comm = mysprintf( "useradd: op=adding home directory acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -349,53 +348,6 @@ int test_useradd(struct audit_data* dataPtr) {
   }
   free( command );
   // End Test 5
-
-  // Test 6:
-  // When PAM authentication fails for the user.
-  // The program must be built with PAM authentication enabled.  The record is generated with the following commands:
-  // useradd
-  // 
-  // In addition to the standard audit information, the following string will be logged:
-  // useradd: PAM authentication failed - by=UID
-  // 
-  // by = the uid of the user executing the command
-  // 
-  /**
-   * Test 6 written by Michael A. Halcrow <mike@halcrow.us>
-   */
- //TEST_6:
-  printf("  TEST %d\n", test++);
-  // Setup
-
-  backupFile( "/etc/pam.d/useradd" );
-
-  if( ( fPtr = fopen( "/etc/pam.d/useradd", "w" ) ) == NULL ) {
-    printf( "Error opening /etc/pam.d/useradd for write w/ truncate access\n" );
-    rc = -1;
-    goto EXIT;
-  }
-  if( ( rc = fputs( "auth required pam_deny.so", fPtr ) ) == EOF ) {
-    printf( "Error writing to /etc/pam.d/useradd\n" );
-    goto EXIT;
-  }
-  if( ( rc = fclose( fPtr ) ) != 0 ) {
-    printf( "Error closing file /etc/pam.d/useradd\n" );
-    goto EXIT;
-  }
-
-  // Execution
-  command = mysprintf( "/usr/sbin/useradd %s", user );
-  dataPtr->comm = 
-    mysprintf("useradd: PAM authentication failed - by=%d", dataPtr->egid );
-  runTrustedProgramWithoutVerify(dataPtr, command );
-  verifyTrustedProgram( dataPtr );
-
-  // Cleanup
-  free( dataPtr->comm );
-  free( command );
-
-  restoreFile( "/etc/pam.d/useradd" );
-  // End Test 6
 
  //EXIT_CLEANUP:
 

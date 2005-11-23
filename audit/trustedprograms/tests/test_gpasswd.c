@@ -178,8 +178,7 @@ int test_gpasswd(struct audit_data* dataPtr) {
   dataPtr->uid = dataPtr->euid = uidSave;
   dataPtr->gid = dataPtr->egid = trustedGid;
   command = mysprintf( "/usr/bin/gpasswd %s", group );
-  dataPtr->comm = mysprintf( "gpasswd: group modification denied - group=%s, by=%d", 
-	       group, dataPtr->euid );
+  dataPtr->comm = mysprintf("gpasswd: op=modify group acct=%s res=failed", group );
   runTrustedProgramWithoutVerify(dataPtr, command);
 
   //setuid program funkiness
@@ -217,8 +216,7 @@ int test_gpasswd(struct audit_data* dataPtr) {
 
   // Execute: remove the password from the group
   command = mysprintf( "/usr/bin/gpasswd -r %s", group );
-  dataPtr->comm = mysprintf( "gpasswd: group password removed - group=%s, by=%d", 
-	       group, dataPtr->euid );
+  dataPtr->comm = mysprintf( "gpasswd: op=deleting group password acct=%s res=success", group);
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
@@ -254,9 +252,7 @@ int test_gpasswd(struct audit_data* dataPtr) {
   //gpasswd uses another process to do this task
   dataPtr->pid = NO_PID_CHECK;
 
-  dataPtr->comm = 
-    mysprintf( "gpasswd: group password changed - group=%s, by=%d",
-	       group, dataPtr->euid );
+  dataPtr->comm = mysprintf( "gpasswd: op=changing password acct=%s res=success", group);
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 

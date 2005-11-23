@@ -84,9 +84,6 @@ int test_passwd(struct audit_data* dataPtr) {
   }
   free( command );
 
-  // Remove laus_* users from /etc/security/opasswd
-  RUNCOMMAND( "rm -f /etc/security/opasswd" );
-
   // Create user
   command = mysprintf( "/usr/sbin/useradd -u %d -g %d -d %s -m -p %s %s", uid, gid, home, encryptedpassword, user );
   if( ( rc = system( command ) ) == -1 ) {
@@ -102,11 +99,12 @@ int test_passwd(struct audit_data* dataPtr) {
   }
   free( command );
 
+  /*  We don't have pam_laus 
   backupFile("/etc/pam.d/passwd");
   if ( ( rc = system( "cat /etc/pam.d/passwd | grep -v pam_laus.so > /tmp/passwd; mv -f /tmp/passwd /etc/pam.d/passwd; echo \"auth required pam_laus.so detach\" >> /etc/pam.d/passwd") ) == -1 ) {
     printf( "Error modifying /etc/pam.d/passwd\n" );
     goto EXIT;
-  }
+  } */
 
   // Test 1: SUCCESS passwd
   // When a user successfully uses the passwd program.
@@ -130,7 +128,21 @@ int test_passwd(struct audit_data* dataPtr) {
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);
-  command = mysprintf( "spawn /usr/bin/passwd\nsleep 1 \nexpect -re \"Enter current password:\" { sleep 1; exp_send \"%s\\r\\n\"} \nsleep 1 \nexpect -re \"Old Password:\" { sleep 1; exp_send \"%s\\r\\n\"} \nsleep 1\nexpect -re \"Enter new password:\" { sleep 1; exp_send \"%s\\r\\n\"} \nsleep 1\nexpect -re \"New password:\" { sleep 1; exp_send \"%s\\r\\n\"} \nsleep 1\nexpect -re \"Re-type new password:\" { sleep 1; exp_send \"%s\\r\\n\"} \nsleep 1\nexpect -re \"Re-enter new password:\" { sleep 1; exp_send \"%s\\r\\n\"} \nsleep 1\nsend_user \"\\n\"\n" , password, password, newpassword, newpassword, newpassword, newpassword);
+  command = mysprintf( "spawn /usr/bin/passwd\n"
+"sleep 1 \n"
+"expect -re \"Enter current password:\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
+"sleep 1 \n"
+"expect -re \"Old Password:\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
+"sleep 1\n"
+"expect -re \"Enter new password:\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
+"sleep 1\n"
+"expect -re \"New password:\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
+"sleep 1\n"
+"expect -re \"Re-type new password:\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
+"sleep 1\n"
+"expect -re \"Re-enter new password:\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
+"sleep 1\n"
+"send_user \"\\n\"\n" , password, password, newpassword, newpassword, newpassword, newpassword);
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
   close(fd);
@@ -145,8 +157,7 @@ int test_passwd(struct audit_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->comm = mysprintf( "passwd: password changed - user=%s, uid=%d, by=%d",
-               user, uid, uid );
+  dataPtr->comm = mysprintf( "PAM chauthtok: user=%s exe=\"/usr/bin/passwd\" (hostname=?, addr=?, terminal=? result=Success)", user );
 
    sleep(6); 
   // Check for audit record
@@ -200,8 +211,7 @@ int test_passwd(struct audit_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->comm = mysprintf( "passwd: password change failed, pam error - user=%s, uid=%d, by=%d",
-               user, uid, uid );
+  dataPtr->comm = mysprintf( "PAM chauthtok: user=%s exe=\"/usr/bin/passwd\" (hostname=?, addr=?, terminal=? result=Authentication token manipulation error)", user);
 
   // Check for audit record
   verifyTrustedProgram( dataPtr );
@@ -216,201 +226,6 @@ int test_passwd(struct audit_data* dataPtr) {
   free( dataPtr->comm );
 
   // End Test 2
-
-
-  // Test 3: FAILURE passwd -S -a
-  // When a non-root user tries to list all passwd status.
-  // The record is generated with the following commands:
-  // passwd -S -a
-  //
-  // In addition to the standard audit information, the following string will be logged:
-  //  passwd: password status display for all users denied - by=UID
-  //
-  //
- //TEST_3:
-  printf("TEST %d\n", test++);
-  // Setup
-  dataPtr->uid = uid;
-
-  // Execution
-  command = mysprintf("/usr/bin/passwd -S -a");
-  runTrustedProgramWithoutVerify( dataPtr, command );
-  free( command );
-
-  // Set up dataPtr to compare against audit record
-  dataPtr->comm =
-    mysprintf( "passwd: password status display for all users denied - by=%d", uid);
-
-  // Check for audit record
-  verifyTrustedProgram( dataPtr );
-
-  // Cleanup
-  free( dataPtr->comm );
-
-  // End Test 3
-
-
-  // Test 4: SUCCESS passwd -S -a
-  // When root lists all passwd status.
-  // The record is generated with the following commands:
-  // passwd -S -a
-  //
-  // In addition to the standard audit information, the following string will be logged:
-  // passwd: password status displayed for all users - by=0 
-  //
-  //
- //TEST_4:
-  printf("TEST %d\n", test++);
-  // Setup
-  dataPtr->uid = dataPtr->euid = 0;
-
-  // Execution
-  command = mysprintf("/usr/bin/passwd -S -a");
-  runTrustedProgramWithoutVerify( dataPtr, command );
-  free( command );
-
-  // Set up dataPtr to compare against audit record
-  dataPtr->comm =
-    mysprintf( "passwd: password status displayed for all users - by=%d", dataPtr->euid);
-
-  // Check for audit record
-  verifyTrustedProgram( dataPtr );
-
-  // Cleanup
-  free( dataPtr->comm );
-
-  // End Test 4
-
-
-  // Test 5: FAILURE passwd -k root
-  // When non-root user tries to change shadow data 
-  // The record is generated with the following commands:
-  // passwd -k root
-  //
-  // In addition to the standard audit information, the following string will be logged:
-  //  passwd: password change denied - user=root, uid=0, by=UID
-  //
-  //
- //TEST_5:
-  printf("TEST %d\n", test++);
-  // Setup
-  dataPtr->uid = uid;
-
-  // Execution
-  command = mysprintf("/usr/bin/passwd -k root");
-  runTrustedProgramWithoutVerify( dataPtr, command );
-  free( command );
-
-  // Set up dataPtr to compare against audit record
-  dataPtr->comm =
-    mysprintf( "passwd: password change denied - user=root, uid=0, by=%d", uid);
-
-  // Check for audit record
-  verifyTrustedProgram( dataPtr );
-
-  // Cleanup
-  free( dataPtr->comm );
-
-  // End Test 5
-
-
-  // Test 6: FAILURE passwd -l root
-  // When non-root user tries to lock root's password
-  // The record is generated with the following commands:
-  // passwd -l root
-  //
-  // In addition to the standard audit information, the following string will be logged:
-  //  passwd: password change denied - user=root, uid=0, by=UID
-  //
-  //
- //TEST_6:
-  printf("TEST %d\n", test++);
-  // Setup
-  dataPtr->uid = uid;
-
-  // Execution
-  command = mysprintf("/usr/bin/passwd -l root");
-  runTrustedProgramWithoutVerify( dataPtr, command );
-  free( command );
-
-  // Set up dataPtr to compare against audit record
-  dataPtr->comm =
-    mysprintf( "passwd: password change denied - user=root, uid=0, by=%d", uid);
-
-  // Check for audit record
-  verifyTrustedProgram( dataPtr );
-
-  // Cleanup
-  free( dataPtr->comm );
-
-  // End Test 6
-
-
-  // Test 7: SUCCESS passwd -l USER
-  // When root locks a user's password
-  // The record is generated with the following commands:
-  // passwd -l USER
-  //
-  // In addition to the standard audit information, the following string will be logged:
-  //  passwd: password changed - user=USER, uid=UID, by=0
-  //
-  //
- //TEST_7:
-  printf("TEST %d\n", test++);
-  // Setup
-  dataPtr->uid = 0;
-
-  // Execution
-  command = mysprintf("/usr/bin/passwd -l %s", user);
-  runTrustedProgramWithoutVerify( dataPtr, command );
-  free( command );
-
-  // Set up dataPtr to compare against audit record
-  dataPtr->comm =
-    mysprintf( "passwd: password changed - user=%s, uid=%d, by=0", user, uid);
-
-  // Check for audit record
-  verifyTrustedProgram( dataPtr );
-
-  // Cleanup
-  free( dataPtr->comm );
-
-  // End Test 7
-
-
-  // Test 8: SUCCESS passwd -S
-  // When user tries to display own password information
-  // The record is generated with the following commands:
-  // passwd -S
-  //
-  // In addition to the standard audit information, the following string will be logged:
-  //  passwd: password status displayed - user=USER, uid=UID, by=BY_UID
-  //
-  //
- //TEST_8:
-  printf("TEST %d\n", test++);
-  // Setup
-  dataPtr->uid = 0;
-
-  // Execution
-  command = mysprintf("/usr/bin/passwd -S");
-  runTrustedProgramWithoutVerify( dataPtr, command );
-  free( command );
-
-  // Set up dataPtr to compare against audit record
-  dataPtr->comm =
-    mysprintf( "passwd: password status displayed - user=root, uid=0, by=0");
-
-  // Check for audit record
-  verifyTrustedProgram( dataPtr );
-
-  // Cleanup
-  free( dataPtr->comm );
-
-  // End Test 8
-
-
-
 
 
  EXIT:

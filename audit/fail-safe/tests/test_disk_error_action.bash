@@ -19,24 +19,20 @@
 # =============================================================================
 #
 # PURPOSE:
-# Verify admin_space_left and admin_space_left_action auditd configuration items
-# are effective.  Test all possible values of admin_space_left_action: ignore,
-# syslog, email, suspend, single, halt
+# Verify disk_full_action auditd configuration item is effective.
+# Test all possible values of disk_full_action: ignore,
+# syslog, suspend, single, halt
 
 source $(dirname "$0")/auditd_common.bash
 
 write_auditd_conf \
-    admin_space_left=7 \
-    admin_space_left_action=$action \
-    space_left=8
-
-# Fill the filesystem hosting audit.log, leaving 1MB + 10KB available
-fill_disk ${audit_log%/*} $((1024 + 10))
+    disk_error_action=$action
 
 service auditd start || auditd -f  # to capture errors in test output
 
-# each record is at least 150 bytes (based on empirical evidence), so writing
-# 100 records should always take us over (150 * 100 =~ 14k)
+chmod ugo-w "${audit_log%/*}"
+killall -USR1 auditd
+
 write_records 100
 
 check_$action

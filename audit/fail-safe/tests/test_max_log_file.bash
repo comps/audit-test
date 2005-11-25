@@ -25,7 +25,6 @@
 
 source $(dirname "$0")/auditd_common.bash
 
-action=$1	# ignore, syslog, suspend, rotate, keep_logs
 max_log_file=1	# 1 megabyte, that is
 
 write_auditd_conf \
@@ -34,18 +33,9 @@ write_auditd_conf \
     max_log_file_action=$action
 
 # Prepopulate log with max_log_file minus 10k
-max_log_file=$max_log_file perl -e '
-    $mystring = sprintf "%-1023s\n", "type=AGRIFFIS";
-    for ($x = 0; $x < $ENV{max_log_file} * 1024 - 10; $x++) {
-	print $mystring;
-    }' >"$audit_log"
-stat "$audit_log"
+write_file "$audit_log" $((max_log_file * 1024 - 10))
 
-if [[ $(type -t pre_$action) == function ]]; then
-    pre_$action
-fi
-
-service auditd start
+service auditd start || auditd -f  # to capture errors in test output
 
 # each record is at least 150 bytes (based on empirical evidence), so writing
 # 100 records should always take us over (150 * 100 =~ 14k)

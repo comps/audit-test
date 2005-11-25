@@ -61,15 +61,44 @@ function write_records {
 	auditctl -m "$zero $ctr"
 	if (( ctr % $1 == 0 )); then break; fi
     done
+    ls -l ${audit_log}*
+    df -k ${audit_log%/*}/
+}
+
+# write_file(path, kb): writes a file of kb size, with content resembling an
+# audit log
+function write_file {
+    declare path=$1 kb=$2
+    echo "Writing $path of kb $kb KB"
+    kb=$kb perl -e '
+	$mystring = sprintf "%-1023s\n", "type=AGRIFFIS";
+	for ($x = 0; $x < $ENV{kb}; $x++) { print $mystring }' \
+	    >"$path"
+    ls -s --block-size=1 "$path"
+}
+
+# fill_disk(dir, free): creates a file in dir which fills the filesystem,
+# leaving free kb available
+function fill_disk {
+    # So far, this only happens on tmpfs, so don't worry about deleting the temp
+    # file later.
+    declare dir=$1 free=$2
+    echo "Filling $dir, leaving $free KB free"
+    dd if=/dev/zero of="$dir/bogus" bs=1024 count=$free
+    cat </dev/zero >"$dir/bloat" ||:
+    rm -f "$dir/bogus"
+    df -k $dir/
+#   free=$free bloat="$dir/bloat" perl -e \
+#	'die unless truncate $ENV{bloat}, (stat $ENV{bloat})[7] - $ENV{free}'
 }
 
 function cleanup {
     auditctl -D
     service auditd stop ||:
-    umount /var/log/audit ||:
     if [[ -s "$auditd_orig" ]]; then mv "$auditd_orig" "$auditd_conf"; fi
-    service auditd start ||:
     rm -f "$auditd_orig" "$tmp1" "$tmp2"
+    umount /var/log/audit
+    service auditd start ||:
 }
 
 function check_rotate {
@@ -102,18 +131,23 @@ function check_syslog {
 }
 
 function check_ignore {
-    declare size1=$(stat -c %s /var/log/audit/audit.log) size2
+    declare strace_pid
+
+    strace -p $(pidof auditd) -ff -e trace=write -s 1024 -o "$tmp1" &
+    strace_pid=$!
     write_records 10
-    sleep 0.1
-    size2=$(stat -c %s /var/log/audit/audit.log)
-    if (( size2 < size1 )); then
-	echo "check_ignore: audit.log appears to have shrunk!"
-	return 2
-    elif (( size2 == size1 )); then
-	echo "check_ignore: audit.log is not growing"
-	return 1
-    else
+    auditctl -m "$zero $$"
+    write_records 10
+    sleep 1
+    kill $strace_pid
+
+    if grep -Fm1 "$zero $$" "$tmp1"; then
+	echo "check_ignore: cool, auditd is still attempting to write"
 	return 0
+    else
+	echo "check_ignore: it appears auditd is suspended:"
+	cat "$tmp1"
+	return 1
     fi
 }
 
@@ -129,18 +163,18 @@ function check_suspend {
 
 function pre_keep_logs {
     # should be 2, but just to be certain... and make this global
-    num_logs=$(awk '/^num_logs =/{print $NF;exit}' "$audit_log")
+    num_logs=$(awk '/^num_logs =/{print $NF;exit}' "$auditd_conf")
     declare i
     for ((i = 1; i < num_logs * 2; i++)); do
-	echo "type=AGRIFFIS" >> "$auditd_log$i"
+	echo "type=AGRIFFIS" >> "$audit_log.$i"
     done
 }
 
 function check_keep_logs {
     declare i
     for ((i = 2; i < num_logs * 2 + 1; i++)); do
-	if ! grep -Fqx "type=AGRIFFIS" "$auditd_conf.$i"; then
-	    echo "check_keep_logs: failed checking $auditd_conf.$i"
+	if ! grep -Fqx "type=AGRIFFIS" "$audit_log.$i"; then
+	    echo "check_keep_logs: failed checking $audit_log.$i"
 	    return 1
 	fi
     done
@@ -149,26 +183,34 @@ function check_keep_logs {
 
 function pre_halt {
     declare mask_runlevel=${1:-0}
-    old_runlevel=$(runlevel | cut -d' ' -f2)
 
-    # prepend to the cleanup function because it's very important this
-    # happens...
     eval "function cleanup {
-	if [[ -s /etc/inittab.agriffis ]]; then
-	    mv /etc/inittab.agriffis /etc/inittab
+	$(type cleanup | sed '1,3d;$d')
+	if [[ -s /sbin/init.agriffis ]]; then
+	    mv /sbin/init.agriffis /sbin/init
 	fi
-	init $old_runlevel
-	$(type cleanup | sed '1,3d')"
+    }"
 
-    # now remove the runlevel from inittab
-    sed -i.agriffis "/:$mask_runlevel:/s/^/#/" /etc/inittab
-    init q
+    # replace /sbin/init with our own version
+    if [[ ! -s /sbin/init.agriffis ]]; then
+	mv /sbin/init /sbin/init.agriffis
+    fi
+
+    cat >/sbin/init <<EOF
+#!/bin/bash -x
+if [[ \$1 == $mask_runlevel ]]; then
+    echo \$1 > "$tmp1"
+else
+    exec /sbin/init "\$@"
+fi
+EOF
+    chmod +x /sbin/init
 }
 
 function check_halt {
     declare want_runlevel=${1:-0}
-    declare runlevel=$(runlevel) || return 2
-    if [[ $runlevel == *" $want_runlevel" ]]; then
+    sleep 0.1	# make sure auditd had a chance to call /sbin/init
+    if [[ $(<$tmp1) == $want_runlevel ]]; then
 	echo "Great, the runlevel changed to $want_runlevel"
 	return 0
     else
@@ -201,7 +243,7 @@ function check_email {
     fi
     if sed "1,${eal_mail_lines}d" "$eal_mail" | \
 	    grep -E -m1 '^Subject: Audit (Disk|Admin) Space Alert'; then
-	echo "check_email: found out magic email"
+	echo "check_email: found magic email"
 	return 0
     else
 	echo "check_email: email never arrived"
@@ -214,6 +256,8 @@ function check_email {
 ######################################################################
 
 trap "cleanup; exit" 0 1 2 3 15
+
+action=$1
 
 # clean slate
 auditctl -D
@@ -230,10 +274,21 @@ write_auditd_conf \
     num_logs=5 \
     max_log_file=1024 \
     max_log_file_action=IGNORE \
-    action_mail_acct=eal \
     space_left=2 \
     space_left_action=IGNORE \
     admin_space_left=1 \
     admin_space_left_action=IGNORE \
     disk_full_action=IGNORE \
     disk_error_action=IGNORE
+
+# email actions aren't fully available until version 1.0.8, so don't write
+# this config item unless that's what we're testing.
+if [[ $action == email ]]; then
+    write_auditd_conf action_mail_acct=eal
+fi
+
+if [[ $(type -t pre_$action) == function ]]; then
+    pre_$action
+fi
+
+set -x

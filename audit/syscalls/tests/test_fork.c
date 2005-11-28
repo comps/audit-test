@@ -78,11 +78,14 @@ int common_fork(struct audit_data *context, int op, int success)
     errno = 0;
     context_setbegin(context);
 
-    /* Using the vfork() library function is significant, as with
-     * syscall(), control doesn't return to the calling function
+    /* To test sys_fork, syscall() must be used, as the fork() library
+     * routine doesn't call the fork system call on x86_64.
+     *
+     * To test sys_vfork, the vfork() library routine must be used, as
+     * with syscall(), control doesn't return to the calling function
      * (parent) in the success case. */
     if (op == TEST_FORK)
-	pid = fork();
+	pid = syscall(context->u.syscall.sysnum);
     else if (op == TEST_VFORK)
 	pid = vfork();
     if (pid == 0)

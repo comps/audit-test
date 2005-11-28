@@ -37,13 +37,13 @@
 #include "includes.h"
 #include "syscalls.h"
 #include <linux/capability.h>
-#if !defined(__ia64__)
+#if defined(__x86_64__) || defined(__ia64__)
+extern int capget(cap_user_header_t header, cap_user_data_t data);
+extern int capset(cap_user_header_t header, const cap_user_data_t data);
+#else
 #undef _POSIX_SOURCE
 #include <sys/capability.h>
 #define _POSIX_SOURCE
-#else
-extern int capget(cap_user_header_t header, cap_user_data_t data);
-extern int capset(cap_user_header_t header, const cap_user_data_t data);
 #endif
 
 int test_capset(struct audit_data *context, int variation, int success)

@@ -122,7 +122,6 @@ sub new {
     my ($self) = {
         _raw => ($line || ''),
         _order => [],
-        _dups => {},
     };
     bless $self, $class;
 
@@ -187,17 +186,17 @@ sub merge_kv {
     print STDERR "Merging [$k] = [$v]\n" if $opt{'debug'};
 
     # concatenate raw lines
-    if ($k eq '_raw') { $self->{$k} .= $v; next; }
+    if ($k eq '_raw') { $self->{$k} .= $v; return; }
 
     # only merge other special fields once
-    elsif (substr($k, 0, 1) eq '_' and exists $self->{$k}) { next; }
+    elsif (substr($k, 0, 1) eq '_' and exists $self->{$k}) { return; }
 
     # handle duplicate keys
     elsif (exists $self->{$k}) {
         # simply concatenate types
         if ($k eq 'type') {
             $self->{$k} .= ',' . $v;
-            next;
+            return;
         }
 
         # handle other duplicates generically by appending a serial number
@@ -238,17 +237,9 @@ sub keys {
 
 sub to_s {
     my ($self) = @_;
-    if (%{$self->{'_dups'}}) { 
-        print STDERR "DUPS: ", join(', ', sort $self->dups), "\n";
-    }
     return join(' ', map {
             (my $v = $self->{$_}) =~ s/.*\s.*/"$&"/;
             "$_=$v" } @{$self->{'_order'}});
-}
-
-sub dups {
-    my ($self) = @_;
-    return CORE::keys %{$self->{'_dups'}};
 }
 
 sub test {

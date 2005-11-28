@@ -92,18 +92,33 @@ run: all
 	./run.bash
 endif
 
-_clean: subdirs
+_clean:
+	@if [[ "$(MAKECMDGOALS)" == clean ]]; then \
+	    for x in $(SUB_DIRS); do \
+		make -C $$x clean; \
+	    done; \
+	fi
 	$(RM) -r .deps
 	$(RM) $(ALL_OBJ)
 
 clean: _clean
 
-_clobber: subdirs clean
+_clobber: clean
+	@if [[ "$(MAKECMDGOALS)" == clobber ]]; then \
+	    for x in $(SUB_DIRS); do \
+		make -C $$x clobber; \
+	    done; \
+	fi
 	$(RM) $(ALL_EXE) $(ALL_AR)
 
 clobber: _clobber
 
-_distclean: subdirs clobber
+_distclean: clobber
+	@if [[ "$(MAKECMDGOALS)" == distclean ]]; then \
+	    for x in $(SUB_DIRS); do \
+		make -C $$x distclean; \
+	    done; \
+	fi
 	$(RM) run.log
 	if [[ -L run.bash ]]; then $(RM) run.bash; fi
 

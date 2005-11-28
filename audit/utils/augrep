@@ -120,7 +120,7 @@ package AuditRecord;
 sub new {
     my ($class, $line) = @_;
     my ($self) = {
-        _raw => ($line || undef),
+        _raw => ($line || ''),
         _order => [],
         _dups => {},
     };
@@ -133,45 +133,91 @@ sub new {
 
 sub parse {
     my ($self, $line) = @_;
-    while ($line =~ s/([^\s"']+)=(.*?)\s*(?=\z|[^\s"']+=)//) {
-        my ($k, $v) = ($1, $2);
+    my ($orig) = $line;
+    while (
+            $line =~ s/   # -- simple value --
+        \A\s*             # skip leading ws
+        (\S[^"'=]*)       # $1 = key: no quotes (but might have ws!)
+        (?<!\s)           # last char of key should not be ws
+            =             # no ws around equal sign
+        ()                # $2 = empty
+        (                 # $3 = value
+         [^'"\s]          # first char cannot be a quote
+         (?:
+            [^\\\s] |           # normal chars; no ws allowed
+            (?:\\[0-8]{1,3}) |  # escaped octal
+            (?:\\.)             # escaped character
+         )*                     # repeat to capture all of value
+        )
+        \s*               # skip ws trailing value
+        (?=\z|\S[^"']*=)  # next should be end or key
+                //x or
+            $line =~ s/   # -- quoted value--
+        \A\s*             # skip leading ws
+        (\S[^"'=]*)       # $1 = key: no quotes (but might have ws!)
+        (?<!\s)           # last char of key should not be ws
+            =             # no ws around equal sign
+        (['"])            # $2 = leading quote
+        (                 # $3 = value
+         (?:
+            [^\2\\] |           # normal chars
+            (?:\\[0-8]{1,3}) |  # escaped octal
+            (?:\\.)             # escaped character
+         )*                     # repeat to capture all of value
+        )
+        \2                # backreference to end quote
+        \s*               # skip ws trailing value
+        (?=\z|\S[^"']*=)  # next should be end or key
+                //x
+    ) {
+        my ($k, $v) = ($1, $3);
         $v =~ s/^(['"])(.*)\1$/$2/;
-        $self->{$k} = $v;
-        push @{$self->{'_order'}}, $k;    # for ordering
+        $self->merge_kv($k, $v);
     }
+
+    return if length($line) == 0;
+    print STDERR "Error parsing: $line\n";
+    print STDERR "Original line was: $orig\n";
+    die;
+}
+
+sub merge_kv {
+    my ($self, $k, $v) = @_;
+
+    print STDERR "Merging [$k] = [$v]\n" if $opt{'debug'};
+
+    # concatenate raw lines
+    if ($k eq '_raw') { $self->{$k} .= $v; next; }
+
+    # only merge other special fields once
+    elsif (substr($k, 0, 1) eq '_' and exists $self->{$k}) { next; }
+
+    # handle duplicate keys
+    elsif (exists $self->{$k}) {
+        # simply concatenate types
+        if ($k eq 'type') {
+            $self->{$k} .= ',' . $v;
+            next;
+        }
+
+        # handle other duplicates generically by appending a serial number
+        my ($serial, $new_k) = 1;
+        $serial++ while ($new_k = $k.'_'.$serial and
+            exists $self->{$new_k} and $self->{$new_k} ne $v);
+        $k = $new_k;
+    }
+
+    # remember the order in which fields were seen
+    push @{$self->{'_order'}}, $k unless $self->{$k};
+        
+    # specials cases handled, add to our hash
+    $self->{$k} = $v;
 }
 
 sub merge {
     my ($self, $other) = @_;
     for my $k ($other->keys) {
-        my ($v) = $other->get($k);
-
-        # append raw lines
-        if ($k eq '_raw') { $self->{$k} .= $v; next; }
-
-        # ignore other special fields
-        elsif (substr($k, 0, 1) eq '_') { next; }
-
-        # handle duplicate keys
-        elsif (exists $self->{$k} and $self->{$k} ne $v) {
-            # simply concatenate types
-            if ($k eq 'type') {
-                $self->{$k} .= ',' . $v;
-                next;
-            }
-
-            # handle other duplicates generically by appending a serial number
-            my ($serial, $new_k) = 1;
-            $serial++ while ($new_k = $k.'_'.$serial and
-                exists $self->{$new_k} and $self->{$new_k} ne $v);
-            $k = $new_k;
-        }
-
-        # remember the order in which fields were seen
-        push @{$self->{'_order'}}, $k unless $self->{$k};
-        
-        # specials cases handled, add to our hash
-        $self->{$k} = $v;
+        $self->merge_kv($k, $other->get($k));
     }
 }
 
@@ -193,7 +239,7 @@ sub keys {
 sub to_s {
     my ($self) = @_;
     if (%{$self->{'_dups'}}) { 
-        warn "DUPS: ", join(', ', sort $self->dups), "\n";
+        print STDERR "DUPS: ", join(', ', sort $self->dups), "\n";
     }
     return join(' ', map {
             (my $v = $self->{$_}) =~ s/.*\s.*/"$&"/;
@@ -207,25 +253,83 @@ sub dups {
 
 sub test {
     my ($self) = @_; shift;
-    my ($prev_was_cond) = 0;
+    my ($prev_was_cond, $negate);
 
     for my $a (@ARGV) {
+        print STDERR "Parsing [$a]\n" if $opt{'debug'};
+
         if ($a eq 'and' or $a eq 'or' or
+            $a eq '!' or $a eq 'not' or
             $a =~ /^\(+$/ or $a =~ /^\)+$/)
         { $prev_was_cond = 0; next; }
 
-        # use string comparison instead of numeric
-        $a =~ s/^(\w+)==(.*)/\$self->{'$1'} eq q{$2}/ or
-        $a =~ s/^(\w+)!=(.*)/\$self->{'$1'} ne q{$2}/ or
-        # use numeric for < <= >= > because string acts differently
-        $a =~ s/^(\w+)([<>])/\$self->{'$1'} $2/ or
-        # quote the pattern
-        $a =~ s/^(\w+)(!~|=~)(.*)/\$self->{'$1'} $2 m{$3}/ or
+        # handle equality negations generically
+        $a =~ s{^(\w+)!=(.*)}{$1==$2} and $negate = 1;
+
+        # string comparison, handling surrouding quotes
+        if ($a =~ s{^(\w+)==(.*)}{}) {
+            if ($1 eq 'msg_time' or $1 eq 'msg_seq') {
+                $a = "$1==$2";      # punt to numeric comparison
+            } else {
+                $a = qq(
+                    ((substr(\$self->{'$1'}, 0, 1) =~ /['"]/) ?
+                     (substr(\$self->{'$1'}, 1, -1) eq q{$2}) :
+                     (\$self->{'$1'} eq q{$2}))
+                );
+                goto end_subs;
+            }
+        }
+
+        # numeric comparison
+        if ($a =~ s{^(\w+)(<=|>=|==|<|>)(.*)}{}) {
+            if ($1 eq 'msg_time') {
+                my ($op, $seconds) = ($2, $3);
+                $seconds = `date +\%s -d '$seconds'` if $seconds =~ /[^\d.]/;
+                chomp($seconds);
+                $a = qq(
+                    do {
+                        my (\$time, \$seq) = (split /[(:)]/, \$self->{'msg'})[1,2];
+                        defined \$seq and \$time $op $seconds;
+                    }
+                );
+                goto end_subs;
+            } 
+            if ($1 eq 'msg_seq') {
+                $a = qq(
+                    do {
+                        my (\$time, \$seq) = (split /[(:)]/, \$self->{'msg'})[1,2];
+                        defined \$seq and \$seq $2 $3;
+                    }
+                );
+                goto end_subs;
+            }
+            $a = qq( \$self->{'$1'} $2 $3 );
+            goto end_subs;
+        };
+
+        # regex comparions
+        if ($a =~ s{^(\w+)(!~|=~)(.*)}{}) {
+            $a = qq(
+                ((substr(\$self->{'$1'}, 0, 1) =~ /['"]/) ?
+                 (substr(\$self->{'$1'}, 1, -1) $2 m{$3}) :
+                 (\$self->{'$1'} $2 m{$3}))
+            );
+            goto end_subs;
+        }
+
         die "Error evaluating expression: $a";
+
+end_subs:
+
+        # handle negations
+        $a = "not ($a)" if $negate;
+        $negate = 0;
 
         # make 'and' implicit, like the find command
         $a =~ s/^/and / if $prev_was_cond;
         $prev_was_cond = 1;
+
+        print STDERR "Became [$a]\n" if $opt{'debug'};
     }
     my ($test) = "@ARGV";
 
@@ -233,7 +337,12 @@ sub test {
     # repeatedly
     local $^W = 0;      # we're redefining test; don't complain
     eval "sub test { my (\$self) = \@_; local \$^W = 0; $test }";
-    die "Error in expression: $@" if $@;
+    if ($@) {
+        print STDERR "Error in expression: $@" if $@;
+        print STDERR "Full test was:\n";
+        print STDERR "$test";
+        die;
+    }
 
     # this only *appears* recursive
     $self->test(@_);
@@ -254,6 +363,7 @@ Getopt::Long::Configure("bundling");
 my ($result) = GetOptions(
     \%opt,
     'c|count',
+    'debug',
     'f|file=s',
     'h|help',
     'm|max-count=i',
@@ -299,6 +409,34 @@ B<augrep> [I<-chqvV>]
 [I<--count --help --quiet --raw --version>] 
 [I<-f logfile | --file logfile>] [I<--seek offset>] expression...
 
+=head1 DESCRIPTION
+
+This tool provides a command-line interface for search audit logs for
+interesting records, similar to ausearch but slower and possibly more flexible.
+
+=head2 EXPRESSIONS
+
+The primitive expression syntax is <key><op><value>, where <key> is one of the
+keys from audit.log, <op> is an operator (==, !=, <, >, <=, >=, =~) and <value>
+is the value against which to compare.  There should be no whitespace between
+the key, operator and value.  The value should not be quoted beyond the quoting
+required by the shell.  For example, "type=~SYSCALL" is valid but
+"type=~'SYSCALL'" is not.  In particular, make sure to quote any primitive
+expression containing < or >, otherwise you're redirecting stdin/stdout, which
+is probably not what you intended.
+
+Complex expressions can be constructed using a combination of primitive
+expressions and logical operators (not, and, or, and parentheses).  Note that
+parentheses may need to be quoted to escape interpretation by the shell, for
+example: '(' type=~SYSCALL ')'
+
+In addition to the keys in audit.log, two special keys are provided: msg_time
+and msg_seq.  These are the time and sequence values extracted from the msg
+entry.  In particular, msg_time is special because augrep will automatically
+parse the comparison value into the seconds-since-epoch format used by augrep,
+for example, the following will find all messages that occurred during the
+specified half-hour: 'msg_time>=14:00' 'msg_time<14:30'
+
 =head1 OPTIONS
 
 =over
@@ -335,11 +473,6 @@ Start the search at the first line at or after offset (bytes).
 Show version information.
 
 =back
-
-=head1 DESCRIPTION
-
-This tool provides a command-line interface for search audit logs for
-interesting records, similar to ausearch but slower and possibly more flexible.
 
 =head1 EXAMPLES
 

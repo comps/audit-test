@@ -81,7 +81,8 @@ int restoreFile(char*);
  */
 char *init_tempfile(mode_t, uid_t, gid_t);
 char *init_tempdir(mode_t, uid_t, gid_t);
-void destroy_temp(char *);
+void destroy_tempdir(char *);
+void destroy_tempfile(char *);
 
 int createTempUser(char** user, int* uid, char** homedir);
 int createTempUserName(char** user, int* uid, char** homedir);
@@ -96,6 +97,9 @@ int context_setidentifiers(struct audit_data *);
 void context_setbegin(struct audit_data *);
 void context_setend(struct audit_data *);
 void context_setipc(struct audit_data *, int, int, int, long);
+int context_setcwd(struct audit_data *);
+void context_setresult(struct audit_data *, int, int);
+char *context_getcwd(struct audit_data *);
 void context_dump(const struct audit_data *);
 void context_release(struct audit_data *);
 

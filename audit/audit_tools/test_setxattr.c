@@ -112,7 +112,7 @@ int aucat_test_setxattr( int succeed, char* username ) {
   } 	
  
 EXIT_CLEANUP:
-    destroy_temp(path);
+    destroy_tempfile(path);
  
 EXIT:
     return rc;

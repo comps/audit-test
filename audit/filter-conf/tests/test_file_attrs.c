@@ -182,7 +182,7 @@ int test_file_owner(laus_data *ld, uid_t uid, gid_t gid) {
 		printf1("ERROR: post_filter_call failed - rc=%d\n", rc);
 
 EXIT_CLEANUP:
-	destroy_temp(file);
+	destroy_tempfile(file);
 
 EXIT:
 	printf5("Returning from test - rc=%d\n", rc);

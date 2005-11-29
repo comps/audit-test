@@ -141,8 +141,8 @@ int test_su(struct audit_data* dataPtr) {
     goto EXIT;
   }
   fclose( fPtr );
-  destroy_temp(pts_filename);
-  destroy_temp(pts_filename2);
+  destroy_tempfile(pts_filename);
+  destroy_tempfile(pts_filename2);
 
 
   // Check for audit record(s)

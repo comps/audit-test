@@ -102,6 +102,10 @@ void context_setend(struct audit_data *context)
     fprintf(stderr, "Operation ended at %s", ctime(&(context->end_time)));
 }
 
+/*
+ * Syscall Related Context
+ */
+
 /* context_setipc() should be called after context_setidentifiers() if
  * not explicitly setting uid and gid */
 void context_setipc(struct audit_data *context, int qbytes, 
@@ -112,6 +116,32 @@ void context_setipc(struct audit_data *context, int qbytes,
     context->u.syscall.ipc_uid = uid;
     context->u.syscall.ipc_gid = gid;
     context->u.syscall.ipc_mode = msgflg;
+}
+
+int context_setcwd(struct audit_data *context)
+{
+    if (getcwd(context->u.syscall.cwd, PATH_MAX) == NULL) {
+	fprintf(stderr, "Error: unable set context cwd.\n");
+	return -1;
+    }
+    context->type |= AUDIT_MSG_CWD;
+    return 0;
+}
+
+void context_setresult(struct audit_data * context, int exit, int error)
+{
+    if (exit < 0) {
+	context->success = 0;
+	context->error = context->u.syscall.exit = -errno;
+    } else {
+	context->success = 1;
+	context->u.syscall.exit = exit;
+    }
+}
+
+char *context_getcwd(struct audit_data *context)
+{
+    return context->u.syscall.cwd;
 }
 
 void context_dump(const struct audit_data *context)

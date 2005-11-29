@@ -67,7 +67,7 @@ char *init_tempdir(mode_t mode, uid_t uid, gid_t gid)
     return dname;
 
 exit_err:
-    destroy_temp(dname);
+    destroy_tempdir(dname);
     return NULL;
 }
 
@@ -113,16 +113,26 @@ char *init_tempfile(mode_t mode, uid_t uid, gid_t gid)
     return fname;
 
 exit_err:
-    destroy_temp(fname);
+    destroy_tempfile(fname);
     return NULL;
 }
 
-void destroy_temp(char *name)
+void destroy_tempdir(char *name)
 {
-    if (unlink(name) < 0)
-	fprintf(stderr, "Error: removing \"%s\": unlink(): %s\n",
+    if (rmdir(name) < 0)
+	fprintf(stderr, "Error: removing tempdir \"%s\": rmdir(): %s\n",
 		name, strerror(errno));
     else
-	fprintf(stderr, "Removed temp: %s\n", name);
+	fprintf(stderr, "Removed tempdir: %s\n", name);
+    free(name);
+}
+
+void destroy_tempfile(char *name)
+{
+    if (unlink(name) < 0)
+	fprintf(stderr, "Error: removing tempfile \"%s\": unlink(): %s\n",
+		name, strerror(errno));
+    else
+	fprintf(stderr, "Removed tempfile: %s\n", name);
     free(name);
 }

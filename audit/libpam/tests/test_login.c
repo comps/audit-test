@@ -161,10 +161,10 @@ int test_login(struct audit_data* dataPtr) {
   if ((fPtr = fopen(pts_filename, "r")) != NULL) {
     fscanf(fPtr, "%d", &pts);
     fclose(fPtr);
-    destroy_temp(pts_filename);
+    destroy_tempfile(pts_filename);
   } else {
     printf("test_login: unable to open %s - %s\n", pts_filename, strerror(errno));
-    destroy_temp(pts_filename);
+    destroy_tempfile(pts_filename);
     goto TEST_2;
   }
 

@@ -42,6 +42,8 @@ service auditd start || auditd -f  # to capture errors in test output
 write_records 100
 
 case $action in
+    email)
+	check_$action "Subject: FIXME" ;;
     syslog)
         check_$action "Audit daemon log file is larger than max size" ;;
     *)

@@ -40,6 +40,8 @@ service auditd start || auditd -f  # to capture errors in test output
 write_records 100
 
 case $action in
+    email)
+	check_$action "Subject: Audit Admin Space Alert" ;;
     syslog)
         check_$action "Audit daemon is low on disk space for logging" ;;
     *)

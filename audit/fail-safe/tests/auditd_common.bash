@@ -260,8 +260,7 @@ function check_email {
 	echo "check_email: "$eal_mail" does not exist"
 	return 2
     fi
-    if sed "1,${eal_mail_lines}d" "$eal_mail" | \
-	    grep -E -m1 '^Subject: Audit (Disk|Admin) Space Alert'; then
+    if sed "1,${eal_mail_lines}d" "$eal_mail" | grep -Fq "$1"; then
 	echo "check_email: found magic email"
 	return 0
     else

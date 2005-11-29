@@ -33,7 +33,6 @@ int context_initsyscall(struct audit_data *context, char *testname)
     int rc = 0;
     char *sysname;
     int sysnum;
-    char cwd[PATH_MAX];
 
     errno = 0;
     sysname = strdup(testname);
@@ -50,19 +49,10 @@ int context_initsyscall(struct audit_data *context, char *testname)
 	goto exit;
     }
 
-    errno = 0;
-    if (getcwd(cwd, PATH_MAX) == NULL) {
-	rc = -1;
-	fprintf(stderr, "Error: unable to get current working directory: %s\n",
-		strerror(errno));
-	goto exit;
-    }
-
     context->u.syscall.sysname = sysname;
     context->u.syscall.sysnum  = sysnum;
     context->u.syscall.arch    = TS_BUILD_ARCH;
     context->u.syscall.exit    = 0;
-    strncpy(context->u.syscall.cwd, cwd, PATH_MAX);
 
 exit:
     if (rc < 0)
@@ -131,7 +121,7 @@ void context_setipc(struct audit_data *context, int qbytes,
 
 int context_setcwd(struct audit_data *context)
 {
-    if (getcwd(context->u.syscall.cwd, PATH_MAX) == NULL) {
+    if (getcwd(context->u.syscall.fs_cwd, PATH_MAX) == NULL) {
 	fprintf(stderr, "Error: unable set context cwd.\n");
 	return -1;
     }
@@ -139,14 +129,19 @@ int context_setcwd(struct audit_data *context)
     return 0;
 }
 
-void context_setfilterkey(struct audit_data *context, char *key)
+void context_setsobj(struct audit_data *context, char *obj)
 {
-    strncpy(context->u.syscall.fk, key, PATH_MAX);
+    strncpy(context->u.syscall.fs_sobj, obj, PATH_MAX);
+}
+
+void context_settobj(struct audit_data *context, char *obj)
+{
+    strncpy(context->u.syscall.fs_tobj, obj, PATH_MAX);
 }
 
 char *context_getcwd(struct audit_data *context)
 {
-    return context->u.syscall.cwd;
+    return context->u.syscall.fs_cwd;
 }
 
 void context_dump(const struct audit_data *context)
@@ -185,8 +180,9 @@ void context_dump(const struct audit_data *context)
 	    fprintf(stderr, "\tipc_mode  : %x\n", syscall->ipc_mode);
 	}
 	if (context->type & AUDIT_MSG_CWD) {
-	    fprintf(stderr, "\tcwd       : %s\n", syscall->cwd ?: "(null)");
-	    fprintf(stderr, "\tfk        : %s\n", syscall->fk ?: "(null)");
+	    fprintf(stderr, "\tfs_cwd    : %s\n", syscall->fs_cwd ?: "(null)");
+	    fprintf(stderr, "\tfs_sobj   : %s\n", syscall->fs_sobj ?: "(null)");
+	    fprintf(stderr, "\tfs_tobj   : %s\n", syscall->fs_tobj ?: "(null)");
 	}
 	if (context->type & AUDIT_MSG_SOCKADDR) {
 	    /* fprintf(stderr, "\tsockaddr  : %s\n", syscall->sockaddr); */

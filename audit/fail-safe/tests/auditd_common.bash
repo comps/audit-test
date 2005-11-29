@@ -284,7 +284,7 @@ auditctl -D
 service auditd stop || killall auditd ||:
 
 # use 8MB tmpfs for audit logs
-if mount | grep /var/log/audit; then exit 1; fi
+if mount | grep /var/log/audit; then exit 2; fi
 mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit
 
 # default config ignores all problems

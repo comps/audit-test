@@ -106,6 +106,17 @@ void context_setend(struct audit_data *context)
  * Syscall Related Context
  */
 
+void context_setresult(struct audit_data * context, int exit, int error)
+{
+    if (exit < 0) {
+	context->success = 0;
+	context->error = context->u.syscall.exit = -errno;
+    } else {
+	context->success = 1;
+	context->u.syscall.exit = exit;
+    }
+}
+
 /* context_setipc() should be called after context_setidentifiers() if
  * not explicitly setting uid and gid */
 void context_setipc(struct audit_data *context, int qbytes, 
@@ -128,15 +139,9 @@ int context_setcwd(struct audit_data *context)
     return 0;
 }
 
-void context_setresult(struct audit_data * context, int exit, int error)
+void context_setfilterkey(struct audit_data *context, char *key)
 {
-    if (exit < 0) {
-	context->success = 0;
-	context->error = context->u.syscall.exit = -errno;
-    } else {
-	context->success = 1;
-	context->u.syscall.exit = exit;
-    }
+    strncpy(context->u.syscall.fk, key, PATH_MAX);
 }
 
 char *context_getcwd(struct audit_data *context)
@@ -181,6 +186,7 @@ void context_dump(const struct audit_data *context)
 	}
 	if (context->type & AUDIT_MSG_CWD) {
 	    fprintf(stderr, "\tcwd       : %s\n", syscall->cwd ?: "(null)");
+	    fprintf(stderr, "\tfk        : %s\n", syscall->fk ?: "(null)");
 	}
 	if (context->type & AUDIT_MSG_SOCKADDR) {
 	    /* fprintf(stderr, "\tsockaddr  : %s\n", syscall->sockaddr); */

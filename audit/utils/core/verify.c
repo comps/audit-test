@@ -83,6 +83,12 @@ ts_exit verify_logresult(struct audit_data *context)
 			      context->u.syscall.ipc_qbytes, 
 			      context->u.syscall.ipc_gid);
 	}
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_CWD) {
+	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
+			      " cwd==%s filterkey==%s", 
+			      context->u.syscall.cwd,
+			      context->u.syscall.fk);
+	}
 	if (count >= sizeof(cmd)) {
 	    fprintf(stderr, "ERROR: verify_logresult: cmd too long\n");
 	    rc = TEST_ERROR;

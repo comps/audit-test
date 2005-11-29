@@ -46,6 +46,9 @@ int audit_set_filters();
 int audit_verify_log(struct audit_data *);
 int audit_parse_log(struct audit_data *, struct audit_data *);
 
+char *audit_add_watch(const char *);
+void audit_rem_watch(const char *, const char *);
+
 /*
  * System Info Collection
  */
@@ -96,9 +99,10 @@ int context_initsyscall(struct audit_data *, char *);
 int context_setidentifiers(struct audit_data *);
 void context_setbegin(struct audit_data *);
 void context_setend(struct audit_data *);
+void context_setresult(struct audit_data *, int, int);
 void context_setipc(struct audit_data *, int, int, int, long);
 int context_setcwd(struct audit_data *);
-void context_setresult(struct audit_data *, int, int);
+void context_setfilterkey(struct audit_data *, char *);
 char *context_getcwd(struct audit_data *);
 void context_dump(const struct audit_data *);
 void context_release(struct audit_data *);

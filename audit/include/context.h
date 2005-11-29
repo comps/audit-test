@@ -94,6 +94,7 @@ struct audit_syscall {
     unsigned int  ipc_mode;
     /* filesystem */
     char          cwd[PATH_MAX];
+    char          fk[PATH_MAX];
     /* will be deprecated */
     unsigned int  arglen;
     char          *args;

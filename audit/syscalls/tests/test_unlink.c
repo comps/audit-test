@@ -1,50 +1,38 @@
-/**********************************************************************
-   **   Copyright (C) International Business Machines  Corp., 2003
-   **
-   **   This program is free software;  you can redistribute it and/or modify
-   **   it under the terms of the GNU General Public License as published by
-   **   the Free Software Foundation; either version 2 of the License, or
-   **   (at your option) any later version.
-   **
-   **   This program is distributed in the hope that it will be useful,
-   **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
-   **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-   **   the GNU General Public License for more details.
-   **
-   **   You should have received a copy of the GNU General Public License
-   **   along with this program;  if not, write to the Free Software
-   **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-   **
-   **
-   **
-   **  FILE       : test_unlink.c
-   **
-   **  PURPOSE    : To test the unlink library call auditing.
-   **
-   **  DESCRIPTION: The test_unlink() function builds into the
-   **  laus_test framework to verify that the Linux Audit System
-   **  accurately logs both successful and erroneous execution of the
-   **  "unlink" system call.
-   **
-   **  In the successful case, this function:
-   **   1) Generates a unique filename and creates a temporary file
-   **   3) Executes the "unlink" system call
-   **
-   **  The successful case executes the expected conditions described
-   **  by the "unlink" system call manpage.  That is, the unlink() function
-   **  is called with an existing valid file.
-   **  
-   **  In the erroneous case, this function:
-   **   1) Execute the "unlink" system call on a file that the euid cannot write
-   **      
-   **  The erroneous case executes the expected conditions described by 
-   **  the "unlink" system call manpage for the EPERM errno.
-   **
-   **  HISTORY    :
-   **    06/03 Originated by Dustin Kirkland (k1rkland@us.ibm.com)
-   **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
-   **
-   **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_unlink.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to remove a name from the filesystem.
+ *
+ *  SYSCALLS:
+ *  unlink()
+ *
+ *  TESTCASE: successful
+ *  Remove a name for which user has appropriate permissions.
+ *
+ *  TESTCASE: unsuccessful
+ *  Attempt to remove a name for which user does not have appropriate
+ *  permissions.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
@@ -52,60 +40,51 @@
 int test_unlink(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int exp_errno = -EPERM;
-    char *fileName = NULL;
-    int remove_me = 0;
+    char *path, *key;
+    int exit = -1;
 
-     /**
-      * Do as much setup work as possible right here
-      */
-
-    // create the file
-    fileName = init_tempfile(S_IRWXU, context->euid, context->egid);
-    if (!fileName) {
+    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    key = audit_add_watch(path);
+    if (!path) {
 	rc = -1;
-	goto EXIT;
+	goto exit;
     }
 
-    if (!context->success) {
-	context->euid = context->fsuid = helper_uid;
-    }
-    // Set up audit argument buffer
-    if ((rc = auditArg1(context,
-			AUDIT_ARG_PATH, strlen(fileName), fileName)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	remove_me = 1;
-	goto EXIT_CLEANUP;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call
-    context->u.syscall.exit = syscall(__NR_unlink, fileName);
-
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
+    if (!success) {
+	rc = seteuid_test();
+	if (rc < 0)
+	    goto exit_path;
+	context->experror = -EPERM;
     }
 
-EXIT_CLEANUP:
-    /*
-     * Do cleanup work here
-     */
-    if (!context->success) {
-	if (unlink(fileName) != 0) {
-	    fprintf(stderr, "ERROR: Unable to remove file %s: errno=%i\n", fileName,
-		    errno);
-	    goto EXIT;
-	}
-    }
+    rc = context_setcwd(context);
+    if (rc < 0)
+	goto exit_suid;
+    context_settobj(context, key);
 
-EXIT:
-    if (fileName)
-	free(fileName);
-    fprintf(stderr, "Returning from test\n");
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit_suid;
+
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting unlink(%s)\n", path);
+    exit = syscall(context->u.syscall.sysnum, path);
+    context_setend(context);
+    context_setresult(context, exit, errno);
+
+exit_suid:
+    if (!success && seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+
+exit_path:
+    audit_rem_watch(path, key);
+    if (exit < 0)
+	destroy_tempfile(path);
+    else
+	free(path);
+    free(key);
+
+exit:
     return rc;
 }

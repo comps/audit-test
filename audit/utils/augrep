@@ -175,9 +175,8 @@ sub parse {
     }
 
     return if length($line) == 0;
-    print STDERR "Error parsing: $line\n";
-    print STDERR "Original line was: $orig\n";
-    die;
+    chomp($line);
+    print STDERR "augrep: WARNING: could not parse [$line] from: $orig";
 }
 
 sub merge_kv {

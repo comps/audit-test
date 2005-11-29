@@ -62,8 +62,6 @@ typedef struct identifiers_s {
 
 int getLAUSData(struct audit_data *);
 int getLoginUID();
-int getIdentifiers( identifiers_t* identifiers );
-int getPid(char* executable);
 
 uid_t gettestuid(void);
 gid_t gettestgid(void);

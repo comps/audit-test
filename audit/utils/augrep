@@ -83,7 +83,7 @@ sub seek {
 sub next_record {
     my ($self) = @_;
     my ($fh) = $self->{'fh'};
-    my ($record);
+    my ($record, $msg, $other, $o_msg);
 
     # populate the array; low-water=30, high-water=60
     if (@{$self->{'records'}} < 30) {
@@ -97,13 +97,16 @@ sub next_record {
     $record = shift @{$self->{'records'}};
 
     # merge following records with duplicate ids
-    for (my $i = 0; $i < @{$self->{'records'}}; ) {
-        my ($other) = $self->{'records'}[$i];
-        if ($other->get('msg') eq $record->get('msg')) {
-            $record->merge($other);
-            splice @{$self->{'records'}}, $i, 1;
-        } else {
-            $i++;
+    if (defined($msg = $record->get('msg')) {
+        for (my $i = 0; $i < @{$self->{'records'}}; ) {
+            $other = $self->{'records'}[$i];
+            next unless defined($o_msg = $other->get('msg'));
+            if ($o_msg eq $msg) {
+                $record->merge($other);
+                splice @{$self->{'records'}}, $i, 1;
+            } else {
+                $i++;
+            }
         }
     }
 

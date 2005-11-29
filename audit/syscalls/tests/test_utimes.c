@@ -71,9 +71,10 @@ int test_utimes(struct audit_data *context, int variation, int success)
     struct timeval utbuf[2];
 
     // Create the file 
-    if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-			     context->euid, context->egid)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
+    fileName = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO, context->euid,
+			     context->egid);
+    if (!fileName) {
+	rc = -1;
 	goto EXIT;
     }
     // utimes setup

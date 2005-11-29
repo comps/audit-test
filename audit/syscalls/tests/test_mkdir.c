@@ -68,9 +68,10 @@ int test_mkdir(struct audit_data *context, int variation, int success)
     mode = S_IRWXU | S_IRWXG | S_IRWXO;
     if (context->success) {
 	// dynamically create temp file, and delete it real quick
-	if ((rc = createTempFile(&path, S_IRWXU | S_IRWXG | S_IRWXO,
-				 context->euid, context->egid)) == -1) {
-	    fprintf(stderr, "ERROR: Cannot create file %s\n", path);
+	path = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO, context->euid,
+			     context->egid);
+	if (!path) {
+	    rc = -1;
 	    goto EXIT;
 	}
 	if ((rc = unlink(path)) != 0) {

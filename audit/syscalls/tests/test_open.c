@@ -78,15 +78,16 @@ int test_open(struct audit_data *context, int variation, int success)
 
     if (context->success) {
 	// Create a file readable by test user if testing success case
-	if ((rc = createTempFile(&fileName, mode,
-				 context->euid, context->egid)) == -1) {
-	    fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
+	fileName = init_tempfile(mode, context->euid, context->egid);
+	if (!fileName) {
+	    rc = -1;
 	    goto EXIT;
 	}
     } else {
 	// Create a file not readable by test user if testing failure case
-	if ((rc = createTempFile(&fileName, mode, 0, 0)) == -1) {
-	    fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
+	fileName = init_tempfile(mode, 0, 0);
+	if (!fileName) {
+	    rc = -1;
 	    goto EXIT;
 	}
     }

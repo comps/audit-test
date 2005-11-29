@@ -73,9 +73,10 @@ int test_creat(struct audit_data *context, int variation, int success)
     //char* fileName2 = NULL;
 
     // create file to choose a filename
-    if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-			     context->euid, context->egid)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
+    fileName = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO, context->euid,
+			     context->egid);
+    if (!fileName) {
+	rc = -1;
 	goto EXIT;
     }
     // delete file just created so that the syscall can use the temp name

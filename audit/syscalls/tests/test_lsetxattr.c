@@ -78,9 +78,9 @@ int test_lsetxattr(struct audit_data *context, int variation, int success)
     context->fsuid = 0;
     context->fsgid = 0;
     // Create the target file
-    if ((rc = createTempFile(&path, S_IRWXU,
-			     context->euid, context->egid)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", path);
+    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    if (!path) {
+	rc = -1;
 	goto EXIT;
     }
     strcpy(value, XATTR_TEST_VALUE);

@@ -147,9 +147,10 @@ int test_file_owner(laus_data *ld, uid_t uid, gid_t gid) {
 	}
 
 	// Create a temporary file
-	if ((rc = createTempFile(&file, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, uid, gid)) != 0) {
-		printf1("Error creating temporary file, rc=%d\n", rc);
-		goto EXIT;
+	file = init_tempfile(S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH, uid, gid);
+	if (!file) {
+	    rc = -1;
+	    goto EXIT;
 	}
 
 	// Set up audit argument buffer
@@ -159,7 +160,7 @@ int test_file_owner(laus_data *ld, uid_t uid, gid_t gid) {
 			AUDIT_ARG_IMMEDIATE, sizeof(flags), &flags,
 			AUDIT_ARG_IMMEDIATE, sizeof(mode), &mode)) != 0) {
 		printf1("ERROR: auditArg3 failed - rc=%d\n", rc);
-		goto EXIT;
+		goto EXIT_CLEANUP;
 	}
 
 	// Generate a syscall record, maybe, via open
@@ -175,20 +176,16 @@ int test_file_owner(laus_data *ld, uid_t uid, gid_t gid) {
 	if (fd >= 0)
 		close(fd);
 
-	// Delete the temporary file
-	unlink(file);
-
 	// Do post-system call work
 	printf5("Calling post_filter_call\n");
-	if ((rc = post_filter_call(ld)) != 0) {
+	if ((rc = post_filter_call(ld)) != 0)
 		printf1("ERROR: post_filter_call failed - rc=%d\n", rc);
-		goto EXIT;
-	}
+
+EXIT_CLEANUP:
+	destroy_temp(file);
 
 EXIT:
-	// Do cleanup work here
 	printf5("Returning from test - rc=%d\n", rc);
-
 	return rc;
 }
 

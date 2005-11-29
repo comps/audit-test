@@ -49,10 +49,10 @@ int test_execve(struct audit_data *context, int variation, int success)
     if (success)
 	cmd = "/bin/true";
     else {
-	rc = createTempFile(&cmd, S_IRUSR|S_IRGRP|S_IROTH,
-			    context->euid, context->egid);
-	if (rc < 0) {
-	    fprintf(stderr, "Error: cannot create tmp file: %s\n", strerror(errno));
+	cmd = init_tempfile(S_IRUSR|S_IRGRP|S_IROTH, context->euid,
+			    context->egid);
+	if (!cmd) {
+	    rc = -1;
 	    goto exit;
 	}
 	context->experror = -EACCES;

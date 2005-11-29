@@ -79,9 +79,10 @@ int test_chown(struct audit_data *context, int variation, int success)
     context->fsuid = 0;
     context->fsgid = 0;
     // create file with 700 permissions 
-    if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-			     context->euid, context->egid)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
+    fileName = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO, context->euid,
+			     context->egid);
+    if (!fileName) {
+	rc = -1;
 	goto EXIT;
     }
 

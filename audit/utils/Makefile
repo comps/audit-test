@@ -40,11 +40,8 @@ CPPFLAGS 	+= -I$(TOPDIR)/include -I$(UTILSDIR)/include
 
 UTILS_AR	= testutils.a
 UTILS_OBJ	= core/context.o		\
-		  core/create_temp_file.o	\
-		  core/create_temp_file_name.o	\
 		  core/create_temp_user_name.o	\
 		  core/create_temp_group_name.o	\
-		  core/create_temp_dir.o	\
 		  core/encode_syscall_args.o	\
 		  core/file_utils.o		\
 		  core/get_identifiers.o	\
@@ -54,6 +51,7 @@ UTILS_OBJ	= core/context.o		\
 		  core/identifiers.o		\
 		  core/mysprintf.o		\
 		  core/run.o			\
+		  core/tempfile.o		\
 		  core/verify.o
 
 LAF_OBJ		= laf/laf_clear.o		\

@@ -74,8 +74,9 @@ int test_fchown32(struct audit_data *context, int variation, int success)
    */
     owner = context->euid;
     group = context->egid;
-    if ((rc = createTempFile(&fileName, S_IRWXU, 0, 0)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
+    fileName = init_tempfile(S_IRWXU, 0, 0);
+    if (!fileName) {
+	rc = -1;
 	goto EXIT;
     }
 

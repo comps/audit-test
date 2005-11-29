@@ -50,7 +50,6 @@ int aucat_test_setxattr( int succeed, char* username ) {
    
   int rc = 0;
   char* path = NULL;
-  //char* savePath;
   struct passwd *pw = NULL; 
 
   char* name = "user.mime_type";
@@ -71,12 +70,13 @@ int aucat_test_setxattr( int succeed, char* username ) {
   bzero( value, sizeof( XATTR_TEST_VALUE ) );
   size = sizeof( XATTR_TEST_VALUE );
 
-  // Create the target file
-  if( ( rc = createTempFile( &path, S_IRWXU, 0, 0 ) ) == -1 ) {
-    printf1( "ERROR: Cannot create file %s\n", path );
-    goto EXIT;
-  }
-   
+    // Create the target file
+    path = init_tempfile(S_IRWXU, 0, 0);
+    if (!path) {
+	rc = -1;
+	goto EXIT;
+    }
+
   //if( succeed ) {     // Set up for success
     flags = XATTR_CREATE;
     strcpy( value, XATTR_TEST_VALUE );
@@ -90,11 +90,11 @@ int aucat_test_setxattr( int succeed, char* username ) {
  if (!succeed) { 
 	if(seteuid(pw->pw_uid) == -1) {  //set euid to that of another user
              printf("Unable to set euid to %i, errno:%i", pw->pw_uid, errno);
-             goto EXIT;
+             goto EXIT_CLEANUP;
         }
         if(setfsuid(pw->pw_uid) == -1) {
 	     printf("Unable to set fsuid to %i, errno:%i", pw->pw_uid, errno);
-	     goto EXIT;
+	     goto EXIT_CLEANUP;
 	}
   }
  
@@ -111,16 +111,11 @@ int aucat_test_setxattr( int succeed, char* username ) {
  	   printf("Unable to set fsuid back to root errno=%i", errno);
   } 	
  
-  // Clean up from success case setup
-  if( ( rc = unlink( path ) ) == -1 ) {
-    printf1( "Error unlinking file %s\n", path );
-    goto EXIT;
-  }
+EXIT_CLEANUP:
+    destroy_temp(path);
  
- EXIT:
-  if ( path )
-    free( path );
-  return rc;
+EXIT:
+    return rc;
 }
 
 #endif

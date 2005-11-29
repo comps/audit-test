@@ -64,15 +64,17 @@ int test_symlink(struct audit_data *context, int variation, int success)
     char *destination = NULL;
     char *res = NULL;
 
-    if ((rc = createTempFile(&source, S_IRWXU | S_IRWXG | S_IRWXO,
-			     context->euid, context->egid)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", source);
+    source = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO, context->euid,
+			   context->egid);
+    if (!source) {
+	rc = -1;
 	goto EXIT;
     }
 
     if (context->success) {
-	if ((rc = createTempFileName(&destination)) == -1) {
-	    fprintf(stderr, "ERROR: Cannot create file %s\n", destination);
+	destination = init_tempfile(S_IRWXU, context->euid, context->egid);
+	if (!destination || (unlink(destination) < 0)) {
+	    fprintf(stderr, "ERROR: Cannot reserve filename %s\n", destination);
 	    goto EXIT_CLEANUP;
 	}
     } else {

@@ -67,9 +67,9 @@ int test_chdir(struct audit_data *context, int variation, int success)
     char *path = NULL;
 
     // dynamically create test directory
-    if ((rc = (createTempDir(&path, S_IRWXU,
-			     context->euid, context->egid)) == -1)) {
-	fprintf(stderr, "ERROR: Cannot create dir %s\n", path);
+    path = init_tempdir(S_IRWXU, context->euid, context->egid);
+    if (!path) {
+	rc = -1;
 	goto EXIT;
     }
 

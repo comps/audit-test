@@ -27,6 +27,8 @@
 #ifndef _LAUSTEST_TEMPNAME_H
 #define _LAUSTEST_TEMPNAME_H
 
-static const char* tempname = "/tmp/lausXXXXXX\0";
+#include "testsuite.h"
+
+static const char* tempname = TEST_TMP_TEMPLATE;
 
 #endif

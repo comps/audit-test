@@ -73,9 +73,10 @@ int test_mount(struct audit_data *context, int variation, int success)
     fprintf(stderr, "Performing test_mount\n");
 
     // dynamically create test directory
-    if ((rc = (createTempDir(&target, S_IRWXU | S_IRWXG | S_IRWXO,
-			     context->euid, context->egid)) == -1)) {
-	fprintf(stderr, "ERROR: Cannot create dir %s\n", target);
+    target = init_tempdir(S_IRWXU|S_IRWXG|S_IRWXO, context->euid,
+			  context->egid);
+    if (!target) {
+	rc = -1;
 	goto EXIT;
     }
     fprintf(stderr, "Genereated target directory %s\n", target);

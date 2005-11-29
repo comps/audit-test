@@ -126,7 +126,9 @@ int test_login(struct audit_data* dataPtr) {
   printf("TEST %d\n", test++);
   // Setup
   // Create expect script file to execute login session
-  createTempFileName(&pts_filename);
+  pts_filename = init_tempfile(S_IRWXU, dataPtr->uid, dataPtr->gid);
+  if (!pts_filename)
+      exit(-1);
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   if ((fd = mkstemp(filename)) == -1) {
@@ -159,10 +161,10 @@ int test_login(struct audit_data* dataPtr) {
   if ((fPtr = fopen(pts_filename, "r")) != NULL) {
     fscanf(fPtr, "%d", &pts);
     fclose(fPtr);
-    unlink(pts_filename);
-    free(pts_filename);
+    destroy_temp(pts_filename);
   } else {
     printf("test_login: unable to open %s - %s\n", pts_filename, strerror(errno));
+    destroy_temp(pts_filename);
     goto TEST_2;
   }
 
@@ -204,7 +206,6 @@ int test_login(struct audit_data* dataPtr) {
   printf("TEST %d\n", test++);
   // Setup
   // Create expect script file to execute login session
-  createTempFileName(&pts_filename);
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);

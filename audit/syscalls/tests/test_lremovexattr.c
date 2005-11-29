@@ -70,9 +70,9 @@ int test_lremovexattr(struct audit_data *context, int variation, int success)
 	 */
     size = sizeof(XATTR_TEST_VALUE);
     // Create the target file
-    if ((rc = createTempFile(&path, S_IRWXU,
-			     context->euid, context->egid)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", path);
+    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    if (!path) {
+	rc = -1;
 	goto EXIT;
     }
     if ((rc =

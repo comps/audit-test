@@ -39,11 +39,23 @@ int getLoginUID()
     char *luid_filename;
     char *command;
 
-    createTempFileName(&luid_filename);
-//  command = mysprintf( "/usr/bin/who -m | /usr/bin/awk -F! '{print $2}' | /usr/bin/awk -F\" \" '{print $1}' | /usr/bin/xargs -i id -u {} > %s", luid_filename); 
-    command =
-	mysprintf("who -m | awk -F\" \" '{print $1}' | xargs id -u > %s",
-		  luid_filename);
+    luid_filename = (char *)malloc(strlen(TEST_TMP_TEMPLATE) + 1);
+    if (!luid_filename) {
+	fprintf(stderr, "Error: obtaining login uid: malloc(): %s\n",
+		strerror(errno));
+	return rc;
+    }
+
+    strcpy(luid_filename, TEST_TMP_TEMPLATE);
+    if (mkstemp(luid_filename) < 0) {
+	fprintf(stderr, "Error: obtaining login uid: mkstemp(): %s\n",
+		strerror(errno));
+	free(luid_filename);
+	return rc;
+    }
+
+    command = mysprintf("who -m | awk -F\" \" '{print $1}' | xargs id -u > %s", 
+			luid_filename);
     if ((rc = system(command)) == -1) {
 	fprintf(stderr, "Error: %s\n", command);
 	goto EXIT;

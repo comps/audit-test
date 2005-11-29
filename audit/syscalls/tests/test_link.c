@@ -67,18 +67,19 @@ int test_link(struct audit_data *context, int variation, int success)
     char *destination = NULL;
     char *res = NULL;
 
-    if ((rc = createTempFile(&source, S_IRWXU | S_IRWXG | S_IRWXO,
-			     context->euid, context->egid)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", source);
+    source = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO, context->euid,
+			   context->egid);
+    if (!source) {
+	rc = -1;
 	goto EXIT;
     }
 
     if (context->success) {
 	// In success case, create file name to guarantee uniqueness, then delete it
-	if ((rc = createTempFile(&destination, S_IRWXU | S_IRWXG |
-				 S_IRWXO, context->euid,
-				 context->egid)) == -1) {
-	    fprintf(stderr, "ERROR: Cannot create file %s\n", destination);
+	destination = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO,
+				    context->euid, context->egid);
+	if (!destination) {
+	    rc = -1;
 	    goto EXIT;
 	}
 	if ((rc = unlink(destination)) != 0) {

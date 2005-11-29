@@ -35,8 +35,6 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#include "testsuite.h" /* for log_options */
-
 /*
  * Audit Interaction
  */
@@ -83,9 +81,10 @@ int restoreFile(char*);
 /*
  * Temp Data Creation
  */
-int createTempFile(char** fname, mode_t mode, uid_t uid, gid_t gid);
-int createTempFileName(char** fname);
-int createTempDir(char** fname, mode_t mode, uid_t uid, gid_t gid);
+char *init_tempfile(mode_t, uid_t, gid_t);
+char *init_tempdir(mode_t, uid_t, gid_t);
+void destroy_temp(char *);
+
 int createTempUser(char** user, int* uid, char** homedir);
 int createTempUserName(char** user, int* uid, char** homedir);
 int createTempGroupName( char** user, int* uid );

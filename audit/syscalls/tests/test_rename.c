@@ -61,17 +61,17 @@ int test_rename(struct audit_data *context, int variation, int success)
     char *targetPath = NULL;
     char *res = NULL;
 
-    if ((rc = createTempFile(&path, S_IRWXU | S_IRWXG | S_IRWXO,
-			     context->euid, context->egid)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", path);
+    path = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO, context->euid,
+			 context->egid);
+    if (!path) {
+	rc = -1;
 	goto EXIT;
     }
 
     if (context->success) {
-	// dynamically create target temp file name
-	if ((rc = createTempFileName(&targetPath)) == -1) {
-	    fprintf(stderr, "ERROR: Cannot create file %s\n", targetPath);
-	    strcpy(targetPath, path);
+	targetPath = init_tempfile(S_IRWXU, context->euid, context->egid); 
+	if (!targetPath || (unlink(targetPath) < 0)) {
+	    fprintf(stderr, "ERROR: Cannot reserve filename %s\n", targetPath);
 	    goto EXIT_CLEANUP;
 	}
     } else {

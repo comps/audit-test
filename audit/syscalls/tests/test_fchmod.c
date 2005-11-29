@@ -66,8 +66,9 @@ int test_fchmod(struct audit_data *context, int variation, int success)
    * Do as much setup work as possible right here
    */
     // Generate unique filename
-    if ((rc = createTempFile(&fileName, S_IRWXU, 0, 0)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
+    fileName = init_tempfile(S_IRWXU, 0, 0);
+    if (!fileName) {
+	rc = -1;
 	goto EXIT;
     }
     if ((fd = open(fileName, O_WRONLY)) == -1) {

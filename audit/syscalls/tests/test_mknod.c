@@ -65,9 +65,10 @@ int test_mknod(struct audit_data *context, int variation, int success)
 
     if (context->success) {
 	// dynamically create temp file, and delete it real quick
-	if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-				 context->euid, context->egid)) == -1) {
-	    fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
+	fileName = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO,
+				 context->euid, context->egid);
+	if (!fileName) {
+	    rc = -1;
 	    goto EXIT;
 	}
 	if ((rc = unlink(fileName)) != 0) {

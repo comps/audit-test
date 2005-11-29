@@ -81,15 +81,17 @@ int test_lchown(struct audit_data *context, int variation, int success)
 
     // Generate unique filename
     // create file
-    if ((rc = createTempFile(&fileName, S_IRWXU | S_IRWXG | S_IRWXO,
-			     context->euid, context->egid)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
+    fileName = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO, context->euid,
+			     context->egid);
+    if (!fileName) {
+	rc = -1;
 	goto EXIT;
     }
     // generate link name by creating temp file, then deleting it real quick
-    if ((rc = createTempFile(&linkName, S_IRWXU | S_IRWXG | S_IRWXO,
-			     context->euid, context->egid)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
+    linkName = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO, context->euid,
+			     context->egid);
+    if (!linkName) {
+	rc = -1;
 	goto EXIT;
     }
     // Delete link name to clear the space

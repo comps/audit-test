@@ -67,9 +67,9 @@ int test_truncate(struct audit_data *context, int variation, int success)
     char *fileName = NULL;
 
     // dynamically create temp file name
-    if ((rc = createTempFile(&fileName, S_IRWXU,
-			     context->euid, context->egid)) == -1) {
-	fprintf(stderr, "ERROR: Cannot create file %s\n", fileName);
+    fileName = init_tempfile(S_IRWXU, context->euid, context->egid);
+    if (!fileName) {
+	rc = -1;
 	goto EXIT;
     }
 

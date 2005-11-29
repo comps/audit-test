@@ -28,7 +28,8 @@
 ##########################################################################
 
 TOPDIR		= .
-SUB_DIRS        = fail-safe \
+SUB_DIRS        = utils \
+		  fail-safe \
 		  syscalls \
 		  audit_trail_protection \
 #		  audit_tools \
@@ -55,22 +56,25 @@ run:
 .PHONY: dist
 dist:
 	deps=$$($(MAKE) --no-print-directory showrpms | xargs) && \
-	rev=$$(svn info | awk '/^Revision:/{print $$2}') && \
+	rev=$$(svn info | awk '/^Revision:/{print $$2}' | grep .) && \
+	tmpdir=$$(mktemp -d) && \
+	into=$${PWD%/*} && \
 	sed -i "/^Version:/s/[0-9].*/$$rev/; \
 	        s/^\(Requires:[ 	]*\).*/\1$$deps/" \
 		    audit-test.spec && \
-	mkdir ../audit-test-$$rev && \
-	rsync -a --exclude=.svn . ../audit-test-$$rev && \
-	$(MAKE) distclean -C ../audit-test-$$rev && \
-	cd .. && \
-	tar czf audit-test-$$rev.tar.gz audit-test-$$rev && \
-	rm -rf audit-test-$$rev && \
+	mkdir "$$tmpdir/audit-test" && \
+	rsync -a --exclude=.svn . "$$tmpdir/audit-test" && \
+	$(MAKE) distclean -C "$$tmpdir/audit-test" && \
+	cd "$$tmpdir" && \
+	tar czf "$$into/audit-test-$$rev.tar.gz" audit-test && \
+	cd "$$into" && \
+	rm -rf "$$tmpdir" && \
 	echo && \
 	ls -l audit-test-$$rev.tar.gz
 
 .PHONY: rpm
 rpm: dist
-	rev=$$(svn info | awk '/^Revision:/{print $$2}') && \
+	rev=$$(svn info | awk '/^Revision:/{print $$2}' | grep .) && \
 	cd .. && \
 	rpmbuild -ta audit-test-$$rev.tar.gz && \
 	mv /usr/src/redhat/RPMS/noarch/audit-test-$$rev-1.* . && \

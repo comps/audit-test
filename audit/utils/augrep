@@ -254,10 +254,10 @@ sub test {
         { $prev_was_cond = 0; next; }
 
         # handle equality negations generically
-        $a =~ s{^(\w+)!=(.*)}{$1==$2} and $negate = 1;
+        $a =~ s{^([\w\s]+)!=(.*)}{$1==$2} and $negate = 1;
 
         # string comparison, handling surrouding quotes
-        if ($a =~ s{^(\w+)==(.*)}{}) {
+        if ($a =~ s{^([\w\s]+)==(.*)}{}) {
             if ($1 eq 'msg_time' or $1 eq 'msg_seq') {
                 $a = "$1==$2";      # punt to numeric comparison
             } else {
@@ -271,7 +271,7 @@ sub test {
         }
 
         # numeric comparison
-        if ($a =~ s{^(\w+)(<=|>=|==|<|>)(.*)}{}) {
+        if ($a =~ s{^([\w\s]+)(<=|>=|==|<|>)(.*)}{}) {
             if ($1 eq 'msg_time') {
                 my ($op, $seconds) = ($2, $3);
                 $seconds = `date +\%s -d '$seconds'` if $seconds =~ /[^\d.]/;
@@ -298,7 +298,7 @@ sub test {
         };
 
         # regex comparions
-        if ($a =~ s{^(\w+)(!~|=~)(.*)}{}) {
+        if ($a =~ s{^([\w\s]+)(!~|=~)(.*)}{}) {
             $a = qq(
                 ((substr(\$self->{'$1'}, 0, 1) =~ /['"]/) ?
                  (substr(\$self->{'$1'}, 1, -1) $2 m{$3}) :

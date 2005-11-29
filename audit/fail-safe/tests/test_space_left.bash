@@ -39,4 +39,9 @@ service auditd start || auditd -f  # to capture errors in test output
 # 100 records should always take us over (150 * 100 =~ 14k)
 write_records 100
 
-check_$action
+case $action in
+    syslog)
+        check_$action "Audit daemon is low on disk space for logging" ;;
+    *)
+        check_$action ;;
+esac

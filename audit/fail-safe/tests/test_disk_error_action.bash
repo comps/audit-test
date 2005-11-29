@@ -28,11 +28,18 @@ source $(dirname "$0")/auditd_common.bash
 write_auditd_conf \
     disk_error_action=$action
 
-service auditd start || auditd -f  # to capture errors in test output
-
-chmod ugo-w "${audit_log%/*}"
-killall -USR1 auditd
+# start auditd manually instead of with the initscript
+# so we can set LD_PRELOAD.
+(
+    export LD_PRELOAD="$PWD/fprintf.so $LD_PRELOAD"
+    auditd || auditd -f # to capture errors in test output
+)
 
 write_records 100
 
-check_$action
+case $action in
+    syslog)
+        check_$action "Audit daemon detected an error writing an event to disk" ;;
+    *)
+        check_$action ;;
+esac

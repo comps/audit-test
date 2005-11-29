@@ -88,16 +88,19 @@ function fill_disk {
     cat </dev/zero >"$dir/bloat" ||:
     rm -f "$dir/bogus"
     df -k $dir/
-#   free=$free bloat="$dir/bloat" perl -e \
-#	'die unless truncate $ENV{bloat}, (stat $ENV{bloat})[7] - $ENV{free}'
 }
 
 function cleanup {
-    auditctl -D
+    echo "Audit log snippet"
+    echo "--- start audit.log --------------------------------------------------------"
+    augrep 'type!=AGRIFFIS' ||:
+    echo "--- end audit.log ----------------------------------------------------------"
+    auditctl -D ||:
     service auditd stop ||:
+    killall auditd ||:
     if [[ -s "$auditd_orig" ]]; then mv "$auditd_orig" "$auditd_conf"; fi
     rm -f "$auditd_orig" "$tmp1" "$tmp2"
-    umount /var/log/audit
+    umount /var/log/audit ||:
     service auditd start ||:
 }
 
@@ -114,31 +117,47 @@ function check_rotate {
 }
 
 function pre_syslog {
+    messages_lines=$(wc -l </var/log/messages)
     logger "making sure syslog works $$"
 }
 
 function check_syslog {
-    declare pid=$(service auditd status | grep -Eo '[0-9]+')
-    if grep -Fq " auditd[$pid]: Audit daemon log file is larger than max size" "$messages"; then
+    declare syslog auditd_pid=$(pidof auditd | cut -f1 -d\ )
+
+    sleep 0.1	# let syslog catch up
+    syslog=$(sed "1,${messages_lines}d" "$messages")
+
+    if grep -Fq " auditd[$auditd_pid]: $1" <<<"$syslog"; then
 	return 0
-    elif grep -Fq "making sure syslog works $$" "$messages"; then
-	echo "check_syslog: syslog appears to be broken"
-	return 2
-    else
+    fi
+
+    echo "--- start messages ---------------------------------------------------------"
+    echo "$syslog"
+    echo "--- end messages -----------------------------------------------------------"
+
+    if grep -Fq "making sure syslog works $$" <<<"$syslog"; then
 	echo "check_syslog: couldn't find auditd syslog record"
 	return 1
+    else
+	echo "check_syslog: syslog appears to be broken"
+	return 2
     fi
 }
 
 function check_ignore {
     declare strace_pid
 
-    strace -p $(pidof auditd) -ff -e trace=write -s 1024 -o "$tmp1" &
+    # strace-4.5.13-0.EL4.1, at least on em64t and ia64, has double-free issues
+    # *on exit* when tracing auditd.  This doesn't seem to affect our use of the
+    # tool, so work around the problem (which would by default abort strace)
+    # with MALLOC_CHECK_=0.  See http://dag.wieers.com/howto/compatibility/
+    MALLOC_CHECK_=0 strace -p $(pidof auditd) -ff -e trace=write -s 1024 -o "$tmp1" &
     strace_pid=$!
+    sleep 1	# wait for strace to get started
     write_records 10
     auditctl -m "$zero $$"
     write_records 10
-    sleep 1
+    sleep 1	# make sure strace is up to date
     kill $strace_pid
 
     if grep -Fm1 "$zero $$" "$tmp1"; then
@@ -257,13 +276,15 @@ function check_email {
 
 trap "cleanup; exit" 0 1 2 3 15
 
+zero=${0##*/}
 action=$1
 
 # clean slate
 auditctl -D
-service auditd stop ||:
+service auditd stop || killall auditd ||:
 
 # use 8MB tmpfs for audit logs
+if mount | grep /var/log/audit; then exit 1; fi
 mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit
 
 # default config ignores all problems
@@ -290,5 +311,3 @@ fi
 if [[ $(type -t pre_$action) == function ]]; then
     pre_$action
 fi
-
-set -x

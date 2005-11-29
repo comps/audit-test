@@ -35,4 +35,13 @@ TOPDIR		= ../..
 TESTDIR		= ..
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
+FPRINTF_OBJ	= fprintf.o
+FPRINTF_SO	= fprintf.so
+
+ALL_OBJ		= $(FPRINTF_OBJ)
+ALL_SO		= $(FPRINTF_SO)
+
+$(FPRINTF_SO): $(FPRINTF_OBJ)
+	$(LINK_SO)
+
 include $(TOPDIR)/rules.mk

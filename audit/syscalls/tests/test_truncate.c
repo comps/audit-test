@@ -1,112 +1,101 @@
-/**********************************************************************
-   **   Copyright (C) International Business Machines  Corp., 2003
-   **
-   **   This program is free software;  you can redistribute it and/or modify
-   **   it under the terms of the GNU General Public License as published by
-   **   the Free Software Foundation; either version 2 of the License, or
-   **   (at your option) any later version.
-   **
-   **   This program is distributed in the hope that it will be useful,
-   **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
-   **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-   **   the GNU General Public License for more details.
-   **
-   **   You should have received a copy of the GNU General Public License
-   **   along with this program;  if not, write to the Free Software
-   **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-   **
-   **
-   **
-   **  FILE   : test_truncate.c
-   **
-   **  PURPOSE: The test_truncate() function builds into the laus_test
-   **           framework to verify that the Linux Audit System accurately
-   **           logs both successful and erroneous execution of the
-   **           "truncate" system call.
-   **
-   **           In the successful case, this function:
-   **             1) Creates the temporary file
-   **             2) Executes the "truncate" system call with valid length
-   **
-   **           The successful case executes the expected conditions
-   **           described by the "truncate" system call manpage.  That is,
-   **           the truncate() function is called using a valid filename 
-   **           and length.
-   **
-   **            In the erroneous case, this function:
-   **             1) Creates the temporary file
-   **             2) Executes the "truncate" system call as a user without 
-   **                permissions on the file.
-   **
-   **            The erroneous case executes the faulty conditions
-   **            described by the "EACCES" error under the "truncate" system
-   **            system call manpage.  That is, the truncate() function is
-   **            called using a filename which you don't have permission to.
-   **
-   **
-   **  HISTORY:
-   **    06/03 originated by Dustin Kirkland (k1rkland@us.ibm.com)
-   **    10/03 furthered by Kylene J. Smith (kylene@us.ibm.com)
-   **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
-   **    05/04 Updates to suppress compile warnings by Kimberly D. Simon <kdsimon@us.ibm.com>
-   **
-   **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_truncate.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to truncate a file to a specified length.
+ *
+ *  SYSCALLS:
+ *  truncate(), truncate64()
+ *
+ *  TESTCASE: successful
+ *  Trucate a file for which user has appropriate permissions.
+ *
+ *  TESTCASE: unsuccessful
+ *  Attempt to truncate a file for which user does not have
+ *  appropriate permissions.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
 
-   /*
-    ** execute a truncate operation
-    */
-int test_truncate(struct audit_data *context, int variation, int success)
+int common_truncate(struct audit_data *context, int success)
 {
     int rc = 0;
-    int exp_errno = -EACCES;
-    off_t length = 1;		//valid value
-    //size_t count = 80;     // not needed?
-    char *fileName = NULL;
+    char *path, *key;
+    off_t newlen = 1;
+    int exit = -1;
 
-    // dynamically create temp file name
-    fileName = init_tempfile(S_IRWXU, context->euid, context->egid);
-    if (!fileName) {
+    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    key = audit_add_watch(path);
+    if (!path) {
 	rc = -1;
-	goto EXIT;
+	goto exit;
     }
 
-    if (!context->success) {
-	context->euid = context->fsuid = helper_uid;
-    }
-    // Set up audit argument buffer
-    if ((rc = auditArg2(context,
-			AUDIT_ARG_PATH, strlen(fileName), fileName,
-			AUDIT_ARG_IMMEDIATE, sizeof(length), &length)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call
-    context->u.syscall.exit = syscall(__NR_truncate, fileName, length);
-
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
+    if (!success) {
+	rc = seteuid_test();
+	if (rc < 0)
+	    goto exit_path;
+	context->experror = -EACCES;
     }
 
+    rc = context_setcwd(context);
+    if (rc < 0)
+	goto exit_suid;
+    context_settobj(context, key);
 
-EXIT_CLEANUP:
-    // truncate cleanup
-    if ((rc = unlink(fileName)) != 0) {
-	fprintf(stderr, "ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
-	goto EXIT;
-    }
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit_suid;
 
-EXIT:
-    if (fileName)
-	free(fileName);
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting truncate(%s, %lu)\n", path, newlen);
+    exit = syscall(context->u.syscall.sysnum, path, newlen);
+    context_setend(context);
+    context_setresult(context, exit, errno);
+
+exit_suid:
+    if (!success && seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+
+exit_path:
+    audit_rem_watch(path, key);
+    if (exit < 0)
+	destroy_tempfile(path);
+    else
+	free(path);
+    free(key);
+
+exit:
     return rc;
+}
+
+int test_truncate(struct audit_data *context, int variation, int success)
+{
+    return common_truncate(context, success);
+}
+
+int test_truncate64(struct audit_data *context, int variation, int success)
+{
+    return common_truncate(context, success);
 }

@@ -1,125 +1,104 @@
-/**********************************************************************
- **   Copyright (C) International Business Machines  Corp., 2003
- **
- **   This program is free software;  you can redistribute it and/or modify
- **   it under the terms of the GNU General Public License as published by
- **   the Free Software Foundation; either version 2 of the License, or
- **   (at your option) any later version.
- **
- **   This program is distributed in the hope that it will be useful,
- **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
- **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
- **   the GNU General Public License for more details.
- **
- **   You should have received a copy of the GNU General Public License
- **   along with this program;  if not, write to the Free Software
- **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- **
- **
- **
- **  FILE   : test_utime.c
- **
- **  PURPOSE: The test_utime() function builds into the laus_test
- **           framework to verify that the Linux Audit System accurately
- **           logs both successful and erroneous execution of the
- **           "utime" system call.
- **
- **           In the successful case, this function:
- **             1) Creates the temporary file
- **             2) Creates the utime data structure
- **             3) Executes the "utime" system call
- **
- **           The successful case executes the expected conditions
- **           described by the "utime" system call manpage.  That is,
- **           the utime() function is called using a valid filename 
- **           and actually changes the access and modified timestamps
- **           on the file.
- **
- **            In the erroneous case, this function:
- **             1) Creates the temporary file
- **             2) Creates the utime data structure
- **             3) Executes the "utime" system call as helper_uid
- **
- **            The erroneous case executes the faulty conditions
- **            described by the "EPERM" errno.
- **            That is, the utime() function is called on NULL.
- **
- **
- **  HISTORY:
- **    06/03 originated by Dustin Kirkland (k1rkland@us.ibm.com)
- **    10/03 furthered by Kylene J. Smith (kylene@us.ibm.com)
- **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
- **
- **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_utime.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to change file access/modification times.
+ *
+ *  SYSCALLS:
+ *  utime(), utimes()
+ *
+ *  TESTCASE: successful
+ *  Change file access and modification times for a file for which
+ *  user has appropriate permissions.
+ *
+ *  TESTCASE: unsuccessful
+ *  Attempt to change file access and modification times for a file
+ *  for which user does not have appropriate permissions.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
 #include <utime.h>
 #include <sys/time.h>
 
-/*
- ** execute a utime operation
- */
-int test_utime(struct audit_data *context, int variation, int success)
+static int common_utime(struct audit_data *context, int success)
 {
     int rc = 0;
-#ifdef __NR_utime
-    int exp_errno = -EPERM;
-    char *fileName = NULL;
-    struct timespec mod_time, acc_time;
-    struct utimbuf utbuf;
+    char *path, *key;
+    struct utimbuf utbuf = { 30, 10 };
+    int exit = -1;
 
-    // Create the file 
-    fileName = init_tempfile(S_IRWXU|S_IRWXG|S_IRWXO, context->euid,
-			     context->egid);
-    if (!fileName) {
+    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    key = audit_add_watch(path);
+    if (!path) {
 	rc = -1;
-	goto EXIT;
-    }
-    // utime setup
-    utbuf.modtime = mod_time.tv_sec = 10;
-    mod_time.tv_nsec = 0;
-    utbuf.actime = acc_time.tv_sec = 30;
-    acc_time.tv_nsec = 0;
-
-    if (!context->success) {
-
-	context->euid = context->fsuid = helper_uid;
+	goto exit;
     }
 
-    // Set up audit argument buffer
-    if ((rc = auditArg3(context,
-			AUDIT_ARG_PATH, strlen(fileName), fileName,
-			AUDIT_ARG_POINTER, sizeof(struct timespec), &acc_time, 
-			AUDIT_ARG_POINTER, sizeof(struct timespec), &mod_time)
-	 ) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call
-    context->u.syscall.exit = utime(fileName, &utbuf);
-
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
+    if (!success) {
+	rc = seteuid_test();
+	if (rc < 0)
+	    goto exit_path;
+	context->experror = -EPERM;
     }
 
-EXIT_CLEANUP:
-    // utime cleanup
-    if ((rc = unlink(fileName)) != 0) {
-	fprintf(stderr, "ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
-	goto EXIT;
-    }
+    rc = context_setcwd(context);
+    if (rc < 0)
+	goto exit_suid;
+    context_settobj(context, key);
 
-EXIT:
-    if (fileName)
-	free(fileName);
-#endif /* __NR_utime */
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit_suid;
+
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting to change access/mod times for: %s\n", path);
+    exit = syscall(context->u.syscall.sysnum, path, &utbuf);
+    context_setend(context);
+    context_setresult(context, exit, errno);
+
+exit_suid:
+    if (!success && seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+
+exit_path:
+    audit_rem_watch(path, key);
+    if (exit < 0)
+	destroy_tempfile(path);
+    else
+	free(path);
+    free(key);
+
+exit:
     return rc;
+}
+
+int test_utime(struct audit_data *context, int variation, int success)
+{
+    return common_utime(context, success);
+}
+
+int test_utimes(struct audit_data *context, int variation, int success)
+{
+    return common_utime(context, success);
 }

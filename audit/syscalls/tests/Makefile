@@ -102,11 +102,9 @@ TESTS_OBJ	= test_access.o \
 		  test_swapon.o \
 		  test_symlink.o \
 		  test_truncate.o \
-		  test_truncate64.o \
 		  test_umask.o \
 		  test_unlink.o \
-		  test_utime.o \
-		  test_utimes.o
+		  test_utime.o
 
 ALL_OBJ		= $(TESTS_OBJ)
 ALL_AR		= $(TESTS_AR)

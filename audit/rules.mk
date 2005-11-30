@@ -47,6 +47,7 @@ AUDIT_CLEAN_LOG = /etc/init.d/audit stop; /bin/rm -f /var/log/audit.d/*; /etc/in
 
 LINK_AR		= $(AR) rc $@ $^
 LINK_EXE	= $(CC) $(LDFLAGS) -o $@ $^ $(LOADLIBES) $(LDLIBS)
+LINK_SO		= $(CC) $(LDFLAGS) -shared -o $@ $^ $(LOADLIBES) $(LDLIBS)
 
 # If MODE isn't set explicitly, the default for the machine is used
 ifeq ($(MODE), 32)
@@ -78,7 +79,7 @@ endif
 	clean clobber distclean _clean _clobber _distclean \
 	msgque rmlogs showrpms showrpms2
 
-all: deps subdirs $(ALL_AR) $(ALL_EXE)
+all: deps subdirs $(ALL_AR) $(ALL_EXE) $(ALL_SO)
 
 run:
 
@@ -109,7 +110,7 @@ _clobber: clean
 		make -C $$x clobber; \
 	    done; \
 	fi
-	$(RM) $(ALL_EXE) $(ALL_AR)
+	$(RM) $(ALL_EXE) $(ALL_AR) $(ALL_SO)
 
 clobber: _clobber
 

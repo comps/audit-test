@@ -42,7 +42,7 @@ int common_truncate(struct audit_data *context, int success)
     int rc = 0;
     char *path, *key;
     off_t newlen = 1;
-    int exit = -1;
+    int exit;
 
     path = init_tempfile(S_IRWXU, context->euid, context->egid);
     key = audit_add_watch(path);
@@ -80,10 +80,7 @@ exit_suid:
 
 exit_path:
     audit_rem_watch(path, key);
-    if (exit < 0)
-	destroy_tempfile(path);
-    else
-	free(path);
+    destroy_tempfile(path);
     free(key);
 
 exit:

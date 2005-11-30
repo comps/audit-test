@@ -22,9 +22,12 @@
 
 char *audit_add_watch(const char *path)
 {
-    char *key, *k;
+    char *k, *key = NULL;
     char cmd[512] = { 0 };
     int count;
+
+    if (!path)
+	return NULL;
 
     key = strdup(path);
     for (k = key; *k != '\0'; k++)
@@ -35,20 +38,20 @@ char *audit_add_watch(const char *path)
 		     path, key);
     if (count >= sizeof(cmd)) {
 	fprintf(stderr, "Error: audit_add_watch(): cmd too long\n");
-	free(key);
-	key = NULL;
-	goto exit;
+	goto exit_err;
     }
 
     fprintf(stderr, "%s\n", cmd);
     if (system(cmd) < 0) {
 	fprintf(stderr, "Error: adding watch\n");
-	free(key);
-	key = NULL;
+	goto exit_err;
     }
 
-exit:
     return key;
+
+exit_err:
+    free(key);
+    return NULL;
 }
 
 void audit_rem_watch(const char *path, const char *key)

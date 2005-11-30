@@ -218,17 +218,6 @@ Arguments:\n\
   // Save the CWD for audit_set_filters()
   getcwd(cwd, PATH_MAX);
 
-  /* XXX
-  ** Save the current filter.conf file
-  */
-  backupFile("/etc/audit/filter.conf");
-
-  /* XXX
-  ** Create a filter.conf file to audit user messages
-  */
-  system("echo \"event user-message = always;\" >/etc/audit/filter.conf");
-  audit_reload();
-  
   /*
   ** Loop through trustedprograms
   **
@@ -267,10 +256,6 @@ Arguments:\n\
     printf("ERROR: At least 1 trusted program did not execute as expected\n");
     rc = -1;
   }
-
-  /* XXX
-  restoreFile("/etc/audit/filter.conf");
-  */
 
   printf("PASSED = %i, FAILED = %i\n", pass_testcases, fail_testcases);
 

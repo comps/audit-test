@@ -78,6 +78,7 @@ int test_groupadd(struct audit_data* dataPtr) {
   // Execution
   command = mysprintf( "/usr/sbin/groupadd -g %d %s", gid, group );
 
+  dataPtr->type = AUDIT_MSG_USER;
   dataPtr->comm = mysprintf( "groupadd: op=adding group acct=%s res=success", group );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );

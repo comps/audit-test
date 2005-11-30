@@ -408,9 +408,9 @@ int test_usermod(struct audit_data* dataPtr) {
 
   // Delete the user
   sleep( 2 ); // MH: To give time for /etc/passwd to sync
-  command = mysprintf( "/usr/sbin/userdel %s", userNew );
+  command = mysprintf( "/usr/sbin/userdel %s", user );
   if( ( rc = system( command ) ) == -1 ) {
-    printf( "Error deleting user [%s]\n", userNew );
+    printf( "Error deleting user [%s]\n", user );
     goto EXIT;
   }
   free( command );
@@ -551,7 +551,7 @@ int test_usermod(struct audit_data* dataPtr) {
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  dataPtr->comm = mysprintf("usermod: op=chaning home directory acct=%s res=success", user);
+  dataPtr->comm = mysprintf("usermod: op=changing home directory acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -559,7 +559,7 @@ int test_usermod(struct audit_data* dataPtr) {
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  dataPtr->comm = mysprintf("usermod: op=chaning home directory owner acct=%s res=success", user);
+  dataPtr->comm = mysprintf("usermod: op=changing home directory owner acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 

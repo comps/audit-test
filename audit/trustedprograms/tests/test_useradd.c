@@ -130,7 +130,8 @@ int test_useradd(struct audit_data* dataPtr) {
 
   command = mysprintf( "/usr/sbin/useradd -D -g %d -b /tmp -e 2038-01-18 -f 42 -s /bin/sh",
 		       gid );
-  dataPtr->comm = mysprintf( "useradd: op=changing user defaults id=%d res=success", auid );
+  dataPtr->type = AUDIT_MSG_USER;
+  dataPtr->comm = mysprintf( "useradd: op=changing user defaults .* res=success");
 
   // Execution
   runTrustedProgramWithoutVerify( dataPtr, command );
@@ -192,6 +193,7 @@ int test_useradd(struct audit_data* dataPtr) {
   runTrustedProgramWithoutVerify( dataPtr, command );
 
   // Verify audit messages
+  dataPtr->type = AUDIT_MSG_USER;
   dataPtr->comm = mysprintf("useradd: op=adding user acct=%s res=success", user);
   verifyTrustedProgram( dataPtr );
   free(dataPtr->comm );
@@ -262,6 +264,7 @@ int test_useradd(struct audit_data* dataPtr) {
 		       uid, gid, home, user );
 
   // Check
+  dataPtr->type = AUDIT_MSG_USER;
   dataPtr->comm = mysprintf( "useradd: op=adding user acct=%s res=success", user);
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
@@ -322,6 +325,7 @@ int test_useradd(struct audit_data* dataPtr) {
   runTrustedProgramWithoutVerify( dataPtr, command );
 
   // Check
+  dataPtr->type = AUDIT_MSG_USER;
   dataPtr->comm = mysprintf("useradd: op=adding user acct=%s", user);
   verifyTrustedProgram( dataPtr );
   free(dataPtr->comm );

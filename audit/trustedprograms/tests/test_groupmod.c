@@ -47,21 +47,15 @@ int test_groupmod(struct audit_data* dataPtr) {
   int rc = 0;
   int test = 1;
   char* command;
-  //char* oldGroup;
-  //char* newGroup; 
   char* Group;
-  //char* new_password;
-  //char* user;
-  //char* home;
-  //int uid;
   int gid;
   int new_gid;
-  //int tmp;
-  //FILE* fPtr;
 
+/*
   if (( rc = ShadowTestSetup(1) == -1 )) {
       goto EXIT;
   }
+*/
 
   // Test 1:
   // When a group's gid is changed 
@@ -93,6 +87,7 @@ int test_groupmod(struct audit_data* dataPtr) {
 
   // Execution
   command = mysprintf( "/usr/sbin/groupmod -g %d %s", new_gid, Group );
+  dataPtr->type = AUDIT_MSG_USER;
   dataPtr->comm = mysprintf( "groupmod: op=modifing group acct=%s res=success", Group );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );

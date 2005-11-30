@@ -87,15 +87,14 @@ EXIT:
 int verifyTrustedProgram(struct audit_data *dataPtr) {
     int rc = 0;
 
-    rc = audit_verify_log(dataPtr);
+    rc = verify_logresult(dataPtr);
 
-    printf("Verify record\n");
-    if (rc > 0) {
-        printf("AUDIT PASS ");
+    printf("Verify record ");
+    if (rc == 0) {
+        printf("AUDIT PASS\n");
         pass_testcases++;
     } else {
-//        debug_expected(dataPtr);
-        printf("AUDIT FAIL ");
+        printf("AUDIT FAIL\n");
         fail_testcases++;
     }
 

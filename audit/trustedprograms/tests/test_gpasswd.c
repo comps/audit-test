@@ -79,8 +79,8 @@ int test_gpasswd(struct audit_data* dataPtr) {
       goto EXIT;
   }
 
-  if ((group_data = getgrnam("trusted")) == NULL) {
-    printf("ERROR: Unable to get trusted group info.\n");
+  if ((group_data = getgrnam("wheel")) == NULL) {
+    printf("ERROR: Unable to get wheel group info.\n");
     goto EXIT;
   }
 
@@ -177,6 +177,7 @@ int test_gpasswd(struct audit_data* dataPtr) {
   // Execute: remove the password from the group
   dataPtr->uid = dataPtr->euid = uidSave;
   dataPtr->gid = dataPtr->egid = trustedGid;
+  dataPtr->type = AUDIT_MSG_USER;
   command = mysprintf( "/usr/bin/gpasswd %s", group );
   dataPtr->comm = mysprintf("gpasswd: op=modify group acct=%s res=failed", group );
   runTrustedProgramWithoutVerify(dataPtr, command);
@@ -216,6 +217,7 @@ int test_gpasswd(struct audit_data* dataPtr) {
 
   // Execute: remove the password from the group
   command = mysprintf( "/usr/bin/gpasswd -r %s", group );
+  dataPtr->type = AUDIT_MSG_USER;
   dataPtr->comm = mysprintf( "gpasswd: op=deleting group password acct=%s res=success", group);
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
@@ -251,6 +253,7 @@ int test_gpasswd(struct audit_data* dataPtr) {
   
   //gpasswd uses another process to do this task
   dataPtr->pid = NO_PID_CHECK;
+  dataPtr->type = AUDIT_MSG_USER;
 
   dataPtr->comm = mysprintf( "gpasswd: op=changing password acct=%s res=success", group);
   runTrustedProgramWithoutVerify( dataPtr, command );

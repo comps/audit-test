@@ -69,6 +69,7 @@ int postTrustedProgram(struct audit_data* dataPtr);
 int runTrustedProgramAndVerify(struct audit_data* dataPtr, char* command);
 int runTrustedProgramWithoutVerify(struct audit_data* dataPtr, char* command );
 int verifyTrustedProgram(struct audit_data* dataPtr );
+int audit_grep_log(struct audit_data* dataPtr );
 
 int ShadowTestSetup(int backupBool);
 int SystemX(char* command);

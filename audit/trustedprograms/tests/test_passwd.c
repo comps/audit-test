@@ -43,6 +43,7 @@
 #include "tempname.h"
 #include <time.h>
 #include <pwd.h>
+#include <libaudit.h>
 
 int test_passwd(struct audit_data* dataPtr) {
 
@@ -154,7 +155,8 @@ int test_passwd(struct audit_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->comm = mysprintf( "PAM chauthtok: user=%s exe=\"/usr/bin/passwd\" (hostname=?, addr=?, terminal=? result=Success)", user );
+  dataPtr->comm = mysprintf( "PAM chauthtok: user=%s .* result=Success", user );
+  dataPtr->type = AUDIT_MSG_USER;
 
    sleep(6); 
   // Check for audit record
@@ -213,7 +215,8 @@ int test_passwd(struct audit_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->comm = mysprintf( "PAM chauthtok: user=%s exe=\"/usr/bin/passwd\" (hostname=?, addr=?, terminal=? result=Authentication token manipulation error)", user);
+  dataPtr->comm = mysprintf( "PAM chauthtok: user=%s .* result=Authentication token manipulation error", user);
+  dataPtr->type = AUDIT_MSG_USER;
 
   // Check for audit record
   verifyTrustedProgram( dataPtr );

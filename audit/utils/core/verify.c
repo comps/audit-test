@@ -54,7 +54,7 @@ ts_exit verify_logresult(struct audit_data *context)
 {
     ts_exit rc;
     char cmd[512] = {0};
-    int count;
+    int count = 0;
 
     if (context->type & AUDIT_MSG_SYSCALL) {
 	count = snprintf(cmd, sizeof(cmd), "augrep -m1 'type=~SYSCALL' "
@@ -93,11 +93,16 @@ ts_exit verify_logresult(struct audit_data *context)
 			      " filterkey==%s", 
 			      context->u.syscall.fs_tobj);
 	}
-	if (count >= sizeof(cmd)) {
-	    fprintf(stderr, "ERROR: verify_logresult: cmd too long\n");
-	    rc = TEST_ERROR;
-	    goto exit;
-	}
+    } else if (context->type & AUDIT_MSG_USER) {
+	count = snprintf(cmd, sizeof(cmd), "augrep -m1 'type=~USER' "
+			 "msg_1=~\"%s\"",
+			 context->comm);
+    }
+
+    if (count >= sizeof(cmd)) {
+	fprintf(stderr, "ERROR: verify_logresult: cmd too long\n");
+	rc = TEST_ERROR;
+	goto exit;
     }
 
     rc = (system(cmd) == 0) ? TEST_EXPECTED : TEST_UNEXPECTED;

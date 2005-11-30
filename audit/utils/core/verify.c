@@ -85,8 +85,12 @@ ts_exit verify_logresult(struct audit_data *context)
 	}
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_CWD) {
 	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
-			      " cwd==%s filterkey==%s", 
-			      context->u.syscall.fs_cwd,
+			      " cwd==%s", 
+			      context->u.syscall.fs_cwd);
+	}
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_WATCH) {
+	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
+			      " filterkey==%s", 
 			      context->u.syscall.fs_tobj);
 	}
 	if (count >= sizeof(cmd)) {

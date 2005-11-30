@@ -55,13 +55,14 @@ enum audit_arg {
  */
 
 /* message type */
-#define AUDIT_MSG_LOGIN         0x0001
-#define AUDIT_MSG_SYSCALL	0x0010
-#define AUDIT_MSG_CWD           0x0020
-#define AUDIT_MSG_IPC           0x0040
-#define AUDIT_MSG_SOCKADDR      0x0080
-#define AUDIT_MSG_USER          0x0100
-#define AUDIT_MSG_DAEMON        0x1000
+#define AUDIT_MSG_LOGIN         0x001
+#define AUDIT_MSG_SYSCALL	0x002
+#define AUDIT_MSG_CWD           0x004
+#define AUDIT_MSG_IPC           0x008
+#define AUDIT_MSG_SOCKADDR      0x010
+#define AUDIT_MSG_WATCH         0x020
+#define AUDIT_MSG_USER          0x040
+#define AUDIT_MSG_DAEMON        0x080
 
 /* syscall arch */
 #if defined(__i386__)

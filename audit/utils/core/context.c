@@ -131,11 +131,13 @@ int context_setcwd(struct audit_data *context)
 
 void context_setsobj(struct audit_data *context, char *obj)
 {
+    context->type |= AUDIT_MSG_WATCH;
     strncpy(context->u.syscall.fs_sobj, obj, PATH_MAX);
 }
 
 void context_settobj(struct audit_data *context, char *obj)
 {
+    context->type |= AUDIT_MSG_WATCH;
     strncpy(context->u.syscall.fs_tobj, obj, PATH_MAX);
 }
 

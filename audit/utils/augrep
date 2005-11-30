@@ -138,7 +138,8 @@ sub parse {
     my ($orig) = $line;
     my ($key_re) = q{
             [^\s"'=]+ |         # normal keys
-            auditd\ pid |       # DAEMON_START
+            auditd\ pid |       # DAEMON_START, DAEMON_END
+            sending\ pid |      # DAEMON_END
             login\ pid |        # LOGIN
             (?:old|new)\ auid | # LOGIN
             user\ pid           # USER_AUTH
@@ -223,6 +224,15 @@ sub merge_kv {
         $serial++ while ($new_k = $k.'_'.$serial and
             exists $self->{$new_k} and $self->{$new_k} ne $v);
         $k = $new_k;
+    }
+
+    # fix up auditd-generated records which use a comma-space separator
+    my ($type) = $self->{'type'};
+    if (defined $type 
+            and ($type eq 'DAEMON_START' or $type eq 'DAEMON_END') 
+            and $k ne 'extra_text'
+            and substr($v, -1) eq ',') {
+        chop($v);
     }
 
     # remember the order in which fields were seen

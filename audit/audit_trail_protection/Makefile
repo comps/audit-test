@@ -1,5 +1,6 @@
-#########################################################################
-#   Copyright (C) International Business Machines  Corp., 2003
+###############################################################################
+# Copyright (C) International Business Machines  Corp., 2003
+# (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 #
 #   This program is free software;  you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -14,22 +15,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#
-#
-#
-#  FILE   : Makefile
-#
-#  PURPOSE: The default "all" target uses the gcc compiler to compile
-#           the audit trail protection test program.
-#
-#           The "clean" target removes all files the end in ".o" (object
-#           files).
-#
-#
-#  HISTORY:
-#    09/03 Originated by Michael A. Halcrow <mike@halcrow.us>
-#
-##########################################################################
+###############################################################################
 
 TOPDIR		= ..
 CPPFLAGS 	+= -I$(TOPDIR)/include

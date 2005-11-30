@@ -1,5 +1,6 @@
-##########################################################################
-#   Copyright (C) International Business Machines  Corp., 2003
+###############################################################################
+# Copyright (C) International Business Machines  Corp., 2003
+# (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 #
 #   This program is free software;  you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -14,31 +15,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#
-#
-#
-#  FILE   : Makefile
-#
-#  PURPOSE: This makefile facilitates the compiling and linking of the
-#           Linux Auditing System test suite.
-#            
-#           The default "all" target will compile all files ending in ".c"
-#           in the current directory, after executing "make" in the "./tests"
-#           subdirectory and the "./utils" subdirectory.  It will then link
-#           the ".o" object files created and produce an executable "syscalls".
-#
-#           The "clean" target will remove all files ending in ".o" and the
-#           "syscalls" binary from the current directory, as well as
-#           executing "make clean" in the "./tests" and the "./utils" 
-#           subdirectories.
-#
-#
-#  HISTORY:
-#    06/03 originated by Dustin Kirkland (k1rkland@us.ibm.com)
-#    06/03 Updated by Michael A. Halcrow <mike@halcrow.us>
-#    08/03 Updated by Daniel H. Jones <danjones@us.ibm.com>
-#
-##########################################################################
+###############################################################################
 
 TOPDIR		= ..
 TESTDIR		= .

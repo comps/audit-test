@@ -44,8 +44,14 @@ int test_rmdir(struct audit_data *context, int variation, int success)
     int exit = -1;
 
     path = init_tempdir(S_IRWXU, context->euid, context->egid);
+    if (!path) {
+	rc = -1;
+	goto exit;
+    }
+
     key = audit_add_watch(path);
-    if (!path || !key) {
+    if (!key) {
+	destroy_tempdir(path);
 	rc = -1;
 	goto exit;
     }

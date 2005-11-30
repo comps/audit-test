@@ -260,7 +260,8 @@ sub to_s {
         map {
             my $v = $self->{$_};
             $v =~ /"/ and $v = "'$v'"
-                or $v =~ /['\s]/ and $v = "\"$v\"";
+                or $v =~ /['\s]/ and $v = "\"$v\""
+                or $v =~ /,$/ and $v = "\"$v\"";
             "$_=$v"
         } @{$self->{'_order'}});
 }

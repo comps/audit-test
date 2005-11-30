@@ -136,48 +136,59 @@ sub new {
 sub parse {
     my ($self, $line) = @_;
     my ($orig) = $line;
+    my ($key_re) = q{
+            [^\s"'=]+ |         # normal keys
+            auditd\ pid |       # DAEMON_START
+            login\ pid |        # LOGIN
+            (?:old|new)\ auid | # LOGIN
+            user\ pid           # USER_AUTH
+        };
+
     while (
             $line =~ s/   # -- simple value --
         \A\s*             # skip leading ws
-        (\S[^"'=]*)       # $1 = key: no quotes (but might have ws!)
-        (?<!\s)           # last char of key should not be ws
+        ($key_re)         # $1 = key, incl known keys with ws
             =             # no ws around equal sign
-        ()                # $2 = empty
+        (?!['"])          # first char of value cannot be a quote
+        ()                # $2 = empty (no quotes)
         (                 # $3 = value
-         [^'"\s]          # first char cannot be a quote
          (?:
-            [^\\\s] |           # normal chars; no ws allowed
-            (?:\\[0-8]{1,3}) |  # escaped octal
+            [^\\\s]+ |          # normal chars; no ws allowed
+            (?:\\[0-8]{1,3})+ | # escaped octal
             (?:\\.)             # escaped character
          )*                     # repeat to capture all of value
         )
-        \s*               # skip ws trailing value
-        (?=\z|\S[^"']*=)  # next should be end or key
-                //x or
+                //xo or
             $line =~ s/   # -- quoted value--
         \A\s*             # skip leading ws
-        (\S[^"'=]*)       # $1 = key: no quotes (but might have ws!)
-        (?<!\s)           # last char of key should not be ws
+        ($key_re)         # $1 = key, incl known keys with ws
             =             # no ws around equal sign
         (['"])            # $2 = leading quote
         (                 # $3 = value
          (?:
-            [^\2\\] |           # normal chars
-            (?:\\[0-8]{1,3}) |  # escaped octal
+            [^\2\\]+ |          # normal chars
+            (?:\\[0-8]{1,3})+ | # escaped octal
             (?:\\.)             # escaped character
          )*                     # repeat to capture all of value
         )
         \2                # backreference to end quote
-        \s*               # skip ws trailing value
-        (?=\z|\S[^"']*=)  # next should be end or key
+                //xo or
+            $line =~ s/   # -- extra text --
+        \A\s*             # skip leading ws
+        (\S+)             # only capture one token at a time
                 //x
     ) {
         my ($k, $v) = ($1, $3);
-        $v =~ s/^(['"])(.*)\1$/$2/;
-        $self->merge_kv($k, $v);
+        if (defined $v) {
+            $k =~ s/\s+/_/g;
+            $v =~ s/^(['"])(.*)\1$/$2/;
+            $self->merge_kv($k, $v);
+        } else {
+            $self->merge_kv('extra_text', $k);
+        }
     }
 
-    return if length($line) == 0;
+    return unless $line =~ /\S/;
     chomp($line);
     print STDERR "augrep: WARNING: could not parse [$line] from: $orig";
 }
@@ -198,6 +209,12 @@ sub merge_kv {
         # simply concatenate types
         if ($k eq 'type') {
             $self->{$k} .= ',' . $v;
+            return;
+        }
+
+        # concatenate extra_text with spaces
+        if ($k eq 'extra_text') {
+            $self->{$k} .= ' ' . $v;
             return;
         }
 
@@ -239,9 +256,13 @@ sub keys {
 
 sub to_s {
     my ($self) = @_;
-    return join(' ', map {
-            (my $v = $self->{$_}) =~ s/.*\s.*/"$&"/;
-            "$_=$v" } @{$self->{'_order'}});
+    return join(' ', 
+        map {
+            my $v = $self->{$_};
+            $v =~ /"/ and $v = "'$v'"
+                or $v =~ /['\s]/ and $v = "\"$v\"";
+            "$_=$v"
+        } @{$self->{'_order'}});
 }
 
 sub test {
@@ -257,10 +278,10 @@ sub test {
         { $prev_was_cond = 0; next; }
 
         # handle equality negations generically
-        $a =~ s{^(\w[\w\s]*)!=(.*)}{$1==$2} and $negate = 1;
+        $a =~ s{^(\w+)!=(.*)}{$1==$2} and $negate = 1;
 
         # string comparison, handling surrouding quotes
-        if ($a =~ s{^(\w[\w\s]*)==(.*)}{}) {
+        if ($a =~ s{^(\w+)=(?:=|(?!~))(.*)}{}) {
             if ($1 eq 'msg_time' or $1 eq 'msg_seq') {
                 $a = "$1==$2";      # punt to numeric comparison
             } else {
@@ -274,7 +295,7 @@ sub test {
         }
 
         # numeric comparison
-        if ($a =~ s{^(\w[\w\s]*)(<=|>=|==|<|>)(.*)}{}) {
+        if ($a =~ s{^(\w+)(<=|>=|=(?:=|(?!~))|<|>)(.*)}{}) {
             if ($1 eq 'msg_time') {
                 my ($op, $seconds) = ($2, $3);
                 $seconds = `date +\%s -d '$seconds'` if $seconds =~ /[^\d.]/;
@@ -301,7 +322,7 @@ sub test {
         };
 
         # regex comparions
-        if ($a =~ s{^(\w[\w\s]*)(!~|=~)(.*)}{}) {
+        if ($a =~ s{^(\w+)(!~|=~|~)(.*)}{}) {
             $a = qq(
                 ((substr(\$self->{'$1'}, 0, 1) =~ /['"]/) ?
                  (substr(\$self->{'$1'}, 1, -1) $2 m{$3}) :

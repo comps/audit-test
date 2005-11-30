@@ -123,12 +123,14 @@ package AuditRecord;
 sub new {
     my ($class, $line) = @_;
     my ($self) = {
-        _raw => ($line || ''),
         _order => [],
     };
     bless $self, $class;
 
-    $self->parse($line) if (defined $line);
+    if (defined $line) {
+        $self->{'_raw'} = $line;
+        $self->parse($line);
+    }
 
     return $self;
 }

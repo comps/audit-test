@@ -45,10 +45,12 @@
 /*
  * Default Values
  */
-#define XATTR_TEST_VALUE "text/plain"
 /* ipc tests */
 #define TEST_IPC_KEY 50 /* arbitrary key, expected to be unique */
 #define TEST_MSG_TYPE 1 /* user-defined ipc message type */
+/* xattr tests */
+#define TEST_FILE_XATTR_NAME  "user.mime_type"
+#define TEST_FILE_XATTR_VALUE "text/plain"
 
 #ifndef __powerpc__
 #define __NR_chown16 182

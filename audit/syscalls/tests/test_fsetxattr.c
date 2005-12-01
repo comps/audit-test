@@ -1,59 +1,40 @@
-/**********************************************************************
- **   Copyright (C) International Business Machines  Corp., 2003
- **
- **   This program is free software;  you can redistribute it and/or modify
- **   it under the terms of the GNU General Public License as published by
- **   the Free Software Foundation; either version 2 of the License, or
- **   (at your option) any later version.
- **
- **   This program is distributed in the hope that it will be useful,
- **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
- **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
- **   the GNU General Public License for more details.
- **
- **   You should have received a copy of the GNU General Public License
- **   along with this program;  if not, write to the Free Software
- **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- **
- **
- **
- **  FILE       : test_fsetxattr.c
- **
- **  PURPOSE    : To test the fsetxattr library call auditing.
- **
- **  DESCRIPTION: The test_fsetxattr() function builds into the
- **  laus_test framework to verify that the Linux Audit System
- **  accurately logs both successful and erroneous execution of the
- **  "fsetxattr" system call.
- **
- **  In the successful case, this function:
- **   1) Creates a temporary file
- **   2) Opens the temporary file
- **   3) Calls fsetxattr on the opened file with
- **      name="user.mime_type" value=XATTR_TEST_VALUE flags=XATTR_CREATE
- **   4) Verifies the success result.
- **
- **  The successful case passes a valid file descriptor, name, value,
- **  size, and flag to the  fsetxattr call, thus satisfying the
- **  conditions as given in the man page for fsetxattr for a success
- **  result.
- **  
- **  In the erroneous case, this function:
- **   1) Creates a temporary file
- **   2) Opens the temporary file
- **   3) Calls fsetxattr on the opened file with
- **      name="user.mime_type" value=XATTR_TEST_VALUE flags=XATTR_REPLACE
- **   4) Verifies the erroneous result.
- **      
- **  The erroneous case causes an ENOATTR as detailed in the man page by 
- **  trying to replace and attribute which has not been set.
- **
- **  HISTORY    :
- **    07/03 Originated by Michael A. Halcrow <mike@halcrow.us>
- **    07/03 Furthered by Kylene J. Smith <kylene@us.ibm.com>
- **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
- **
- **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_fsetxattr.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to set extended attribute values via a
+ *  file descriptor.
+ *
+ *  SYSCALLS:
+ *  fsetxattr()
+ *
+ *  TESTCASE: successful
+ *  Set an extended attribute value for a file for which user has
+ *  appropriate permissions.
+ *
+ *  TESTCASE: unsuccessful
+ *  Attempt to set an extended attribute value for a file for which
+ *  user does not have appropriate permissions.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
@@ -61,80 +42,65 @@
 
 int test_fsetxattr(struct audit_data *context, int variation, int success)
 {
-
     int rc = 0;
-    int exp_errno = -ENOATTR;
-    char *path = NULL;
+    char *path, *key;
+    int fd;
+    char *aname = TEST_FILE_XATTR_NAME;
+    char *avalue = TEST_FILE_XATTR_VALUE;
+    int flags = XATTR_CREATE;
+    int exit;
 
-    int filedes;
-    char *name = "user.mime_type";
-    char value[sizeof(XATTR_TEST_VALUE)];
-    size_t size;
-    int flags;
-
-	/**
-	 * Do as much setup work as possible right here
-	 */
-    bzero(value, sizeof(XATTR_TEST_VALUE));
-    size = sizeof(XATTR_TEST_VALUE);
-
-    // Create the target file
-    path = init_tempfile(S_IRWXU | S_IRWXG | S_IRWXO, context->euid,
-			 context->egid);
+    path = init_tempfile(S_IRWXU, context->euid, context->egid);
     if (!path) {
 	rc = -1;
-	goto EXIT;
-    }
-    // Open the target file
-    if ((filedes = rc = open(path, O_RDWR)) == -1) {
-	fprintf(stderr, "Error opening file [%s] for read/write access: errno=%i\n",
-		path, errno);
-	goto EXIT_CLEANUP_UNLINK;
+	goto exit;
     }
 
-    if (context->success) {	// Set up for success
-	flags = XATTR_CREATE;
-	strcpy(value, XATTR_TEST_VALUE);
-    } else {			// Set up for error
-	flags = XATTR_REPLACE;
+    key = audit_add_watch(path);
+    if (!key) {
+	destroy_tempdir(path);
+	rc = -1;
+	goto exit;
     }
 
-    // Set up audit argument buffer
-    if ((rc = auditArg5(context,
-			AUDIT_ARG_PATH, strlen(path), path,
-			AUDIT_ARG_STRING, strlen(name), name,
-			AUDIT_ARG_POINTER, size, value,
-			AUDIT_ARG_IMMEDIATE, sizeof(size_t), &size,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &flags)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT_CLEANUP_CLOSE;
+    rc = fd = open(path, O_RDWR);
+    if (rc < 0) {
+	fprintf(stderr, "Error: Could not open %s: %s\n", path,
+		strerror(errno));
+	goto exit;
     }
-    // Do pre-system call work
-    preSysCall(context);
+    fprintf(stderr, "Opened file: %s fd: %i\n", path, fd);
 
-    // Execute system call
-    context->u.syscall.exit =
-	syscall(__NR_fsetxattr, filedes, name, value, size, flags);
-
-    // Do post-system call work
-    postSysCall(context, errno, -1, exp_errno);
-
-EXIT_CLEANUP_CLOSE:
-    if ((close(filedes)) == -1) {
-	fprintf(stderr, "Error closing filehandle %d\n", filedes);
-	goto EXIT_CLEANUP_UNLINK;
+    if (!success) {
+	rc = seteuid_test();
+	if (rc < 0)
+	    goto exit_path;
+	context->experror = -EACCES;
     }
 
-EXIT_CLEANUP_UNLINK:
-    // Clean up from success case setup
-    if ((unlink(path)) == -1) {
-	fprintf(stderr, "Error unlinking file %s\n", path);
-	goto EXIT;
-    }
+    context_settobj(context, key);
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit_suid;
 
-EXIT:
-    if (path)
-	free(path);
-    fprintf(stderr, "Returning from test\n");
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting setxattr(%i, %s, %s, %zi, %i)\n", 
+	    fd, aname, avalue, sizeof(avalue), flags);
+    exit = syscall(context->u.syscall.sysnum, fd, aname, avalue,
+		   sizeof(avalue), flags);
+    context_setend(context);
+    context_setresult(context, exit, errno);
+
+exit_suid:
+    if (!success && seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+
+exit_path:
+    audit_rem_watch(path, key);
+    destroy_tempfile(path);
+    free(key);
+
+exit:
     return rc;
 }

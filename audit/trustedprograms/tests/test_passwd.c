@@ -134,10 +134,10 @@ int test_passwd(struct audit_data* dataPtr) {
 "expect -re \"UNIX password: $\"\n"
 "exp_send \"%s\\r\\n\" \n"
 "sleep 1\n"
-"expect -re \"New UNIX password: $\"\n"
+"expect -re \"Enter new password: $\"\n"
 "sleep 1\n"
 "exp_send \"%s\\r\\n\" \n"
-"expect -re \"Retype new UNIX password: $\"\n"
+"expect -re \"Re-type new password: $\"\n"
 "sleep 1\n"
 "exp_send \"%s\\r\\n\" \n"
 "expect \".\" \n", password, newpassword, newpassword);

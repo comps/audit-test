@@ -126,7 +126,7 @@ int test_login(struct audit_data* dataPtr) {
   printf("TEST %d\n", test++);
   // Setup
   // Create expect script file to execute login session
-  pts_filename = init_tempfile(S_IRWXU, dataPtr->uid, dataPtr->gid);
+  pts_filename = init_tempfile(S_IRWXO, dataPtr->uid, dataPtr->gid);
   if (!pts_filename)
       exit(-1);
   filename = (char *) malloc(strlen(tempname));
@@ -175,13 +175,13 @@ int test_login(struct audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
   dataPtr->type = AUDIT_MSG_USER;
 
-  dataPtr->comm = mysprintf("PAM authentication: user=%s .* terminal=pts/%d result=Success", user, pts); 
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./bin/login.* terminal=pts/%d result=Success", user, pts); 
   verifyPAMProgram( dataPtr );
 
-  dataPtr->comm = mysprintf("PAM accounting: user=%s .* terminal=pts/%d result=Success", user, pts);
+  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=./bin/login.* terminal=pts/%d result=Success", user, pts);
   verifyPAMProgram( dataPtr );
 
-  dataPtr->comm = mysprintf("PAM session open: user=%s .* terminal=pts/%d result=Success", user, pts);
+  dataPtr->comm = mysprintf("PAM session open: user=%s exe=./bin/login.* terminal=pts/%d result=Success", user, pts);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
@@ -243,7 +243,7 @@ expect -re \"Password: \" { exp_send \"%s\\r\"} \n",
   dataPtr->type = AUDIT_MSG_USER;
 
   //strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s .* terminal=pts/%d result=Authentication failure", user, pts);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./bin/login.* terminal=pts/.*result=Authentication failure", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup

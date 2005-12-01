@@ -37,14 +37,10 @@
 #include "includes.h"
 #include "syscalls.h"
 #include <linux/capability.h>
-#if defined(__x86_64__) || defined(__ia64__)
+
+/* sys/capability.h not available on RHEL4 U2 glibc-2.3.4-2.13 */
 extern int capget(cap_user_header_t header, cap_user_data_t data);
 extern int capset(cap_user_header_t header, const cap_user_data_t data);
-#else
-#undef _POSIX_SOURCE
-#include <sys/capability.h>
-#define _POSIX_SOURCE
-#endif
 
 int test_capset(struct audit_data *context, int variation, int success)
 {

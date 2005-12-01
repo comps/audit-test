@@ -95,7 +95,7 @@ int test_su(struct audit_data* dataPtr) {
   printf("TEST %d\n", test++);
   // Setup
   // Create expect script file to execute su session
-  pts_filename = init_tempfile(S_IRWXU, dataPtr->uid, dataPtr->gid);
+  pts_filename = init_tempfile(S_IRWXO, dataPtr->uid, dataPtr->gid);
   pts_filename2 = init_tempfile(S_IRWXU, dataPtr->uid, dataPtr->gid);
   if (!pts_filename || !pts_filename2)
       exit(-1);

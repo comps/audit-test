@@ -29,8 +29,6 @@ TESTS_OBJ	= test_access.o \
 		  test_chdir.o \
 		  test_chmod.o \
 		  test_chown.o \
-		  test_chown16.o \
-		  test_chown32.o \
 		  test_clock_settime.o \
 		  test_clone.o \
 		  test_creat.o \
@@ -38,8 +36,6 @@ TESTS_OBJ	= test_access.o \
 		  test_execve.o \
 		  test_fchmod.o \
 		  test_fchown.o \
-		  test_fchown16.o \
-		  test_fchown32.o \
 		  test_fork.o \
 		  test_fremovexattr.o \
 		  test_fsetxattr.o \
@@ -48,8 +44,6 @@ TESTS_OBJ	= test_access.o \
 		  test_ioperm.o \
 		  test_iopl.o \
 		  test_lchown.o \
-		  test_lchown16.o \
-		  test_lchown32.o \
 		  test_link.o \
 		  test_lremovexattr.o \
 		  test_lsetxattr.o \

@@ -98,6 +98,7 @@ static int lookup_variation(char *varstr)
 	return SYSCALL_FILE;
     if (strcmp(varstr, "symlink") == 0)
 	return SYSCALL_SYMLINK;
+    fprintf(stderr, "Testcase variation \"%s\", not found.\n", varstr);
     return -1;
 }
 

@@ -56,12 +56,6 @@
 #define TEST_SYM_XATTR_NAME   "trusted.md5sum"
 #define TEST_SYM_XATTR_VALUE  "0"
 
-#ifndef __powerpc__
-#define __NR_chown16 182
-#define __NR_fchown16 95
-#define __NR_lchown16 16
-#endif
-
 /* 
  * Global variables
  */
@@ -80,7 +74,6 @@ int test_capset(struct audit_data *, int, int);
 int test_chdir(struct audit_data *, int, int);
 int test_chmod(struct audit_data *, int, int);
 int test_chown(struct audit_data *, int, int);
-int test_chown16(struct audit_data *, int, int);
 int test_chown32(struct audit_data *, int, int);
 int test_clock_settime(struct audit_data *, int, int);
 int test_clone(struct audit_data *, int, int);
@@ -90,7 +83,6 @@ int test_delete_module(struct audit_data *, int, int);
 int test_execve(struct audit_data *, int, int);
 int test_fchmod(struct audit_data *, int, int);
 int test_fchown(struct audit_data *, int, int);
-int test_fchown16(struct audit_data *, int, int);
 int test_fchown32(struct audit_data *, int, int);
 int test_fork(struct audit_data *, int, int);
 int test_fremovexattr(struct audit_data *, int, int);
@@ -100,7 +92,6 @@ int test_ioctl(struct audit_data *, int, int);
 int test_ioperm(struct audit_data *, int, int);
 int test_iopl(struct audit_data *, int, int);
 int test_lchown(struct audit_data *, int, int);
-int test_lchown16(struct audit_data *, int, int);
 int test_lchown32(struct audit_data *, int, int);
 int test_link(struct audit_data *, int, int);
 int test_lremovexattr(struct audit_data *, int, int);

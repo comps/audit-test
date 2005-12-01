@@ -131,20 +131,20 @@ int context_setcwd(struct audit_data *context)
 
 void context_setsobj(struct audit_data *context, char *obj)
 {
-    context->type |= AUDIT_MSG_WATCH;
+    context->type |= AUDIT_MSG_PATH;
     strncpy(context->u.syscall.fs_sobj, obj, PATH_MAX);
 }
 
 void context_settobj(struct audit_data *context, char *obj)
 {
-    context->type |= AUDIT_MSG_WATCH;
+    context->type |= AUDIT_MSG_PATH;
     strncpy(context->u.syscall.fs_tobj, obj, PATH_MAX);
 }
 
-void context_setsym(struct audit_data *context, char *obj)
+void context_setwatch(struct audit_data *context, char *obj)
 {
-    context->type |= AUDIT_MSG_SYMLINK;
-    strncpy(context->u.syscall.fs_sym, obj, PATH_MAX);
+    context->type |= AUDIT_MSG_WATCH;
+    strncpy(context->u.syscall.fs_watch, obj, PATH_MAX);
 }
 
 char *context_getcwd(struct audit_data *context)
@@ -189,9 +189,9 @@ void context_dump(const struct audit_data *context)
 	}
 	if (context->type & AUDIT_MSG_CWD)
 	    fprintf(stderr, "\tfs_cwd    : %s\n", syscall->fs_cwd ?: "(null)");
-	if (context->type & AUDIT_MSG_SYMLINK)
-	    fprintf(stderr, "\tfs_sym    : %s\n", syscall->fs_sym ?: "(null)");
-	if (context->type & AUDIT_MSG_WATCH) {
+	if (context->type & AUDIT_MSG_WATCH)
+	    fprintf(stderr, "\tfs_watch  : %s\n", syscall->fs_watch ?:"(null)");
+	if (context->type & AUDIT_MSG_PATH) {
 	    fprintf(stderr, "\tfs_sobj   : %s\n", syscall->fs_sobj ?: "(null)");
 	    fprintf(stderr, "\tfs_tobj   : %s\n", syscall->fs_tobj ?: "(null)");
 	}

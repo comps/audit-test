@@ -50,20 +50,13 @@
 static int test_lremovexattr_file(struct audit_data *context, int success)
 {
     int rc = 0;
-    char *path, *key;
+    char *path;
     char *aname = TEST_FILE_XATTR_NAME;
     char *avalue = TEST_FILE_XATTR_VALUE;
     int exit;
 
     path = init_tempfile(S_IRWXU, context->euid, context->egid);
     if (!path) {
-	rc = -1;
-	goto exit;
-    }
-
-    key = audit_add_watch(path);
-    if (!key) {
-	destroy_tempfile(path);
 	rc = -1;
 	goto exit;
     }
@@ -87,7 +80,7 @@ static int test_lremovexattr_file(struct audit_data *context, int success)
     rc = context_setcwd(context);
     if (rc < 0)
 	goto exit_suid;
-    context_settobj(context, key);
+    context_settobj(context, path);
 
     rc = context_setidentifiers(context);
     if (rc < 0)
@@ -105,9 +98,7 @@ exit_suid:
 	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
 
 exit_path:
-    audit_rem_watch(path, key);
     destroy_tempfile(path);
-    free(key);
 
 exit:
     return rc;
@@ -153,7 +144,7 @@ static int test_lremovexattr_symlink(struct audit_data *context, int success)
     rc = context_setcwd(context);
     if (rc < 0)
 	goto exit_suid;
-    context_setsym(context, path);
+    context_settobj(context, path);
 
     rc = context_setidentifiers(context);
     if (rc < 0)

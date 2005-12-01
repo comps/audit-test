@@ -91,12 +91,18 @@ ts_exit verify_logresult(struct audit_data *context)
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_WATCH) {
 	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
 			      " filterkey==%s", 
-			      context->u.syscall.fs_tobj);
+			      context->u.syscall.fs_watch);
 	}
-	if (count < sizeof(cmd) && context->type & AUDIT_MSG_SYMLINK) {
-	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
-			      " name==%s", 
-			      context->u.syscall.fs_sym);
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH) {
+	    if (context->u.syscall.fs_sobj)
+		count += snprintf(&cmd[count], sizeof(cmd)-count, 
+				  " name==%s name_1=%s", 
+				  context->u.syscall.fs_sobj,
+				  context->u.syscall.fs_tobj);
+	    else
+		count += snprintf(&cmd[count], sizeof(cmd)-count, 
+				  " name==%s", 
+				  context->u.syscall.fs_tobj);
 	}
     } else if (context->type & AUDIT_MSG_USER) {
 	count = snprintf(cmd, sizeof(cmd), "augrep -m1 'type=~USER' "

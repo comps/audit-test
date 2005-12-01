@@ -86,7 +86,7 @@ int test_fremovexattr(struct audit_data *context, int variation, int success)
 	context->experror = -EACCES;
     }
 
-    context_settobj(context, key);
+    context_setwatch(context, key);
     rc = context_setidentifiers(context);
     if (rc < 0)
 	goto exit_suid;

@@ -43,19 +43,12 @@
 static int common_utime(struct audit_data *context, int success)
 {
     int rc = 0;
-    char *path, *key;
+    char *path;
     struct utimbuf utbuf = { 30, 10 };
     int exit;
 
     path = init_tempfile(S_IRWXU, context->euid, context->egid);
     if (!path) {
-	rc = -1;
-	goto exit;
-    }
-
-    key = audit_add_watch(path);
-    if (!key) {
-	destroy_tempfile(path);
 	rc = -1;
 	goto exit;
     }
@@ -70,7 +63,7 @@ static int common_utime(struct audit_data *context, int success)
     rc = context_setcwd(context);
     if (rc < 0)
 	goto exit_suid;
-    context_settobj(context, key);
+    context_settobj(context, path);
 
     rc = context_setidentifiers(context);
     if (rc < 0)
@@ -88,9 +81,7 @@ exit_suid:
 	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
 
 exit_path:
-    audit_rem_watch(path, key);
     destroy_tempfile(path);
-    free(key);
 
 exit:
     return rc;

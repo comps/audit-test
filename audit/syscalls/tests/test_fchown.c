@@ -80,7 +80,7 @@ static int common_fchown(struct audit_data *context, int success)
 	context->experror = -EPERM;
     }
 
-    context_settobj(context, key);
+    context_setwatch(context, key);
     rc = context_setidentifiers(context);
     if (rc < 0)
 	goto exit_suid;

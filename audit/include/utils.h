@@ -82,10 +82,12 @@ int restoreFile(char*);
 /*
  * Temp Data Creation
  */
-char *init_tempfile(mode_t, uid_t, gid_t);
 char *init_tempdir(mode_t, uid_t, gid_t);
+char *init_tempfile(mode_t, uid_t, gid_t);
+char *init_tempsym(char *, uid_t, gid_t);
 void destroy_tempdir(char *);
 void destroy_tempfile(char *);
+void destroy_tempsym(char *);
 
 int createTempUser(char** user, int* uid, char** homedir);
 int createTempUserName(char** user, int* uid, char** homedir);

@@ -21,11 +21,13 @@
  */
 
 #include "includes.h"
+#include <libgen.h>
 
 static int common_setperms(char *name, mode_t mode, uid_t uid, gid_t gid, 
 			   int file)
 {
-    if (chmod(name, mode) < 0) {
+    if ((mode != -1) &&
+	(chmod(name, mode) < 0)) {
 	fprintf(stderr, "Error: initializing temp%s: chmod(%d): %s\n",
 		file ? "file" : "dir", mode, strerror(errno));
 	return -1;
@@ -117,10 +119,62 @@ exit_err:
     return NULL;
 }
 
+char *init_tempsym(char *target, uid_t uid, gid_t gid)
+{
+    char *spath;
+    char *sname = "/sym";
+
+    spath = init_tempdir(-1, uid, gid);
+    if (!spath) {
+	fprintf(stderr, "Error: initializing symlink directory\n");
+	spath = NULL;
+	goto exit;
+    }
+
+    errno = 0;
+    if (realloc(spath, strlen(spath) + sizeof(sname)) == NULL) {
+	fprintf(stderr, "Error: initializing symlink: realloc(): %s\n",
+		strerror(errno));
+	destroy_tempdir(spath);
+	spath = NULL;
+	goto exit;
+    }
+
+    errno = 0;
+    if (strcat(spath, sname) == NULL) {
+	fprintf(stderr, "Error: initializing symlink: strcat(): %s\n",
+		strerror(errno));
+	destroy_tempdir(spath);
+	spath = NULL;
+	goto exit;
+    }
+
+    errno = 0;
+    if (symlink(target, spath) < 0) {
+	fprintf(stderr, "Error: initializing symlink: symlink(): %s\n",
+		strerror(errno));
+	destroy_tempdir(spath);
+	spath = NULL;
+	goto exit;
+    }
+
+    fprintf(stderr, "Created symlink: %s\n", spath);
+
+    if (lchown(spath, uid, gid) < 0) {
+	fprintf(stderr, "Error: initializing sysmlink: chown(): %s\n", 
+		strerror(errno));
+	destroy_tempsym(spath);
+	spath = NULL;
+    }
+
+exit:
+    return spath;
+}
+
 void destroy_tempdir(char *name)
 {
     if (rmdir(name) < 0)
-	fprintf(stderr, "Error: removing tempdir \"%s\": rmdir(): %s\n",
+	fprintf(stderr, "Error: removing tempdir: rmdir(%s): %s\n",
 		name, strerror(errno));
     else
 	fprintf(stderr, "Removed tempdir: %s\n", name);
@@ -130,9 +184,30 @@ void destroy_tempdir(char *name)
 void destroy_tempfile(char *name)
 {
     if (unlink(name) < 0)
-	fprintf(stderr, "Error: removing tempfile \"%s\": unlink(): %s\n",
+	fprintf(stderr, "Error: removing tempfile: unlink(%s): %s\n",
 		name, strerror(errno));
     else
 	fprintf(stderr, "Removed tempfile: %s\n", name);
     free(name);
+}
+
+void destroy_tempsym(char *name)
+{
+    char *save_name;
+
+    if (unlink(name) < 0) {
+	fprintf(stderr, "Error: removing symlink: unlink(%s): %s\n",
+		name, strerror(errno));
+	return;
+    }
+
+    save_name = strdup(name);
+    if (rmdir(dirname(name)) < 0)
+	fprintf(stderr, "Error: removing symlink: rmdir(%s): %s\n",
+		name, strerror(errno));
+    else
+	fprintf(stderr, "Removed symlink: %s\n", save_name);
+
+    free(name);
+    free(save_name);
 }

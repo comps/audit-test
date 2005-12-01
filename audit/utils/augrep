@@ -38,6 +38,7 @@ usage: augrep [options...] condition...
     -f     --file=logfile  Search a log other than /var/log/audit/audit.log
     -h     --help          Show this help message
     -m     --max-count=NUM stop after NUM matches
+           --nosync        don't wait for auditd to finish flushing
     -q     --quiet         No output, just set exit status (like grep)
            --seek=offset   Seek to offset before starting search
            --raw           Show raw lines instead of merged record
@@ -157,7 +158,7 @@ sub parse {
         (                 # $3 = value
             (?:
                 [^\\\s]+ |          # normal chars; no ws allowed
-                (?:\\[0-8]{1,3})+ | # escaped octal
+                (?:\\[0-7]{1,3})+ | # escaped octal
                 (?:\\.)             # escaped character
             )*                      # repeat to capture all of value
         )
@@ -169,7 +170,7 @@ sub parse {
         (['"])            # $2 = leading quote
         (                 # $3 = value
             (?: [^\\] |             # normal chars
-                (?:\\[0-8]{1,3}) |  # escaped octal
+                (?:\\[0-7]{1,3}) |  # escaped octal
                 (?:\\.)             # escaped character
             )*?           # repeat to capture all of value
         )
@@ -393,6 +394,7 @@ my ($result) = GetOptions(
     'f|file=s',
     'h|help',
     'm|max-count=i',
+    'nosync',
     'q|quiet',
     'raw',
     'seek=i',
@@ -401,6 +403,23 @@ my ($result) = GetOptions(
 if ($opt{'h'}) { print STDERR $usage; exit 0 }
 if ($opt{'V'}) { print STDERR $version; exit 0 }
 die "augrep: argument required\n$usage" unless @ARGV;
+
+# Unless --nosync is given, wait for the auditd backlog to reach zero, as
+# reported by auditctl -s
+unless ($opt{'nosync'}) {
+    my ($i, $backlog);
+    for ($i = 0; $i < 30; $i++) {
+        ($backlog = `auditctl -s`) =~ s/.*?\bbacklog=(\d+).*/$1/s;
+        last if $backlog == 0;
+        if ($i % 10 == 0 and $opt{'debug'}) {
+            print STDERR "augrep: waiting on backlog ($backlog)\n";
+        }
+        select(undef, undef, undef, 0.1);
+    }
+    if ($i == 30) {
+        print STDERR "augrep: WARNING: backlog=$backlog after 3 seconds\n";
+    }
+}
 
 my ($reader) = AuditReader->new($opt{'f'});
 $reader->seek($opt{'seek'} || $ENV{'AUDIT_SEEK'} || 0);
@@ -478,6 +497,10 @@ Search a logfile other than /var/log/audit/audit.log
 =item B<-h --help>
 
 Show usage information
+
+=item B<--nosync>
+
+Don't wait for auditd backlog to reach zero, as reported by auditctl -s
 
 =item B<-q --quiet>
 

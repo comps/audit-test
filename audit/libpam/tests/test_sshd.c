@@ -132,13 +132,14 @@ int test_sshd(struct audit_data* dataPtr) {
   // uid/gid's are DONT CARES for the libpam tests, luid not yet set
   dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->uid = dataPtr->fsuid = NO_ID_CHECK;
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
-  dataPtr->type = AUDIT_MSG_USER;
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
+  dataPtr->type = AUDIT_MSG_DAEMON;
   dataPtr->comm = mysprintf("PAM setcred: user=%s exe=./usr/sbin/sshd.*terminal=ssh result=Success", user);
   verifyPAMProgram( dataPtr );
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
+  dataPtr->type = AUDIT_MSG_USER;
   dataPtr->comm = mysprintf("PAM accounting: user=%s exe=./usr/sbin/sshd.*terminal=ssh result=Success", user);
   verifyPAMProgram( dataPtr );
 

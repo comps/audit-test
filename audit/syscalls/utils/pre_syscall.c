@@ -51,11 +51,6 @@ int preSysCall(struct audit_data *context)
 		context->euid, context->euid, 0, errno);
 	goto EXIT;
     }
-    fprintf(stderr, "Calling getLAUSData\n");
-    if ((rc = getLAUSData(context)) != 0) {
-	fprintf(stderr, "Error returned from getLAUSData(): rc=%i\n", rc);
-	goto EXIT;
-    }
 
     fprintf(stderr, "Setting begin timestamp\n");
     context->begin_time = time(NULL) - 2;	// MH: Start two seconds

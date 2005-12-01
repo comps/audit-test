@@ -67,7 +67,7 @@ int test_fsetxattr(struct audit_data *context, int variation, int success)
     if (rc < 0) {
 	fprintf(stderr, "Error: Could not open %s: %s\n", path,
 		strerror(errno));
-	goto exit;
+	goto exit_path;
     }
     fprintf(stderr, "Opened file: %s fd: %i\n", path, fd);
 

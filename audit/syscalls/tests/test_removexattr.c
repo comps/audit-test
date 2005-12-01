@@ -65,7 +65,7 @@ int test_removexattr(struct audit_data *context, int variation, int success)
     if (rc < 0) {
 	fprintf(stderr, "Error: creating extended attribute %s: %s\n",
 		aname, strerror(errno));
-	goto exit;
+	goto exit_path;
     }
     fprintf(stderr, "Created extended attribute %s for %s\n", aname, path);
 

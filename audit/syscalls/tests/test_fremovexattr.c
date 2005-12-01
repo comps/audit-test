@@ -67,7 +67,7 @@ int test_fremovexattr(struct audit_data *context, int variation, int success)
     if (rc < 0) {
 	fprintf(stderr, "Error: creating extended attribute %s: %s\n",
 		aname, strerror(errno));
-	goto exit;
+	goto exit_path;
     }
     fprintf(stderr, "Created extended attribute %s for %s\n", aname, path);
 
@@ -75,7 +75,7 @@ int test_fremovexattr(struct audit_data *context, int variation, int success)
     if (rc < 0) {
 	fprintf(stderr, "Error: Could not open %s: %s\n", path,
 		strerror(errno));
-	goto exit;
+	goto exit_path;
     }
     fprintf(stderr, "Opened file: %s fd: %i\n", path, fd);
 

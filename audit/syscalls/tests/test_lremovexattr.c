@@ -73,7 +73,7 @@ static int test_lremovexattr_file(struct audit_data *context, int success)
     if (rc < 0) {
 	fprintf(stderr, "Error: creating extended attribute %s: %s\n",
 		aname, strerror(errno));
-	goto exit;
+	goto exit_path;
     }
     fprintf(stderr, "Created extended attribute %s for %s\n", aname, path);
 
@@ -139,7 +139,7 @@ static int test_lremovexattr_symlink(struct audit_data *context, int success)
     if (rc < 0) {
 	fprintf(stderr, "Error: creating extended attribute %s: %s\n",
 		aname, strerror(errno));
-	goto exit;
+	goto exit_path;
     }
     fprintf(stderr, "Created extended attribute %s for %s\n", aname, path);
 

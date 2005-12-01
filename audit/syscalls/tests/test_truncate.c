@@ -52,7 +52,7 @@ int common_truncate(struct audit_data *context, int success)
 
     key = audit_add_watch(path);
     if (!key) {
-	destroy_tempdir(path);
+	destroy_tempfile(path);
 	rc = -1;
 	goto exit;
     }

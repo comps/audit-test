@@ -53,7 +53,7 @@ declare opt_log=run.log
 
 function die {
     [[ -n "$*" ]] && msg "${0##*/}: $*"
-    exit 1
+    exit 2
 }
 
 function warn {
@@ -107,6 +107,47 @@ function dmsg {
 function prf {
     $logging && printf "$(monoize "$1")" "${@:2}" >>"$opt_log"
     printf "$(colorize "$1")" "${@:2}"
+}
+
+#----------------------------------------------------------------------
+# routines available to run_test
+# NB: these should simply echo/printf, not msg/vmsg/dmsg/prf because
+# run_test output is already going to the log.
+#----------------------------------------------------------------------
+
+function rotate_audit_logs {
+    declare tmp num_logs
+
+    echo "Rotating logs, one way or another"
+
+    if [[ -f /var/log/audit/audit.log ]]; then
+        pushd /var/log/audit >/dev/null
+        tmp=$(mktemp $PWD/rotating.XXXXXX) || return 2
+        ln -f audit.log "$tmp" || return 2
+        killall -USR1 auditd &>/dev/null
+        sleep 0.1
+
+        # Forced log rotation wasn't added until 1.0.10.  If it didn't work,
+        # then do it manually.
+        if [[ audit.log -ef $tmp ]]; then
+            service auditd stop
+            num_logs=$(awk '$1=="num_logs"{print $3;exit}' /etc/auditd.conf)
+            while (( --num_logs > 0 )); do
+                if (( num_logs == 1 )); then
+                    mv -vf audit.log audit.log.1 2>/dev/null
+                else
+                    mv -vf audit.log.$((num_logs-1)) audit.log.$((num_logs)) \
+                        2>/dev/null
+                fi
+            done
+        fi
+
+        rm -f "$tmp"
+        popd >/dev/null
+    fi
+
+    killall -0 auditd &>/dev/null || service auditd start
+    sleep 0.1
 }
 
 #----------------------------------------------------------------------

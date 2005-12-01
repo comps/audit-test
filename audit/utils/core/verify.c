@@ -28,7 +28,7 @@ ts_exit verify_opresult(struct audit_data *context, int success)
 	rc = TEST_UNEXPECTED;
 	fprintf(stderr, 
 		"Expected operation success, got operation failure: [%d] %s\n",
-		context->error, strerror(context->error));
+		context->error, strerror(-context->error));
 	goto exit;
     }
 
@@ -42,7 +42,7 @@ ts_exit verify_opresult(struct audit_data *context, int success)
 	rc = TEST_UNEXPECTED;
 	fprintf(stderr,
 		"Expected operation error [%d], got operation error [%d] %s\n",
-		context->experror, context->error, strerror(context->error));
+		context->experror, context->error, strerror(-context->error));
     }
 
 exit:

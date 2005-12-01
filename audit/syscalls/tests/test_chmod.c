@@ -1,114 +1,95 @@
-/**********************************************************************
-   **   Copyright (C) International Business Machines  Corp., 2003
-   **
-   **   This program is free software;  you can redistribute it and/or modify
-   **   it under the terms of the GNU General Public License as published by
-   **   the Free Software Foundation; either version 2 of the License, or
-   **   (at your option) any later version.
-   **
-   **   This program is distributed in the hope that it will be useful,
-   **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
-   **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-   **   the GNU General Public License for more details.
-   **
-   **   You should have received a copy of the GNU General Public License
-   **   along with this program;  if not, write to the Free Software
-   **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-   **
-   **
-   **
-   **  FILE       : test_chmod.c
-   **
-   **  PURPOSE    : To test the chmod library call auditing.
-   **
-   **  DESCRIPTION: The test_chmod() function builds into the
-   **  laus_test framework to verify that the Linux Audit System
-   **  accurately logs both successful and erroneous execution of the
-   **  "chmod" system call.
-   **
-   **  In the successful case, this function:
-   **   1) Generate a file name and create a test file
-   **   2) Clear the audit trail
-   **   3) Execute the "chmod" system call to change permissions
-   **   4) Tests the results of the system call against the
-   **      expected successful return
-   **
-   **  The successful case creates a test file and attempts to change
-   **  the permissions on the file.  As the file does exist, and the mode
-   **  is a valid mode, this system call should succeed.
-   **  
-   **  In the erroneous case, this function:
-   **      
-   **  The erroneous case attempts to change the mode on a 700 file by
-   **  a non-root user other than the owner.  This throws an EPERM error.
-   **
-   **  HISTORY    :
-   **    06/03 Originated by Dustin Kirkland <k1rkland@us.ibm.com>
-   **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
-   **
-   **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_chmod.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to change file access permissions.
+ *
+ *  SYSCALLS:
+ *  chmod()
+ *
+ *  TESTCASE: successful
+ *  Modify file access permissions for a file for which user has
+ *  appropriate permissions to do so.
+ *
+ *  TESTCASE: unsuccessful
+ *  Attempt to modify file access permissions for a file for which
+ *  user does not have appropriate permissions to do so.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
 
 int test_chmod(struct audit_data *context, int variation, int success)
 {
-
-
     int rc = 0;
-    int exp_errno = -EPERM;
-    char *fileName = NULL;
-    int mode = S_IRUSR;
+    char *path, *key;
+    int mode = S_IRWXU|S_IRWXO;
+    int exit;
 
-     /**
-      * Do as much setup work as possible right here
-      */
-    // so create file with 700 permissions
-    fileName = init_tempfile(S_IRUSR, context->euid, context->egid);
-    if (!fileName) {
+    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    if (!path) {
 	rc = -1;
-	goto EXIT;
+	goto exit;
     }
 
-    if (!context->success) {
-	context->euid = context->fsuid = helper_uid;
-    }
-    // Set up audit argument buffer
-    if ((rc = auditArg2(context,
-			AUDIT_ARG_PATH,
-			strlen(fileName),
-			fileName,
-			AUDIT_ARG_IMMEDIATE, sizeof(int), &mode)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
-    // Execute system call
-    context->u.syscall.exit = syscall(__NR_chmod, fileName, mode);
-
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
+    key = audit_add_watch(path);
+    if (!key) {
+	destroy_tempfile(path);
+	rc = -1;
+	goto exit;
     }
 
-
-EXIT_CLEANUP:
-     /**
-      * Do cleanup work here
-      */
-    if ((unlink(fileName)) != 0) {
-	fprintf(stderr, "ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
-	goto EXIT;
+    if (!success) {
+	rc = seteuid_test();
+	if (rc < 0)
+	    goto exit_path;
+	context->experror = -EPERM;
     }
 
-EXIT:
-    if (fileName)
-	free(fileName);
-    fprintf(stderr, "Returning from test\n");
+    rc = context_setcwd(context);
+    if (rc < 0)
+	goto exit_suid;
+    context_settobj(context, key);
+
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit_suid;
+
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting chmod(%s, %o)\n", path, mode);
+    exit = syscall(context->u.syscall.sysnum, path, mode);
+    context_setend(context);
+    context_setresult(context, exit, errno);
+
+exit_suid:
+    if (!success && seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+
+exit_path:
+    audit_rem_watch(path, key);
+    destroy_tempfile(path);
+    free(key);
+
+exit:
     return rc;
 }

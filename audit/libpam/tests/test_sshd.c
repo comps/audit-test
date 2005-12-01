@@ -132,13 +132,14 @@ int test_sshd(struct audit_data* dataPtr) {
   // uid/gid's are DONT CARES for the libpam tests, luid not yet set
   dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->uid = dataPtr->fsuid = NO_ID_CHECK;
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
+  dataPtr->type = AUDIT_MSG_USER;
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM setcred: user=%s exe=\"/usr/sbin/sshd\" (hostname=localhost.localdomain, addr=127.0.0.1, terminal=ssh result=Success)", user);
+  dataPtr->comm = mysprintf("PAM setcred: user=%s exe=./usr/sbin/sshd.*terminal=ssh result=Success", user);
   verifyPAMProgram( dataPtr );
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=\"/usr/sbin/sshd\" (hostname=localhost.localdomain, addr=127.0.0.1, terminal=ssh result=Success)", user);
+  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=./usr/sbin/sshd.*terminal=ssh result=Success", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
@@ -197,7 +198,7 @@ int test_sshd(struct audit_data* dataPtr) {
 
   
   //strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/usr/sbin/sshd\" (hostname=localhost.localdomain, addr=127.0.0.1, terminal=ssh result=Authentication failure)", user);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./usr/sbin/sshd.*terminal=ssh result=Authentication failure", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup

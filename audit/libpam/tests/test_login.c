@@ -173,17 +173,15 @@ int test_login(struct audit_data* dataPtr) {
   // uid/gid's are DONT CARES for the libpam tests, luid not yet set
   dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->uid = dataPtr->fsuid = NO_ID_CHECK;
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
+  dataPtr->type = AUDIT_MSG_USER;
 
-  //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/bin/login\" (hostname=?, addr=?, terminal=pts/%d result=Success)", user, pts); 
+  dataPtr->comm = mysprintf("PAM authentication: user=%s .* terminal=pts/%d result=Success", user, pts); 
   verifyPAMProgram( dataPtr );
 
-  //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=\"/bin/login\" (hostname=?, addr=?, terminal=pts/%d result=Success)", user, pts);
+  dataPtr->comm = mysprintf("PAM accounting: user=%s .* terminal=pts/%d result=Success", user, pts);
   verifyPAMProgram( dataPtr );
 
-  //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM session open: user=%s exe=\"/bin/login\" (hostname=?, addr=?, terminal=pts/%d result=Success)", user, pts);
+  dataPtr->comm = mysprintf("PAM session open: user=%s .* terminal=pts/%d result=Success", user, pts);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
@@ -242,9 +240,10 @@ expect -re \"Password: \" { exp_send \"%s\\r\"} \n",
   // uid/gid's are DONT CARES for the libpam tests, luid not yet set
   dataPtr->loginuid = dataPtr->euid = dataPtr->suid = dataPtr->uid = dataPtr->fsuid = NO_ID_CHECK;
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
+  dataPtr->type = AUDIT_MSG_USER;
 
   //strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/bin/login\" (hostname=?, addr=?, terminal=pts/%d result=Authentication failure)", user, pts);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s .* terminal=pts/%d result=Authentication failure", user, pts);
   verifyPAMProgram( dataPtr );
 
   // Cleanup

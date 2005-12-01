@@ -67,15 +67,15 @@ EXIT:
 int verifyPAMProgram(struct audit_data *dataPtr) {
     int rc = 0;
 
-    rc = audit_verify_log(dataPtr);
+    rc = verify_logresult(dataPtr);
 
-    printf("Verify record\n");
-    if (rc > 0) {
+    printf("Verify record: ");
+    if (rc == 0) {
         pass_testcases++;
-        printf("AUDIT PASS ");
+        printf("AUDIT PASS\n");
     } else {
         fail_testcases++;
-        printf("AUDIT FAIL ");
+        printf("AUDIT FAIL\n");
     }
 
     return rc;

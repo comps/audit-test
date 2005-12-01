@@ -105,8 +105,7 @@ int test_su(struct audit_data* dataPtr) {
   command = mysprintf( "spawn /bin/su - %s\n"
 "sleep 1 \n"
 "expect -re \"Password: $\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
-"sleep 1 \n"
-"expect -re \" $\" { sleep 1; exp_send \"/tmp/get_pts %s\\r\\n\"} \n"
+"expect -re \"> $\" { sleep 1; exp_send \"/usr/bin/tty > %s\\r\\n\"} \n"
 "sleep 1 \n"
 "expect \" $\" { sleep 1; exp_send \"exit\\r\"; send_user \"exit\\n\"} ", user, password, pts_filename);
   write(fd, command, strlen(command));
@@ -125,10 +124,10 @@ int test_su(struct audit_data* dataPtr) {
 
 
   // Get the pts used
-	command = mysprintf("cat %s|awk -F/ '{print $4}' > %s", pts_filename, pts_filename2);
-        printf("Running Command: %s\n", command);
-	system(command);
-	free(command);
+  command = mysprintf("cat %s|awk -F/ '{print $4}' > %s", pts_filename, pts_filename2);
+  printf("Running Command: %s\n", command);
+  system(command);
+  free(command);
   if( ( fPtr = fopen( pts_filename2, "r" ) ) == NULL ) {
     printf( "Error opening file [%s] for reading: errno = [%i]\n", pts_filename2, errno );
     rc = errno;
@@ -152,12 +151,13 @@ int test_su(struct audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/bin/su\" (hostname=?, addr=?, terminal=pts/%d result=Success)",
+  dataPtr->type = AUDIT_MSG_USER;
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./bin/su.*terminal=pts/%d result=Success",
 				user, pts);
   verifyPAMProgram( dataPtr );
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=\"/bin/su\" (hostname=?, addr=?, terminal=pts/%d result=Success)",
+  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=./bin/su.*terminal=pts.%d result=Success",
 				user, pts);
   verifyPAMProgram( dataPtr );
 
@@ -215,13 +215,8 @@ int test_su(struct audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
 
   //strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=\"/bin/su\" (hostname=?, addr=?, terminal=pts/%d result=Authentication failure)", user, pts);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./bin/su.*result=Authentication failure", user);
   verifyPAMProgram( dataPtr );
-  // NOTE: We're using the same pts number as in the success case.
-  //       We don't know of a good way to definitively determine the pts of a user whose session connection failed.
-  //       Thus, we're assuming that since this test closely follows the success case and since this is an isolated
-  //       system, we can guess with some confidence that the pts will be the same as the session we just successfully
-  //       opened and closed.   
 
   // Cleanup
   unlink( filename );

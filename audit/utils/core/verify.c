@@ -102,6 +102,9 @@ ts_exit verify_logresult(struct audit_data *context)
 	count = snprintf(cmd, sizeof(cmd), "augrep -m1 'type=~USER' "
 			 "msg_1=~\"%s\"",
 			 context->comm);
+    } else if (context->type & AUDIT_MSG_DAEMON) {
+	count = snprintf(cmd, sizeof(cmd), "augrep -m1 msg_1=~\"%s\"",
+			 context->comm);
     }
 
     if (count >= sizeof(cmd)) {

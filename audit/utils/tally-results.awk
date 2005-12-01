@@ -1,15 +1,6 @@
 #!/usr/bin/awk -f
 
-BEGIN {
-    "/bin/pwd" | getline cwd
-}
-
-{ print }
-
-/^make.*Entering directory/ {
-    dir = substr($NF, length(cwd)+2)
-    dir = substr(dir, 1, length(dir)-1)
-}
+/^TALLIED RESULTS/ { exit }     # sanity check
 
 /^ *[0-9]+ pass \([0-9]+%\)$/ { pass += $1 }
 /^ *[0-9]+ fail \([0-9]+%\)$/ { fail += $1 }

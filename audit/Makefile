@@ -18,11 +18,14 @@
 ###############################################################################
 
 TOPDIR		= .
-SUB_DIRS        = utils \
-		  fail-safe \
+
+RUN_DIRS        = fail-safe \
 		  syscalls \
 		  audit_trail_protection \
-#		  audit_tools \
+		  audit_tools
+
+SUB_DIRS        = $(RUN_DIRS) \
+		  utils \
 #		  filter-conf \
 #		  libpam \
 #		  trustedprograms
@@ -31,17 +34,18 @@ include $(TOPDIR)/rules.mk
 
 run:
 	$(MAKE) all
-	for x in $(SUB_DIRS); do make -C $$x run; done 2>&1 | utils/tally-results.awk
+	for x in $(RUN_DIRS); do make -C $$x run; done
 	@# tty output has color, generated run.logs don't, so collect them
 	@# instead of redirecting output of the above loop.
-	@for x in $(SUB_DIRS); do \
+	@for x in $(RUN_DIRS); do \
 	    echo; \
 	    echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
 	    printf "::: %-52s :::\n" "$$x"; \
 	    echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
 	    echo; \
 	    cat $$x/run.log; \
-	done 2>&1 | utils/tally-results.awk > run.log
+	done &> run.log
+	utils/tally-results.awk < run.log | tee -a run.log
 
 .PHONY: dist
 dist:

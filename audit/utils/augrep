@@ -409,7 +409,7 @@ die "augrep: argument required\n$usage" unless @ARGV;
 unless ($opt{'nosync'}) {
     my ($i, $backlog);
     for ($i = 0; $i < 30; $i++) {
-        ($backlog = `auditctl -s`) =~ s/.*?\bbacklog=(\d+).*/$1/s;
+        ($backlog = `/sbin/auditctl -s`) =~ s/.*?\bbacklog=(\d+).*/$1/s;
         last if $backlog == 0;
         if ($i % 10 == 0 and $opt{'debug'}) {
             print STDERR "augrep: waiting on backlog ($backlog)\n";

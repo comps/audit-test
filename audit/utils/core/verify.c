@@ -94,9 +94,9 @@ ts_exit verify_logresult(struct audit_data *context)
 			      context->u.syscall.fs_watch);
 	}
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH) {
-	    if (context->u.syscall.fs_sobj)
+	    if (strcmp(context->u.syscall.fs_sobj, ""))
 		count += snprintf(&cmd[count], sizeof(cmd)-count, 
-				  " name==%s name_1=%s", 
+				  " name==%s name_1==%s", 
 				  context->u.syscall.fs_sobj,
 				  context->u.syscall.fs_tobj);
 	    else

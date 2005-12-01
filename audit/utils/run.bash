@@ -249,7 +249,8 @@ function cleanup_hook {
 }
 
 function startup {
-    declare u=testuser
+    export TEST_USER=testuser
+    export TEST_USER_PASSWD=gentoo    # encrypted below
 
     dmsg "Starting up"
 
@@ -258,15 +259,26 @@ function startup {
         die "Please run this suite as root"
     fi
 
+    # Make sure auditd is running
+    if [[ $(service auditd status) == *running* ]]; then
+        service auditd start || exit 1
+    fi
+
     # Add the test user which is used for unprivileged tests
-    if ! grep -q "^$u:" /etc/group; then 
-        dmsg "Adding group $u"
-        groupadd "$u" || exit 1
+    if ! grep -q "^$TEST_USER:" /etc/group; then 
+        dmsg "Adding group $TEST_USER"
+        groupadd "$TEST_USER" || exit 1
     fi
-    if ! grep -q "^$u:" /etc/passwd; then 
-        dmsg "Adding user $u"
-        useradd -g "$u" -m "$u" || exit 1
+    if grep -q "^$TEST_USER:" /etc/passwd; then 
+        dmsg "Removing old $TEST_USER"
+        userdel "$TEST_USER" || exit 1
+        rm -rf /home/$TEST_USER
     fi
+
+    dmsg "Adding user $TEST_USER"
+    useradd -g "$TEST_USER" -m "$TEST_USER" || exit 1
+    sed -i "/^$TEST_USER:/"'s|:[^:]*:|:$1$N1PtB8Kg$d6gItPaB3lSpG/GiDOXEM1:|' \
+        /etc/shadow
 
     startup_hook
 }

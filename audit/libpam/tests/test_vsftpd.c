@@ -76,23 +76,17 @@ int test_vsftpd(struct audit_data* dataPtr) {
   }
   free( command );
   // Modify configuration files
-  backupFile("/etc/vsftpd.conf");
+  backupFile("/etc/vsftpd/vsftpd.conf");
   // Warning: Possible /tmp attack vulnerability; we assume the test machine is in a controlled and secure test environment
-  if ( ( rc = system( "grep -v \"local_enable\" /etc/vsftpd.conf > /tmp/vsftpd.conf ; mv -f /tmp/vsftpd.conf /etc/vsftpd.conf ; echo \"local_enable=YES\" >> /etc/vsftpd.conf" ) ) == -1 ) {
-    printf( "Error modifying /etc/vsftpd.conf\n" );
+  if ( ( rc = system( "grep -v \"local_enable\" /etc/vsftpd/vsftpd.conf > /tmp/vsftpd.conf ; mv -f /tmp/vsftpd.conf /etc/vsftpd/vsftpd.conf ; echo \"local_enable=YES\" >> /etc/vsftpd/vsftpd.conf" ) ) == -1 ) {
+    printf( "Error modifying /etc/vsftpd/vsftpd.conf\n" );
     goto EXIT;
   }
-/* 
-  backupFile("/etc/xinetd.conf");
-  if ( ( rc = system( "echo \"ftp stream tcp nowait root /usr/sbin/tcpd vsftpd\" > /etc/xinetd.conf") ) == -1 ) {
-    printf( "Error modifying /etc/xinetd.conf\n" );
+  if ( ( rc = system( "/etc/init.d/vsftpd restart") ) != 0) {
+    printf( "Error restarting vsftpd\n");
     goto EXIT;
   }
-  if ( rc = system("/etc/init.d/xinetd restart") == -1 ) {
-    printf("Error restarting xinetd\n");
-    goto EXIT;
-  }
-*/
+
 
   // Test 1: SUCCESS ftp 
   // When a user successfully uses the vsftpd program.
@@ -137,12 +131,12 @@ int test_vsftpd(struct audit_data* dataPtr) {
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
   dataPtr->type = AUDIT_MSG_USER;
-  dataPtr->comm = mysprintf("PAM authentication: user=%s .*hostname=127.0.0.1, addr=127.0.0.1, terminal=. result=Success", user);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./usr/sbin/vsftpd.*hostname=127.0.0.1, addr=127.0.0.1, terminal=. result=Success", user);
   verifyPAMProgram( dataPtr );
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
   dataPtr->type = AUDIT_MSG_USER;
-  dataPtr->comm = mysprintf("PAM accounting: user=%s .*hostname=127.0.0.1, addr=127.0.0.1, terminal=. result=Success", user);
+  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=./usr/sbin/vsftpd.*hostname=127.0.0.1, addr=127.0.0.1, terminal=. result=Success", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
@@ -191,7 +185,7 @@ int test_vsftpd(struct audit_data* dataPtr) {
 
   //strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
   dataPtr->type = AUDIT_MSG_USER;
-  dataPtr->comm = mysprintf("PAM authentication: user=%s .*hostname=127.0.0.1, addr=127.0.0.1, terminal=? result=Authentication failure", user);
+  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./usr/sbin/vsftpd.*hostname=127.0.0.1, addr=127.0.0.1, terminal=. result=Authentication failure", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup

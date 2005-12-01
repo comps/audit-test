@@ -41,6 +41,8 @@
 #define SYSCALL_BASIC    0
 #define SYSCALL_REMOVE   1
 #define SYSCALL_SETPERMS 2
+#define SYSCALL_FILE     3
+#define SYSCALL_SYMLINK  4
 
 /*
  * Default Values
@@ -51,6 +53,8 @@
 /* xattr tests */
 #define TEST_FILE_XATTR_NAME  "user.mime_type"
 #define TEST_FILE_XATTR_VALUE "text/plain"
+#define TEST_SYM_XATTR_NAME   "trusted.md5sum"
+#define TEST_SYM_XATTR_VALUE  "0"
 
 #ifndef __powerpc__
 #define __NR_chown16 182

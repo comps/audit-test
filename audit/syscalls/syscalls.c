@@ -94,6 +94,10 @@ static int lookup_variation(char *varstr)
 	return SYSCALL_REMOVE;
     if (strcmp(varstr, "setperms") == 0)
 	return SYSCALL_SETPERMS;
+    if (strcmp(varstr, "file") == 0)
+	return SYSCALL_FILE;
+    if (strcmp(varstr, "symlink") == 0)
+	return SYSCALL_SYMLINK;
     return -1;
 }
 

@@ -28,24 +28,23 @@
 #    03/03 Jerone Young (jeroney@us.ibm.com)
 #    11/05 Adapted for failsafe pam_loginuid by Matt Anderson (mra@hp.com)
 #
-#
+
 set RHOST $env(RHOST)
 set TEST_USER $env(TEST_USER)
 set TEST_USER_PASSWD $env(TEST_USER_PASSWD)
 
-set timeout 90
+spawn ssh \
+    -o "PubkeyAuthentication no" \
+    -o "NoHostAuthenticationForLocalhost yes" \
+    -l $TEST_USER $RHOST whoami
 
-send_user "SSH Test Password\n"
-
-spawn ssh -l $TEST_USER $RHOST whoami
-
-sleep 2
-
-expect -nocase "password: " {exp_send "$TEST_USER_PASSWD\r"}
+expect -nocase "password: " {
+    exp_send "$TEST_USER_PASSWD\r"
+}
 
 expect "$TEST_USER"  {
-		send_user "SSH allowed $TEST_USER to login via password\n";
-		exit 0;
-	}
+    send_user "SSH allowed $TEST_USER to login via password\n";
+    exit 0;
+}
 
 exit 1;

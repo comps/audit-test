@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 # =============================================================================
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 # Written by Matt Anderson <mra@hp.com>
@@ -23,84 +23,35 @@
 # PURPOSE	: Used to test pam_loginuid and the require_auditd flag
 #
 # DESCRIPTION	: This test runs through the following steps
-#	1. create test user
-#	2. have test user login over ssh
-#	3. disable auditing
-#	4. have test user login again
-#	5. show the login failed due to auditing being off
-#	6. re-enable auditing
-#	7. remove test user
+#	1. configure pam_loginuid with require_auditd
+#	2. attempt to login with auditd running
+#	3. attempt to login with auditd off
 # 
 # HISTORY	:
 #  11/05 Initial version by Matt Anderson <mra@hp.com>
+#  11/05 Mods to use global TEST_USER by Aron Griffis <aron@hp.com>
 #
 
 export RHOST="localhost"
-export TEST_USER="loginuid_user"
-export TEST_USER_PASSWD="eal" # DON'T CHANGE pre-crypted passwd used later
-export TEST_USER_HOMEDIR="/home/$TEST_USER"
-FIRSTRUN=-1
-SECONDRUN=-1
+# TEST_USER and TEST_USER_PASSWD are set in run.bash startup()
 
-function setup_env {
-  # if there is cruft, remove it before making more
-  USER_EXISTS=X`grep $TEST_USER /etc/passwd`
-  if [ $USER_EXISTS != "X" ];  then
-    /usr/sbin/userdel $TEST_USER
-    rm -rf /home/$TEST_USER
-  fi
-
-  # pre-crypted password produced with crypt("eal", 42);
-  /usr/sbin/useradd -p 42VmxaOByKwlA -m -g nobody $TEST_USER #&> /dev/null
-
-  if [ $? != 0 ]; then
-    echo "ERROR: Could not create test user $TEST_USER."
-    exit 1
-  fi
-
-  AUDIT_STATUS=X`/etc/init.d/auditd status | grep running`
-  if [ "$AUDIT_STATUS" = "X" ]; then
-     # audit is not running?  well, then start it
-     /etc/init.d/auditd start
-  fi
-
-  REQUIRE_AUDIT=X`grep pam_loginuid /etc/pam.d/sshd | awk '{print $4}'`
-  if [ $REQUIRE_AUDIT != "Xrequire_auditd" ]; then
-     cp /etc/pam.d/sshd /etc/pam.d/sshd.testsave
-     sed -e "s/pam_loginuid\.so.*/pam_loginuid.so require_auditd/;" /etc/pam.d/sshd.testsave > /etc/pam.d/sshd
-  fi
+function cleanup {
+  # restore original pam config
+  mv /etc/pam.d/sshd.testsave /etc/pam.d/sshd
+  killall -0 auditd &>/dev/null || /etc/init.d/auditd start
 }
+trap 'cleanup; exit' 0 1 2 3 15
 
-function clear_env {
-  rm -rf /home/$TEST_USER
-  /usr/sbin/userdel $TEST_USER
+# make sure pam_loginuid is configured with require_auditd
+sed -i.testsave 's/^pam_loginuid\.so.*/& require_auditd/' /etc/pam.d/sshd \
+    || exit 2
 
-  # if we had saved the old pam config then restore it
-  [ -f /etc/pam.d/sshd.testsave ] && mv /etc/pam.d/sshd.testsave /etc/pam.d/sshd
-}
+# attempt to login with auditd running; should work
+./ssh01_s1 || exit 1
 
-# main()
+# attempt to login with auditd off; should fail
+service auditd stop || exit 2
+./ssh01_s1 && exit 1
 
-setup_env
-
-./ssh01_s1
-FIRSTRUN=$?
-
-if [ $FIRSTRUN -eq 0 ]; then
-  # the user was able to login when audit was running
-  # so turn it off
-  /etc/init.d/auditd stop
-
-  # try the test again
-  ./ssh01_s1
-  SECONDRUN=$?
-
-  # turn auditing back on
-  /etc/init.d/auditd start
-fi
-
-clear_env
-
-[ $SECONDRUN -eq 1 ] && exit 0 # pass
-[ $SECONDRUN -eq 0 ] && exit 1 # fail
-exit 2 # error
+# tests passed
+exit 0

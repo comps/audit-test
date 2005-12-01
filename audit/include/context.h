@@ -61,8 +61,9 @@ enum audit_arg {
 #define AUDIT_MSG_IPC           0x008
 #define AUDIT_MSG_SOCKADDR      0x010
 #define AUDIT_MSG_WATCH         0x020
-#define AUDIT_MSG_USER          0x040
-#define AUDIT_MSG_DAEMON        0x080
+#define AUDIT_MSG_SYMLINK       0x040
+#define AUDIT_MSG_USER          0x080
+#define AUDIT_MSG_DAEMON        0x100
 
 /* syscall arch */
 #if defined(__i386__)
@@ -97,6 +98,7 @@ struct audit_syscall {
     char          fs_cwd[PATH_MAX];
     char          fs_sobj[PATH_MAX]; /* source object */
     char          fs_tobj[PATH_MAX]; /* target object */
+    char          fs_sym[PATH_MAX];  /* symlinks handled differently */
     /* will be deprecated */
     unsigned int  arglen;
     char          *args;

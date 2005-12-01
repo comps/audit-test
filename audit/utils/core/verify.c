@@ -93,6 +93,11 @@ ts_exit verify_logresult(struct audit_data *context)
 			      " filterkey==%s", 
 			      context->u.syscall.fs_tobj);
 	}
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_SYMLINK) {
+	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
+			      " name==%s", 
+			      context->u.syscall.fs_sym);
+	}
     } else if (context->type & AUDIT_MSG_USER) {
 	count = snprintf(cmd, sizeof(cmd), "augrep -m1 'type=~USER' "
 			 "msg_1=~\"%s\"",

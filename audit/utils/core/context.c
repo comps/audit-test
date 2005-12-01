@@ -141,6 +141,12 @@ void context_settobj(struct audit_data *context, char *obj)
     strncpy(context->u.syscall.fs_tobj, obj, PATH_MAX);
 }
 
+void context_setsym(struct audit_data *context, char *obj)
+{
+    context->type |= AUDIT_MSG_SYMLINK;
+    strncpy(context->u.syscall.fs_sym, obj, PATH_MAX);
+}
+
 char *context_getcwd(struct audit_data *context)
 {
     return context->u.syscall.fs_cwd;
@@ -181,8 +187,11 @@ void context_dump(const struct audit_data *context)
 	    fprintf(stderr, "\tipc_gid   : %u\n", syscall->ipc_gid);
 	    fprintf(stderr, "\tipc_mode  : %x\n", syscall->ipc_mode);
 	}
-	if (context->type & AUDIT_MSG_CWD) {
+	if (context->type & AUDIT_MSG_CWD)
 	    fprintf(stderr, "\tfs_cwd    : %s\n", syscall->fs_cwd ?: "(null)");
+	if (context->type & AUDIT_MSG_SYMLINK)
+	    fprintf(stderr, "\tfs_sym    : %s\n", syscall->fs_sym ?: "(null)");
+	if (context->type & AUDIT_MSG_WATCH) {
 	    fprintf(stderr, "\tfs_sobj   : %s\n", syscall->fs_sobj ?: "(null)");
 	    fprintf(stderr, "\tfs_tobj   : %s\n", syscall->fs_tobj ?: "(null)");
 	}

@@ -208,6 +208,7 @@ filters/tests/watch
  - hardlinks
  - symlinks
  - renames
+ use filterkey for determining filesystem object
 
 
 Audit records:

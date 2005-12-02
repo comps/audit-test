@@ -41,7 +41,7 @@ int context_initsyscall(struct audit_data *context, char *testname)
 	fprintf(stderr, "Error: strdup(): %s\n", strerror(errno));
     }
 
-    sysnum = audit_name_to_syscall(sysname, audit_detect_machine());
+    sysnum = audit_name_to_syscall(sysname, get_auditarch());
     if (sysnum < 0) {
 	rc = -1;
 	fprintf(stderr, "Error: unable to translate \"%s\" to syscall number\n",

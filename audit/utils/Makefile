@@ -22,7 +22,8 @@ UTILSDIR	= .
 CPPFLAGS 	+= -I$(TOPDIR)/include -I$(UTILSDIR)/include
 
 UTILS_AR	= testutils.a
-UTILS_OBJ	= core/context.o		\
+UTILS_OBJ	= core/arch.o			\
+		  core/context.o		\
 		  core/create_temp_user_name.o	\
 		  core/create_temp_group_name.o	\
 		  core/encode_syscall_args.o	\

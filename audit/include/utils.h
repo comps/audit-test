@@ -66,8 +66,10 @@ typedef struct identifiers_s {
 int getLAUSData(struct audit_data *);
 int getLoginUID();
 
+int get_auditarch(void);
 uid_t gettestuid(void);
 gid_t gettestgid(void);
+
 int seteuid_test(void);
 int setresuid_test(void);
 int setuidresgid_test(void);

@@ -23,6 +23,59 @@ Using the latter gives you control over which tests are executed.  For example:
     cd syscalls
     sudo ./run.bash chown
 
+| Writing tests
++--------------
+
+Each test case is expected to be an independent executable that returns an
+exit status.  An executable can be shared between tests by using
+comand-line options to select test variations.  For example, the syscalls
+directory uses a single executable "syscalls" which takes options to
+indicate which syscall should be tested.  You should choose whichever
+method works best for your set of tests.
+
+The exit status is interpreted by the test harness (run.bash) as follows:
+
+    0     - PASS, meaning that the test behaved as expected
+    1     - FAIL, meaning that the test did not PASS
+    other - ERROR, meaning that there was an error which prevented the test from
+            being performed, such as a setup step which did not complete
+            correctly, or a failed memory allocation, etc.
+
+The test case is expected to generate debugging information to either stdout or
+stderr.  The debugging information is captured by the harness and displayed only
+when requested by --verbose, --debug, or investigation of run.log
+
+Bash tests
+----------
+Tests written in bash can make use of common functions in utils/functions.bash.
+The library should be loaded with this snippet at the top of the test case:
+
+    export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+    if [[ -z $TOPDIR ]]; then
+        TOPDIR=$(
+            while [[ ! $PWD -ef / ]]; do
+                [[ -f rules.mk ]] && { echo $PWD; exit 0; }
+                cd ..
+            done
+            exit 1
+        ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 1; }
+        export TOPDIR
+    fi
+    PATH=$TOPDIR/utils:$PATH
+
+    source functions.bash
+
+This snippet additionally puts the utils directory in the PATH, which is helpful
+for running augrep and other shared utility programs.
+
+If you augment functions.bash, beware that it is expected to behave a litle
+differently from the test cases.  Zero status is success, non-zero is error
+(there is no distinction between fail/error in the utility functions).
+More importantly, debugging output goes to stdout, error output goes to stderr.
+The reason for this is that the common functions are also used by the test
+harness, which wants to be able to /dev/null the debug info without losing the
+error messages.
+
 | Writing run.conf
 +-----------------
 

@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 # =============================================================================
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 # Written by Aron Griffis <aron@hp.com>
@@ -18,41 +18,24 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 # =============================================================================
 
-######################################################################
-# global vars
-######################################################################
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+if [[ -z $TOPDIR ]]; then
+    TOPDIR=$(
+	while [[ ! $PWD -ef / ]]; do
+	    [[ -f rules.mk ]] && { echo $PWD; exit 0; }
+	    cd ..
+	done
+	exit 1
+    ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 1; }
+    export TOPDIR
+fi
+PATH=$TOPDIR/utils:$PATH
 
-auditd_conf=/etc/auditd.conf
-auditd_orig=$(mktemp $auditd_conf.XXXXXX)
-audit_log=/var/log/audit/audit.log
-eal_mail=/var/mail/eal
-messages=/var/log/messages
-tmp1=$(mktemp)
-tmp2=$(mktemp)
-zero=${0##*/}
+source functions.bash
 
 ######################################################################
 # common functions
 ######################################################################
-
-function write_auditd_conf {
-    declare x key value
-
-    # Save off the auditd configuration
-    if [[ ! -s "$auditd_orig" ]]; then 
-	cp -a "$auditd_conf" "$auditd_orig"
-    fi
-
-    # Replace configuration lines; slow but works
-    for x in "$@"; do
-	key=${x%%=*}
-	value=${x#*=}
-	sed -i "/^$key[[:blank:]]*=/d" "$auditd_conf"
-	echo "$key = $value" >> "$auditd_conf"
-    done
-
-    cat "$auditd_conf"
-}
 
 function write_records {
     echo "Writing records to audit log ($ctr)"
@@ -84,25 +67,20 @@ function fill_disk {
     # file later.
     declare dir=$1 free=$2
     echo "Filling $dir, leaving $free KB free"
-    dd if=/dev/zero of="$dir/bogus" bs=1024 count=$free
-    cat </dev/zero >"$dir/bloat" ||:
+    dd if=/dev/zero of="$dir/bogus" bs=1024 count=$free || return 2
+    cat </dev/zero >"$dir/bloat"
     rm -f "$dir/bogus"
     df -k $dir/
 }
 
-function cleanup {
+eval 'function cleanup {
     echo "Audit log snippet"
     echo "--- start audit.log --------------------------------------------------------"
-    augrep 'type!=AGRIFFIS' ||:
+    augrep "type!=AGRIFFIS"
     echo "--- end audit.log ----------------------------------------------------------"
-    auditctl -D ||:
-    service auditd stop ||:
-    killall auditd ||:
-    if [[ -s "$auditd_orig" ]]; then mv "$auditd_orig" "$auditd_conf"; fi
-    rm -f "$auditd_orig" "$tmp1" "$tmp2"
-    umount /var/log/audit ||:
-    service auditd start ||:
-}
+    '"
+    $(type cleanup | sed '1,3d;$d')
+}"
 
 function check_rotate {
     if [[ ! -s "$audit_log.1" ]]; then
@@ -278,9 +256,13 @@ trap "cleanup; exit" 0 1 2 3 15
 zero=${0##*/}
 action=$1
 
+if [[ -z $action ]]; then
+    echo "Please specify a variation on the command-line"
+    exit 2
+fi
+
 # clean slate
-auditctl -D
-service auditd stop || killall auditd ||:
+stop_auditd
 
 # use 8MB tmpfs for audit logs
 if mount | grep /var/log/audit; then exit 2; fi

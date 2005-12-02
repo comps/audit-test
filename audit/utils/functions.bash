@@ -1,0 +1,167 @@
+#!/bin/bash
+# =============================================================================
+# (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+# Written by Aron Griffis <aron@hp.com>
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+#   the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program;  if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# =============================================================================
+#
+# functions.bash: routines available to run_test and to bash test cases
+#
+# NB: these should simply echo/printf, not msg/vmsg/dmsg/prf because
+#     run_test output is already going to the log.
+
+[[ -z ${_FUNCTIONS_BASH} ]] || return 0
+_FUNCTIONS_BASH=1
+
+shopt -s extglob
+
+######################################################################
+# global vars
+######################################################################
+
+auditd_conf=/etc/auditd.conf
+auditd_orig=$(mktemp $auditd_conf.XXXXXX)
+audit_log=/var/log/audit/audit.log
+eal_mail=/var/mail/eal
+messages=/var/log/messages
+tmp1=$(mktemp)
+tmp2=$(mktemp)
+zero=${0##*/}
+
+######################################################################
+# utility functions
+######################################################################
+
+# This can be prepended or appended by doing something like:
+#   eval "function cleanup {
+#	# prepend code here
+#	$(type cleanup | sed '1,3d;$d')
+#	# append code here
+#    }"
+function cleanup {
+    if [[ -s "$auditd_orig" ]]; then 
+        auditctl -D
+        service auditd stop
+        killall auditd
+        [[ -s "$auditd_orig" ]] && mv "$auditd_orig" "$auditd_conf"
+        umount /var/log/audit
+        service auditd start
+    fi
+    rm -f "$auditd_orig" "$tmp1" "$tmp2"
+}
+
+# can override to cleanup &>/dev/null when appropriate
+trap 'cleanup; exit' 0 1 2 15
+
+######################################################################
+# auditd functions
+######################################################################
+
+function write_auditd_conf {
+    declare x key value
+
+    # Save off the auditd configuration
+    if [[ ! -s "$auditd_orig" ]]; then 
+	cp -a "$auditd_conf" "$auditd_orig"
+    fi
+
+    # Replace configuration lines; slow but works
+    for x in "$@"; do
+	key=${x%%=*}
+	value=${x#*=}
+	sed -i "/^$key[[:blank:]]*=/d" "$auditd_conf"
+	echo "$key = $value" >> "$auditd_conf"
+    done
+}
+
+function start_auditd {
+    declare i s="testing 1-2-3 testing"
+    if ! killall -0 auditd &>/dev/null; then
+	# auditd -f lets us see error messages on stdout
+	service auditd start &>/dev/null || { auditd -f; return 2; }
+    fi
+
+    # auditd daemonizes before it is ready to receive records from the kernel.
+    # make sure it's receiving before continuing.  try for 20 seconds because
+    # sometimes 10 seconds isn't enough, believe it or not!
+    for ((i = 0; i < 10; i++)); do
+	auditctl -m "$s"
+	tail -n10 /var/log/audit/audit.log | grep -Fq "$s" && return 0
+	echo -n .
+	sleep 0.2
+    done
+
+    echo
+    echo "Warning: auditd slow starting" >&2
+
+    return 0
+}
+
+function stop_auditd {
+    declare i
+
+    auditctl -D &>/dev/null
+    if killall -0 auditd &>/dev/null; then
+	service auditd stop || killall auditd
+	for ((i = 0; i < 10; i++)); do
+	    killall -0 auditd &>/dev/null || return 0
+	    echo -n .
+	    sleep 0.2
+	done
+
+	echo
+	echo "Timed out waiting for auditd to stop" >&2
+	killall -9 auditd
+    fi
+
+    return 0
+}
+
+# This function is generally called from 
+function rotate_audit_logs {
+    declare tmp num_logs
+
+    if [[ -f /var/log/audit/audit.log ]]; then
+        pushd /var/log/audit >/dev/null
+        tmp=$(mktemp $PWD/rotating.XXXXXX) || return 2
+        ln -f audit.log "$tmp" || return 2
+
+	# Attempt to rotate using mechanism available in 1.0.10+
+	if killall -0 auditd &>/dev/null; then
+	    killall -USR1 auditd &>/dev/null
+	    sleep 0.1
+	fi
+
+        # If rotation didn't work, do it manually.
+        if [[ audit.log -ef $tmp ]]; then
+            stop_auditd
+            num_logs=$(awk '$1=="num_logs"{print $3;exit}' /etc/auditd.conf)
+            while ((--num_logs > 0)); do
+                if ((num_logs == 1)); then
+		    [[ -f audit.log ]] && mv -f audit.log audit.log.1
+                else
+		    [[ -f audit.log.$((num_logs-1)) ]] && \
+			mv -f audit.log.$((num_logs-1)) audit.log.$((num_logs))
+                fi
+            done
+        fi
+
+        rm -f "$tmp"
+        popd >/dev/null
+    fi
+
+    killall -0 auditd &>/dev/null || start_auditd
+}

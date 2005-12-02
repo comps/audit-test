@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 # =============================================================================
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 # Written by Aron Griffis <aron@hp.com>
@@ -23,23 +23,23 @@
 # effective.  Test all possible values of max_log_file_action: ignore, syslog,
 # suspend, rotate, keep_logs
 
-source $(dirname "$0")/auditd_common.bash
+source auditd_common.bash
 
 max_log_file=1	# 1 megabyte, that is
 
 write_auditd_conf \
     num_logs=2 \
     max_log_file=$max_log_file \
-    max_log_file_action=$action
+    max_log_file_action=$action || exit 2
 
 # Prepopulate log with max_log_file minus 10k
-write_file "$audit_log" $((max_log_file * 1024 - 10))
+write_file "$audit_log" $((max_log_file * 1024 - 10)) || exit 2
 
-service auditd start || auditd -f  # to capture errors in test output
+start_auditd || exit 2
 
 # each record is at least 150 bytes (based on empirical evidence), so writing
 # 100 records should always take us over (150 * 100 =~ 14k)
-write_records 100
+write_records 100 || exit 2
 
 case $action in
     email)
@@ -49,3 +49,4 @@ case $action in
     *)
         check_$action ;;
 esac
+exit $?

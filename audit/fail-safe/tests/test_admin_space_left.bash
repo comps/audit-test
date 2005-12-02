@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 # =============================================================================
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 # Written by Aron Griffis <aron@hp.com>
@@ -23,21 +23,21 @@
 # are effective.  Test all possible values of admin_space_left_action: ignore,
 # syslog, email, suspend, single, halt
 
-source $(dirname "$0")/auditd_common.bash
+source auditd_common.bash
 
 write_auditd_conf \
     admin_space_left=7 \
     admin_space_left_action=$action \
-    space_left=8
+    space_left=8 || exit 2
 
 # Fill the filesystem hosting audit.log, leaving 1MB + 10KB available
-fill_disk ${audit_log%/*} $((1024 + 10))
+fill_disk ${audit_log%/*} $((1024 + 10)) || exit 2
 
-service auditd start || auditd -f  # to capture errors in test output
+start_auditd || exit 2
 
 # each record is at least 150 bytes (based on empirical evidence), so writing
 # 100 records should always take us over (150 * 100 =~ 14k)
-write_records 100
+write_records 100 || exit 2
 
 case $action in
     email)
@@ -47,3 +47,4 @@ case $action in
     *)
         check_$action ;;
 esac
+exit $?

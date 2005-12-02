@@ -32,7 +32,20 @@
 # The normal usage of this script is simply "./run.sh" but additional
 # usage information can be retrieved with "./run.sh --help"
 
-shopt -s extglob
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+if [[ -z $TOPDIR ]]; then
+    TOPDIR=$(
+	while [[ ! $PWD -ef / ]]; do
+	    [[ -f rules.mk ]] && { echo $PWD; exit 0; }
+	    cd ..
+	done
+	exit 1
+    ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 1; }
+    export TOPDIR
+fi
+PATH=$TOPDIR/utils:$PATH
+
+source functions.bash
 
 #----------------------------------------------------------------------
 # global variables
@@ -40,12 +53,12 @@ shopt -s extglob
 
 declare -a TESTS VARIATIONS
 declare -i pass fail error total
-declare exit_status
 declare logging=false
 declare opt_verbose=false
 declare opt_debug=false
 declare opt_config=run.conf
 declare opt_log=run.log
+declare opt_timeout=30
 
 #----------------------------------------------------------------------
 # utility functions
@@ -53,7 +66,7 @@ declare opt_log=run.log
 
 function die {
     [[ -n "$*" ]] && msg "${0##*/}: $*"
-    exit 2
+    exit 1
 }
 
 function warn {
@@ -107,47 +120,6 @@ function dmsg {
 function prf {
     $logging && printf "$(monoize "$1")" "${@:2}" >>"$opt_log"
     printf "$(colorize "$1")" "${@:2}"
-}
-
-#----------------------------------------------------------------------
-# routines available to run_test
-# NB: these should simply echo/printf, not msg/vmsg/dmsg/prf because
-# run_test output is already going to the log.
-#----------------------------------------------------------------------
-
-function rotate_audit_logs {
-    declare tmp num_logs
-
-    echo "Rotating logs, one way or another"
-
-    if [[ -f /var/log/audit/audit.log ]]; then
-        pushd /var/log/audit >/dev/null
-        tmp=$(mktemp $PWD/rotating.XXXXXX) || return 2
-        ln -f audit.log "$tmp" || return 2
-        killall -USR1 auditd &>/dev/null
-        sleep 0.1
-
-        # Forced log rotation wasn't added until 1.0.10.  If it didn't work,
-        # then do it manually.
-        if [[ audit.log -ef $tmp ]]; then
-            service auditd stop
-            num_logs=$(awk '$1=="num_logs"{print $3;exit}' /etc/auditd.conf)
-            while (( --num_logs > 0 )); do
-                if (( num_logs == 1 )); then
-                    mv -vf audit.log audit.log.1 2>/dev/null
-                else
-                    mv -vf audit.log.$((num_logs-1)) audit.log.$((num_logs)) \
-                        2>/dev/null
-                fi
-            done
-        fi
-
-        rm -f "$tmp"
-        popd >/dev/null
-    fi
-
-    killall -0 auditd &>/dev/null || service auditd start
-    sleep 0.1
 }
 
 #----------------------------------------------------------------------
@@ -236,7 +208,8 @@ function - {
 # startup/cleanup
 #----------------------------------------------------------------------
 
-trap 'cleanup; close_log; exit' 0 1 2 3 15
+trap 'cleanup &>/dev/null; close_log; exit' 0
+trap 'cleanup; close_log; exit' 1 2 3 15
 
 # this can be overridden in run.conf
 function startup_hook {
@@ -260,47 +233,34 @@ function startup {
     fi
 
     # Make sure auditd is running
-    if [[ $(service auditd status) == *running* ]]; then
-        service auditd start || exit 1
-    fi
+    start_auditd >/dev/null || die
 
     # Add the test user which is used for unprivileged tests
-    if ! grep -q "^$TEST_USER:" /etc/group; then 
-        dmsg "Adding group $TEST_USER"
-        groupadd "$TEST_USER" || exit 1
-    fi
-    if grep -q "^$TEST_USER:" /etc/passwd; then 
-        dmsg "Removing old $TEST_USER"
-        userdel "$TEST_USER" || exit 1
-        rm -rf /home/$TEST_USER
-    fi
-
+    rm -rf "/home/$TEST_USER"
+    userdel $TEST_USER &>/dev/null
+    groupdel $TEST_USER &>/dev/null
+    dmsg "Adding group $TEST_USER"
+    groupadd "$TEST_USER" || die
     dmsg "Adding user $TEST_USER"
-    useradd -g "$TEST_USER" -m "$TEST_USER" || exit 1
+    useradd -g "$TEST_USER" -m "$TEST_USER" || die
     sed -i "/^$TEST_USER:/"'s|:[^:]*:|:$1$N1PtB8Kg$d6gItPaB3lSpG/GiDOXEM1:|' \
         /etc/shadow
 
     startup_hook
 }
 
-function cleanup {
-    declare u=testuser
-
-    dmsg "Cleaning up"
+eval "function cleanup {
+    dmsg \"\$( $(type cleanup | sed '1,3d;$d') )\"
 
     # Remove the test user
-    if grep -q "^$u:" /etc/passwd; then
-        dmsg "Removing user $u"
-        userdel "$u"
-        rm -rf "/home/$u"
-    fi
-    if grep -q "^$u:" /etc/group; then
-        dmsg "Removing group $u"
-        groupdel "$u"
-    fi
+    dmsg \"Removing user \$TEST_USER\"
+    rm -rf \"/home/\$TEST_USER\"
+    userdel \"\$TEST_USER\" &>/dev/null
+    dmsg \"Removing group \$TEST_USER\"
+    groupdel \"\$TEST_USER\" &>/dev/null
 
     cleanup_hook
-}
+}"
 
 function open_log {
     :> "$opt_log" || die "can't init $opt_log"
@@ -314,20 +274,6 @@ function close_log {
 }
 
 #----------------------------------------------------------------------
-# test environment
-#----------------------------------------------------------------------
-
-export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-if [[ -z $TOPDIR ]]; then
-    TOPDIR=$(readlink run.bash)
-    TOPDIR=${TOPDIR%/utils/*}
-    export TOPDIR
-fi
-pushd $TOPDIR >/dev/null || die "Can't access TOPDIR ($TOPDIR)"
-PATH=$PWD/utils:$PATH
-popd >/dev/null
-
-#----------------------------------------------------------------------
 # main program
 #----------------------------------------------------------------------
 
@@ -338,6 +284,7 @@ Run a set of test cases, reporting pass/fail and tallying results.
 
     -f --config=FILE  Use a config file other than run.conf
     -l --log=FILE     Output to a log other than run.log
+    -t --timeout=SEC  Seconds to wait for a test to timeout, default 30
     -h --help         Show this help
 
 Output modes:
@@ -363,6 +310,7 @@ function parse_cmdline {
             -f|--config) opt_config=$2; shift 2 ;;
             -h|--help) usage; exit 0 ;;
             -l|--log) opt_log=$2; shift 2 ;;
+            -t|--timeout) opt_timeout=$2; shift 2 ;;
             --nocolor) colorize() { monoize "$@"; }; shift ;;
             -v|--verbose) opt_verbose=true; shift ;;
             --) shift ; break ;;
@@ -402,41 +350,57 @@ function parse_cmdline {
 }
 
 function run_tests {
-    declare x t v output
+    declare t output status hee
+
+    if $opt_debug; then
+	hee=/dev/stderr
+    else
+	hee=/dev/null
+    fi
 
     for t in "${TESTS[@]}"; do
-        prf "%-60s " "$t"
+	if $opt_debug; then
+	    echo
+	    prf "%-60s " "$t"
+	    msg "<blue>DEBUG"
+	    msg "<blue>--- begin output -----------------------------------------------------------"
+	else
+	    prf "%-60s " "$t"
+	fi
 
-        # run_test is defined in the configuration file
-        output=$(run_test "$t" 2>&1)
+	output=$(
+	    ( run_test "$t" 2>&1 | tee $hee; exit ${PIPESTATUS[0]}; ) &
+	    pid=$!
+	    if [[ $opt_timeout > 0 ]]; then
+		( sleep $opt_timeout; kill $pid; ) &>/dev/null &
+	    fi
+	    wait $pid
+	)
+	status=$?
 
-        case $? in
-            0)  msg "<green>PASS"
-                (( pass++ ))
-                dmsg "<blue>--- begin output -----------------------------------------------------------"
-                dmsg "$output"
-                dmsg "<blue>--- end output -------------------------------------------------------------"
-                dmsg
-                ;;
+	if $opt_debug; then
+	    echo "$output" >> "$opt_log"
+	    msg "<blue>--- end output -------------------------------------------------------------"
+	    prf "%-60s " "$t"
+	fi
 
-            1)  msg "<yellow>FAIL"
-                (( fail++ ))
-                vmsg "<blue>--- begin output -----------------------------------------------------------"
-                vmsg "$output"
-                vmsg "<blue>--- end output -------------------------------------------------------------"
-                vmsg
-                ;;
+	case $status in
+	    0)  msg "<green>PASS"
+		(( pass++ ))
+		continue ;;
+	    1)  msg "<yellow>FAIL"
+		(( fail++ )) 
+		$opt_debug && continue ;;
+	    *)  msg "<red>ERROR ($?)"
+		(( error++ )) 
+		$opt_debug && continue ;;
+	esac
 
-            *)  msg "<red>ERROR ($?)"
-                (( error++ ))
-                vmsg "<blue>--- begin output -----------------------------------------------------------"
-                vmsg "$output"
-                vmsg "<blue>--- end output -------------------------------------------------------------"
-                vmsg
-                ;;
-        esac
+	vmsg "<blue>--- begin output -----------------------------------------------------------"
+	vmsg "$output"
+	vmsg "<blue>--- end output -------------------------------------------------------------"
+	vmsg
     done
-
 
     (( total = pass + fail + error ))
     msg

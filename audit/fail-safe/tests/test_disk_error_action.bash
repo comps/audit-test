@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 # =============================================================================
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 # Written by Aron Griffis <aron@hp.com>
@@ -23,19 +23,17 @@
 # Test all possible values of disk_full_action: ignore,
 # syslog, suspend, single, halt
 
-source $(dirname "$0")/auditd_common.bash
+source auditd_common.bash
 
 write_auditd_conf \
-    disk_error_action=$action
+    disk_error_action=$action || exit 2
 
-# start auditd manually instead of with the initscript
-# so we can set LD_PRELOAD.
 (
     export LD_PRELOAD="$PWD/fprintf.so $LD_PRELOAD"
-    auditd || auditd -f # to capture errors in test output
+    start_auditd || exit 2
 )
 
-write_records 100
+write_records 100 || exit 2
 
 case $action in
     syslog)
@@ -43,3 +41,4 @@ case $action in
     *)
         check_$action ;;
 esac
+exit $?

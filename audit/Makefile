@@ -33,6 +33,7 @@ SUB_DIRS        = $(RUN_DIRS) \
 include $(TOPDIR)/rules.mk
 
 run:
+	@echo "run.log will be collected from subdirectories when the test completes" >run.log
 	$(MAKE) all
 	for x in $(RUN_DIRS); do make -C $$x run; done
 	@# tty output has color, generated run.logs don't, so collect them

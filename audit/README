@@ -58,7 +58,7 @@ The library should be loaded with this snippet at the top of the test case:
                 cd ..
             done
             exit 1
-        ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 1; }
+        ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 2; }
         export TOPDIR
     fi
     PATH=$TOPDIR/utils:$PATH

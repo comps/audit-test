@@ -47,9 +47,13 @@ int test_init_module(struct audit_data *context, int variation, int success)
     void *region;
     int exit;
 
-    /* set up test kernel module */
     strncpy(module_name, getenv("AUDIT_KMOD_NAME") ?: "dummy", 19);
-    sprintf(module_path, "%s/%s.ko", getenv("AUDIT_KMOD_DIR") ?: ".", module_name);
+    sprintf(module_path, "%s/%s.ko", getenv("AUDIT_KMOD_DIR") ?: ".",
+	    module_name);
+
+    /* make sure module isn't already loaded, ignore errors */
+    syscall(__NR_init_module, module_name, 0);
+
     fprintf(stderr, "Module path: %s\n", module_path);
     fd = open(module_path, O_RDONLY);
     if (fd < 0) {
@@ -70,7 +74,6 @@ int test_init_module(struct audit_data *context, int variation, int success)
 	goto exit;
     }
 
-    /* To produce failure, attempt to load module as test user */
     if (!success) {
 	rc = seteuid_test();
 	if (rc < 0)

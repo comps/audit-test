@@ -75,7 +75,8 @@ int test_delete_module(struct audit_data *context, int variation, int success)
     rc = syscall(__NR_init_module, region, mstat.st_size, "");
     if (rc < 0) {
 	fprintf(stderr, "Error: loading module: %s\n", strerror(errno));
-	goto exit_mem;
+	if (errno != EEXIST)
+	    goto exit_mem;
     }
     fprintf(stderr, "Loaded module: %s\n", module_path);
 

@@ -26,7 +26,7 @@ if [[ -z $TOPDIR ]]; then
 	    cd ..
 	done
 	exit 1
-    ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 1; }
+    ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 2; }
     export TOPDIR
 fi
 PATH=$TOPDIR/utils:$PATH

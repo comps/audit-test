@@ -84,12 +84,17 @@ sub seek {
 sub next_record {
     my ($self) = @_;
     my ($fh) = $self->{'fh'};
-    my ($record, $msg, $other, $o_msg);
+    my ($line, $record, $msg, $other, $o_msg);
 
     # populate the array; low-water=30, high-water=60
     if (@{$self->{'records'}} < 30) {
-        while (@{$self->{'records'}} < 60 and !$fh->eof) {
-            push @{$self->{'records'}}, AuditRecord->new(scalar <$fh>);
+        while (@{$self->{'records'}} < 60) {
+            $line = <$fh>;
+            # Make sure we got a line and that it was complete.
+            # Incomplete lines can be found when the filesystem is full and
+            # auditd couldn't write the entire record.
+            last unless defined($line) and chomp($line);
+            push @{$self->{'records'}}, AuditRecord->new($line);
         }
     }
     return undef unless (@{$self->{'records'}});

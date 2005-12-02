@@ -18,9 +18,6 @@
 ###############################################################################
 
 TOPDIR		= ..
-TESTDIR		= .
-CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
-
-SUB_DIRS	= utils tests
+SUB_DIRS	= tests
 
 include $(TOPDIR)/rules.mk

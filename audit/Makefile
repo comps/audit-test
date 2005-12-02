@@ -21,8 +21,8 @@ TOPDIR		= .
 
 RUN_DIRS        = fail-safe \
 		  syscalls \
-		  audit_trail_protection \
-		  audit_tools
+		  audit-trail-protection \
+		  audit-tools
 
 SUB_DIRS        = $(RUN_DIRS) \
 		  utils \

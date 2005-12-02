@@ -371,9 +371,12 @@ function run_tests {
 	output=$(
 	    ( run_test "$t" 2>&1 | tee $hee; exit ${PIPESTATUS[0]}; ) &
 	    pid=$!
-	    if [[ $opt_timeout > 0 ]]; then
-		( sleep $opt_timeout; kill $pid; ) &>/dev/null &
-	    fi
+# opt_timeout is disabled for now due to a bash bug.  If the timeout is put into
+# the background and $pid exits before wait is called, the wait will fail
+# because bash claims $pid is not a child of this shell.
+#	    if [[ $opt_timeout > 0 ]]; then
+#		( sleep $opt_timeout; kill $pid; ) &>/dev/null &
+#	    fi
 	    wait $pid
 	)
 	status=$?

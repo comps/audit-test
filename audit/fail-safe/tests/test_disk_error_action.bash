@@ -30,7 +30,8 @@ write_auditd_conf \
 
 (
     export LD_PRELOAD="$PWD/fprintf.so $LD_PRELOAD"
-    start_auditd || exit 2
+    auditd || { auditd -f; exit 2; }
+    sleep 2     # rather than the more complex version in start_auditd
 )
 
 write_records 100 || exit 2

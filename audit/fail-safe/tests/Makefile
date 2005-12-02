@@ -27,8 +27,15 @@ FPRINTF_SO	= fprintf.so
 ALL_OBJ		= $(FPRINTF_OBJ)
 ALL_SO		= $(FPRINTF_SO)
 
+ifeq ($(MODE),)
 $(FPRINTF_SO): CFLAGS += -fPIC
 $(FPRINTF_SO): $(FPRINTF_OBJ)
 	$(LINK_SO)
+else
+# fprintf.so is preloaded for auditd, so must be built for the native
+# architecture.  See test_disk_error_action.bash
+$(FPRINTF_SO):
+	$(MAKE) "$@" MODE=
+endif
 
 include $(TOPDIR)/rules.mk

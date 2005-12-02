@@ -391,7 +391,7 @@ function run_tests {
 	    1)  msg "<yellow>FAIL"
 		(( fail++ )) 
 		$opt_debug && continue ;;
-	    *)  msg "<red>ERROR ($?)"
+	    *)  msg "<red>ERROR ($status)"
 		(( error++ )) 
 		$opt_debug && continue ;;
 	esac

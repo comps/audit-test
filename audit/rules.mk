@@ -90,7 +90,7 @@ run.bash:
 	[[ -f run.bash ]] || ln -sfn $(TOPDIR)/utils/run.bash run.bash
 
 run: all
-	MODE="$(MODE)" ./run.bash
+	./run.bash
 endif
 
 _clean:

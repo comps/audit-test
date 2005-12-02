@@ -109,8 +109,14 @@ audit_tools/au_restart
 
 audit_tools/ausearch
    test that searching based on SYSCALL information works
+    -m SYSCALL
+    -sc <name>
+    -sc <value>
+    -sv <yes>
+    -sv <no>
+    others?
    test that searching based on TEXT information works
-
+   - messages about adding users and groups
 
 fail-safe/tests/test_rollover.c
    1) Performs pre-processing, including establishing a signal
@@ -167,30 +173,41 @@ fail-safe/tests/test_pam_loginuid.c
     When auditing is disabled that the pam_loginuid disallows users to login to the system
      -- could be a manual test
 
-filter-conf/tests/test_int_cmp.c
- Tests the integer comparison support in the audit filter
-
-filter-conf/tests/test_login.c
+filters/tests/test_login.c
  Tests the login support.
+ ? not sure what this translates to
 
-filter-conf/tests/test_syscall_attrs.c
- Tests the argN system call support.
- Tests the syscall-minor system call support. (on certain arches only)
-
-filter-conf/tests/test_str_cmp.c
- Tests the string comparison filtering support.
-
-filter-conf/tests/test_process_attrs.c
+filters/tests/test_process_attrs.c
  Tests the login-uid process attribute support.
+ -F auid=N
+ -F auid!=N
 
-filter-conf/tests/test_file_attrs.c
+filters/tests/test_file_attrs.c
  Tests the file-mode, file-dev, file-ino file attribute support.
- Tests the file-uid and file-gid file attribute support.
+ -F inode=N
  Tests the dev-major, dev-minor file attribute support.
+ -F devmajor=N
+ -F devminor=N
 
-filter-conf/tests/test_user_msg.c
+filters/tests/test_syscall_attrs.c
+ -F success=yes
+ -F success=no
+ -F syscall=<name>
+ -F syscall=<number>
+
+filters/tests/test_user_msg.c
  Tests the user message filtering support.
+ -m <user message>
 
+filters/tests/test_str_cmp.c
+ Tests the string comparison filtering support.
+ verify strange characters in user messages
+
+filters/tests/watch
+ Test behavior for:
+ - hardlinks
+ - symlinks
+ - renames
 
 
 Audit records:

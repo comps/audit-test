@@ -101,20 +101,11 @@ _clean:
 	fi
 	$(RM) -r .deps
 	$(RM) $(ALL_OBJ)
+	$(RM) $(ALL_EXE) $(ALL_AR) $(ALL_SO)
 
 clean: _clean
 
-_clobber: clean
-	@if [[ "$(MAKECMDGOALS)" == clobber ]]; then \
-	    for x in $(SUB_DIRS); do \
-		make -C $$x clobber; \
-	    done; \
-	fi
-	$(RM) $(ALL_EXE) $(ALL_AR) $(ALL_SO)
-
-clobber: _clobber
-
-_distclean: clobber
+_distclean: clean
 	@if [[ "$(MAKECMDGOALS)" == distclean ]]; then \
 	    for x in $(SUB_DIRS); do \
 		make -C $$x distclean; \

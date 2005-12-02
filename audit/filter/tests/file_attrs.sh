@@ -49,19 +49,9 @@ source functions.bash
 #
 
 # override the test harness cleanup function
-eval "function cleanup {
+prepend_cleanup '
     # remove the filter we set earlier
-    [ \"$filter_field\" != \"\" ] && auditctl -d $filter_rule -F $filter_field 2> /dev/null
-    # call the default cleanup function
-    $(type cleanup | sed '1,3d;$d')
-}"
-
-# exit and indicate and error
-function exit_error {
-    [ "$*" != "" ] && echo "error: $*"
-    cleanup
-    exit 2
-}
+    [ -n "$filter_field" ] && auditctl -d $filter_rule -F $filter_field 2>/dev/null'
 
 # generate an audit record for the given file and update the
 # audit log marker
@@ -70,7 +60,7 @@ function audit_rec_gen {
         log_mark=$(stat -c %s $audit_log)
         cat $tmp1 > /dev/null
     else
-        exit_error "unable to find file \"$1\""
+        die "unable to find file \"$1\""
     fi
 }
 
@@ -90,7 +80,7 @@ log_mark=$(stat -c %s $audit_log)
 
 # create the test file
 echo "notice: creating a temporary file ..."
-touch $tmp1 2> /dev/null || exit_error "unable to create temporary file for testing"
+touch $tmp1 2> /dev/null || die "unable to create temporary file for testing"
 
 # collect file information
 f_inode="$(stat -c '%i' $tmp1)"

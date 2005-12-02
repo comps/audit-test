@@ -45,12 +45,8 @@ zero=${0##*/}
 # utility functions
 ######################################################################
 
-# This can be prepended or appended by doing something like:
-#   eval "function cleanup {
-#	# prepend code here
-#	$(type cleanup | sed '1,3d;$d')
-#	# append code here
-#    }"
+# This can be prepended or appended by calling prepend_cleanup or append_cleanup
+# below
 function cleanup {
     if [[ -s "$auditd_orig" ]]; then 
         auditctl -D
@@ -65,6 +61,26 @@ function cleanup {
 
 # can override to cleanup &>/dev/null when appropriate
 trap 'cleanup; exit' 0 1 2 15
+
+function prepend_cleanup {
+    eval "function cleanup {
+	$*
+	$(type cleanup | sed '1,3d;$d')
+    }"
+}
+
+function append_cleanup {
+    eval "function cleanup {
+	$(type cleanup | sed '1,3d;$d')
+	$*
+    }"
+}
+
+function die {
+    [[ -n $* ]] && echo "error: $*"
+    # this will call the cleanup function automatically because of trap 0
+    exit 2
+}
 
 ######################################################################
 # auditd functions

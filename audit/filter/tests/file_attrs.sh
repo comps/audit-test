@@ -60,7 +60,7 @@ function audit_rec_gen {
         log_mark=$(stat -c %s $audit_log)
         cat $tmp1 > /dev/null
     else
-        die "unable to find file \"$1\""
+        exit_error "unable to find file \"$1\""
     fi
 }
 
@@ -80,7 +80,7 @@ log_mark=$(stat -c %s $audit_log)
 
 # create the test file
 echo "notice: creating a temporary file ..."
-touch $tmp1 2> /dev/null || die "unable to create temporary file for testing"
+touch $tmp1 2> /dev/null || exit_error "unable to create temporary file for testing"
 
 # collect file information
 f_inode="$(stat -c '%i' $tmp1)"

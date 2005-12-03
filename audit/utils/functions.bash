@@ -76,7 +76,19 @@ function append_cleanup {
     }"
 }
 
-function die {
+function exit_pass {
+    [[ -n $* ]] && echo "pass: $*"
+    # this will call the cleanup function automatically because of trap 0
+    exit 0
+}
+
+function exit_fail {
+    [[ -n $* ]] && echo "fail: $*"
+    # this will call the cleanup function automatically because of trap 0
+    exit 1
+}
+
+function exit_error {
     [[ -n $* ]] && echo "error: $*"
     # this will call the cleanup function automatically because of trap 0
     exit 2

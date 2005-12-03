@@ -33,12 +33,12 @@ shopt -s extglob
 ######################################################################
 
 auditd_conf=/etc/auditd.conf
-auditd_orig=$(mktemp $auditd_conf.XXXXXX)
+auditd_orig=$(mktemp $auditd_conf.XXXXXX) || exit 2
 audit_log=/var/log/audit/audit.log
 eal_mail=/var/mail/eal
 messages=/var/log/messages
-tmp1=$(mktemp)
-tmp2=$(mktemp)
+tmp1=$(mktemp) || exit 2
+tmp2=$(mktemp) || exit 2
 zero=${0##*/}
 
 ######################################################################
@@ -52,7 +52,7 @@ function cleanup {
         auditctl -D
         service auditd stop
         killall auditd
-        [[ -s "$auditd_orig" ]] && mv "$auditd_orig" "$auditd_conf"
+        mv "$auditd_orig" "$auditd_conf"
         umount /var/log/audit
         service auditd start
     fi

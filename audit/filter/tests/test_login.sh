@@ -26,10 +26,10 @@ export RHOST="localhost"
 BEGIN=`date +"%D %T"`
 
 # attempt to login
-./ssh01_s1 || exit 1
+$(dirname $0)/ssh01_s1 || exit $?
 
 # look for the LOGIN record in the audit log
-ausearch -m LOGIN -ts $BEGIN || exit 1
+ausearch -m LOGIN -ts $BEGIN || exit $? 
 
 # tests passed
 exit 0

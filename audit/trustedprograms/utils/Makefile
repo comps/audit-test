@@ -25,8 +25,7 @@ TP_UTILS_AR	= trustedprogram_test_utils.a
 TP_UTILS_OBJ	= post_trustedprogram.o		\
 		  pre_trustedprogram.o		\
 		  trusted_program.o		\
-		  shadow_test_setup.o		\
-		  audit_grep_log.o
+		  shadow_test_setup.o
 
 ALL_AR		= $(TP_UTILS_AR)
 ALL_OBJ		= $(TP_UTILS_OBJ)

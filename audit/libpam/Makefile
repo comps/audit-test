@@ -61,5 +61,4 @@ $(LIBPAM_EXE): $(LIBPAM_OBJ) $(ALL_AR) $(UTILS_AR)
 	$(LINK_EXE)
 
 run: all
-	$(AUDIT_CLEAN_LOG)
 	./$(EXE) &> ./$(EXE).run.log

@@ -19,16 +19,19 @@
 
 TOPDIR		= .
 
-RUN_DIRS        = fail-safe \
+RUN_DIRS	= syscalls
+
+ifeq ($(MODE), $(NATIVE))
+RUN_DIRS       += fail-safe \
 		  filter \
-		  syscalls \
 		  audit-trail-protection \
 		  audit-tools \
 		  libpam \
 		  trustedprograms
+endif
 
-SUB_DIRS        = $(RUN_DIRS) \
-		  utils \
+SUB_DIRS	= $(RUN_DIRS) \
+		  utils
 
 include $(TOPDIR)/rules.mk
 

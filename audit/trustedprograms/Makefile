@@ -41,5 +41,4 @@ $(TP_EXE): $(TP_OBJ) $(TESTS_AR) $(TUTILS_AR) $(UTILS_AR)
 	$(LINK_EXE)
 
 run: all
-	$(AUDIT_CLEAN_LOG)
 	./$(EXE) &> ./$(EXE).run.log

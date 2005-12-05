@@ -43,32 +43,34 @@ SYSTEMINFO      = systeminfo.run.log
 CFLAGS          += -g -O2 -Wall -Werror -D_GNU_SOURCE
 LDFLAGS         +=
 
-AUDIT_CLEAN_LOG = /etc/init.d/audit stop; /bin/rm -f /var/log/audit.d/*; /etc/init.d/audit start
-
 LINK_AR		= $(AR) rc $@ $^
 LINK_EXE	= $(CC) $(LDFLAGS) -o $@ $^ $(LOADLIBES) $(LDLIBS)
 LINK_SO		= $(CC) $(LDFLAGS) -shared -o $@ $^ $(LOADLIBES) $(LDLIBS)
 
 # If MODE isn't set explicitly, the default for the machine is used
-ifeq ($(MODE), 32)
-	ifneq (,$(findstring $(MACHINE), $(Z64)))
-		CFLAGS += -m31
-		LDFLAGS += -m31
-	else 
-		ifneq (,$(findstring $(MACHINE), $(X86_64)))
-			CFLAGS += -m32 -malign-double
-			LDFLAGS += -m32
-		else
-			CFLAGS += -m32
-			LDFLAGS += -m32
-		endif
-	endif
-endif
-ifeq ($(MODE), 64)
-	ifeq (,$(findstring $(MACHINE),$(X) $(IA)))
-		CFLAGS += -m64
-		LDFLAGS += -m64
-	endif
+NATIVE          = $(strip $(shell file /bin/bash | awk -F'[ -]' '{print $$3}'))
+MODE            ?= $(NATIVE)
+ifneq ($(MODE), $(NATIVE))
+    ifeq ($(MODE), 32)
+	    ifneq (,$(findstring $(MACHINE), $(Z64)))
+		    CFLAGS += -m31
+		    LDFLAGS += -m31
+	    else 
+		    ifneq (,$(findstring $(MACHINE), $(X86_64)))
+			    CFLAGS += -m32 -malign-double
+			    LDFLAGS += -m32
+		    else
+			    CFLAGS += -m32
+			    LDFLAGS += -m32
+		    endif
+	    endif
+    endif
+    ifeq ($(MODE), 64)
+	    ifeq (,$(findstring $(MACHINE),$(X) $(IA)))
+		    CFLAGS += -m64
+		    LDFLAGS += -m64
+	    endif
+    endif
 endif
 
 ##########################################################################
@@ -199,12 +201,12 @@ depsdir:
 # Sub-directory processing rules
 ##########################################################################
 
-.PHONY: subdirs $(SUB_DIRS) 
+.PHONY: subdirs
 
-subdirs: $(SUB_DIRS)
-
-$(SUB_DIRS):
-	@$(MAKE) -C $@ $(MAKECMDGOALS)
+subdirs:
+	for x in $(SUB_DIRS); do \
+	    $(MAKE) -C $$x $(MAKECMDGOALS); \
+	done
 
 ##########################################################################
 # Command framework execution rules

@@ -168,7 +168,7 @@ verify:
 showrpms:
 	@$(MAKE) --no-print-directory _showrpms | xargs -n1 echo | sort -u
 
-_showrpms: subdirs
+_showrpms: subdirs_quiet
 	@echo "$(RPMS)"
 
 ##########################################################################
@@ -201,11 +201,16 @@ depsdir:
 # Sub-directory processing rules
 ##########################################################################
 
-.PHONY: subdirs
+.PHONY: subdirs subdirs_quiet
 
 subdirs:
 	for x in $(SUB_DIRS); do \
 	    $(MAKE) -C $$x $(MAKECMDGOALS); \
+	done
+
+subdirs_quiet:
+	@for x in $(SUB_DIRS); do \
+	    $(MAKE) --no-print-directory -C $$x $(MAKECMDGOALS); \
 	done
 
 ##########################################################################

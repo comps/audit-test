@@ -1,5 +1,7 @@
+#!/bin/bash -x
 # =============================================================================
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+# Written by Matt Anderson <mra@hp.com>
 #
 #   This program is free software;  you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -15,6 +17,19 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 # =============================================================================
+#
 
-+ tests/file_attrs.sh
-+ tests/test_login.sh
+export RHOST="localhost"
+# TEST_USER and TEST_USER_PASSWD are set in run.bash startup()
+
+# save the date
+BEGIN=`date +"%D %T"`
+
+# attempt to login
+./ssh01_s1 || exit 1
+
+# look for the LOGIN record in the audit log
+ausearch -m LOGIN -ts $BEGIN || exit 1
+
+# tests passed
+exit 0

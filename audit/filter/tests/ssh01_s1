@@ -1,0 +1,50 @@
+#! /usr/bin/expect -f
+#*********************************************************************
+#   Copyright (C) International Business Machines  Corp., 2000
+#   Copyright (C) Hewlett-Packard Development Company, L.P., 2005
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+#   the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program;  if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#  FILE   : ssh 
+#
+#  PURPOSE: Tests to see that ssh rejects an invalid password
+#
+#  SETUP: The program `/usr/bin/expect' MUST be installed.
+#         The PASSWD and RHOST variables MUST be set prior to execution.
+#
+#  HISTORY:
+#    03/03 Jerone Young (jeroney@us.ibm.com)
+#    11/05 Adapted for failsafe pam_loginuid by Matt Anderson (mra@hp.com)
+#
+
+set RHOST $env(RHOST)
+set TEST_USER $env(TEST_USER)
+set TEST_USER_PASSWD $env(TEST_USER_PASSWD)
+
+spawn ssh \
+    -o "PubkeyAuthentication no" \
+    -o "NoHostAuthenticationForLocalhost yes" \
+    -l $TEST_USER $RHOST whoami
+
+expect -nocase "password: " {
+    exp_send "$TEST_USER_PASSWD\r"
+}
+
+expect "$TEST_USER"  {
+    send_user "SSH allowed $TEST_USER to login via password\n";
+    exit 0;
+}
+
+exit 1;

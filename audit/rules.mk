@@ -204,7 +204,7 @@ depsdir:
 .PHONY: subdirs subdirs_quiet
 
 subdirs:
-	for x in $(SUB_DIRS); do \
+	@for x in $(SUB_DIRS); do \
 	    $(MAKE) -C $$x $(MAKECMDGOALS); \
 	done
 

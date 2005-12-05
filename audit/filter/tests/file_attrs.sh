@@ -50,6 +50,8 @@ source functions.bash
 
 # override the test harness cleanup function
 prepend_cleanup '
+    # remove our files
+    rm -f $file_real.hard
     # remove the filter we set earlier
     [ -n "$filter_field" ] && auditctl -d $filter_rule -F $filter_field 2>/dev/null'
 
@@ -58,7 +60,7 @@ prepend_cleanup '
 function audit_rec_gen {
     if [ -f "$1" ]; then
         log_mark=$(stat -c %s $audit_log)
-        cat $tmp1 > /dev/null
+        cat "$1" > /dev/null
     else
         exit_error "unable to find file \"$1\""
     fi
@@ -78,34 +80,47 @@ ret_val=0
 # audit log marker
 log_mark=$(stat -c %s $audit_log)
 
-# create the test file
-echo "notice: creating a temporary file ..."
-touch $tmp1 2> /dev/null || exit_error "unable to create temporary file for testing"
+# create the test files
+file_real=$tmp1
+echo "notice: creating the test files ..."
+touch $file_real 2> /dev/null || exit_error "unable to create temporary file for testing"
+ln $file_real $file_real.hard || exit_error "unable to create hard linked file"
 
-# collect file information
-f_inode="$(stat -c '%i' $tmp1)"
-echo "notice: temporary file information"
-echo " path      = $tmp1"
-echo " inode     = $f_inode"
+for iter_file in $file_real $file_real.hard; do
+    echo ""
 
-for iter in "inode=$f_inode"; do
-    # set an audit filter
-    echo "notice: setting a filter for $iter ..."
-    filter_field="$iter"
-    auditctl -a $filter_rule -F $filter_field
+    # collect file information
+    f_inode="$(stat -c '%i' $iter_file)"
+    echo "notice: test file information"
+    echo " path      = $iter_file"
+    echo " inode     = $f_inode"
+    
+    for iter_field in "inode=$f_inode"; do
+        # set an audit filter
+        echo "notice: setting a filter for $iter_field ..."
+        filter_field="$iter_field"
+        auditctl -a $filter_rule -F $filter_field
+        
+        # generate an audit record
+        audit_rec_gen $iter_file
+        
+        # look for the audit record
+        echo "notice: testing for audit record ..."
+        augrep --seek=$log_mark ${filter_field/=/==}
+        ret_val_tmp=$?
+        [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
 
-    # generate an audit record
-    audit_rec_gen $tmp1
-
-    # look for the audit record
-    echo "notice: testing for audit record ..."
-    augrep --seek=$log_mark ${filter_field/=/==}
-    ret_val_tmp=$?
-    [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
-
-    # remove the filter
-    auditctl -d $filter_rule -F $filter_field
-    filter_field=""
+        # display the result
+        if [ "$ret_val_tmp" = "0" ]; then
+            echo "notice: found audit record - PASS"
+        else
+            echo "notice: did not find audit record - FAIL"
+        fi
+        
+        # remove the filter
+        auditctl -d $filter_rule -F $filter_field
+        filter_field=""
+    done
 done
 
 #

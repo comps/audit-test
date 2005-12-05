@@ -24,12 +24,11 @@ RUN_DIRS        = fail-safe \
 		  syscalls \
 		  audit-trail-protection \
 		  audit-tools
+		  libpam \
+		  trustedprograms
 
 SUB_DIRS        = $(RUN_DIRS) \
 		  utils \
-#		  filter-conf \
-#		  libpam \
-#		  trustedprograms
 
 include $(TOPDIR)/rules.mk
 

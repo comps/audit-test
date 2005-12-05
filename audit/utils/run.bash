@@ -102,18 +102,22 @@ function monoize {
     echo "$*"
 }
 
-function msg {
+function lmsg {
     $logging && monoize "$*" >>"$opt_log"
+}
+
+function msg {
+    lmsg "$*"
     colorize "$*"
 }
 
 function vmsg {
-    $logging && monoize "$*" >>"$opt_log"
+    lmsg "$*"
     $opt_verbose || $opt_debug && colorize "$*"
 }
 
 function dmsg {
-    $logging && monoize "$*" >>"$opt_log"
+    lmsg "$*"
     $opt_debug && colorize "$*"
 }
 
@@ -360,7 +364,6 @@ function run_tests {
 
     for t in "${TESTS[@]}"; do
 	if $opt_debug; then
-	    echo
 	    prf "%-60s " "$t"
 	    msg "<blue>DEBUG"
 	    msg "<blue>--- begin output -----------------------------------------------------------"
@@ -382,7 +385,7 @@ function run_tests {
 	status=$?
 
 	if $opt_debug; then
-	    echo "$output" >> "$opt_log"
+	    lmsg "$output"
 	    msg "<blue>--- end output -------------------------------------------------------------"
 	    prf "%-60s " "$t"
 	fi
@@ -390,18 +393,24 @@ function run_tests {
 	case $status in
 	    0)  msg "<green>PASS"
 		(( pass++ ))
-		continue ;;
+		if ! $opt_debug; then
+		    lmsg "<blue>--- begin output -----------------------------------------------------------"
+		    lmsg "$output"
+		    lmsg "<blue>--- end output -------------------------------------------------------------"
+		fi ;;
+
 	    1)  msg "<yellow>FAIL"
 		(( fail++ )) 
-		$opt_debug && continue ;;
+		if ! $opt_debug; then
+		    vmsg "<blue>--- begin output -----------------------------------------------------------"
+		    vmsg "$output"
+		    vmsg "<blue>--- end output -------------------------------------------------------------"
+		fi ;;
+
 	    *)  msg "<red>ERROR ($status)"
-		(( error++ )) 
-		$opt_debug && continue ;;
+		(( error++ )) ;;
 	esac
 
-	vmsg "<blue>--- begin output -----------------------------------------------------------"
-	vmsg "$output"
-	vmsg "<blue>--- end output -------------------------------------------------------------"
 	vmsg
     done
 

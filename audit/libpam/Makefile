@@ -59,6 +59,3 @@ include $(TOPDIR)/rules.mk
 
 $(LIBPAM_EXE): $(LIBPAM_OBJ) $(ALL_AR) $(UTILS_AR)
 	$(LINK_EXE)
-
-run: all
-	./$(EXE) &> ./$(EXE).run.log

@@ -269,12 +269,12 @@ Arguments:\n\
 EXIT_HELP:
   if (testcase != NULL)
     free (testcase);
-  return rc;
+  return !!rc;  // PASS=0, FAIL=1
 
 EXIT_ERROR:
 //  restoreFile("/etc/audit/filter.conf");
   audit_reload();
   printf("ERROR: Test aborted: errno = %i\n", errno);
-  return rc;
+  return 2;     // ERROR=2
 
 }

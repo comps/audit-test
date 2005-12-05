@@ -1,60 +1,38 @@
-/**********************************************************************
-   **   Copyright (C) International Business Machines  Corp., 2003
-   **
-   **   This program is free software;  you can redistribute it and/or modify
-   **   it under the terms of the GNU General Public License as published by
-   **   the Free Software Foundation; either version 2 of the License, or
-   **   (at your option) any later version.
-   **
-   **   This program is distributed in the hope that it will be useful,
-   **   but WITHOUT ANY WARRANTY;  without even the implied warranty of
-   **   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-   **   the GNU General Public License for more details.
-   **
-   **   You should have received a copy of the GNU General Public License
-   **   along with this program;  if not, write to the Free Software
-   **   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-   **
-   **
-   **
-   **  FILE       : test_access.c
-   **
-   **  PURPOSE    : To test the access  library call auditing.
-   **
-   **  DESCRIPTION: The test_access() function builds into the
-   **  laus_test framework to verify that the Linux Audit System
-   **  accurately logs both successful and erroneous execution of the
-   **  "access" system call.
-   **
-   **  In the successful case, this function:
-   **   1) Generates a unique filename and creates a file with a
-   **      particular mode
-   **   2) Clears the audit trail
-   **   3) Uses the access system call to check a mode that is allowed
-   **   4) Tests the results of the system call against the
-   **      expected successful return
-   **
-   **  The successful case creates a file with mode permissions and
-   **  uses the "access" system call to check the permissions on the file.
-   **  An existing filename and a valid mode is used, and thus the system
-   **  call executes correctly.
-   **  
-   **  In the erroneous case, this function:
-   **   1) Generates a unique filename and creates a file with a
-   **      particular mode
-   **   2) Clears the audit trail
-   **   3) Uses the access system call to check a nonsensical mode
-   **   4) Tests the results of the system call against the
-   **      expected successful return
-   **      
-   **  The erroneous case tries to access the file in an invalid mode,
-   **  thus generating an EACCES errno.
-   **
-   **  HISTORY    :
-   **    06/03 Originated by Dustin Kirkland <k1rkland@us.ibm.com>
-   **    03/04 Added exp_errno variable by D. Kent Soper <dksoper@us.ibm.com>
-   **
-   **********************************************************************/
+/*  Copyright (C) International Business Machines  Corp., 2003
+ *  (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+ *
+ *  This program is free software;  you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY;  without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+ *  the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program;  if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ *  Implementation written by HP, based on original code from IBM.
+ *
+ *  FILE:
+ *  test_access.c
+ *
+ *  PURPOSE:
+ *  Verify audit of attempts to check file access permissions.
+ *
+ *  SYSCALLS:
+ *  access()
+ *
+ *  TESTCASE: successful
+ *  Check read access permissions on a file with read permissions.
+ *
+ *  TESTCASE: unsuccessful
+ *  Attempt to check write access permissions on a file with read-only
+ *  permissions.
+ */
 
 #include "includes.h"
 #include "syscalls.h"
@@ -62,62 +40,53 @@
 int test_access(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    int exp_errno = -EACCES;
-    char *fileName = NULL;
+    char *path;
     int mode;
+    int fd;
 
-     /**
-      * Do as much setup work as possible right here
-      */
-    // Generate unique filename
-
-    fileName = init_tempfile(S_IRUSR, context->euid, context->egid);
-    if (!fileName) {
+    path = init_tempfile(S_IRUSR|S_IROTH, context->euid, context->egid);
+    if (!path) {
 	rc = -1;
-	goto EXIT;
+	goto exit;
     }
 
-    if (context->success) {
+    if (success)
 	mode = R_OK;
-    } else {
+    else {
 	mode = W_OK;
+	rc = setresuid_test();
+	if (rc < 0)
+	    goto exit_path;
+	context->experror = -EACCES;
     }
 
-    // Set up audit argument buffer
-    if ((rc = auditArg2(context,
-			AUDIT_ARG_PATH, strlen(fileName), fileName,
-			AUDIT_ARG_IMMEDIATE, sizeof(mode), &mode)) != 0) {
-	fprintf(stderr, "Error setting up audit argument buffer\n");
-	goto EXIT;
-    }
-    // Do pre-system call work
-    if ((rc = preSysCall(context)) != 0) {
-	fprintf(stderr, "ERROR: pre-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
+    rc = context_setcwd(context);
+    if (rc < 0)
+	goto exit_suid;
+    context_settobj(context, path);
 
-    context->u.syscall.exit = syscall(__NR_access, fileName, mode);
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit_suid;
 
-    // Do post-system call work
-    if ((rc = postSysCall(context, errno, -1, exp_errno)) != 0) {
-	fprintf(stderr, "ERROR: post-syscall setup failed (%d)\n", rc);
-	goto EXIT_CLEANUP;
-    }
+    errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting access(%s, %d)\n", path, mode);
+    fd = syscall(context->u.syscall.sysnum, path, mode);
+    context_setend(context);
+    context_setresult(context, fd, errno);
 
+    errno = 0;
+    if ((fd != -1) && (close(fd) < 0))
+	fprintf(stderr, "Error: closing file: %s\n", strerror(errno));
 
+exit_suid:
+    if (!success && setresuid(0, 0, 0) < 0)
+	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
 
-EXIT_CLEANUP:
-     /**
-      * Do cleanup work here
-      */
-    if ((unlink(fileName)) != 0) {
-	fprintf(stderr, "ERROR: Unable to remove file %s: errno=%i\n", fileName, errno);
-	goto EXIT;
-    }
+exit_path:
+    destroy_tempfile(path);
 
-EXIT:
-    if (fileName)
-	free(fileName);
-    fprintf(stderr, "Returning from test\n");
+exit:
     return rc;
 }

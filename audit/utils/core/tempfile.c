@@ -66,6 +66,8 @@ char *init_tempdir(mode_t mode, uid_t uid, gid_t gid)
     if (common_setperms(dname, mode, uid, gid, 0) < 0)
 	goto exit_err;
 
+    fprintf(stderr, "Tempdir: %s (%o)\n", dname, mode);
+
     return dname;
 
 exit_err:
@@ -111,6 +113,8 @@ char *init_tempfile(mode_t mode, uid_t uid, gid_t gid)
 
     if (common_setperms(fname, mode, uid, gid, 1) < 0)
 	goto exit_err;
+
+    fprintf(stderr, "Tempfile: %s (%o)\n", fname, mode);
 
     return fname;
 

@@ -23,7 +23,7 @@ RUN_DIRS        = fail-safe \
 		  filter \
 		  syscalls \
 		  audit-trail-protection \
-		  audit-tools
+		  audit-tools \
 		  libpam \
 		  trustedprograms
 

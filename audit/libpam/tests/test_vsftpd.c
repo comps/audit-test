@@ -197,7 +197,11 @@ int test_vsftpd(struct audit_data* dataPtr) {
 
 
  EXIT:
-  restoreFile("/etc/vsftpd.conf");
+  restoreFile("/etc/vsftpd/vsftpd.conf");
+  if ( ( rc = system( "/etc/init.d/vsftpd stop") ) != 0) {
+    printf( "Error restarting vsftpd\n");
+    goto EXIT;
+  }
 /*
   restoreFile("/etc/pam.d/vsftpd");
   restoreFile("/etc/xinetd.conf");

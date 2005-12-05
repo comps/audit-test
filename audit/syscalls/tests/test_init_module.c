@@ -52,7 +52,7 @@ int test_init_module(struct audit_data *context, int variation, int success)
 	    module_name);
 
     /* make sure module isn't already loaded, ignore errors */
-    syscall(__NR_init_module, module_name, 0);
+    syscall(__NR_delete_module, module_name, 0);
 
     fprintf(stderr, "Module path: %s\n", module_path);
     fd = open(module_path, O_RDONLY);

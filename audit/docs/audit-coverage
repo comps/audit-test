@@ -171,11 +171,10 @@ fail-safe/tests/test_rollover_failure.c
 
 fail-safe/tests/test_pam_loginuid.c
     When auditing is disabled that the pam_loginuid disallows users to login to the system
-     -- could be a manual test
 
 filters/tests/test_login.c
  Tests the login support.
- ? not sure what this translates to
+ -m LOGIN
 
 filters/tests/test_process_attrs.c
  Tests the login-uid process attribute support.
@@ -209,16 +208,4 @@ filters/tests/watch
  - symlinks
  - renames
  use filterkey for determining filesystem object
-
-
-Audit records:
-
-raw from tail -f /var/log/audit/audit.log :
-type=LOGIN msg=audit(1132069757.773:1153): login pid=27016 uid=0 old auid=4294967295 new auid=500
-
-ausearch:
-[mra@orbital ~]$ sudo /sbin/ausearch -p 27016
-----
-time->Tue Nov 15 10:49:17 2005
-type=LOGIN msg=audit(1132069757.773:1153): login pid=27016 uid=0 old auid=4294967295 new auid=500
 

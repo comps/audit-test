@@ -45,6 +45,22 @@ source functions.bash
 # helper functions
 #
 
+# override the test harness cleanup function
+prepend_cleanup '
+    # remove the filter we set earlier
+    [ -n "$filter_watch" ] && auditctl -W $filter_watch 2>/dev/null'
+
+# generate an audit record for the given file and update the
+# audit log marker
+function audit_rec_gen {
+    if [ -f "$1" ]; then
+        log_mark=$(stat -c %s $audit_log)
+        cat "$1" > /dev/null
+    else
+        exit_error "unable to find file \"$1\""
+    fi
+}
+
 #
 # main
 #
@@ -53,8 +69,34 @@ source functions.bash
 echo "notice: starting $(basename $0) test ($(date))"
 echo ""
 
-# XXX - write somethine useful here
-ret_val=2
+# return value
+ret_val=0
+
+# audit log marker
+log_mark=$(stat -c %s $audit_log)
+
+# create the test files
+echo "notice: creating the test file ..."
+touch $tmp1 2> /dev/null || exit_error "unable to create temporary file for testing"
+
+# display file information
+f_inode="$(stat -c '%i' $tmp1)"
+echo "notice: file information"
+echo " file  = $tmp1"
+echo " inode = $f_inode"
+
+# set an audit filter
+echo "notice: setting a watch for the file ..."
+filter_watch=$tmp1
+auditctl -w $tmp1
+
+# generate an audit event
+audit_rec_gen $tmp1
+
+# check for the audit record
+echo "notice: testing for audit record ..."
+augrep --seek=$log_mark "watch==$(basename $tmp1)" "inode==$f_inode"
+ret_val=$?
 
 #
 # done

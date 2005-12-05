@@ -132,7 +132,7 @@ char *init_tempsym(char *target, uid_t uid, gid_t gid)
     }
 
     errno = 0;
-    if (realloc(spath, strlen(spath) + sizeof(sname)) == NULL) {
+    if (realloc(spath, strlen(spath) + strlen(sname) + 1) == NULL) {
 	fprintf(stderr, "Error: initializing symlink: realloc(): %s\n",
 		strerror(errno));
 	destroy_tempdir(spath);

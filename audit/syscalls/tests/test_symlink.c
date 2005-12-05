@@ -60,7 +60,7 @@ int test_symlink(struct audit_data *context, int variation, int success)
     }
 
     errno = 0;
-    if (realloc(newpath, strlen(newpath) + sizeof(lname)) == NULL) {
+    if (realloc(newpath, strlen(newpath) + strlen(lname) + 1) == NULL) {
 	fprintf(stderr, "Error: initializing path: realloc(): %s\n",
 		strerror(errno));
 	rc = -1;

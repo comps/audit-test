@@ -46,7 +46,7 @@ int test_mknod(struct audit_data *context, int variation, int success)
     char *newname = "/blkdev";
     mode_t mode = S_IRWXU|S_IRWXO;
     dev_t dev = S_IFBLK;
-    int fd;
+    int exit;
 
     path = init_tempdir(S_IRWXU, context->euid, context->egid);
     if (!path) {
@@ -89,12 +89,12 @@ int test_mknod(struct audit_data *context, int variation, int success)
     errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting mknod(%s, %d, S_IFBLK)\n", path, mode);
-    fd = syscall(context->u.syscall.sysnum, path, mode, dev);
+    exit = syscall(context->u.syscall.sysnum, path, mode, dev);
     context_setend(context);
-    context_setresult(context, fd, errno);
+    context_setresult(context, exit, errno);
 
     errno = 0;
-    if ((fd != -1) && (unlink(path) < 0))
+    if ((exit == 0) && (unlink(path) < 0))
 	fprintf(stderr, "Error: removing file: %s\n", strerror(errno));
 
 exit_suid:

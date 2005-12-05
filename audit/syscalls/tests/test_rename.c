@@ -36,7 +36,6 @@
 
 #include "includes.h"
 #include "syscalls.h"
-#include <libgen.h>
 
 int test_rename(struct audit_data *context, int variation, int success)
 {
@@ -45,8 +44,13 @@ int test_rename(struct audit_data *context, int variation, int success)
     int exit = -1;
 
     oldpath = init_tempfile(S_IRWXU|S_IRWXO, context->euid, context->egid);
+    if (!oldpath) {
+	rc = -1;
+	goto exit;
+    }
     newpath = init_tempfile(S_IRWXU, context->euid, context->egid);
-    if (!oldpath || !newpath) {
+    if (!newpath) {
+	destroy_tempfile(oldpath);
 	rc = -1;
 	goto exit;
     }

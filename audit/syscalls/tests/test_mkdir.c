@@ -45,7 +45,7 @@ int test_mkdir(struct audit_data *context, int variation, int success)
     char *path;
     char *newname = "/newdir";
     mode_t mode = S_IRWXU|S_IRWXO;
-    int fd;
+    int exit;
 
     path = init_tempdir(S_IRWXU, context->euid, context->egid);
     if (!path) {
@@ -88,12 +88,12 @@ int test_mkdir(struct audit_data *context, int variation, int success)
     errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting mkdir(%s, %d)\n", path, mode);
-    fd = syscall(context->u.syscall.sysnum, path, mode);
+    exit = syscall(context->u.syscall.sysnum, path, mode);
     context_setend(context);
-    context_setresult(context, fd, errno);
+    context_setresult(context, exit, errno);
 
     errno = 0;
-    if ((fd != -1) && (rmdir(path) < 0))
+    if ((exit == 0) && (rmdir(path) < 0))
 	fprintf(stderr, "Error: removing directory: %s\n", strerror(errno));
 
 exit_suid:

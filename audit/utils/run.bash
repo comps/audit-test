@@ -397,6 +397,7 @@ function run_tests {
 		    lmsg "<blue>--- begin output -----------------------------------------------------------"
 		    lmsg "$output"
 		    lmsg "<blue>--- end output -------------------------------------------------------------"
+		    lmsg
 		fi ;;
 
 	    1)  msg "<yellow>FAIL"
@@ -405,13 +406,18 @@ function run_tests {
 		    vmsg "<blue>--- begin output -----------------------------------------------------------"
 		    vmsg "$output"
 		    vmsg "<blue>--- end output -------------------------------------------------------------"
+		    vmsg
 		fi ;;
 
 	    *)  msg "<red>ERROR ($status)"
-		(( error++ )) ;;
+		(( error++ ))
+		if ! $opt_debug; then
+		    vmsg "<blue>--- begin output -----------------------------------------------------------"
+		    vmsg "$output"
+		    vmsg "<blue>--- end output -------------------------------------------------------------"
+		    vmsg
+		fi ;;
 	esac
-
-	vmsg
     done
 
     (( total = pass + fail + error ))

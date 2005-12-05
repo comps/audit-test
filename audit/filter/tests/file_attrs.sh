@@ -22,7 +22,7 @@
 # configuration
 #
 
-# used in auditctl (i.e., auditctl -[a|d] $filter_str)
+# used in auditctl (i.e., auditctl -[a|d] $filter_rule)
 filter_rule="exit,always -S open"
 
 #
@@ -53,7 +53,7 @@ prepend_cleanup '
     # remove our files
     rm -f $file_real.hard
     # remove the filter we set earlier
-    [ -n "$filter_field" ] && auditctl -d $filter_rule -F $filter_field 2>/dev/null'
+    [ -n "$filter_field" ] && auditctl -d $filter_rule $filter_field 2>/dev/null'
 
 # generate an audit record for the given file and update the
 # audit log marker
@@ -91,36 +91,78 @@ for iter_file in $file_real $file_real.hard; do
 
     # collect file information
     f_inode="$(stat -c '%i' $iter_file)"
-    echo "notice: test file information"
-    echo " path      = $iter_file"
-    echo " inode     = $f_inode"
-    
-    for iter_field in "inode=$f_inode"; do
-        # set an audit filter
-        echo "notice: setting a filter for $iter_field ..."
-        filter_field="$iter_field"
-        auditctl -a $filter_rule -F $filter_field
-        
-        # generate an audit record
-        audit_rec_gen $iter_file
-        
-        # look for the audit record
-        echo "notice: testing for audit record ..."
-        augrep --seek=$log_mark ${filter_field/=/==}
-        ret_val_tmp=$?
-        [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
-
-        # display the result
-        if [ "$ret_val_tmp" = "0" ]; then
-            echo "notice: found audit record - PASS"
-        else
-            echo "notice: did not find audit record - FAIL"
-        fi
-        
-        # remove the filter
-        auditctl -d $filter_rule -F $filter_field
-        filter_field=""
+    f_fs_mount=$(dirname $iter_file)
+    while [ "$(cat /etc/fstab | awk -v DIR=$f_fs_mount '{ if ( $2 == DIR ) print $2 }')" = "" ]; do
+        f_fs_mount=$(dirname $f_fs_mount)
     done
+    f_fs_dev="$(cat /etc/fstab | awk -v DIR=$f_fs_mount '{ if ( $2 == DIR ) print $1 }')"
+    f_fs_dev_major="$(stat -Lc '%t' $f_fs_dev)"
+    f_fs_dev_minor="$(stat -Lc '%T' $f_fs_dev)"
+    f_fs_dev_num=$(printf "%.2x:%.2x" "0x$f_fs_dev_major" "0x$f_fs_dev_minor")
+
+    # display file information
+    echo "notice: test file information"
+    echo " path       = $iter_file"
+    echo " inode      = $f_inode"
+    echo " fs_mount   = $f_fs_mount"
+    echo " fs_dev     = $f_fs_dev"
+    echo " fs_dev_num = $f_fs_dev_num"
+
+    ### inode check
+
+    # set an audit filter
+    echo "notice: setting a filter for the inode ..."
+    filter_field="-F inode=$f_inode"
+    auditctl -a $filter_rule $filter_field
+        
+    # generate an audit record
+    audit_rec_gen $iter_file
+        
+    # look for the audit record
+    echo "notice: testing for audit record ..."
+    augrep --seek=$log_mark inode==$f_inode
+    ret_val_tmp=$?
+    [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
+
+    # display the result
+    if [ "$ret_val_tmp" = "0" ]; then
+        echo "notice: found audit record - PASS"
+    else
+        echo "notice: did not find audit record - FAIL"
+    fi
+        
+    # remove the filter
+    auditctl -d $filter_rule $filter_field
+    filter_field=""
+
+    ### device number check
+    
+    # set an audit filter
+    echo "notice: setting a filter for the device number ..."
+    filter_field="-F devmajor=0x$f_fs_dev_major -F devminor=0x$f_fs_dev_minor"
+    auditctl -a $filter_rule $filter_field
+    auditctl -l
+        
+    # generate an audit record
+    audit_rec_gen $iter_file
+        
+    # look for the audit record
+    echo "notice: testing for audit record ..."
+    augrep --seek=$log_mark "name==$iter_file" "dev==$f_fs_dev_num"
+    ret_val_tmp=$?
+    [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
+
+    # display the result
+    if [ "$ret_val_tmp" = "0" ]; then
+        echo "notice: found audit record - PASS"
+    else
+        echo "notice: did not find audit record - FAIL"
+    fi
+        
+    # remove the filter
+    auditctl -d $filter_rule $filter_field
+    filter_field=""
+
 done
 
 #

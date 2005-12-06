@@ -1086,5 +1086,5 @@ int test_usermod(struct audit_data* dataPtr) {
 
   restoreFile( "/etc/default/useradd" );
   printf("Returning from test_usermod()\n");
-  return rc;
+  return !!fail_testcases;
 }

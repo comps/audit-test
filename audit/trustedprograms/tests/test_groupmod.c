@@ -108,7 +108,7 @@ int test_groupmod(struct audit_data* dataPtr) {
   restoreFile("/etc/default/useradd");
 
   printf("Returning from test_groupmod()\n");
-  return rc;
+  return !!fail_testcases;
 }
 
 

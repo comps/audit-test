@@ -32,6 +32,9 @@
 #ifndef _TRUSTEDPROGRAMS_H
 #define _TRUSTEDPROGRAMS_H
 
+int pass_testcases;
+int fail_testcases;
+
 typedef struct {
   char* command;
   char* command_args;

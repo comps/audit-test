@@ -366,7 +366,7 @@ int test_useradd(struct audit_data* dataPtr) {
 
   restoreFile("/etc/default/useradd");
   printf("Returning from test_useradd()\n");
-  return rc;
+  return !!fail_testcases;
 }
 
 

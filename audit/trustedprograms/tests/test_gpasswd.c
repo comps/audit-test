@@ -288,7 +288,7 @@ int test_gpasswd(struct audit_data* dataPtr) {
   restoreFile("/etc/default/useradd");
 
   printf("Returning from test_gpasswd()\n");
-  return rc;
+  return !!fail_testcases;
 }
 
 

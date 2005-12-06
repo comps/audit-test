@@ -102,7 +102,7 @@ int test_groupadd(struct audit_data* dataPtr) {
 
   restoreFile("/etc/default/useradd");
   printf("Returning from test_groupadd()\n");
-  return rc;
+  return !!fail_testcases;
 }
 
 

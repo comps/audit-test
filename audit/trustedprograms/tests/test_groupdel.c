@@ -108,7 +108,7 @@ int test_groupdel(struct audit_data* dataPtr) {
   restoreFile("/etc/default/useradd");
 
   printf("Returning from test_groupdel()\n");
-  return rc;
+  return !!fail_testcases;
 }
 
 

@@ -245,7 +245,7 @@ Arguments:\n\
     printf("Performing test on %s\n", trustedprogramTests[k].testName);
 
     if ((rc = trustedprogramTests[k].testPtr(successDataPtr)) != 0) {
-      goto EXIT_ERROR;
+      test_rc = rc;
     }
     
   }

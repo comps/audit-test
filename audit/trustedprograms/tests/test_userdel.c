@@ -216,7 +216,7 @@ int test_userdel(struct audit_data* dataPtr) {
 
   restoreFile( "/etc/default/useradd" );
   printf("Returning from test_userdel()\n");
-  return rc;
+  return !!fail_testcases;
 }
 
 

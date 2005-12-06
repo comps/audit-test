@@ -110,6 +110,8 @@ for iter_file in $file_real $file_real.hard; do
 
     ### inode check
 
+    echo ""
+
     # set an audit filter
     echo "notice: setting a filter for the inode ..."
     filter_field="-F inode=$f_inode"
@@ -137,6 +139,8 @@ for iter_file in $file_real $file_real.hard; do
 
     ### device number check
     
+    echo ""
+
     # set an audit filter
     echo "notice: setting a filter for the device number ..."
     filter_field="-F devmajor=0x$f_fs_dev_major -F devminor=0x$f_fs_dev_minor"

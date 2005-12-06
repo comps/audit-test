@@ -82,17 +82,23 @@ log_mark=$(stat -c %s $audit_log)
 echo "notice: creating the test file ..."
 touch $tmp1 2> /dev/null || exit_error "unable to create temporary file for testing"
 
-# get user information
-user_auid="$(cat /proc/self/loginuid)"
+# get syscall information
+syscall_name="open"
+syscall_num="$(grep __NR_${syscall_name} /usr/include/asm/unistd.h | awk '{ print $3}')"
 
-# display file information
-echo "notice: user information"
-echo " uid       = $(id -u)"
-echo " login id  = $user_auid"
+# display syscall information
+echo "notice: syscall information"
+echo " platform       = $(uname -i)"
+echo " syscall name   = $syscall_name"
+echo " syscall number = $syscall_num"
+
+### success check
+
+echo ""
 
 # set an audit filter
-echo "notice: setting a filter for the inode ..."
-filter_field="-F auid=$user_auid"
+echo "notice: setting a filter for the syscall success ..."
+filter_field="-F success=1"
 auditctl -a $filter_rule $filter_field
 
 # generate an audit event
@@ -100,8 +106,20 @@ audit_rec_gen $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."
-augrep --seek=$log_mark "name==$tmp1" "auid==$user_auid"
+augrep --seek=$log_mark "syscall==$syscall_num" "name==$tmp1" "success==yes"
 ret_val=$?
+
+### fail check
+
+echo ""
+
+### syscall name check
+
+echo ""
+
+### syscall number check
+
+echo ""
 
 #
 # done

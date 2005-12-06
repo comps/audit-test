@@ -26,6 +26,7 @@ use strict;
 # Global vars
 ######################################################################
 
+(my $zero = $0) =~ s|.*/||;
 (my $version = '$Revision$') =~ s/.*?(\d.*\d).*/augrep version $1\n/;
 my $found = 0;
 my %opt = (
@@ -37,6 +38,7 @@ usage: augrep [options...] condition...
     -c     --count         Only print a count of matching lines
     -f     --file=logfile  Search a log other than /var/log/audit/audit.log
     -h     --help          Show this help message
+    -i     --interpret     Interpret uid/gid to name/group
     -m     --max-count=NUM stop after NUM matches
            --nosync        don't wait for auditd to finish flushing
     -q     --quiet         No output, just set exit status (like grep)
@@ -44,6 +46,38 @@ usage: augrep [options...] condition...
            --raw           Show raw lines instead of merged record
     -V     --version       Show version information
 EOT
+my $ausearch_usage = <<EOT;
+usage: ausearch [options]
+       -a  <audit event id>
+       -c  <comm name>
+       -f  <file name>
+       -ga <all group id>
+       -ge <effective group id>
+       -gi <group id>
+       -h
+       -hn <host name>
+       -i
+       -if <input file name>
+       -m  <message type>
+       -p  <process id>
+       -sc <syscall name>
+       -sv <success value>
+       -te [end date] [end time]
+       -ts [start date] [start time]
+       -tm <terminal>
+       -ua <all user id>
+       -ue <effective user id>
+       -ui <user id>
+       -ul <login id>
+       -v
+       -w
+       -x <executable name>
+EOT
+
+$SIG{'__DIE__'} = sub {
+    $! = 2;
+    die(@_);
+};
 
 ######################################################################
 # Audit Reader
@@ -257,7 +291,22 @@ sub merge {
 
 sub raw {
     my ($self) = @_;
-    return $self->{'_raw'};
+    return $self->{'_raw'} unless $opt{'i'};
+
+    # These are hardcoded so perl won't have to repeatedly compile the regex
+    my ($raw) = $self->{'_raw'};
+    $raw =~ s/\b(uid=)(\d+)\b/$1.getpwuid($2)/ge if exists $self->{'uid'};
+    $raw =~ s/\b(gid=)(\d+)\b/$1.getgrgid($2)/ge if exists $self->{'gid'};
+    $raw =~ s/\b(auid=)(\d+)\b/$1.getpwuid($2)/ge if exists $self->{'auid'};
+    $raw =~ s/\b(egid=)(\d+)\b/$1.getgrgid($2)/ge if exists $self->{'egid'};
+    $raw =~ s/\b(euid=)(\d+)\b/$1.getpwuid($2)/ge if exists $self->{'euid'};
+    $raw =~ s/\b(fsgid=)(\d+)\b/$1.getgrgid($2)/ge if exists $self->{'fsgid'};
+    $raw =~ s/\b(fsuid=)(\d+)\b/$1.getpwuid($2)/ge if exists $self->{'fsuid'};
+    $raw =~ s/\b(ogid=)(\d+)\b/$1.getgrgid($2)/ge if exists $self->{'ogid'};
+    $raw =~ s/\b(ouid=)(\d+)\b/$1.getpwuid($2)/ge if exists $self->{'ouid'};
+    $raw =~ s/\b(sgid=)(\d+)\b/$1.getgrgid($2)/ge if exists $self->{'sgid'};
+    $raw =~ s/\b(suid=)(\d+)\b/$1.getpwuid($2)/ge if exists $self->{'suid'};
+    return $raw;
 }
 
 sub get {
@@ -299,13 +348,26 @@ sub test {
 
         # string comparison, handling surrouding quotes
         if ($a =~ s{^(\w+)=(?:=|(?!~))(.*)}{}) {
-            if ($1 eq 'msg_time' or $1 eq 'msg_seq') {
-                $a = "$1==$2";      # punt to numeric comparison
+            my ($k, $v) = ($1, $2);
+            if ($k eq 'msg_time' or $k eq 'msg_seq') {
+                $a = "$k==$v";      # punt to numeric comparison
+            } elsif ($k =~ /^(?:uid|auid|euid|fsuid|ouid|suid)$/
+                    and $v !~ /^\d+$/) {
+                my ($uid) = scalar getpwnam($v);
+                die "User does not exist: $v\n" unless defined $uid;
+                $a = "$k==$uid";
+                redo;
+            } elsif ($k =~ /^(?:gid|egid|fsgid|ogid|sgid)$/
+                    and $v !~ /^\d+$/) {
+                my ($gid) = scalar getgrnam($v);
+                die "Group does not exist: $v\n" unless defined $gid;
+                $a = "$k==$gid";
+                redo;
             } else {
                 $a = qq(
-                    ((substr(\$self->{'$1'}, 0, 1) =~ /['"]/) ?
-                     (substr(\$self->{'$1'}, 1, -1) eq q{$2}) :
-                     (\$self->{'$1'} eq q{$2}))
+                    ((substr(\$self->{'$k'}, 0, 1) =~ /['"]/) ?
+                     (substr(\$self->{'$k'}, 1, -1) eq q{$v}) :
+                     (\$self->{'$k'} eq q{$v}))
                 );
                 goto end_subs;
             }
@@ -313,37 +375,37 @@ sub test {
 
         # numeric comparison
         if ($a =~ s{^(\w+)(<=|>=|=(?:=|(?!~))|<|>)(.*)}{}) {
-            if ($1 eq 'msg_time') {
-                my ($op, $seconds) = ($2, $3);
-                $seconds = `date +\%s -d '$seconds'` if $seconds =~ /[^\d.]/;
-                chomp($seconds);
+            my ($k, $op, $v) = ($1, $2, $3);
+            if ($k eq 'msg_time') {
+                chomp($v = `date +\%s -d '$v'`) if $v =~ /[^\d.]/;
                 $a = qq(
                     do {
                         my (\$time, \$seq) = (split /[(:)]/, \$self->{'msg'})[1,2];
-                        defined \$seq and \$time $op $seconds;
+                        defined \$seq and \$time $op $v;
                     }
                 );
                 goto end_subs;
             } 
-            if ($1 eq 'msg_seq') {
+            if ($k eq 'msg_seq') {
                 $a = qq(
                     do {
                         my (\$time, \$seq) = (split /[(:)]/, \$self->{'msg'})[1,2];
-                        defined \$seq and \$seq $2 $3;
+                        defined \$seq and \$seq $op $v;
                     }
                 );
                 goto end_subs;
             }
-            $a = qq( \$self->{'$1'} $2 $3 );
+            $a = qq( \$self->{'$k'} $op $v );
             goto end_subs;
         };
 
         # regex comparions
         if ($a =~ s{^(\w+)(!~|=~|~)(.*)}{}) {
+            my ($k, $op, $v) = ($1, $2, $3);
             $a = qq(
-                ((substr(\$self->{'$1'}, 0, 1) =~ /['"]/) ?
-                 (substr(\$self->{'$1'}, 1, -1) $2 m{$3}) :
-                 (\$self->{'$1'} $2 m{$3}))
+                ((substr(\$self->{'$k'}, 0, 1) =~ /['"]/) ?
+                 (substr(\$self->{'$k'}, 1, -1) $op m{$v}) :
+                 (\$self->{'$k'} $op m{$v}))
             );
             goto end_subs;
         }
@@ -385,32 +447,80 @@ end_subs:
 
 package main;
 
-# Allow bundling of options
-Getopt::Long::Configure("bundling");
+if ($zero eq 'ausearch') {
+    $opt{'ausearch'} = 1;
 
-# Parse the options on the cmdline.  Put the short versions first in
-# each optionstring so that the hash keys are created using the short
-# versions.  For example, use 'q|qar', not 'qar|q'.
-my ($result) = GetOptions(
-    \%opt,
-    'c|count',
-    'debug',
-    'f|file=s',
-    'h|help',
-    'm|max-count=i',
-    'nosync',
-    'q|quiet',
-    'raw',
-    'seek=i',
-    'V|version',
-);
-if ($opt{'h'}) { print STDERR $usage; exit 0 }
-if ($opt{'V'}) { print STDERR $version; exit 0 }
+    my $eq = '=~';
+    Getopt::Long::Configure("default", "pass_through");
+    die unless GetOptions(
+        'w'     => sub { $eq = '==' },
+    );
+
+    push @ARGV, '--' unless grep {$_ eq '--'} @ARGV;
+
+    Getopt::Long::Configure("default", "bundling_override");
+    die unless GetOptions(
+        'a=i'   => sub { push @ARGV, "msg_seq$_[1]" },
+        'c=s'   => sub { push @ARGV, "comm==$_[1]" },
+        'f=s'   => sub { push @ARGV, "name$eq$_[1]" },
+        'ga=s'  => sub { push @ARGV, "(", "gid==$_[1]", "or",
+                                          "egid==$_[1]", ")" },
+        'ge=s'  => sub { push @ARGV, "egid==$_[1]" },
+        'gi=s'  => sub { push @ARGV, "gid==$_[1]" },
+        'h'     => sub { print STDERR $usage; exit 0 },
+        'hn=s'  => sub { push @ARGV, "hostname$eq$_[1]" },      # XXX msg_1?
+        'i'     => sub { $opt{'i'} = 1 },
+        'if=s'  => sub { $opt{'f'} = $_[1] },
+        'm=s'   => sub { push @ARGV, ($_[1] eq 'ALL') ?
+                         "type!=" : "type=~\\b$_[1]\\b" },
+        'p=i'   => sub { push @ARGV, "pid==$_[1]" },
+        'sc=i'  => sub { push @ARGV, "syscall==$_[1]" },        # XXX names
+        'sv=s'  => sub { push @ARGV, "success==$_[1]" },
+        'ts'    => sub { push @ARGV, "msg_time>=" },            # see <> below
+        'te'    => sub { push @ARGV, "msg_time<=" },            # see <> below
+        'tm'    => sub { push @ARGV, ($eq eq '==')
+                            ? "msg_1=~\\bterminal=$_[1]\\b"
+                            : "msg_1=~\\bterminal=\\S*$_[1]" },
+        'ua=s'  => sub { push @ARGV, "(", "uid==$_[1]", "or",
+                                          "euid==$_[1]", ")" },
+        'ue=s'  => sub { push @ARGV, "euid==$_[1]" },
+        'ui=s'  => sub { push @ARGV, "uid==$_[1]" },
+        'ul=s'  => sub { push @ARGV, "auid==$_[1]" },
+        'v'     => sub { print STDERR $version; exit 0 },
+        'w'     => sub { },                                     # handled above
+        'x'     => sub { push @ARGV, "exe==$_[1]" },
+        'debug' => sub { $opt{'debug'} = 1 },
+        'nosync' => sub { $opt{'nosync'} = 1 },
+        '<>'    => sub {
+            die "I don't understand $_[0]\n" unless
+            $ARGV[-1] =~ s/^(msg_time.=)(.*)/$1.(length($2)?"$2 ":"").$_[0]/e
+        },
+    );
+
+} else {
+    Getopt::Long::Configure("default", "bundling");
+    die unless GetOptions(
+        \%opt,
+        'c|count',
+        'debug',
+        'f|file=s',
+        'h|help',
+        'i|interpret',
+        'm|max-count=i',
+        'nosync',
+        'q|quiet',
+        'raw',
+        'seek=i',
+        'V|version',
+    );
+    if ($opt{'h'}) { print STDERR $usage; exit 0 }
+    if ($opt{'V'}) { print STDERR $version; exit 0 }
+}
 die "augrep: argument required\n$usage" unless @ARGV;
 
 # Unless --nosync is given, wait for the auditd backlog to reach zero, as
 # reported by auditctl -s
-unless ($opt{'nosync'}) {
+if ($> == 0 and not $opt{'nosync'}) {
     my ($i, $backlog);
     for ($i = 0; $i < 30; $i++) {
         ($backlog = `/sbin/auditctl -s`) =~ s/.*?\bbacklog=(\d+).*/$1/s;
@@ -437,6 +547,10 @@ while (my $record = $reader->next_record) {
         } else {
             print $record->raw unless $opt{'q'};
         }
+    } elsif ($opt{'ausearch'}) {
+        my ($time, $seq) = (split /[(:)]/, $record->get('msg'))[1,2];
+        printf "----\ntime->%s%s", 
+            defined($time) ? ctime(int $time) : "(null)\n", $record->raw;
     } else {
         print $record->to_s."\n" unless $opt{'q'} or $opt{'c'};
     }

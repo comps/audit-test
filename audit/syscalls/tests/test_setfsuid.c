@@ -26,10 +26,10 @@
  *  SYSCALLS:
  *  setfsuid(), setfsuid32()
  *
- *  TESTCASE: successful 
+ *  TESTCASE: modfsid successful
  *  As root, attempt to set fsuid to test user's uid.
  *
- *  TESTCASE: unsuccessful
+ *  TESTCASE: nomodfsid successful
  *  As test user attempt to set fsuid to test user's uid+1;
  *
  *  NOTES:
@@ -46,7 +46,50 @@
 #include "includes.h"
 #include "syscalls.h"
 
-static int common_setfsuid(struct audit_data *context, int success)
+static int common_setfsuid_pre(struct audit_data *context)
+{
+    int rc = 0;
+    int fsuid;
+    uid_t pre_fsuid;
+    int exit;
+
+    fsuid = gettestuid();
+    if (fsuid < 0) {
+	rc = -1;
+	goto exit;
+    }
+
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit;
+
+    context_setbegin(context);
+    fprintf(stderr, "Attempting setfsuid(%d)\n", fsuid);
+    exit = syscall(context->u.syscall.sysnum, fsuid);
+    context_setend(context);
+    context_setresult(context, exit, 0);
+    /* make context reflect the fact that we just set fsuid */
+    context->fsuid = fsuid;
+
+    /* Use a second call to setfsuid() to verify that the fsuid was
+     * not set; setfsuid() returns the previous fsuid if it sets
+     * fsuid, and the current fsuid if it does not, which always tells
+     * us the result of the previous operation. */
+    pre_fsuid = setfsuid(fsuid);
+    if (pre_fsuid != fsuid) {
+	fprintf(stderr, 
+		"Error: fsuid was not modified in operation as expected.\n");
+	rc = -1;
+    }
+
+    if (seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
+
+exit:
+    return rc;
+}
+
+static int common_setfsuid_cur(struct audit_data *context)
 {
     int rc = 0;
     int testuid;
@@ -54,59 +97,67 @@ static int common_setfsuid(struct audit_data *context, int success)
     int exit;
 
     testuid = gettestuid();
-    if (testuid < 0) {
-	rc = -1;
+    if (testuid < 0)
 	goto exit;
-    }
-    fsuid = testuid;
+    fsuid = testuid + 1;
 
-    /* To produce failure case, switch to test user 
-     * and attempt to set fsuid to a value different from real
-     * uid, euid, suid, or current fsuid. */
-    if (!success) {
-	/* no expected error */
-	fsuid = testuid + 1;
-
-	rc = seteuid(testuid);
-	if (rc < 0)
-	    goto exit;
-    }
-
-    context_setbegin(context);
-    exit = syscall(context->u.syscall.sysnum, fsuid);
-    context_setend(context);
-
-    fprintf(stderr, "setfsuid(%d) returned %d\n", fsuid, exit);
-
-    rc = context_setidentifiers(context);
+    rc = seteuid(testuid);
     if (rc < 0)
 	goto exit;
 
-    /* On success, setfsuid() returns the previous value of fsuid.  
-     * On error, setfsuid() returns the current value of fsuid.  This
-     * interface requires a second call to determine whether the first
-     * call was successful. */
-    pre_fsuid = setfsuid(testuid);
-    fprintf(stderr, "setfsuid(%d) returned %d\n", testuid, pre_fsuid);
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit_suid;
 
-    context->success = (pre_fsuid == fsuid);
-    context->u.syscall.exit = exit;
-    /* fsuid was set explicitly, so override the value from
-     * context_setidentifiers() */
-    context->fsuid = pre_fsuid;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting setfsuid(%d)\n", fsuid);
+    exit = syscall(context->u.syscall.sysnum, fsuid);
+    context_setend(context);
+    context_setresult(context, exit, 0);
+
+    /* Use a second call to setfsuid() to verify that the fsuid was
+     * not set; setfsuid() returns the previous fsuid if it sets
+     * fsuid, and the current fsuid if it does not, which always tells
+     * us the result of the previous operation. */
+    pre_fsuid = setfsuid(fsuid);
+    if (pre_fsuid == fsuid) {
+	fprintf(stderr, 
+		"Error: fsuid was unexpectedly modified in operation.\n");
+	rc = -1;
+    }
+
+exit_suid:
+    if (seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit:
-    seteuid(0); /* always clean up */
-    fprintf(stderr, "seteuid(0) returned %d\n", rc);
     return rc;
 }
 
 int test_setfsuid(struct audit_data *context, int variation, int success)
 {
-    return common_setfsuid(context, success);
+    switch(variation) {
+    case SYSCALL_PREFSID:
+	return common_setfsuid_pre(context);
+    case SYSCALL_CURFSID:
+	return common_setfsuid_cur(context);
+    default:
+	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
+		variation, context->u.syscall.sysname);
+	return -1;
+    }
 }
 
 int test_setfsuid32(struct audit_data *context, int variation, int success)
 {
-    return common_setfsuid(context, success);
+    switch(variation) {
+    case SYSCALL_PREFSID:
+	return common_setfsuid_pre(context);
+    case SYSCALL_CURFSID:
+	return common_setfsuid_cur(context);
+    default:
+	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
+		variation, context->u.syscall.sysname);
+	return -1;
+    }
 }

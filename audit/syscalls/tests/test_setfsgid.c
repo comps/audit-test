@@ -26,10 +26,10 @@
  *  SYSCALLS:
  *  setfsgid(), setfsgid32()
  *
- *  TESTCASE: successful 
+ *  TESTCASE: modfsid successful
  *  As root, attempt to set fsgid to test user's gid.
  *
- *  TESTCASE: unsuccessful
+ *  TESTCASE: nomodfsid successful
  *  As test user with test user gids, attempt to set fsgid to root's gid.
  *
  *  NOTES:
@@ -46,66 +46,112 @@
 #include "includes.h"
 #include "syscalls.h"
 
-static int common_setfsgid(struct audit_data *context, int success)
+static int common_setfsgid_pre(struct audit_data *context)
 {
     int rc = 0;
-    int testgid;
-    gid_t fsgid, pre_fsgid;
+    int fsgid;
+    gid_t pre_fsgid;
     int exit;
 
-    testgid = gettestgid();
-    if (testgid < 0) {
+    fsgid = gettestgid();
+    if (fsgid < 0) {
 	rc = -1;
 	goto exit;
     }
-    fsgid = testgid;
-
-    /* To produce failure case, switch to test user 
-     * and attempt to set fsgid to root gid */
-    if (!success) {
-	/* no expected error */
-	fsgid = 0;
-
-	rc = setuidresgid_test();
-	if (rc < 0)
-	    goto exit;
-    }
-
-    context_setbegin(context);
-    exit = syscall(context->u.syscall.sysnum, fsgid);
-    context_setend(context);
-
-    fprintf(stderr, "setfsgid(%d) returned %d\n", fsgid, exit);
 
     rc = context_setidentifiers(context);
     if (rc < 0)
 	goto exit;
 
-    /* On success, setfsgid() returns the previous value of fsgid.  
-     * On error, setfsgid() returns the current value of fsgid.  This
-     * interface requires a second call to determine whether the first
-     * call was successful. */
-    pre_fsgid = setfsgid(testgid);
-    fprintf(stderr, "setfsgid(%d) returned %d\n", testgid, pre_fsgid);
+    context_setbegin(context);
+    fprintf(stderr, "Attempting setfsgid(%d)\n", fsgid);
+    exit = syscall(context->u.syscall.sysnum, fsgid);
+    context_setend(context);
+    context_setresult(context, exit, 0);
+    /* make context reflect the fact that we just set fsgid */
+    context->fsgid = fsgid;
 
-    context->success = (pre_fsgid == fsgid);
-    context->u.syscall.exit = exit;
-    /* fsgid was set explicitly, so override the value from
-     * context_setidentifiers() */
-    context->fsgid = pre_fsgid;
+    /* Use a second call to setfsgid() to verify that the fsgid was
+     * not set; setfsgid() returns the previous fsgid if it sets
+     * fsgid, and the current fsgid if it does not, which always tells
+     * us the result of the previous operation. */
+    pre_fsgid = setfsgid(fsgid);
+    if (pre_fsgid != fsgid) {
+	fprintf(stderr, 
+		"Error: fsgid was not modified in operation as expected.\n");
+	rc = -1;
+    }
+
+    if (setegid(0) < 0)
+	fprintf(stderr, "Error: setegid(): %s\n", strerror(errno));
 
 exit:
-    if (!success)
-	rc = setuidresgid_root();
+    return rc;
+}
+
+static int common_setfsgid_cur(struct audit_data *context)
+{
+    int rc = 0;
+    gid_t fsgid = 0;
+    gid_t pre_fsgid;
+    int exit;
+
+    rc = setuidresgid_test();
+    if (rc < 0)
+	goto exit;
+
+    rc = context_setidentifiers(context);
+    if (rc < 0)
+	goto exit_suid;
+
+    context_setbegin(context);
+    fprintf(stderr, "Attempting setfsgid(%d)\n", fsgid);
+    exit = syscall(context->u.syscall.sysnum, fsgid);
+    context_setend(context);
+    context_setresult(context, exit, 0);
+
+    /* Use a second call to setfsgid() to verify that the fsgid was
+     * not set; setfsgid() returns the previous fsgid if it sets
+     * fsgid, and the current fsgid if it does not, which always tells
+     * us the result of the previous operation. */
+    pre_fsgid = setfsgid(fsgid);
+    if (pre_fsgid == fsgid) {
+	fprintf(stderr, 
+		"Error: fsgid was unexpectedly modified in operation.\n");
+	rc = -1;
+    }
+
+exit_suid:
+    setuidresgid_root(); 
+
+exit:
     return rc;
 }
 
 int test_setfsgid(struct audit_data *context, int variation, int success)
 {
-    return common_setfsgid(context, success);
+    switch(variation) {
+    case SYSCALL_PREFSID:
+	return common_setfsgid_pre(context);
+    case SYSCALL_CURFSID:
+	return common_setfsgid_cur(context);
+    default:
+	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
+		variation, context->u.syscall.sysname);
+	return -1;
+    }
 }
 
 int test_setfsgid32(struct audit_data *context, int variation, int success)
 {
-    return common_setfsgid(context, success);
+    switch(variation) {
+    case SYSCALL_PREFSID:
+	return common_setfsgid_pre(context);
+    case SYSCALL_CURFSID:
+	return common_setfsgid_cur(context);
+    default:
+	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
+		variation, context->u.syscall.sysname);
+	return -1;
+    }
 }

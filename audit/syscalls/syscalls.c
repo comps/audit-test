@@ -98,6 +98,10 @@ static int lookup_variation(char *varstr)
 	return SYSCALL_FILE;
     if (strcmp(varstr, "symlink") == 0)
 	return SYSCALL_SYMLINK;
+    if (strcmp(varstr, "modfsid") == 0)
+	return SYSCALL_MODFSID;
+    if (strcmp(varstr, "nomodfsid") == 0)
+	return SYSCALL_NOMODFSID;
     return -1;
 }
 

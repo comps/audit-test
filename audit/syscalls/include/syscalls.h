@@ -43,6 +43,8 @@
 #define SYSCALL_SETPERMS 2
 #define SYSCALL_FILE     3
 #define SYSCALL_SYMLINK  4
+#define SYSCALL_MODFSID  5
+#define SYSCALL_NOMODFSID 6
 
 /*
  * Default Values

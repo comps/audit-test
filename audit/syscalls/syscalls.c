@@ -80,7 +80,8 @@ static int parse_command_line(int argc, char **argv,
 	}
     }
 
-    if (rc == 0 && strcmp(options->testcase, "") == 0)
+    if (rc == 0 && 
+	((!strcmp(options->testcase, "") || !strcmp(options->variation, ""))))
 	    rc = -1;
 
     return rc;
@@ -102,6 +103,7 @@ static int lookup_variation(char *varstr)
 	return SYSCALL_MODFSID;
     if (strcmp(varstr, "nomodfsid") == 0)
 	return SYSCALL_NOMODFSID;
+    fprintf(stderr, "Warning: unknown variation: %s\n", varstr);
     return -1;
 }
 

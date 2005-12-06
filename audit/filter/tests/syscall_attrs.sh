@@ -67,6 +67,7 @@ function audit_rec_gen_ok {
 # generate a failure audit record for the given file and update the audit log
 # marker
 function audit_rec_gen_fail {
+    [ "$TEST_USER" = "" ] && exit_error "run in the harness or define \$TEST_USER"
     if [ -f "$1" ]; then
         log_mark=$(stat -c %s $audit_log)
         /bin/su $TEST_USER bash -c "cat \"$1\"" 2> /dev/null

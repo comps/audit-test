@@ -141,7 +141,7 @@ echo ""
 
 # set an audit filter
 echo "notice: setting a filter for the syscall failure ..."
-filter_field="-F success=0"
+filter_field="-F success!=1"
 auditctl -a $filter_rule $filter_field
 
 # generate an audit event

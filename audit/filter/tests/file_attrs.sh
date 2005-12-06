@@ -145,7 +145,6 @@ for iter_file in $file_real $file_real.hard; do
     echo "notice: setting a filter for the device number ..."
     filter_field="-F devmajor=0x$f_fs_dev_major -F devminor=0x$f_fs_dev_minor"
     auditctl -a $filter_rule $filter_field
-    auditctl -l
         
     # generate an audit record
     audit_rec_gen $iter_file

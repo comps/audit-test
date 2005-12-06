@@ -77,7 +77,7 @@ int test_execve(struct audit_data *context, int variation, int success)
     }
     context_setend(context);
     
-    exit = WEXITSTATUS(status);
+    exit = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
     context->pid = pid;
     context->success = (exit == 0);
     context->error = context->u.syscall.exit = -exit;

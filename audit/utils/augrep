@@ -104,14 +104,13 @@ sub next_record {
 
     # merge following records with duplicate ids
     if (defined($msg = $record->get('msg'))) {
-        for (my $i = 0; $i < @{$self->{'records'}}; ) {
+        for (my $i = 0; $i < @{$self->{'records'}}; $i++) {
             $other = $self->{'records'}[$i];
             next unless defined($o_msg = $other->get('msg'));
             if ($o_msg eq $msg) {
                 $record->merge($other);
                 splice @{$self->{'records'}}, $i, 1;
-            } else {
-                $i++;
+                $i--;
             }
         }
     }

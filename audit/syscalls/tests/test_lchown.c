@@ -26,11 +26,17 @@
  *  SYSCALLS:
  *  lchown(), lchown32()
  *
- *  TESTCASE: successful XXX
+ *  TESTCASE: file successful
  *  Change a file's owner and group as the superuser.
  *
- *  TESTCASE: unsuccessful
+ *  TESTCASE: file unsuccessful
  *  Attempt to change a file's owner and group as regular user.
+ *
+ *  TESTCASE: symlink successful
+ *  Change a symlink's owner and group as the superuser.
+ *
+ *  TESTCASE: symlink unsuccessful
+ *  Attempt to change a symlink's owner and group as regular user.
  */
 
 #include "includes.h"

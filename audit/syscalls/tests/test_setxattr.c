@@ -26,12 +26,20 @@
  *  SYSCALLS:
  *  setxattr()
  *
- *  TESTCASE: successful
+ *  TESTCASE: file successful
  *  Set an extended attribute value for a file for which user has
  *  appropriate permissions.
  *
- *  TESTCASE: unsuccessful
+ *  TESTCASE: file unsuccessful
  *  Attempt to set an extended attribute value for a file for which
+ *  user does not have appropriate permissions.
+ *
+ *  TESTCASE: symlink successful
+ *  Set an extended attribute value for a symlink for which user has
+ *  appropriate permissions.
+ *
+ *  TESTCASE: symlink unsuccessful
+ *  Attempt to set an extended attribute value for a symlink for which
  *  user does not have appropriate permissions.
  */
 

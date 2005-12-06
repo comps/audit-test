@@ -26,12 +26,20 @@
  *  SYSCALLS:
  *  removexattr()
  *
- *  TESTCASE: successful
+ *  TESTCASE: file successful
  *  Remove an extended attribute for a file for which user has
  *  appropriate permissions.
  *
- *  TESTCASE: unsuccessful
+ *  TESTCASE: file unsuccessful
  *  Attempt to remove an extended attribute for a file for which
+ *  user does not have appropriate permissions.
+ *
+ *  TESTCASE: symlink successful
+ *  Remove an extended attribute for a symlink for which user has
+ *  appropriate permissions.
+ *
+ *  TESTCASE: symlink unsuccessful
+ *  Attempt to remove an extended attribute for a symlink for which
  *  user does not have appropriate permissions.
  */
 

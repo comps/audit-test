@@ -91,7 +91,7 @@ echo " uid       = $(id -u)"
 echo " login id  = $user_auid"
 
 # set an audit filter
-echo "notice: setting a filter for the inode ..."
+echo "notice: setting a filter for the login uid ..."
 filter_field="-F auid=$user_auid"
 auditctl -a $filter_rule $filter_field
 

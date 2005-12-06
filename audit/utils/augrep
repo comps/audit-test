@@ -447,7 +447,7 @@ end_subs:
 
 package main;
 
-if ($zero eq 'ausearch') {
+if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
     $opt{'ausearch'} = 1;
 
     my $eq = '=~';
@@ -460,6 +460,7 @@ if ($zero eq 'ausearch') {
 
     Getopt::Long::Configure("default", "bundling_override");
     die unless GetOptions(
+        'ausearch' => sub { },                                  # just ignore
         'a=i'   => sub { push @ARGV, "msg_seq$_[1]" },
         'c=s'   => sub { push @ARGV, "comm==$_[1]" },
         'f=s'   => sub { push @ARGV, "name$eq$_[1]" },

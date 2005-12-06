@@ -225,7 +225,7 @@ int test_sshd(struct audit_data* dataPtr) {
   }
   free( command );
   printf("Returning from test_sshd()\n");
-  return rc;
+  return !!fail_testcases;
 }
 
 

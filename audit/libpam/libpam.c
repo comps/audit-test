@@ -59,6 +59,7 @@
 int pass_testcases = 0;
 int fail_testcases = 0;
 int skip_testcases = 0;
+int audit_count = 0;
 int debug = 2;
 uid_t login_uid = 0;
 char cwd[PATH_MAX];
@@ -157,7 +158,7 @@ Arguments:\n\
       case 't':
         // Individual test case specified, exit if invalid value
         testcase = (char *) malloc(strlen(optarg) + 1);	
-        sprintf(testcase, "%s", optarg);				// optarg is not null-terminated
+        sprintf(testcase, "%s", optarg);	// optarg is not null-terminated
         for (k = 0; k < sizeof(pamTests)/sizeof(pam_data); k++) {
           if ((rc = strcmp(testcase, pamTests[k].testName)) == 0 ) {
             break;
@@ -209,14 +210,6 @@ Arguments:\n\
   // Save the CWD for audit_set_filters()
   getcwd(cwd, PATH_MAX);
 
-  /*
-  ** For these tests, we want to log all success and failures
-  if ( ( rc = system("echo \"event user-message = always;\nevent process-login = always;\" > /etc/audit/filter.conf") ) != 0 ) {
-    printf("Could not configure filter.conf\n");
-    goto EXIT_ERROR;
-  }
-  */
-
   if ((rc = audit_reload()) != 0) {
     goto EXIT_ERROR;
   }
@@ -243,12 +236,11 @@ Arguments:\n\
     successDataPtr->type = AUDIT_MSG_LOGIN;
     successDataPtr->euid = uid;
     successDataPtr->egid = gid;
-    //successDataPtr->testName = pamTests[k].testName;
     
     printf("Performing test on %s\n", pamTests[k].testName);
 
     if ((rc = pamTests[k].testPtr(successDataPtr)) != 0) {
-      goto EXIT_ERROR;
+      test_rc = rc;
     }
     
   }
@@ -262,8 +254,6 @@ Arguments:\n\
 
   printf("PASSED = %i, FAILED = %i\n", pass_testcases, fail_testcases);
 
- //XXXX
-  //restoreFile("/etc/audit/filter.conf");
   audit_reload();
 
 EXIT_HELP:
@@ -272,7 +262,6 @@ EXIT_HELP:
   return !!rc;  // PASS=0, FAIL=1
 
 EXIT_ERROR:
-//  restoreFile("/etc/audit/filter.conf");
   audit_reload();
   printf("ERROR: Test aborted: errno = %i\n", errno);
   return 2;     // ERROR=2

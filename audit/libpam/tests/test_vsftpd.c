@@ -215,7 +215,7 @@ int test_vsftpd(struct audit_data* dataPtr) {
   }
   free( command );
   printf("Returning from test_vsftpd()\n");
-  return rc;
+  return !!fail_testcases;
 }
 
 

@@ -56,7 +56,6 @@ int test_su(struct audit_data* dataPtr) {
   char* command;
   char* filename;
   char* pts_filename;
-  char* pts_filename2;
   //char* dummy;
   int pts;
   int fd;
@@ -69,6 +68,12 @@ int test_su(struct audit_data* dataPtr) {
 
   dataPtr->euid = 0;
   dataPtr->egid = 0;
+  backupFile("/etc/skel/.bashrc");
+  if( ( rc = system("echo 'PS1=\"> \"' >> /etc/skel/.bashrc") ) == -1 ) {
+    printf( "Error modifying /etc/skel/.bashrc\n");
+    goto EXIT;
+  }
+
   if (( rc = createTempUserName( &user, &uid, &home ) == -1 )) {
     printf("Out of temp user names\n");
     goto EXIT;
@@ -96,15 +101,14 @@ int test_su(struct audit_data* dataPtr) {
   // Setup
   // Create expect script file to execute su session
   pts_filename = init_tempfile(S_IRWXO, dataPtr->uid, dataPtr->gid);
-  pts_filename2 = init_tempfile(S_IRWXU, dataPtr->uid, dataPtr->gid);
-  if (!pts_filename || !pts_filename2)
+  if (!pts_filename)
       exit(-1);
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);
   command = mysprintf( "spawn /bin/su - %s; expect"
 " -ex \"Password:\" { send \"%s\\n\"; exp_continue}"
-" -ex \">\" { send \"/usr/bin/tty > %s; exit\\n\"; exp_continue}"
+" -ex \"> \" { send \"/usr/bin/tty | /bin/sed 's,.*/,,' > %s; exit\\n\"; exp_continue}"
 " eof", user, password, pts_filename);
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -122,24 +126,21 @@ int test_su(struct audit_data* dataPtr) {
 
 
   // Get the pts used
-  command = mysprintf("cat %s|awk -F/ '{print $4}' > %s", pts_filename, pts_filename2);
-  printf("Running Command: %s\n", command);
-  system(command);
-  free(command);
-  if( ( fPtr = fopen( pts_filename2, "r" ) ) == NULL ) {
-    printf( "Error opening file [%s] for reading: errno = [%i]\n", pts_filename2, errno );
+  if( ( fPtr = fopen( pts_filename, "r" ) ) == NULL ) {
+    printf( "Error opening file [%s] for reading: errno = [%i]\n", pts_filename, errno );
     rc = errno;
-    goto EXIT;
+    fail_testcases++;
+    goto TEST_2;
   }
 
-  if( fscanf( fPtr, "%d", &pts ) == 0 ) {
-    printf( "No conversions assigned from file [%s]\n", pts_filename2 );
+  if( fscanf( fPtr, "%u", &pts ) == 0 ) {
+    printf( "No conversions assigned from file [%s]\n", pts_filename );
     rc = errno;
-    goto EXIT;
+    fail_testcases++;
+    goto TEST_2;
   }
   fclose( fPtr );
   destroy_tempfile(pts_filename);
-  destroy_tempfile(pts_filename2);
 
 
   // Check for audit record(s)
@@ -178,7 +179,7 @@ int test_su(struct audit_data* dataPtr) {
   // PAM authentication: user=USERNAME (hostname=?, addr=?, terminal=pts/PTS)
   //
   //
- //TEST_2:
+  TEST_2:
   printf("TEST %d\n", test++);
   // Setup
 
@@ -190,7 +191,7 @@ int test_su(struct audit_data* dataPtr) {
 "sleep 1 \n"
 "expect -re \"Password: $\" { exp_send \"%s\\r\\n\"} \n"
 "sleep 1 \n"
-"expect \" $\" { exp_send \"exit\\r\"; send_user \"exit\\n\"} ", user, badpassword, pts_filename);
+"expect \" $\" { exp_send \"exit\\r\"; send_user \"exit\\n\"} ", user, badpassword);
 
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -224,13 +225,14 @@ int test_su(struct audit_data* dataPtr) {
   // End Test 2
 
  EXIT:
+  restoreFile("/etc/skel/.bashrc");
   command = mysprintf( "/usr/sbin/userdel -r %s", user );
   if( ( rc = system( command ) ) == -1 ) {
     printf( "Error deleting user [%s]\n", user );
   }
   free( command );
   printf("Returning from test_su()\n");
-  return rc;
+  return !!fail_testcases;
 }
 
 

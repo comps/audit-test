@@ -98,6 +98,12 @@ int test_login(struct audit_data* dataPtr) {
 
   dataPtr->euid = 0;
   dataPtr->egid = 0;
+  backupFile("/etc/skel/.bashrc");
+  if( ( rc = system("echo 'PS1=\"> \"' >> /etc/skel/.bashrc") ) == -1 ) {
+    printf( "Error modifying /etc/skel/.bashrc\n");
+    goto EXIT;
+  }
+  
   if (( rc = createTempUserName( &user, &uid, &home )) == -1 ) {
     printf("Out of temp user names\n");
     goto EXIT;
@@ -255,6 +261,7 @@ expect -re \"Password: \" { exp_send \"%s\\r\"} \n",
 
 
  EXIT:
+  restoreFile("/etc/skel/.bashrc");
   userdel_utmp( user );			// See the HACK note in the function definition above
   command = mysprintf( "/usr/sbin/userdel -r %s", user );
   if( ( rc = system( command ) ) != 0 ) {
@@ -262,7 +269,7 @@ expect -re \"Password: \" { exp_send \"%s\\r\"} \n",
   }
   free( command );
   printf("Returning from test_login()\n");
-  return rc;
+  return !!fail_testcases;
 }
 
 

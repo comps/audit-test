@@ -102,12 +102,10 @@ int test_su(struct audit_data* dataPtr) {
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);
-  command = mysprintf( "spawn /bin/su - %s\n"
-"sleep 1 \n"
-"expect -re \"Password: $\" { sleep 1; exp_send \"%s\\r\\n\"} \n"
-"expect -re \"> $\" { sleep 1; exp_send \"/usr/bin/tty > %s\\r\\n\"} \n"
-"sleep 1 \n"
-"expect \" $\" { sleep 1; exp_send \"exit\\r\"; send_user \"exit\\n\"} ", user, password, pts_filename);
+  command = mysprintf( "spawn /bin/su - %s; expect"
+" -ex \"Password:\" { send \"%s\\n\"; exp_continue}"
+" -ex \">\" { send \"/usr/bin/tty > %s; exit\\n\"; exp_continue}"
+" eof", user, password, pts_filename);
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
   close(fd);

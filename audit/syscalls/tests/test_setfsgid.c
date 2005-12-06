@@ -131,9 +131,9 @@ exit:
 int test_setfsgid(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
-    case SYSCALL_PREFSID:
+    case SYSCALL_MODFSID:
 	return common_setfsgid_pre(context);
-    case SYSCALL_CURFSID:
+    case SYSCALL_NOMODFSID:
 	return common_setfsgid_cur(context);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
@@ -145,9 +145,9 @@ int test_setfsgid(struct audit_data *context, int variation, int success)
 int test_setfsgid32(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
-    case SYSCALL_PREFSID:
+    case SYSCALL_MODFSID:
 	return common_setfsgid_pre(context);
-    case SYSCALL_CURFSID:
+    case SYSCALL_NOMODFSID:
 	return common_setfsgid_cur(context);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",

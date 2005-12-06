@@ -250,21 +250,23 @@ function startup {
     sed -i "/^$TEST_USER:/"'s|:[^:]*:|:$1$N1PtB8Kg$d6gItPaB3lSpG/GiDOXEM1:|' \
         /etc/shadow
 
+    eval "function cleanup {
+	dmsg \"\$( $(type cleanup | sed '1,3d;$d') )\"
+    "'
+	if [[ -n $TEST_USER ]]; then
+	    # Remove the test user
+	    dmsg "Removing user $TEST_USER"
+	    rm -rf "/home/$TEST_USER"
+	    userdel "$TEST_USER" &>/dev/null
+	    dmsg "Removing group $TEST_USER"
+	    groupdel "$TEST_USER" &>/dev/null
+	fi
+
+	cleanup_hook
+    }'
+
     startup_hook
 }
-
-eval "function cleanup {
-    dmsg \"\$( $(type cleanup | sed '1,3d;$d') )\"
-
-    # Remove the test user
-    dmsg \"Removing user \$TEST_USER\"
-    rm -rf \"/home/\$TEST_USER\"
-    userdel \"\$TEST_USER\" &>/dev/null
-    dmsg \"Removing group \$TEST_USER\"
-    groupdel \"\$TEST_USER\" &>/dev/null
-
-    cleanup_hook
-}"
 
 function open_log {
     :> "$opt_log" || die "can't init $opt_log"

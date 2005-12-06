@@ -467,7 +467,7 @@ if ($zero eq 'ausearch') {
                                           "egid==$_[1]", ")" },
         'ge=s'  => sub { push @ARGV, "egid==$_[1]" },
         'gi=s'  => sub { push @ARGV, "gid==$_[1]" },
-        'h'     => sub { print STDERR $usage; exit 0 },
+        'h'     => sub { print STDERR $ausearch_usage; exit 0 },
         'hn=s'  => sub { push @ARGV, "hostname$eq$_[1]" },      # XXX msg_1?
         'i'     => sub { $opt{'i'} = 1 },
         'if=s'  => sub { $opt{'f'} = $_[1] },

@@ -107,8 +107,6 @@ void context_setresult(struct audit_data * context, int exit, int error)
     }
 }
 
-/* context_setipc() should be called after context_setidentifiers() if
- * not explicitly setting uid and gid */
 void context_setipc(struct audit_data *context, int qbytes, 
 		    int uid, int gid, long msgflg)
 {
@@ -117,6 +115,22 @@ void context_setipc(struct audit_data *context, int qbytes,
     context->u.syscall.ipc_uid = uid;
     context->u.syscall.ipc_gid = gid;
     context->u.syscall.ipc_mode = msgflg;
+}
+
+void context_setsockaddr(struct audit_data *context, unsigned char *buf, 
+			 size_t len)
+{
+    int i;
+    unsigned char* ptr = context->u.syscall.sockaddr;
+
+    context->type |= AUDIT_MSG_SOCKADDR;
+    for (i = 0; i < len; i++) {
+	sprintf(ptr, "%.2X", buf[i]);
+	ptr+=2;
+    }
+    *ptr = '\0';
+    fprintf(stderr, "Setting context sockaddr to: %s\n",
+	    context->u.syscall.sockaddr);
 }
 
 int context_setcwd(struct audit_data *context)

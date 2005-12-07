@@ -23,6 +23,7 @@
 
 #include <linux/audit.h>
 #include <limits.h>             /* for PATH_MAX */
+#include <netinet/in.h>
 
 /*
  * Context Flags
@@ -94,6 +95,8 @@ struct audit_syscall {
     unsigned int  ipc_uid;
     unsigned int  ipc_gid;
     unsigned int  ipc_mode;
+    /* sockaddr */
+    char          sockaddr[(sizeof(struct sockaddr_in) * 2) + 1];
     /* filesystem */
     char          fs_cwd[PATH_MAX];
     char          fs_sobj[PATH_MAX];  /* source object */

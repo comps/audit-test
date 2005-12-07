@@ -83,6 +83,11 @@ ts_exit verify_logresult(struct audit_data *context)
 			      context->u.syscall.ipc_qbytes, 
 			      context->u.syscall.ipc_gid);
 	}
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_SOCKADDR) {
+	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
+			      " saddr=%s", 
+			      context->u.syscall.sockaddr); 
+	}
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_CWD) {
 	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
 			      " cwd==%s", 

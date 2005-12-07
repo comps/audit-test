@@ -62,7 +62,7 @@ int test_vsftpd(struct audit_data* dataPtr) {
   char* encryptedpassword = "42VmxaOByKwlA";
   char* badpassword = "anything_but_eal";
 
-  if ( ( rc = system("rpm -q vsftpd") ) == 1 ) {
+  if ( ( rc = system("rpm -q vsftpd") ) != 0 ) {
     printf("vsftpd is not installed, assuming WS\n");
     goto WS;
   }

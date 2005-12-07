@@ -99,7 +99,8 @@ chown root:root $tmp1 || exit_error "unable to set the permissions on the test f
 
 # get syscall information
 syscall_name="open"
-syscall_num="$(grep __NR_${syscall_name} /usr/include/asm/unistd.h | awk '{ print $3}')"
+syscall_num="$(augrep --resolve $syscall_name)"
+[ "$syscall_num" = "" ] && exit_error "unable to determine the syscall number for $syscall_name"
 
 # display syscall information
 echo "notice: syscall information"

@@ -62,6 +62,11 @@ int test_vsftpd(struct audit_data* dataPtr) {
   char* encryptedpassword = "42VmxaOByKwlA";
   char* badpassword = "anything_but_eal";
 
+  if ( ( rc = system("rpm -q vsftpd") ) == 1 ) {
+    printf("vsftpd is not installed, assuming WS\n");
+    goto WS;
+  }
+
   dataPtr->euid = 0;
   dataPtr->egid = 0;
   if (( rc = createTempUserName( &user, &uid, &home ) == -1 )) {
@@ -163,7 +168,11 @@ int test_vsftpd(struct audit_data* dataPtr) {
   filename = (char *) malloc(strlen(tempname));
   strcpy(filename, tempname);
   fd = mkstemp(filename);
-  command = mysprintf( "spawn /usr/bin/ftp localhost\nsleep 1 \nexpect \": $\" { exp_send \"%s\\r\\n\"} \nexpect \"Password:\" { exp_send \"%s\\r\\n\"} \nexpect \"ftp> $\" { exp_send \"quit\\r\"; send_user \"quit\\n\"} ", user, badpassword);
+  command = mysprintf( "spawn /usr/bin/ftp localhost\n"
+"sleep 1 \n"
+"expect \": $\" { exp_send \"%s\\r\\n\"} \n"
+"expect \"Password:\" { exp_send \"%s\\r\\n\"} \n"
+"expect \"ftp> $\" { exp_send \"quit\\r\"; send_user \"quit\\n\"} ", user, badpassword);
   write(fd, command, strlen(command));
   fchmod(fd, S_IRWXU | S_IRWXG | S_IRWXO);
   close(fd);
@@ -195,25 +204,19 @@ int test_vsftpd(struct audit_data* dataPtr) {
 
   // End Test 2
 
-
  EXIT:
   restoreFile("/etc/vsftpd/vsftpd.conf");
   if ( ( rc = system( "/etc/init.d/vsftpd stop") ) != 0) {
     printf( "Error restarting vsftpd\n");
     goto EXIT;
   }
-/*
-  restoreFile("/etc/pam.d/vsftpd");
-  restoreFile("/etc/xinetd.conf");
-  if ( rc = system("/etc/init.d/xinetd restart") == -1 ) {
-    printf("Error restarting xinetd\n");
-  }
-*/
+
   command = mysprintf( "/usr/sbin/userdel -r %s", user );
   if( ( rc = system( command ) ) == -1 ) {
     printf( "Error deleting user [%s]\n", user );
   }
   free( command );
+ WS:
   printf("Returning from test_vsftpd()\n");
   return !!fail_testcases;
 }

@@ -100,7 +100,7 @@ int test_su(struct audit_data* dataPtr) {
   printf("TEST %d\n", test++);
   // Setup
   // Create expect script file to execute su session
-  pts_filename = init_tempfile(S_IRWXO, dataPtr->uid, dataPtr->gid);
+  pts_filename = init_tempfile(S_IRWXO, dataPtr->uid, dataPtr->gid, "libpam - su");
   if (!pts_filename)
       exit(-1);
   filename = (char *) malloc(strlen(tempname));

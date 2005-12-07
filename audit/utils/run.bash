@@ -123,18 +123,24 @@ function msg {
 }
 
 function vmsg {
-    if $opt_verbose || $opt_debug; then
-	msg "$@"
+    if [[ $1 == -nolog ]]; then
+	shift
     else
 	lmsg "$@"
+    fi
+    if $opt_verbose || $opt_debug; then
+	colorize "$@"
     fi
 }
 
 function dmsg {
-    if $opt_debug; then
-	msg "$@"
+    if [[ $1 == -nolog ]]; then
+	shift
     else
 	lmsg "$@"
+    fi
+    if $opt_debug; then
+	colorize "$@"
     fi
 }
 

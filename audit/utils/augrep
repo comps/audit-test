@@ -38,8 +38,9 @@ usage: augrep [options...] condition...
     -c     --count         Only print a count of matching lines
     -f     --file=logfile  Search a log other than /var/log/audit/audit.log
     -h     --help          Show this help message
-    -i     --interpret     Interpret uid/gid to name/group
-      --interpret-syscalls Interpret syscall numbers to name
+    -i     --interpret     Same as --interpret-syscalls --interpret-ids
+      --interpret-syscalls Interpret syscall numbers to names
+      --interpret-ids      Interpret uids/gids to names
     -m     --max-count=NUM stop after NUM matches
            --nosync        don't wait for auditd to finish flushing
     -q     --quiet         No output, just set exit status (like grep)
@@ -361,7 +362,11 @@ sub raw {
     my $raw = $self->{'_raw'};
     my $n;
 
-    if ($opt{'i'}) {
+    if ($opt{'interpret-syscalls'} and defined($n = $self->get('syscall'))) {
+        $raw =~ s/\b(syscall=)(\d+)\b/$1$n/;
+    }
+
+    if ($opt{'interpret-ids'}) {
         # These are hardcoded so perl won't have to repeatedly compile the regex
         $raw =~ s/\b(uid=)(\d+)\b/$1$n/ if defined($n = $self->get('uid'));
         $raw =~ s/\b(gid=)(\d+)\b/$1$n/ if defined($n = $self->get('gid'));
@@ -374,10 +379,6 @@ sub raw {
         $raw =~ s/\b(ouid=)(\d+)\b/$1$n/ if defined($n = $self->get('ouid'));
         $raw =~ s/\b(sgid=)(\d+)\b/$1$n/ if defined($n = $self->get('sgid'));
         $raw =~ s/\b(suid=)(\d+)\b/$1$n/ if defined($n = $self->get('suid'));
-    }
-
-    if ($opt{'interpret-syscalls'} and defined($n = $self->get('syscall'))) {
-        $raw =~ s/\b(syscall=)(\d+)\b/$1$n/;
     }
 
     return $raw;
@@ -399,7 +400,7 @@ sub get {
         return defined($name = SyscallTable->new->reverse($v)) ? $name->[0] : $v;
     }
 
-    if ($opt{'i'}) {
+    if ($opt{'interpret-ids'}) {
         if ($k =~ /^(?:uid|auid|euid|fsuid|ouid|suid)$/) {
             return defined($name = getpwuid($v)) ? $name : $v;
         }
@@ -572,7 +573,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         'gi=s'  => sub { push @ARGV, "gid==$_[1]" },
         'h'     => sub { print STDERR $ausearch_usage; exit 0 },
         'hn=s'  => sub { push @ARGV, "hostname$eq$_[1]" },      # XXX msg_1?
-        'i'     => sub { $opt{'i'} = 1 },
+        'i'     => sub { $opt{'interpret-ids'} = 1 },
         'if=s'  => sub { $opt{'f'} = $_[1] },
         'm=s'   => sub { push @ARGV, ($_[1] eq 'ALL') ?
                          "type!=" : "type=~\\b$_[1]\\b" },
@@ -599,6 +600,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
             $ARGV[-1] =~ s/^(msg_time.=)(.*)/$1.(length($2)?"$2 ":"").$_[0]/e
         },
     );
+    die "ausearch: argument required\n$ausearch_usage" unless @ARGV;
 
 } else {
     Getopt::Long::Configure("default", "bundling");
@@ -609,6 +611,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         'f|file=s',
         'h|help',
         'i|interpret',
+        'interpret-ids',
         'interpret-syscalls',
         'm|max-count=i',
         'nosync',
@@ -636,8 +639,11 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         }
         exit 1; # could not resolve
     }
+    if ($opt{'i'}) {
+        $opt{'interpret-ids'} = $opt{'interpret-syscalls'} = 1;
+    }
+    die "augrep: argument required\n$usage" unless @ARGV;
 }
-die "augrep: argument required\n$usage" unless @ARGV;
 
 # Unless --nosync is given, wait for the auditd backlog to reach zero, as
 # reported by auditctl -s

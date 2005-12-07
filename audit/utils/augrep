@@ -564,7 +564,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
     Getopt::Long::Configure("default", "bundling_override");
     die unless GetOptions(
         'ausearch' => sub { },                                  # just ignore
-        'a=i'   => sub { push @ARGV, "msg_seq$_[1]" },
+        'a=i'   => sub { push @ARGV, "msg_seq==$_[1]" },
         'c=s'   => sub { push @ARGV, "comm==$_[1]" },
         'f=s'   => sub { push @ARGV, "name$eq$_[1]" },
         'ga=s'  => sub { push @ARGV, "(", "gid==$_[1]", "or",
@@ -592,7 +592,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         'ul=s'  => sub { push @ARGV, "auid==$_[1]" },
         'v'     => sub { print STDERR $version; exit 0 },
         'w'     => sub { },                                     # handled above
-        'x'     => sub { push @ARGV, "exe==$_[1]" },
+        'x=s'   => sub { push @ARGV, "exe==$_[1]" },
         'debug' => sub { $opt{'debug'} = 1 },
         'nosync' => sub { $opt{'nosync'} = 1 },
         '<>'    => sub {

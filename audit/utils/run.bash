@@ -250,9 +250,7 @@ function startup {
     sed -i "/^$TEST_USER:/"'s|:[^:]*:|:$1$N1PtB8Kg$d6gItPaB3lSpG/GiDOXEM1:|' \
         /etc/shadow
 
-    eval "function cleanup {
-	dmsg \"\$( $(type cleanup | sed '1,3d;$d') )\"
-    "'
+    append_cleanup '
 	if [[ -n $TEST_USER ]]; then
 	    # Remove the test user
 	    dmsg "Removing user $TEST_USER"
@@ -261,12 +259,15 @@ function startup {
 	    dmsg "Removing group $TEST_USER"
 	    groupdel "$TEST_USER" &>/dev/null
 	fi
-
-	cleanup_hook
-    }'
+	cleanup_hook'
 
     startup_hook
 }
+
+# cleanup function should send output via dmsg
+eval "function cleanup {
+    dmsg \"\$( $(type cleanup | sed '1,3d;$d') )\"
+}"
 
 function open_log {
     :> "$opt_log" || die "can't init $opt_log"

@@ -56,14 +56,14 @@ int test_swapon(struct audit_data *context, int variation, int success)
 	context->experror = -EPERM;
     }
 
-    rc = context_setcwd(context);
-    if (rc < 0)
-	goto exit_suid;
-    context_settobj(context, path);
-
     rc = context_setidentifiers(context);
     if (rc < 0)
 	goto exit_suid;
+
+    /* The swapfile isn't considered the object of the operation, and
+     * does not reliably appear in the audit record, so don't test for
+     * it here.
+     */
 
     errno = 0;
     context_setbegin(context);

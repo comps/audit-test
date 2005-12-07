@@ -53,8 +53,9 @@ run:
 	    echo; \
 	    cat $$x/$$l.log; \
 	  done &> audit.$$l.log; \
-	  utils/tally-results.awk < audit.$$l.log | tee -a audit.$$l.log; \
 	done
+	utils/tally-results.awk < audit.rollup.log \
+	    | tee -a audit.run.log | tee -a audit.rollup.log
 
 .PHONY: dist
 dist:

@@ -1,0 +1,23 @@
+type=DAEMON_START msg=audit(1133817257.143:186) auditd start, ver=1.0.3, format=raw, auid=10208, auditd pid=25495
+type=CONFIG_CHANGE msg=audit(1133817257.142:49946): audit_enabled=1 old=1 by auid=10208
+type=CONFIG_CHANGE msg=audit(1133817257.346:49947): audit_backlog_limit=256 old=256 by auid=10208
+type=USER msg=audit(1133817257.347:49948): user pid=25504 uid=0 auid=10208 msg='testing 1-2-3 testing'
+type=USER_CHAUTHTOK msg=audit(1133817257.367:49949): user pid=25521 uid=0 auid=10208 msg='groupadd: op=adding group acct=testuser1 res=success'
+type=USER_CHAUTHTOK msg=audit(1133817257.477:49950): user pid=25522 uid=0 auid=10208 msg='groupdel: op=deleting group acct=testuser1 res=success'
+type=USER_CHAUTHTOK msg=audit(1133817257.661:49951): user pid=25540 uid=0 auid=10208 msg='userdel: op=deleting user entries acct=testuser res=success'
+type=USER_CHAUTHTOK msg=audit(1133817257.854:49952): user pid=25541 uid=0 auid=10208 msg='groupdel: op=deleting group acct=testuser res=failed'
+type=CRED_ACQ msg=audit(1133817350.160:49953): user pid=25543 uid=0 auid=10208 msg='PAM setcred: user=root exe="/usr/bin/sudo" (hostname=?, addr=?, terminal=pts/0 result=Success)'
+type=USER_START msg=audit(1133817350.160:49954): user pid=25543 uid=0 auid=10208 msg='PAM session open: user=root exe="/usr/bin/sudo" (hostname=?, addr=?, terminal=pts/0 result=Success)'
+type=USER_END msg=audit(1133817350.160:49955): user pid=25543 uid=0 auid=10208 msg='PAM session close: user=root exe="/usr/bin/sudo" (hostname=?, addr=?, terminal=pts/0 result=Success)'
+type=CRED_ACQ msg=audit(1133817894.617:49956): user pid=25579 uid=0 auid=10208 msg='PAM setcred: user=root exe="/usr/bin/sudo" (hostname=?, addr=?, terminal=pts/0 result=Success)'
+type=USER_START msg=audit(1133817894.618:49957): user pid=25579 uid=0 auid=10208 msg='PAM session open: user=root exe="/usr/bin/sudo" (hostname=?, addr=?, terminal=pts/0 result=Success)'
+type=USER_END msg=audit(1133817894.618:49958): user pid=25579 uid=0 auid=10208 msg='PAM session close: user=root exe="/usr/bin/sudo" (hostname=?, addr=?, terminal=pts/0 result=Success)'
+type=CRED_ACQ msg=audit(1133818361.504:49959): user pid=25755 uid=0 auid=10208 msg='PAM setcred: user=root exe="/usr/bin/sudo" (hostname=?, addr=?, terminal=pts/0 result=Success)'
+type=USER_START msg=audit(1133818361.504:49960): user pid=25755 uid=0 auid=10208 msg='PAM session open: user=root exe="/usr/bin/sudo" (hostname=?, addr=?, terminal=pts/0 result=Success)'
+type=USER_END msg=audit(1133818361.504:49961): user pid=25755 uid=0 auid=10208 msg='PAM session close: user=root exe="/usr/bin/sudo" (hostname=?, addr=?, terminal=pts/0 result=Success)'
+type=SYSCALL msg=audit(1133818506.374:49969): arch=c000003e syscall=90 success=yes exit=0 a0=50a1c0 a1=1ed a2=8 a3=4 items=1 pid=25761 auid=10208 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 comm="chmod" exe="/bin/chmod"
+type=CWD msg=audit(1133818506.374:49969):  cwd="/home/agriffis"
+type=PATH msg=audit(1133818506.374:49969): name=".Xdefaults" flags=1  inode=1196355 dev=fd:01 mode=0100644 ouid=10208 ogid=10208 rdev=00:00
+type=SYSCALL msg=audit(1133821357.979:50097): arch=c000003e syscall=90 success=yes exit=0 a0=50a1c0 a1=1a4 a2=8 a3=4 items=1 pid=26438 auid=10208 uid=10208 gid=10208 euid=10208 suid=10208 fsuid=10208 egid=10208 sgid=10208 fsgid=10208 comm="chmod" exe="/bin/chmod"
+type=CWD msg=audit(1133821357.979:50097):  cwd="/home/agriffis/audit-test/audit-tools"
+type=PATH msg=audit(1133821357.979:50097): name="/home/agriffis/.Xdefaults" flags=1  inode=1196355 dev=fd:01 mode=0100755 ouid=10208 ogid=10208 rdev=00:00

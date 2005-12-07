@@ -84,7 +84,7 @@ int test_execve(struct audit_data *context, int variation, int success)
 
 exit_free:
     if (!success)
-	free(cmd);
+	destroy_tempfile(cmd);
 
 exit:
     return rc;

@@ -77,19 +77,19 @@ function append_cleanup {
 }
 
 function exit_pass {
-    [[ -n $* ]] && echo "pass: $*"
+    [[ -n $* ]] && echo "pass: $*" >&2
     # this will call the cleanup function automatically because of trap 0
     exit 0
 }
 
 function exit_fail {
-    [[ -n $* ]] && echo "fail: $*"
+    [[ -n $* ]] && echo "fail: $*" >&2
     # this will call the cleanup function automatically because of trap 0
     exit 1
 }
 
 function exit_error {
-    [[ -n $* ]] && echo "error: $*"
+    [[ -n $* ]] && echo "error: $*" >&2
     # this will call the cleanup function automatically because of trap 0
     exit 2
 }

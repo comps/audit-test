@@ -43,6 +43,7 @@ usage: augrep [options...] condition...
     -m     --max-count=NUM stop after NUM matches
            --nosync        don't wait for auditd to finish flushing
     -q     --quiet         No output, just set exit status (like grep)
+           --resolve=name  Resolve syscall name/number
            --seek=offset   Seek to offset before starting search
            --raw           Show raw lines instead of merged record
     -V     --version       Show version information
@@ -608,11 +609,26 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         'nosync',
         'q|quiet',
         'raw',
+        'resolve:s',
         'seek=i',
         'V|version',
     );
     if ($opt{'h'}) { print STDERR $usage; exit 0 }
     if ($opt{'V'}) { print STDERR $version; exit 0 }
+    if (defined $opt{'resolve'}) {
+        my ($resolution);
+        if ($opt{'resolve'} =~ /\D/) {
+            $resolution = SyscallTable->new->resolve($opt{'resolve'});
+        } else {
+            $resolution = SyscallTable->new->reverse($opt{'resolve'});
+        }
+        if (defined $resolution) {
+            print $resolution, "\n";
+            exit 0;
+        } else {
+            exit 1;
+        }
+    }
 }
 die "augrep: argument required\n$usage" unless @ARGV;
 

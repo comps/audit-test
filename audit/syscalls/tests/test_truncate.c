@@ -44,7 +44,8 @@ int common_truncate(struct audit_data *context, int success)
     off_t newlen = 1;
     int exit;
 
-    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    path = init_tempfile(S_IRWXU, context->euid, context->egid, 
+			 context->u.syscall.sysname);
     if (!path) {
 	rc = -1;
 	goto exit;

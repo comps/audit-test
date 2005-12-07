@@ -75,11 +75,19 @@ exit_err:
     return NULL;
 }
 
-char *init_tempfile(mode_t mode, uid_t uid, gid_t gid)
+char *init_tempfile(mode_t mode, uid_t uid, gid_t gid, char *name)
 {
     int fd = 0;
     char *fname;
-    char *writedata = "This tempfile created for audit testing.\n";
+    char data[512];
+    int count;
+
+    count = snprintf(data, sizeof(data), 
+		     "This tempfile created for testing %s audits.\n", name);
+    if (count >= sizeof(data)) {
+	fprintf(stderr, "Error: initializing tempfile: [%s] too long\n", name);
+	return NULL;
+    }
 
     fname = (char *)malloc(strlen(TEST_TMP_TEMPLATE) + 1);
     if (!fname) {
@@ -99,7 +107,7 @@ char *init_tempfile(mode_t mode, uid_t uid, gid_t gid)
 
     fprintf(stderr, "Created tempfile: %s\n", fname);
 
-    if (write(fd, writedata, strlen(writedata)) < 0) {
+    if (write(fd, data, count) < 0) {
 	fprintf(stderr, "Error: initializing tempfile: write(): %s\n",
 		strerror(errno));
 	goto exit_err;
@@ -123,7 +131,7 @@ exit_err:
     return NULL;
 }
 
-char *init_swapfile(mode_t mode, uid_t uid, gid_t gid, size_t size)
+char *init_tempswap(mode_t mode, uid_t uid, gid_t gid, size_t size)
 {
     char *data, *path;
     int fd;
@@ -139,7 +147,7 @@ char *init_swapfile(mode_t mode, uid_t uid, gid_t gid, size_t size)
     }
     memset(data, 0, size);
 
-    path = init_tempfile(mode, uid, gid);
+    path = init_tempfile(mode, uid, gid, "");
     if (!path) {
 	fprintf(stderr, "Error: initializing temporary swapfile\n");
 	goto exit;

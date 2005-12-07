@@ -43,7 +43,8 @@ int test_open(struct audit_data *context, int variation, int success)
     char *path;
     int fd;
 
-    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    path = init_tempfile(S_IRWXU, context->euid, context->egid,
+			 context->u.syscall.sysname);
     if (!path) {
 	rc = -1;
 	goto exit;

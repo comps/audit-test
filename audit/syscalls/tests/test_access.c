@@ -44,7 +44,8 @@ int test_access(struct audit_data *context, int variation, int success)
     int mode;
     int fd;
 
-    path = init_tempfile(S_IRUSR|S_IROTH, context->euid, context->egid);
+    path = init_tempfile(S_IRUSR|S_IROTH, context->euid, context->egid,
+			 context->u.syscall.sysname);
     if (!path) {
 	rc = -1;
 	goto exit;

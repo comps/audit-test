@@ -56,7 +56,8 @@ static int test_lsetxattr_file(struct audit_data *context, int success)
     int flags = XATTR_CREATE;
     int exit;
 
-    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    path = init_tempfile(S_IRWXU, context->euid, context->egid,
+			 context->u.syscall.sysname);
     if (!path) {
 	rc = -1;
 	goto exit;
@@ -107,7 +108,8 @@ static int test_lsetxattr_symlink(struct audit_data *context, int success)
     int flags = XATTR_CREATE;
     int exit;
 
-    target = init_tempfile(S_IRWXU, context->euid, context->egid);
+    target = init_tempfile(S_IRWXU, context->euid, context->egid,
+			   context->u.syscall.sysname);
     if (!target) {
 	rc = -1;
 	goto exit;

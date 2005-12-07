@@ -85,8 +85,8 @@ int restoreFile(char*);
  * Temp Data Creation
  */
 char *init_tempdir(mode_t, uid_t, gid_t);
-char *init_tempfile(mode_t, uid_t, gid_t);
-char *init_tempswap(char *, uid_t, gid_t, size_t);
+char *init_tempfile(mode_t, uid_t, gid_t, char *);
+char *init_tempswap(mode_t, uid_t, gid_t, size_t);
 char *init_tempsym(char *, uid_t, gid_t);
 void destroy_tempdir(char *);
 void destroy_tempfile(char *);

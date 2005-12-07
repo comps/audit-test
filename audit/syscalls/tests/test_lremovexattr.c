@@ -55,7 +55,8 @@ static int test_lremovexattr_file(struct audit_data *context, int success)
     char *avalue = TEST_FILE_XATTR_VALUE;
     int exit;
 
-    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    path = init_tempfile(S_IRWXU, context->euid, context->egid,
+			 context->u.syscall.sysname);
     if (!path) {
 	rc = -1;
 	goto exit;
@@ -112,7 +113,8 @@ static int test_lremovexattr_symlink(struct audit_data *context, int success)
     char *avalue = TEST_SYM_XATTR_VALUE;
     int exit;
 
-    target = init_tempfile(S_IRWXU, context->euid, context->egid);
+    target = init_tempfile(S_IRWXU, context->euid, context->egid,
+			   context->u.syscall.sysname);
     if (!target) {
 	rc = -1;
 	goto exit;

@@ -49,7 +49,8 @@ int test_fremovexattr(struct audit_data *context, int variation, int success)
     char *avalue = TEST_FILE_XATTR_VALUE;
     int exit;
 
-    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    path = init_tempfile(S_IRWXU, context->euid, context->egid,
+			 context->u.syscall.sysname);
     if (!path) {
 	rc = -1;
 	goto exit;

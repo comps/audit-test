@@ -50,7 +50,7 @@ int test_execve(struct audit_data *context, int variation, int success)
 	cmd = "/bin/true";
     else {
 	cmd = init_tempfile(S_IRUSR|S_IRGRP|S_IROTH, context->euid,
-			    context->egid);
+			    context->egid, context->u.syscall.sysname);
 	if (!cmd) {
 	    rc = -1;
 	    goto exit;

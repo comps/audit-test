@@ -43,12 +43,14 @@ int test_rename(struct audit_data *context, int variation, int success)
     char *oldpath, *newpath;
     int exit = -1;
 
-    oldpath = init_tempfile(S_IRWXU|S_IRWXO, context->euid, context->egid);
+    oldpath = init_tempfile(S_IRWXU|S_IRWXO, context->euid, context->egid,
+			    context->u.syscall.sysname);
     if (!oldpath) {
 	rc = -1;
 	goto exit;
     }
-    newpath = init_tempfile(S_IRWXU, context->euid, context->egid);
+    newpath = init_tempfile(S_IRWXU, context->euid, context->egid,
+			    context->u.syscall.sysname);
     if (!newpath) {
 	destroy_tempfile(oldpath);
 	rc = -1;

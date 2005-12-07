@@ -57,7 +57,8 @@ static int common_lchown_file(struct audit_data *context, int success)
 	goto exit;
     }
 
-    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    path = init_tempfile(S_IRWXU, context->euid, context->egid,
+			 context->u.syscall.sysname);
     if (!path) {
 	rc = -1;
 	goto exit;
@@ -112,7 +113,8 @@ static int common_lchown_symlink(struct audit_data *context, int success)
 	goto exit;
     }
 
-    target = init_tempfile(S_IRWXU, context->euid, context->egid);
+    target = init_tempfile(S_IRWXU, context->euid, context->egid,
+			   context->u.syscall.sysname);
     if (!target) {
 	rc = -1;
 	goto exit;

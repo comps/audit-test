@@ -45,7 +45,8 @@ int test_chmod(struct audit_data *context, int variation, int success)
     int mode = S_IRWXU|S_IRWXO;
     int exit;
 
-    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    path = init_tempfile(S_IRWXU, context->euid, context->egid,
+			 context->u.syscall.sysname);
     if (!path) {
 	rc = -1;
 	goto exit;

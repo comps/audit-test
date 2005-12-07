@@ -50,7 +50,8 @@ int test_fsetxattr(struct audit_data *context, int variation, int success)
     int flags = XATTR_CREATE;
     int exit;
 
-    path = init_tempfile(S_IRWXU, context->euid, context->egid);
+    path = init_tempfile(S_IRWXU, context->euid, context->egid,
+			 context->u.syscall.sysname);
     if (!path) {
 	rc = -1;
 	goto exit;

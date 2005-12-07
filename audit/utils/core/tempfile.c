@@ -123,6 +123,67 @@ exit_err:
     return NULL;
 }
 
+char *init_swapfile(mode_t mode, uid_t uid, gid_t gid, size_t size)
+{
+    char *data, *path;
+    int fd;
+    char cmd[512] = { 0 };
+    int count;
+
+    errno = 0;
+    data = malloc(size);
+    if (!data) {
+	fprintf(stderr, "Error: initializing swapfile: malloc(): %s\n",
+		strerror(errno));
+	return NULL;
+    }
+    memset(data, 0, size);
+
+    path = init_tempfile(mode, uid, gid);
+    if (!path) {
+	fprintf(stderr, "Error: initializing temporary swapfile\n");
+	goto exit;
+    }
+
+    fd = open(path, O_WRONLY|O_TRUNC);
+    if (fd < 0) {
+	fprintf(stderr, "Error: initializing swapfile: open(): %s\n",
+		strerror(errno));
+	goto exit_err;
+    }
+
+    if (write(fd, data, size) < size) {
+	fprintf(stderr, "Error: initializing swapfile: write(): %s\n",
+		strerror(errno));
+	goto exit_err;
+    }
+
+    if (close(fd) < 0) {
+	fprintf(stderr, "Error: initializing swapfile: close(): %s\n",
+		strerror(errno));
+	goto exit_err;
+    }
+
+    count = snprintf(cmd, sizeof(cmd), "/sbin/mkswap %s", path);
+    if (count >= sizeof(cmd)) {
+	fprintf(stderr, "Error: initializing swapfile: cmd too long\n");
+	goto exit_err;
+    }
+    if (system(cmd) < 0) {
+	fprintf(stderr, "Error: initializing swapfile: /sbin/mkswap\n");
+	goto exit_err;
+    }
+	
+exit:
+    free(data);
+    return path;
+
+exit_err:
+    free(data);
+    destroy_tempfile(path);
+    return NULL;
+}
+
 char *init_tempsym(char *target, uid_t uid, gid_t gid)
 {
     char *spath;

@@ -64,6 +64,7 @@ int test_vsftpd(struct audit_data* dataPtr) {
 
   if ( ( rc = system("rpm -q vsftpd") ) != 0 ) {
     printf("vsftpd is not installed, assuming WS\n");
+    fail_testcases++;
     goto WS;
   }
 

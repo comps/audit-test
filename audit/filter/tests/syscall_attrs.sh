@@ -151,7 +151,7 @@ audit_rec_gen_fail $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."
-augrep --seek=$log_mark "name==$tmp1"
+augrep --seek=$log_mark "syscall==$syscall_num" "name==$tmp1" "success==no"
 ret_val_tmp=$?
 [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
 

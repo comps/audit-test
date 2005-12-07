@@ -36,20 +36,25 @@ SUB_DIRS	= $(RUN_DIRS) \
 include $(TOPDIR)/rules.mk
 
 run:
-	@echo "run.log will be collected from subdirectories when the test completes" >run.log
+	@for l in run rollup; do \
+	    echo "audit.$$l.log will be collected from subdirectories when the test completes" >audit.$$l.log; \
+	done
 	$(MAKE) all
 	for x in $(RUN_DIRS); do make -C $$x run; done
-	@# tty output has color, generated run.logs don't, so collect them
+	@# tty output has color, generated logs don't, so collect them
 	@# instead of redirecting output of the above loop.
-	@for x in $(RUN_DIRS); do \
+	@for l in run rollup; do \
+	  ( utils/run.bash --header; echo ) &> audit.$$l.log
+	  for x in $(RUN_DIRS); do \
 	    echo; \
 	    echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
 	    printf "::: %-52s :::\n" "$$x"; \
 	    echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
 	    echo; \
-	    cat $$x/run.log; \
-	done &> run.log
-	utils/tally-results.awk < run.log | tee -a run.log
+	    cat $$x/$$l.log; \
+	  done &> audit.$$l.log; \
+	  utils/tally-results.awk < audit.$$l.log | tee -a audit.$$l.log; \
+	done
 
 .PHONY: dist
 dist:

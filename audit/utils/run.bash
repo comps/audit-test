@@ -58,6 +58,7 @@ declare opt_verbose=false
 declare opt_debug=false
 declare opt_config=run.conf
 declare opt_log=run.log
+declare opt_rollup=rollup.log
 declare opt_timeout=30
 
 #----------------------------------------------------------------------
@@ -106,24 +107,44 @@ function lmsg {
     $logging && monoize "$*" >>"$opt_log"
 }
 
+function llmsg {
+    $logging || return
+    monoize "$@" >>"$opt_log"
+    monoize "$@" >>"$opt_rollup"
+}
+
 function msg {
-    lmsg "$*"
-    colorize "$*"
+    if [[ $1 == -nolog ]]; then
+	shift
+    else
+	llmsg "$@"
+    fi
+    colorize "$@"
 }
 
 function vmsg {
-    lmsg "$*"
-    $opt_verbose || $opt_debug && colorize "$*"
+    if $opt_verbose || $opt_debug; then
+	msg "$@"
+    else
+	lmsg "$@"
+    fi
 }
 
 function dmsg {
-    lmsg "$*"
-    $opt_debug && colorize "$*"
+    if $opt_debug; then
+	msg "$@"
+    else
+	lmsg "$@"
+    fi
 }
 
 function prf {
-    $logging && printf "$(monoize "$1")" "${@:2}" >>"$opt_log"
+    if [[ $1 == -nolog ]]; then
+	declare logging=false
+    fi
     printf "$(colorize "$1")" "${@:2}"
+    $logging || return
+    printf "$(monoize "$1")" "${@:2}" | tee -a "$opt_rollup" >>"$opt_log"
 }
 
 #----------------------------------------------------------------------
@@ -271,6 +292,7 @@ eval "function cleanup {
 
 function open_log {
     :> "$opt_log" || die "can't init $opt_log"
+    :> "$opt_rollup" || die "can't init $opt_rollup"
     logging=true
 
     dmsg "Log file started $(date)"
@@ -290,7 +312,9 @@ Usage: ${0##*/} [OPTION]...
 Run a set of test cases, reporting pass/fail and tallying results.
 
     -f --config=FILE  Use a config file other than run.conf
+       --header       Don't run anything, just output the log header
     -l --log=FILE     Output to a log other than run.log
+    -r --rollup=FILE  Output to a rollup other than rollup.log
     -t --timeout=SEC  Seconds to wait for a test to timeout, default 30
     -h --help         Show this help
 
@@ -306,8 +330,8 @@ function parse_cmdline {
     declare args conf tcase
 
     # Use /usr/bin/getopt which supports GNU-style long options
-    args=$(getopt -o df:hl:v \
-        --long config:,debug,help,log:,nocolor,verbose \
+    args=$(getopt -o df:hl:r:v \
+        --long config:,debug,help,header,log:,rollup:,nocolor,verbose \
         -n "$0" -- "$@") || die
     eval set -- "$args"
 
@@ -316,7 +340,9 @@ function parse_cmdline {
             -d|--debug) opt_debug=true; opt_verbose=true; shift ;;
             -f|--config) opt_config=$2; shift 2 ;;
             -h|--help) usage; exit 0 ;;
+	    --header) header; exit 0 ;;
             -l|--log) opt_log=$2; shift 2 ;;
+            -r|--rollup) opt_rollup=$2; shift 2 ;;
             -t|--timeout) opt_timeout=$2; shift 2 ;;
             --nocolor) colorize() { monoize "$@"; }; shift ;;
             -v|--verbose) opt_verbose=true; shift ;;
@@ -325,10 +351,8 @@ function parse_cmdline {
         esac
     done
 
-    # Open the log
-    if [[ -n $opt_log ]]; then
-        open_log "$opt_log"
-    fi
+    # Open the logs now that opt_log and opt_rollup are set
+    open_log
 
     # Load the config
     dmsg "Loading config from $opt_config"
@@ -356,8 +380,23 @@ function parse_cmdline {
     fi
 }
 
+function header {
+    prf "%12s: %s\n" Started "$(date)"
+    prf "%12s: %s\n" Kernel "$(uname -r)"
+    prf "%12s: %s\n" Architecture "$(uname -m)"
+    prf "%12s: %s\n" Mode "${MODE:-(native)}"
+    prf "%12s: %s\n" Hostname "$(uname -n)"
+}
+
 function run_tests {
     declare t output status hee
+    declare begin_output="<blue>--- begin output -----------------------------------------------------------"
+    declare end_output="<blue>--- end output -------------------------------------------------------------"
+
+    header
+    msg 
+    prf "%-60s %s\n" "Testcase" "Result"
+    prf "%-60s %s\n" "--------" "------"
 
     if $opt_debug; then
 	hee=/dev/stderr
@@ -367,9 +406,9 @@ function run_tests {
 
     for t in "${TESTS[@]}"; do
 	if $opt_debug; then
-	    prf "%-60s " "$t"
-	    msg "<blue>DEBUG"
-	    msg "<blue>--- begin output -----------------------------------------------------------"
+	    prf -nolog "%-60s " "$t"
+	    msg -nolog "<blue>DEBUG"
+	    msg -nolog "$begin_output"
 	else
 	    prf "%-60s " "$t"
 	fi
@@ -384,43 +423,34 @@ function run_tests {
 #		( sleep $opt_timeout; kill $pid; ) &>/dev/null &
 #	    fi
 	    wait $pid
-	)
+	) 2>&1
 	status=$?
 
 	if $opt_debug; then
-	    lmsg "$output"
-	    msg "<blue>--- end output -------------------------------------------------------------"
+	    msg -nolog "$end_output"
 	    prf "%-60s " "$t"
 	fi
 
-	case $status in
-	    0)  msg "<green>PASS"
-		(( pass++ ))
-		if ! $opt_debug; then
-		    lmsg "<blue>--- begin output -----------------------------------------------------------"
-		    lmsg "$output"
-		    lmsg "<blue>--- end output -------------------------------------------------------------"
-		    lmsg
-		fi ;;
-
-	    1)  msg "<yellow>FAIL"
+	if [[ $status == 0 ]]; then
+	    msg "<green>PASS"
+	    (( pass++ ))
+	    lmsg "$begin_output"
+	    lmsg "$output"
+	    lmsg "$end_output"
+	    lmsg
+	else
+	    if [[ $status == 1 ]]; then
+		msg "<yellow>FAIL"
 		(( fail++ )) 
-		if ! $opt_debug; then
-		    vmsg "<blue>--- begin output -----------------------------------------------------------"
-		    vmsg "$output"
-		    vmsg "<blue>--- end output -------------------------------------------------------------"
-		    vmsg
-		fi ;;
-
-	    *)  msg "<red>ERROR ($status)"
+	    else
+		msg "<red>ERROR ($status)"
 		(( error++ ))
-		if ! $opt_debug; then
-		    vmsg "<blue>--- begin output -----------------------------------------------------------"
-		    vmsg "$output"
-		    vmsg "<blue>--- end output -------------------------------------------------------------"
-		    vmsg
-		fi ;;
-	esac
+	    fi
+	    vmsg "$begin_output"
+	    vmsg "$output"
+	    vmsg "$end_output"
+	    vmsg
+	fi
     done
 
     (( total = pass + fail + error ))

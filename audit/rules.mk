@@ -48,8 +48,8 @@ LINK_EXE	= $(CC) $(LDFLAGS) -o $@ $^ $(LOADLIBES) $(LDLIBS)
 LINK_SO		= $(CC) $(LDFLAGS) -shared -o $@ $^ $(LOADLIBES) $(LDLIBS)
 
 # If MODE isn't set explicitly, the default for the machine is used
-NATIVE          = $(strip $(shell file /bin/bash | awk -F'[ -]' '{print $$3}'))
-MODE            ?= $(NATIVE)
+export NATIVE   = $(strip $(shell file /bin/bash | awk -F'[ -]' '{print $$3}'))
+export MODE     ?= $(NATIVE)
 ifneq ($(MODE), $(NATIVE))
     ifeq ($(MODE), 32)
 	    ifneq (,$(findstring $(MACHINE), $(Z64)))

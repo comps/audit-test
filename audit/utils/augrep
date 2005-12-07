@@ -97,13 +97,14 @@ sub new {
         bless $singleton, $class;
 
         open(S, "gcc -E -dM /usr/include/syscall.h |") or die;
-        while (<S>) {
-            next unless /^#define\s+__NR_(\w+)\s+(\w+)/;
+        my $line;
+        while (defined($line = <S>)) {
+            next unless $line =~ /^#define\s+__NR_(\w+)\s+(\w+)/;
             $singleton->{$1} = $2;
         }
         close S;
 
-        my ($changed);
+        my $changed;
         do {
             my ($v, $new_v);
             $changed = 0;
@@ -121,7 +122,8 @@ sub new {
 
         my (%rev) = ();
         while (my ($k, $v) = each %$singleton) {
-            $rev{$v} = $k;
+            $rev{$v} ||= [];
+            push @{$rev{$v}}, $k;
         }
         $singleton->{'_reverse'} = \%rev;
     }
@@ -149,7 +151,7 @@ use FileHandle;
 
 sub new {
     my ($class, $filename) = @_;
-    my ($self) = {
+    my $self = {
         filename => $filename,
         fh => undef,
         records => [],
@@ -164,7 +166,7 @@ sub new {
 
 sub seek {
     my ($self, $pos) = @_;
-    my ($fh) = $self->{'fh'};
+    my $fh = $self->{'fh'};
 
     if ($pos == 0) {
         $fh->seek(0, 0) or die "failed to seek: $!";
@@ -177,7 +179,7 @@ sub seek {
 
 sub next_record {
     my ($self) = @_;
-    my ($fh) = $self->{'fh'};
+    my $fh = $self->{'fh'};
     my ($line, $record, $msg, $other, $o_msg);
 
     # populate the array; low-water=30, high-water=60
@@ -197,10 +199,10 @@ sub next_record {
     $record = shift @{$self->{'records'}};
 
     # merge following records with duplicate ids
-    if (defined($msg = $record->get('msg'))) {
+    if (defined($msg = $record->_get('msg'))) {
         for (my $i = 0; $i < @{$self->{'records'}}; $i++) {
             $other = $self->{'records'}[$i];
-            next unless defined($o_msg = $other->get('msg'));
+            next unless defined($o_msg = $other->_get('msg'));
             if ($o_msg eq $msg) {
                 $record->merge($other);
                 splice @{$self->{'records'}}, $i, 1;
@@ -221,7 +223,7 @@ package AuditRecord;
 
 sub new {
     my ($class, $line) = @_;
-    my ($self) = {
+    my $self = {
         _order => [],
     };
     bless $self, $class;
@@ -236,8 +238,8 @@ sub new {
 
 sub parse {
     my ($self, $line) = @_;
-    my ($orig) = $line;
-    my ($key_re) = q{
+    my $orig = $line;
+    my $key_re = q{
             [^\s"'=]+ |         # normal keys
             auditd\ pid |       # DAEMON_START, DAEMON_END
             sending\ pid |      # DAEMON_END
@@ -327,7 +329,7 @@ sub merge_kv {
     }
 
     # fix up auditd-generated records which use a comma-space separator
-    my ($type) = $self->{'type'};
+    my $type = $self->{'type'};
     if (defined $type 
             and ($type eq 'DAEMON_START' or $type eq 'DAEMON_END') 
             and $k ne 'extra_text'
@@ -345,65 +347,68 @@ sub merge_kv {
 sub merge {
     my ($self, $other) = @_;
     for my $k ($other->keys) {
-        $self->merge_kv($k, $other->get($k));
+        $self->merge_kv($k, $other->_get($k));
     }
+}
+
+sub _raw {
+    my ($self) = @_;
+    return $self->{'_raw'};
 }
 
 sub raw {
     my ($self) = @_;
-    my ($raw) = $self->{'_raw'};
-    my ($name);
+    my $raw = $self->{'_raw'};
+    my $n;
 
     if ($opt{'i'}) {
         # These are hardcoded so perl won't have to repeatedly compile the regex
-        $raw =~ s/\b(uid=)(\d+)\b/
-                  $1 . (defined($name = getpwuid($2)) ? $name : $2)/ge
-                  if exists $self->{'uid'};
-        $raw =~ s/\b(gid=)(\d+)\b/
-                  $1 . (defined($name = getgrgid($2)) ? $name : $2)/ge
-                  if exists $self->{'gid'};
-        $raw =~ s/\b(auid=)(\d+)\b/
-                  $1 . (defined($name = getpwuid($2)) ? $name : $2)/ge
-                  if exists $self->{'auid'};
-        $raw =~ s/\b(egid=)(\d+)\b/
-                  $1 . (defined($name = getgrgid($2)) ? $name : $2)/ge
-                  if exists $self->{'egid'};
-        $raw =~ s/\b(euid=)(\d+)\b/
-                  $1 . (defined($name = getpwuid($2)) ? $name : $2)/ge
-                  if exists $self->{'euid'};
-        $raw =~ s/\b(fsgid=)(\d+)\b/
-                  $1 . (defined($name = getgrgid($2)) ? $name : $2)/ge
-                  if exists $self->{'fsgid'};
-        $raw =~ s/\b(fsuid=)(\d+)\b/
-                  $1 . (defined($name = getpwuid($2)) ? $name : $2)/ge
-                  if exists $self->{'fsuid'};
-        $raw =~ s/\b(ogid=)(\d+)\b/
-                  $1 . (defined($name = getgrgid($2)) ? $name : $2)/ge
-                  if exists $self->{'ogid'};
-        $raw =~ s/\b(ouid=)(\d+)\b/
-                  $1 . (defined($name = getpwuid($2)) ? $name : $2)/ge
-                  if exists $self->{'ouid'};
-        $raw =~ s/\b(sgid=)(\d+)\b/
-                  $1 . (defined($name = getgrgid($2)) ? $name : $2)/ge
-                  if exists $self->{'sgid'};
-        $raw =~ s/\b(suid=)(\d+)\b/
-                  $1 . (defined($name = getpwuid($2)) ? $name : $2)/ge
-                  if exists $self->{'suid'};
+        $raw =~ s/\b(uid=)(\d+)\b/$1$n/ if defined($n = $self->get('uid'));
+        $raw =~ s/\b(gid=)(\d+)\b/$1$n/ if defined($n = $self->get('gid'));
+        $raw =~ s/\b(auid=)(\d+)\b/$1$n/ if defined($n = $self->get('auid'));
+        $raw =~ s/\b(egid=)(\d+)\b/$1$n/ if defined($n = $self->get('egid'));
+        $raw =~ s/\b(euid=)(\d+)\b/$1$n/ if defined($n = $self->get('euid'));
+        $raw =~ s/\b(fsgid=)(\d+)\b/$1$n/ if defined($n = $self->get('fsgid'));
+        $raw =~ s/\b(fsuid=)(\d+)\b/$1$n/ if defined($n = $self->get('fsuid'));
+        $raw =~ s/\b(ogid=)(\d+)\b/$1$n/ if defined($n = $self->get('ogid'));
+        $raw =~ s/\b(ouid=)(\d+)\b/$1$n/ if defined($n = $self->get('ouid'));
+        $raw =~ s/\b(sgid=)(\d+)\b/$1$n/ if defined($n = $self->get('sgid'));
+        $raw =~ s/\b(suid=)(\d+)\b/$1$n/ if defined($n = $self->get('suid'));
     }
 
-    if ($opt{'interpret-syscalls'}) {
-        $raw =~ s/\b(syscall=)(\d+)\b/
-                  $1 . (defined($name = SyscallTable->new->reverse($2))
-                  ? $name : $2)/ge
-                  if exists $self->{'syscall'};
+    if ($opt{'interpret-syscalls'} and defined($n = $self->get('syscall'))) {
+        $raw =~ s/\b(syscall=)(\d+)\b/$1$n/;
     }
 
     return $raw;
 }
 
-sub get {
+sub _get {
     my ($self, $k) = @_;
     return $self->{$k};
+}
+
+sub get {
+    my ($self, $k) = @_;
+    my $v = $self->{$k};
+    my $name;
+
+    return undef unless defined $v;
+
+    if ($opt{'interpret-syscalls'} and $k eq 'syscall') {
+        return defined($name = SyscallTable->new->reverse($v)) ? $name->[0] : $v;
+    }
+
+    if ($opt{'i'}) {
+        if ($k =~ /^(?:uid|auid|euid|fsuid|ouid|suid)$/) {
+            return defined($name = getpwuid($v)) ? $name : $v;
+        }
+        if ($k =~ /^(?:gid|egid|fsgid|ogid|sgid)$/) {
+            return defined($name = getgrgid($v)) ? $name : $v;
+        }
+    }
+
+    return $v;
 }
 
 sub keys {
@@ -415,16 +420,16 @@ sub to_s {
     my ($self) = @_;
     return join(' ', 
         map {
-            my $v = $self->{$_};
-            $v =~ /"/ and $v = "'$v'"
-                or $v =~ /['\s]/ and $v = "\"$v\""
-                or $v =~ /,$/ and $v = "\"$v\"";
+            my $v = $self->get($_);
+            ($v =~ /"/ and $v = "'$v'")
+                or ($v =~ /['\s]/ and $v = "\"$v\"")
+                or ($v =~ /,$/ and $v = "\"$v\"");
             "$_=$v"
         } @{$self->{'_order'}});
 }
 
 sub test {
-    my ($self) = @_; shift;
+    my ($self) = @_;
     my ($prev_was_cond, $negate);
 
     for my $a (@ARGV) {
@@ -445,18 +450,18 @@ sub test {
                 $a = "$k==$v";      # punt to numeric comparison
             } elsif ($k =~ /^(?:uid|auid|euid|fsuid|ouid|suid)$/
                     and $v =~ /\D/) {
-                my ($uid) = scalar getpwnam($v);
+                my $uid = getpwnam($v);
                 die "User does not exist: $v\n" unless defined $uid;
                 $a = "$k==$uid";
                 # fall through to numeric comparison
             } elsif ($k =~ /^(?:gid|egid|fsgid|ogid|sgid)$/
                     and $v =~ /\D/) {
-                my ($gid) = scalar getgrnam($v);
+                my $gid = getgrnam($v);
                 die "Group does not exist: $v\n" unless defined $gid;
                 $a = "$k==$gid";
                 # fall through to numeric comparison
             } elsif ($k eq 'syscall' and $v =~ /\D/) {
-                my ($num) = SyscallTable->new->resolve($v);
+                my $num = SyscallTable->new->resolve($v);
                 die "Unknown syscall: $v\n" unless defined $num;
                 $a = "$k==$num";
                 # fall through to numeric comparison
@@ -521,7 +526,7 @@ end_subs:
 
         print STDERR "Became [$a]\n" if $opt{'debug'};
     }
-    my ($test) = "@ARGV";
+    my $test = "@ARGV";
 
     # in theory this should be (significantly) faster than eval'ing
     # repeatedly
@@ -616,18 +621,20 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
     if ($opt{'h'}) { print STDERR $usage; exit 0 }
     if ($opt{'V'}) { print STDERR $version; exit 0 }
     if (defined $opt{'resolve'}) {
-        my ($resolution);
         if ($opt{'resolve'} =~ /\D/) {
-            $resolution = SyscallTable->new->resolve($opt{'resolve'});
+            my $num = SyscallTable->new->resolve($opt{'resolve'});
+            if (defined $num) {
+                print $num, "\n";
+                exit 0;
+            }
         } else {
-            $resolution = SyscallTable->new->reverse($opt{'resolve'});
+            my $name = SyscallTable->new->reverse($opt{'resolve'});
+            if (defined $name) {
+                print join("\n", @$name), "\n";
+                exit 0;
+            }
         }
-        if (defined $resolution) {
-            print $resolution, "\n";
-            exit 0;
-        } else {
-            exit 1;
-        }
+        exit 1; # could not resolve
     }
 }
 die "augrep: argument required\n$usage" unless @ARGV;
@@ -649,7 +656,7 @@ if ($> == 0 and not $opt{'nosync'}) {
     }
 }
 
-my ($reader) = AuditReader->new($opt{'f'});
+my $reader = AuditReader->new($opt{'f'});
 $reader->seek($opt{'seek'} || $ENV{'AUDIT_SEEK'} || 0);
 
 while (my $record = $reader->next_record) {
@@ -683,13 +690,17 @@ augrep - audit.log search tool
 =head1 SYNOPSIS
 
 B<augrep> [I<-chqvV>] 
-[I<--count --help --quiet --raw --version>] 
+[I<--ausearch --count --help --quiet --raw --version>] 
 [I<-f logfile | --file logfile>] [I<--seek offset>] expression...
+
+B<augrep> I<--resolve syscall>
+
+B<augrep> I<--ausearch options...>
 
 =head1 DESCRIPTION
 
-This tool provides a command-line interface for search audit logs for
-interesting records, similar to ausearch but slower and possibly more flexible.
+This tool provides a command-line interface for searching audit logs, similar to
+ausearch but slower and possibly more flexible.
 
 =head2 EXPRESSIONS
 
@@ -718,6 +729,13 @@ specified half-hour: 'msg_time>=14:00' 'msg_time<14:30'
 
 =over
 
+=item B<--ausearch>
+
+If this is found anywhere on the command-line, all of the other options are
+interpeted in ausearch mode.  For the usage, try --ausearch -h or read
+ausearch(8).  Another way of invoking ausearch mode is to run augrep through
+a symbolic link called ausearch.
+
 =item B<-c --count>
 
 Suppress normal output; instead print a count of matching lines.
@@ -744,6 +762,11 @@ status if any match is found, otherwise exit with non-zero status.
 Output the raw lines related to the search, rather than merging them into a
 single record.  Note this means that the search expression might contain keys
 not present in the output (such as inode_1)
+
+=item B<--resolve> I<syscall>
+
+Resolve the syscall from name to number for the current architecture.  If
+a number is given, resolve it back to the list of names.
 
 =item B<--seek> I<offset>
 

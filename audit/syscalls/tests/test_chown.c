@@ -76,7 +76,8 @@ static int common_chown(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting chown(%s, %i, %i)\n", path, owner, group);
+    fprintf(stderr, "Attempting %s(%s, %x, %x)\n", 
+	    context->u.syscall.sysname, path, owner, group);
     exit = syscall(context->u.syscall.sysnum, path, owner, group);
     context_setend(context);
     context_setresult(context, exit, errno);

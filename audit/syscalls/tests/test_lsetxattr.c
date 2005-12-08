@@ -81,8 +81,9 @@ static int test_lsetxattr_file(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting setxattr(%s, %s, %s, %zi, %i)\n", 
-	    path, aname, avalue, sizeof(avalue), flags);
+    fprintf(stderr, "Attempting %s(%s, %s, %s, %zx, %x)\n",
+	    context->u.syscall.sysname, path, aname, 
+	    avalue, sizeof(avalue), flags);
     exit = syscall(context->u.syscall.sysnum, path, aname, avalue,
 		   sizeof(avalue), flags);
     context_setend(context);
@@ -140,8 +141,9 @@ static int test_lsetxattr_symlink(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting lsetxattr(%s, %s, %s, %zi, %i)\n", 
-	    path, aname, avalue, sizeof(avalue), flags);
+    fprintf(stderr, "Attempting %s(%s, %s, %s, %zx, %x)\n", 
+	    context->u.syscall.sysname, path, aname, 
+	    avalue, sizeof(avalue), flags);
     exit = syscall(context->u.syscall.sysnum, path, aname, avalue,
 		   sizeof(avalue), flags);
     context_setend(context);

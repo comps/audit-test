@@ -62,10 +62,13 @@ int test_ioctl(struct audit_data *context, int variation, int success)
     if (rc < 0)
 	goto exit;
 
-    fprintf(stderr, "Attempt to call ioctl(%d, TCGETA)\n", fd);
+    fprintf(stderr, "Attempt to call %s(%d, %x, %p)\n", 
+	    context->u.syscall.sysname, fd, TCGETA, &tio);
 
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%x, %x, %p)\n",
+	    context->u.syscall.sysname, fd, TCGETA, &tio);
     exit = syscall(context->u.syscall.sysnum, fd, TCGETA, &tio);
     context_setend(context);
     context_setresult(context, exit, errno);

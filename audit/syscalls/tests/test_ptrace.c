@@ -67,7 +67,8 @@ int test_ptrace(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Calling ptrace(PTRACE_ATTACH, %d)\n", pid);
+    fprintf(stderr, "Attempting %s(%x, %x, %p, %p)\n", 
+	    context->u.syscall.sysname, PTRACE_ATTACH, pid, NULL, NULL);
     exit = ptrace(PTRACE_ATTACH, pid, NULL, NULL);
     if (exit >= 0)
 	wait(NULL);

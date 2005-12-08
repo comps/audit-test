@@ -73,6 +73,8 @@ static int common_semop(struct audit_data *context, int op, int success)
 
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%x, %p, %x, %p)\n", 
+	    context->u.syscall.sysname, semid, &sops, nsems, &timeout);
     exit = (op == TEST_TIMED) ?
 	semtimedop(semid, &sops, nsems, &timeout) :
 	semop(semid, &sops, nsems);

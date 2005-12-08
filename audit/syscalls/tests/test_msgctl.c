@@ -85,7 +85,8 @@ static int test_msgctl_setperms(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting msgctl(%d, IPC_SET)\n", qid);
+    fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
+	    context->u.syscall.sysname, qid, IPC_SET, &buf);
     exit = msgctl(qid, IPC_SET, &buf);
     context_setend(context);
     context_setresult(context, exit, errno);
@@ -130,7 +131,8 @@ static int test_msgctl_remove(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting msgctl(%d, IPC_RMID)\n", qid);
+    fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
+	    context->u.syscall.sysname, qid, IPC_RMID, NULL);
     exit = msgctl(qid, IPC_RMID, NULL);
     context_setend(context);
     context_setresult(context, exit, errno);

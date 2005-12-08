@@ -71,7 +71,8 @@ int test_mount(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting mount(%s, %s, %s)\n", source, mtpt, fstype);
+    fprintf(stderr, "Attempting %s(%s, %s, %s, %x, %p)\n", 
+	    context->u.syscall.sysname, source, mtpt, fstype, 0, NULL);
     exit = syscall(context->u.syscall.sysnum, source, mtpt, fstype, 0, NULL);
     context_setend(context);
     context_setresult(context, exit, errno);

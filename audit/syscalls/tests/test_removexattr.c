@@ -89,7 +89,8 @@ int test_removexattr(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting removexattr(%s, %s)\n", path, aname);
+    fprintf(stderr, "Attempting %s(%s, %s)\n", 
+	    context->u.syscall.sysname, path, aname);
     exit = syscall(context->u.syscall.sysnum, path, aname);
     context_setend(context);
     context_setresult(context, exit, errno);

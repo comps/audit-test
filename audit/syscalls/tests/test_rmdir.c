@@ -67,7 +67,8 @@ int test_rmdir(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting rmdir(%s)\n", path);
+    fprintf(stderr, "Attempting %s(%s)\n", 
+	    context->u.syscall.sysname, path);
     exit = syscall(context->u.syscall.sysnum, path);
     context_setend(context);
     context_setresult(context, exit, errno);

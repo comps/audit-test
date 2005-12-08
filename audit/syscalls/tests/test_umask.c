@@ -51,6 +51,7 @@ int test_umask(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%x)\n", context->u.syscall.sysname, mask);
     exit = umask(mask);
     context_setend(context);
     context_setresult(context, exit, errno);

@@ -69,7 +69,8 @@ int common_truncate(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting truncate(%s, %lu)\n", path, newlen);
+    fprintf(stderr, "Attempting %s(%s, %lx)\n", 
+	    context->u.syscall.sysname, path, newlen);
     exit = syscall(context->u.syscall.sysnum, path, newlen);
     context_setend(context);
     context_setresult(context, exit, errno);

@@ -71,7 +71,8 @@ int test_msgget(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting msgget(%d, %d)\n", TEST_IPC_KEY, msgflag);
+    fprintf(stderr, "Attempting %s(%x, %x)\n", 
+            context->u.syscall.sysname, TEST_IPC_KEY, msgflag);
     exit = msgget(TEST_IPC_KEY, msgflag);
     context_setend(context);
     context_setresult(context, exit, errno);

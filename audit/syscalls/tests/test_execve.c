@@ -59,6 +59,8 @@ int test_execve(struct audit_data *context, int variation, int success)
     }
 
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%s, %p, %p)\n", 
+	    context->u.syscall.sysname, cmd, NULL, NULL);
     pid = fork();
     if (pid < 0) {
 	rc = -1;

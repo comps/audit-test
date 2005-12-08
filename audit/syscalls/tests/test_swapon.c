@@ -67,7 +67,8 @@ int test_swapon(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting swapon(%s, %d)\n", path, 0);
+    fprintf(stderr, "Attempting %s(%s, %x)\n", 
+	    context->u.syscall.sysname, path, 0);
     exit = syscall(context->u.syscall.sysnum, path, 0);
     context_setend(context);
     context_setresult(context, exit, errno);

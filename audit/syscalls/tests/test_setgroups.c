@@ -76,6 +76,8 @@ static int common_setgroups(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%zx, %p)\n",
+	    context->u.syscall.sysname, size, &list);
     exit = syscall(context->u.syscall.sysnum, size, &list);
     context_setend(context);
     context_setresult(context, exit, errno);

@@ -63,8 +63,10 @@ static int common_setresgid(struct audit_data *context, int success)
 	    goto exit;
     }
 
-    context_setbegin(context);
     errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%x, %x, %x)\n",
+	    context->u.syscall.sysname, -1, -1, gid);
     exit = syscall(context->u.syscall.sysnum, -1, -1, gid);
     context_setend(context);
     context_setresult(context, exit, errno);

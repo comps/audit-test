@@ -85,8 +85,8 @@ int test_msgsnd(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting msgsnd(%i, {%li, \"%s\"}, %i, IPC_NOWAIT)\n", 
-	    qid, buf->mtype, buf->mtext, buflen);
+    fprintf(stderr, "Attempting %s(%x, %p, %x, %x)\n", 
+	    context->u.syscall.sysname, qid, buf, buflen, IPC_NOWAIT);
     exit = msgsnd(qid, buf, buflen, IPC_NOWAIT);
     context_setend(context);
     context_setresult(context, exit, errno);

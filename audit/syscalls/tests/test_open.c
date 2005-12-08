@@ -41,6 +41,7 @@ int test_open(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     char *path;
+    int flags = O_RDONLY;
     int fd;
 
     path = init_tempfile(S_IRWXU, context->euid, context->egid,
@@ -68,8 +69,9 @@ int test_open(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting open(%s, O_RDONLY)\n", path);
-    fd = syscall(context->u.syscall.sysnum, path, O_RDONLY);
+    fprintf(stderr, "Attempting %s(%s, %x)\n", 
+	    context->u.syscall.sysname, path, flags);
+    fd = syscall(context->u.syscall.sysnum, path, flags);
     context_setend(context);
     context_setresult(context, fd, errno);
 

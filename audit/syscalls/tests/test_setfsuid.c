@@ -64,7 +64,7 @@ static int common_setfsuid_pre(struct audit_data *context)
 	goto exit;
 
     context_setbegin(context);
-    fprintf(stderr, "Attempting setfsuid(%d)\n", fsuid);
+    fprintf(stderr, "Attempting %s(%x)\n", context->u.syscall.sysname, fsuid);
     exit = syscall(context->u.syscall.sysnum, fsuid);
     context_setend(context);
     context_setresult(context, exit, 0);
@@ -110,7 +110,7 @@ static int common_setfsuid_cur(struct audit_data *context)
 	goto exit_suid;
 
     context_setbegin(context);
-    fprintf(stderr, "Attempting setfsuid(%d)\n", fsuid);
+    fprintf(stderr, "Attempting %s(%x)\n", context->u.syscall.sysname, fsuid);
     exit = syscall(context->u.syscall.sysnum, fsuid);
     context_setend(context);
     context_setresult(context, exit, 0);

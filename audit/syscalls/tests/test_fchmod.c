@@ -82,7 +82,8 @@ int test_fchmod(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting fchmod(%d, %o)\n", fd, mode);
+    fprintf(stderr, "Attempting %s(%x, %x)\n", 
+	    context->u.syscall.sysname, fd, mode);
     exit = syscall(context->u.syscall.sysnum, fd, mode);
     context_setend(context);
     context_setresult(context, exit, errno);

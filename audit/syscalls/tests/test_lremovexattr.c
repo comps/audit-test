@@ -89,7 +89,8 @@ static int test_lremovexattr_file(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting removexattr(%s, %s)\n", path, aname);
+    fprintf(stderr, "Attempting %s(%s, %s)\n", 
+	    context->u.syscall.sysname, path, aname);
     exit = syscall(context->u.syscall.sysnum, path, aname);
     context_setend(context);
     context_setresult(context, exit, errno);
@@ -154,7 +155,8 @@ static int test_lremovexattr_symlink(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting lremovexattr(%s, %s)\n", path, aname);
+    fprintf(stderr, "Attempting %s(%s, %s)\n", 
+	    context->u.syscall.sysname, path, aname);
     exit = syscall(context->u.syscall.sysnum, path, aname);
     context_setend(context);
     context_setresult(context, exit, errno);

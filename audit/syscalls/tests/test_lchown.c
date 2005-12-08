@@ -82,7 +82,8 @@ static int common_lchown_file(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting lchown(%s, %i, %i)\n", path, owner, group);
+    fprintf(stderr, "Attempting %s(%s, %x, %x)\n", 
+	    context->u.syscall.sysname, path, owner, group);
     exit = syscall(context->u.syscall.sysnum, path, owner, group);
     context_setend(context);
     context_setresult(context, exit, errno);
@@ -145,7 +146,8 @@ static int common_lchown_symlink(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting lchown(%s, %i, %i)\n", path, owner, group);
+    fprintf(stderr, "Attempting %s(%s, %x, %x)\n", 
+	    context->u.syscall.sysname, path, owner, group);
     exit = syscall(context->u.syscall.sysnum, path, owner, group);
     context_setend(context);
     context_setresult(context, exit, errno);

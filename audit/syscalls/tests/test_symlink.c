@@ -95,7 +95,8 @@ int test_symlink(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting symlink(%s, %s)\n", oldpath, newpath);
+    fprintf(stderr, "Attempting %s(%s, %s)\n", 
+	    context->u.syscall.sysname, oldpath, newpath);
     exit = syscall(context->u.syscall.sysnum, oldpath, newpath);
     context_setend(context);
     context_setresult(context, exit, errno);

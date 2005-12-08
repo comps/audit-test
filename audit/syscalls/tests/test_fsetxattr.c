@@ -86,8 +86,9 @@ int test_fsetxattr(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting setxattr(%i, %s, %s, %zi, %i)\n", 
-	    fd, aname, avalue, sizeof(avalue), flags);
+    fprintf(stderr, "Attempting %s(%x, %s, %s, %zx, %x)\n", 
+	    context->u.syscall.sysname, fd, aname, 
+	    avalue, sizeof(avalue), flags);
     exit = syscall(context->u.syscall.sysnum, fd, aname, avalue,
 		   sizeof(avalue), flags);
     context_setend(context);

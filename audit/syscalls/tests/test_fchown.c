@@ -88,7 +88,8 @@ static int common_fchown(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting fchown(%i, %i, %i)\n", fd, owner, group);
+    fprintf(stderr, "Attempting %s(%x, %x, %x)\n", 
+	    context->u.syscall.sysname, fd, owner, group);
     exit = syscall(context->u.syscall.sysnum, fd, owner, group);
     context_setend(context);
     context_setresult(context, exit, errno);

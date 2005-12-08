@@ -69,7 +69,8 @@ static int common_clone(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Create child at %p\n", cstack);
+    fprintf(stderr, "Attempting %s(%x, %p)\n", 
+	    context->u.syscall.sysname, flags, cstack);
     pid = syscall(context->u.syscall.sysnum, flags, cstack);
 
     if (pid == 0) /* child */

@@ -64,7 +64,7 @@ static int common_setfsgid_pre(struct audit_data *context)
 	goto exit;
 
     context_setbegin(context);
-    fprintf(stderr, "Attempting setfsgid(%d)\n", fsgid);
+    fprintf(stderr, "Attempting %s(%x)\n", context->u.syscall.sysname, fsgid);
     exit = syscall(context->u.syscall.sysnum, fsgid);
     context_setend(context);
     context_setresult(context, exit, 0);
@@ -105,7 +105,7 @@ static int common_setfsgid_cur(struct audit_data *context)
 	goto exit_suid;
 
     context_setbegin(context);
-    fprintf(stderr, "Attempting setfsgid(%d)\n", fsgid);
+    fprintf(stderr, "Attempting %s(%x)\n", context->u.syscall.sysname, fsgid);
     exit = syscall(context->u.syscall.sysnum, fsgid);
     context_setend(context);
     context_setresult(context, exit, 0);

@@ -72,7 +72,8 @@ static int common_utime(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting to change access/mod times for: %s\n", path);
+    fprintf(stderr, "Attempting %s(%s, %p)\n", 
+	    context->u.syscall.sysname, path, &utbuf);
     exit = syscall(context->u.syscall.sysnum, path, &utbuf);
     context_setend(context);
     context_setresult(context, exit, errno);

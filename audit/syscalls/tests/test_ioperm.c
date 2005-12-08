@@ -57,12 +57,11 @@ int test_ioperm(struct audit_data *context, int variation, int success)
     if (rc < 0)
 	goto exit;
 
-    fprintf(stderr, 
-	    "Attempt to set permissions: %i for port address: %x, num bytes: %i\n",
-	    TEST_PORT_PERMS, TEST_PORT_ADDRESS, TEST_NUM_BYTES);
-
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%x, %x, %x)\n",
+	    context->u.syscall.sysname, TEST_PORT_ADDRESS,
+	    TEST_NUM_BYTES, TEST_PORT_PERMS);
     exit = syscall(context->u.syscall.sysnum, TEST_PORT_ADDRESS,
 		   TEST_NUM_BYTES, TEST_PORT_PERMS);
     context_setend(context);

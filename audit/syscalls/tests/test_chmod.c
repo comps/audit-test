@@ -70,7 +70,8 @@ int test_chmod(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting chmod(%s, %o)\n", path, mode);
+    fprintf(stderr, "Attempting %s(%s, %x)\n",
+	    context->u.syscall.sysname, path, mode);
     exit = syscall(context->u.syscall.sysnum, path, mode);
     context_setend(context);
     context_setresult(context, exit, errno);

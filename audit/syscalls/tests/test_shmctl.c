@@ -87,7 +87,8 @@ static int test_shmctl_setperms(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting shmctl(%d, IPC_SET)\n", shmid);
+    fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
+	    context->u.syscall.sysname, shmid, IPC_SET, &buf);
     exit = shmctl(shmid, IPC_SET, &buf);
     context_setend(context);
     context_setresult(context, exit, errno);
@@ -133,7 +134,8 @@ static int test_shmctl_remove(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting shmctl(%d, IPC_RMID)\n", shmid);
+    fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
+	    context->u.syscall.sysname, shmid, IPC_RMID, NULL);
     exit = shmctl(shmid, IPC_RMID, NULL);
     context_setend(context);
     context_setresult(context, exit, errno);

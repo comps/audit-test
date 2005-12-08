@@ -57,11 +57,8 @@ int test_capset(struct audit_data *context, int variation, int success)
 	return -1;
     }
 
-    /* get current process's capabilities */
     header->version = _LINUX_CAPABILITY_VERSION;
     header->pid = 0;
-
-    errno = 0;
     rc = capget(header, data);
     if (rc < 0) {
 	fprintf(stderr, "Error: capget(): %s\n", strerror(errno));
@@ -87,6 +84,8 @@ int test_capset(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%p, %p)\n", 
+	    context->u.syscall.sysname, header, data);
     exit = capset(header, data);
     context_setend(context);
     context_setresult(context, exit, errno);

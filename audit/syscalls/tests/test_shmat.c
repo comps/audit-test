@@ -73,7 +73,8 @@ int test_shmat(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting shmat(%d, IPC_SET)\n", shmid);
+    fprintf(stderr, "Attempting %s(%x)\n", 
+	    context->u.syscall.sysname, shmid);
     shmadd = (long)shmat(shmid, NULL, 0);
     context_setend(context);
     context_setresult(context, shmadd, errno);

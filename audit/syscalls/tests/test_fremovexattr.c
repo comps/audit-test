@@ -94,7 +94,8 @@ int test_fremovexattr(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting fremovexattr(%i, %s)\n", fd, aname);
+    fprintf(stderr, "Attempting %s(%x, %s)\n", 
+	    context->u.syscall.sysname, fd, aname);
     exit = syscall(context->u.syscall.sysnum, fd, aname);
     context_setend(context);
     context_setresult(context, exit, errno);

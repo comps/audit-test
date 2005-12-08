@@ -53,10 +53,9 @@ int test_iopl(struct audit_data *context, int variation, int success)
     if (rc < 0)
 	goto exit;
 
-    fprintf(stderr, "Attempt to set I/O privilege level to: 1\n");
-
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%x)\n", context->u.syscall.sysname, 1);
     exit = syscall(context->u.syscall.sysnum, 1);
     context_setend(context);
     context_setresult(context, exit, errno);

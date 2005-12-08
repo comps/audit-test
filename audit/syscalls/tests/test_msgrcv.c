@@ -91,8 +91,8 @@ int test_msgrcv(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting msgrcv(%i, %p, %i, %i, IPC_NOWAIT)\n", 
-	    qid, buf, buflen, TEST_MSG_TYPE);
+    fprintf(stderr, "Attempting %s(%x, %p, %x, %x, IPC_NOWAIT)\n", 
+	    context->u.syscall.sysname, qid, buf, buflen, TEST_MSG_TYPE);
     exit = msgrcv(qid, buf, buflen, TEST_MSG_TYPE, IPC_NOWAIT);
     context_setend(context);
     context_setresult(context, exit, errno);

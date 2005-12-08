@@ -73,8 +73,8 @@ int test_shmget(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting shmget(%d, %lu, %d)\n", TEST_IPC_KEY,
-	    PAGE_SIZE, flags);
+    fprintf(stderr, "Attempting %s(%x, %lx, %x)\n", 
+	    context->u.syscall.sysname, TEST_IPC_KEY, PAGE_SIZE, flags);
     /* using library routine makes it portable between arches */
     exit = shmget(TEST_IPC_KEY, PAGE_SIZE, flags);
     context_setend(context);

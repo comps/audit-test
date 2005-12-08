@@ -87,7 +87,8 @@ static int test_semctl_setperms(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting semctl(%d, %d, IPC_SET\n", semid, nsems);
+    fprintf(stderr, "Attempting %s(%x, %x, %x, %p)\n", 
+	    context->u.syscall.sysname, semid, nsems, IPC_SET, &buf);
     exit = semctl(semid, nsems, IPC_SET, &buf);
     context_setend(context);
     context_setresult(context, exit, errno);
@@ -133,7 +134,8 @@ static int test_semctl_remove(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting semctl(%d, %d, IPC_RMID)\n", semid, nsems);
+    fprintf(stderr, "Attempting %s(%x, %x, %x, %p)\n", 
+	    context->u.syscall.sysname, semid, nsems, IPC_RMID, NULL);
     exit = semctl(semid, nsems, IPC_RMID, NULL);
     context_setend(context);
     context_setresult(context, exit, errno);

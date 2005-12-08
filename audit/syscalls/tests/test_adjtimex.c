@@ -44,7 +44,6 @@ int test_adjtimex(struct audit_data *context, int variation, int success)
     int exit;
 
     memset(&timex, 0, sizeof(timex));
-    /* To produce failure, attempt to set timex mode as unprivileged user */
     if (!success) {
 	rc = seteuid_test();
 	if (rc < 0)
@@ -59,6 +58,7 @@ int test_adjtimex(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%p)\n", context->u.syscall.sysname, &timex);
     exit = syscall(context->u.syscall.sysnum, &timex);
     context_setend(context);
     context_setresult(context, exit, errno);

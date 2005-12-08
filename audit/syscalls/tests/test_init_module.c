@@ -87,6 +87,8 @@ int test_init_module(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%p, %x)\n", 
+	    context->u.syscall.sysname, region, (unsigned int)mstat.st_size);
     exit = syscall(context->u.syscall.sysnum, region, mstat.st_size, "");
     context_setend(context);
     context_setresult(context, exit, errno);

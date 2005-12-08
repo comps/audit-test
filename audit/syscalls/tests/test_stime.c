@@ -62,6 +62,8 @@ int test_stime(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%p)\n",
+	    context->u.syscall.sysname, &tv.tv_sec);
     exit = syscall(context->u.syscall.sysnum, &tv.tv_sec);
     context_setend(context);
     context_setresult(context, exit, errno);

@@ -64,8 +64,10 @@ static int common_setresuid(struct audit_data *context, int success)
 	    goto exit;
     }
 
-    context_setbegin(context);
     errno = 0;
+    context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%x, %x, %x)\n", 
+	    context->u.syscall.sysname, -1, -1, uid);
     exit = syscall(context->u.syscall.sysnum, -1, -1, uid);
     context_setend(context);
     context_setresult(context, exit, errno);

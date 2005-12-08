@@ -72,8 +72,8 @@ int test_bind(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting bind(%d, %x, %d)\n", 
-	    sockfd, my_addr.sin_addr.s_addr, addrlen);
+    fprintf(stderr, "Attempting %s(%x, %p, %x)\n", 
+	    context->u.syscall.sysname, sockfd, &my_addr, addrlen);
     exit = syscall(context->u.syscall.sysnum, sockfd, 
 		   (struct sockaddr *)&my_addr, addrlen);
     context_setend(context);

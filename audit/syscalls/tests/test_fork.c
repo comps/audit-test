@@ -84,6 +84,7 @@ int common_fork(struct audit_data *context, int op, int success)
      * To test sys_vfork, the vfork() library routine must be used, as
      * with syscall(), control doesn't return to the calling function
      * (parent) in the success case. */
+    fprintf(stderr, "Attempting %s()\n", context->u.syscall.sysname);
     if (op == TEST_FORK)
 	pid = syscall(context->u.syscall.sysnum);
     else if (op == TEST_VFORK)

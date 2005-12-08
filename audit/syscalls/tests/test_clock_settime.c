@@ -61,7 +61,8 @@ int test_clock_settime(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
-    exit = -1;
+    fprintf(stderr, "Attempting %s(%x, %p)\n", 
+	    context->u.syscall.sysname, CLOCK_REALTIME, &tspec);
     exit = syscall(context->u.syscall.sysnum, CLOCK_REALTIME, &tspec);
     context_setend(context);
     context_setresult(context, exit, errno);

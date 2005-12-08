@@ -94,6 +94,8 @@ int test_delete_module(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%s, %x)\n", 
+	    context->u.syscall.sysname, module_name, 0);
     exit = syscall(context->u.syscall.sysnum, module_name, 0);
     context_setend(context);
     context_setresult(context, exit, errno);

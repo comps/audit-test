@@ -65,6 +65,8 @@ int test_settimeofday(struct audit_data *context, int variation, int success)
 
     errno = 0;
     context_setbegin(context);
+    fprintf(stderr, "Attempting %s(%p, %p)\n",
+	    context->u.syscall.sysname, &tv, &tz);
     exit = syscall(context->u.syscall.sysnum, &tv, &tz);
     context_setend(context);
     context_setresult(context, exit, errno);

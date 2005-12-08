@@ -321,9 +321,10 @@ sub merge_kv {
         }
 
         # handle other duplicates generically by appending a serial number
-        my ($serial, $new_k) = 1;
-        $serial++ while ($new_k = $k.'_'.$serial and
-            exists $self->{$new_k} and $self->{$new_k} ne $v);
+        my ($new_k, $serial) = ($k, 0);
+        while (exists $self->{$new_k} and $self->{$new_k} ne $v) {
+            $new_k = $k.'_'.(++$serial);
+        }
         $k = $new_k;
     }
 
@@ -338,7 +339,7 @@ sub merge_kv {
 
     # remember the order in which fields were seen
     push @{$self->{'_order'}}, $k unless $self->{$k};
-        
+
     # specials cases handled, add to our hash
     $self->{$k} = $v;
 }

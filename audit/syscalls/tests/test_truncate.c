@@ -37,12 +37,14 @@
 #include "includes.h"
 #include "syscalls.h"
 
-int common_truncate(struct audit_data *context, int success)
+#define TEST_TRUNCATE	0
+#define TEST_TRUNCATE64	1
+
+int common_truncate(struct audit_data *context, int op, int success)
 {
     int rc = 0;
     char *path;
-    off_t newlen = 1;
-    int exit;
+    int exit = -1;
 
     path = init_tempfile(S_IRWXU, context->euid, context->egid, 
 			 context->u.syscall.sysname);
@@ -69,9 +71,15 @@ int common_truncate(struct audit_data *context, int success)
 
     errno = 0;
     context_setbegin(context);
-    fprintf(stderr, "Attempting %s(%s, %lx)\n", 
-	    context->u.syscall.sysname, path, newlen);
-    exit = syscall(context->u.syscall.sysnum, path, newlen);
+    if (op == TEST_TRUNCATE) {
+	fprintf(stderr, "Attempting %s(%s, %x)\n", 
+		context->u.syscall.sysname, path, 0);
+	exit = syscall(context->u.syscall.sysnum, path, 0);
+    } else if (op == TEST_TRUNCATE64) {
+	fprintf(stderr, "Attempting %s(%s, %x, %x)\n", 
+		context->u.syscall.sysname, path, 0, 0);
+	exit = syscall(context->u.syscall.sysnum, path, 0, 0);
+    }
     context_setend(context);
     context_setresult(context, exit, errno);
 
@@ -88,10 +96,10 @@ exit:
 
 int test_truncate(struct audit_data *context, int variation, int success)
 {
-    return common_truncate(context, success);
+    return common_truncate(context, TEST_TRUNCATE, success);
 }
 
 int test_truncate64(struct audit_data *context, int variation, int success)
 {
-    return common_truncate(context, success);
+    return common_truncate(context, TEST_TRUNCATE64, success);
 }

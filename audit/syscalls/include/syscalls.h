@@ -58,11 +58,6 @@
 #define TEST_SYM_XATTR_NAME   "trusted.md5sum"
 #define TEST_SYM_XATTR_VALUE  "0"
 
-/* 
- * Global variables
- */
-extern int helper_uid; /* user for testing EPERM, EACCES errors */
-
 /*
  * Syscall Test Function Prototypes
  *

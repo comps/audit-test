@@ -25,16 +25,15 @@ SYSCALLS_OBJ	= syscalls.o syscalls_table.o
 SYSCALLS_EXE	= syscalls
 
 UTILS_AR	= $(TOPDIR)/utils/testutils.a
-TUTILS_AR	= utils/syscall_test_utils.a
 TESTS_AR	= tests/syscall_test.a
 
 ALL_OBJ		= $(SYSCALLS_OBJ)
 ALL_EXE		= $(SYSCALLS_EXE)
 
-SUB_DIRS	= tests utils
+SUB_DIRS	= tests
 
 include $(TOPDIR)/rules.mk
 
 $(SYSCALLS_EXE): LDLIBS += -laudit
-$(SYSCALLS_EXE): $(ALL_OBJ) $(TESTS_AR) $(UTILS_AR) $(TUTILS_AR)
+$(SYSCALLS_EXE): $(ALL_OBJ) $(TESTS_AR) $(UTILS_AR)
 	$(LINK_EXE)

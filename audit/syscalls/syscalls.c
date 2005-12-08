@@ -32,9 +32,6 @@ struct syscall_opts {
     char	 variation[MAX_VARIATION_NAME + 1];
 };
 
-/* global to syscalls tests */
-int helper_uid;
-
 static void usage()
 {
     char *usage = "Usage:\n\

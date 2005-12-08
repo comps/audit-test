@@ -34,16 +34,31 @@ PATH=$TOPDIR/utils:$PATH
 source functions.bash
 
 ######################################################################
+# global variables
+######################################################################
+
+zero=${0##*/}
+action=$1
+total_written=0
+
+######################################################################
 # common functions
 ######################################################################
 
 function write_records {
-    echo "Writing records to audit log ($ctr)"
-    while true; do
-	(( ctr++ ))
-	auditctl -m "$zero $ctr"
-	if (( ctr % $1 == 0 )); then break; fi
+    declare max=$1 i
+    echo "Writing records to audit log ($max)"
+    for ((i=1; i<=max; i++)); do
+	auditctl -m "$zero $action $i" || return 2
+	if ((i % 10 || i+1 == max)); then
+	    echo -n .
+	else
+	    echo -n $i
+	fi
     done
+    echo
+    (( total_written += max ))
+    echo "Total written = $total_written"
     ls -l ${audit_log}*
     df -k ${audit_log%/*}/
 }
@@ -73,14 +88,13 @@ function fill_disk {
     df -k $dir/
 }
 
-eval 'function cleanup {
+prepend_cleanup '{
+    echo
     echo "Audit log snippet"
     echo "--- start audit.log --------------------------------------------------------"
     augrep "type!=AGRIFFIS"
     echo "--- end audit.log ----------------------------------------------------------"
-    '"
-    $(type cleanup | sed '1,3d;$d')
-}"
+}'
 
 function check_rotate {
     if [[ ! -s "$audit_log.1" ]]; then
@@ -88,10 +102,10 @@ function check_rotate {
 	return 1
     fi
 
-    # verify the logs were written correctly (no missing or additional records)
-    grep -aho "$zero [[:digit:]]*" "$audit_log.1" "$audit_log" >"$tmp1"
-    seq 1 $ctr | sed "s/^/$zero /" >"$tmp2"
-    cmp "$tmp1" "$tmp2" || return 1	# could be "diff" for debugging
+    echo "Verifying the logs were written correctly (no missing or duped)"
+    grep -aho "$zero $action [[:digit:]]*" "$audit_log.1" "$audit_log" >"$tmp1"
+    seq 1 $total_written | sed "s/^/$zero $action /" >"$tmp2"
+    diff "$tmp1" "$tmp2" || return 1
 }
 
 function pre_syslog {
@@ -252,9 +266,6 @@ function check_email {
 ######################################################################
 
 trap "cleanup; exit" 0 1 2 3 15
-
-zero=${0##*/}
-action=$1
 
 if [[ -z $action ]]; then
     echo "Please specify a variation on the command-line"

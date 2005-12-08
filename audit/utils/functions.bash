@@ -116,24 +116,27 @@ function write_auditd_conf {
 }
 
 function start_auditd {
-    declare i s="testing 1-2-3 testing"
+    declare i s="starting auditd $$: can you hear me now?"
     if ! killall -0 auditd &>/dev/null; then
 	# auditd -f lets us see error messages on stdout
 	service auditd start &>/dev/null || { auditd -f; return 2; }
     fi
 
     # auditd daemonizes before it is ready to receive records from the kernel.
-    # make sure it's receiving before continuing.  try for 20 seconds because
-    # sometimes 10 seconds isn't enough, believe it or not!
-    for ((i = 0; i < 10; i++)); do
+    # make sure it's receiving before continuing.
+    for ((i = 0; i < 100; i++)); do
 	auditctl -m "$s"
-	tail -n10 /var/log/audit/audit.log | grep -Fq "$s" && return 0
+	echo -n "start_auditd: Waiting for auditd to start"
+	if tail -n10 /var/log/audit/audit.log | grep -Fq "$s"; then
+	    echo
+	    return 0
+	fi
 	echo -n .
-	sleep 0.2
+	sleep 0.1
     done
 
     echo
-    echo "Warning: auditd slow starting" >&2
+    echo "start_auditd: auditd slow starting, giving up" >&2
 
     return 0
 }
@@ -142,18 +145,22 @@ function stop_auditd {
     declare i
 
     auditctl -D &>/dev/null
-    if killall -0 auditd &>/dev/null; then
-	service auditd stop || killall auditd
-	for ((i = 0; i < 10; i++)); do
-	    killall -0 auditd &>/dev/null || return 0
-	    echo -n .
-	    sleep 0.2
-	done
+    service auditd stop || killall auditd
+    killall -0 auditd &>/dev/null || return 0
 
-	echo
-	echo "Timed out waiting for auditd to stop" >&2
-	killall -9 auditd
-    fi
+    for ((i = 0; i < 100; i++)); do
+	echo -n "stop_auditd: Waiting for auditd to stop"
+	if ! killall -0 auditd &>/dev/null; then
+	    echo
+	    return 0
+	fi
+	echo -n .
+	sleep 0.1
+    done
+
+    echo
+    echo "stop_auditd: timed out, killing auditd" >&2
+    killall -9 auditd
 
     return 0
 }
@@ -168,6 +175,7 @@ function rotate_audit_logs {
         ln -f audit.log "$tmp" || return 2
 
 	# Attempt to rotate using mechanism available in 1.0.10+
+	echo "rotate_audit_logs: Attempting to rotate using USR1"
 	if killall -0 auditd &>/dev/null; then
 	    killall -USR1 auditd &>/dev/null
 	    sleep 0.1
@@ -175,6 +183,7 @@ function rotate_audit_logs {
 
         # If rotation didn't work, do it manually.
         if [[ audit.log -ef $tmp ]]; then
+	    echo "rotate_audit_logs: Seems that USR1 is not supported"
             stop_auditd
             num_logs=$(awk '$1=="num_logs"{print $3;exit}' /etc/auditd.conf)
             while ((--num_logs > 0)); do

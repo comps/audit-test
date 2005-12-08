@@ -116,36 +116,6 @@ void context_dump(const struct audit_data *);
 void context_release(struct audit_data *);
 
 /*
- * Syscall Args Encoding
- */
-int arg_get(ARG_TYPE* ptype, int* psize, char* dest, const char** src);
-int arg_vector(char** vector, int vector_size, 
-	       const ARG_TYPE type, const int size, const char* src);
-int auditArg0(struct audit_data *);
-int auditArg1(struct audit_data *, const int, const int, void *);
-int auditArg2(struct audit_data *, const int, const int, void *,
-	       const int, const int, void *);
-int auditArg3(struct audit_data *, const int, const int, void *,
-	       const int, const int, void *,
-	       const int, const int, void *);
-int auditArg4(struct audit_data *, const int, const int, void *,
-	       const int, const int, void *,
-	       const int, const int, void *,
-	       const int, const int, void *);
-int auditArg5(struct audit_data *, const int, const int, void *,
-	       const int, const int, void *,
-	       const int, const int, void *,
-	       const int, const int, void *,
-	       const int, const int, void *);
-
-/*
- * Syscall Test Setup/Teardown
- */
-int preSysCall(struct audit_data* dataPtr);
-int postSysCall(struct audit_data* dataPtr, int resultErrno, int errorRC, 
-		int expectedErrno);
-
-/*
  * Test Verification
  */
 ts_exit verify_opresult(struct audit_data *, int);

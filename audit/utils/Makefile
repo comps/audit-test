@@ -26,7 +26,6 @@ UTILS_OBJ	= core/arch.o			\
 		  core/context.o		\
 		  core/create_temp_user_name.o	\
 		  core/create_temp_group_name.o	\
-		  core/encode_syscall_args.o	\
 		  core/file_utils.o		\
 		  core/get_laus_data.o		\
 		  core/get_login_uid.o		\

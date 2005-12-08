@@ -205,12 +205,12 @@ depsdir:
 
 subdirs:
 	@for x in $(SUB_DIRS); do \
-	    $(MAKE) -C $$x $(MAKECMDGOALS); \
+	    $(MAKE) -C $$x $(MAKECMDGOALS) || exit $$?; \
 	done
 
 subdirs_quiet:
 	@for x in $(SUB_DIRS); do \
-	    $(MAKE) --no-print-directory -C $$x $(MAKECMDGOALS); \
+	    $(MAKE) --no-print-directory -C $$x $(MAKECMDGOALS) || exit $$?; \
 	done
 
 ##########################################################################

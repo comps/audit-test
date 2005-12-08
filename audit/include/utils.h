@@ -44,8 +44,6 @@ void audit_rem_watch(const char *, const char *);
 /*
  * System Info Collection
  */
-int getLoginUID();
-
 int get_auditarch(void);
 uid_t gettestuid(void);
 gid_t gettestgid(void);

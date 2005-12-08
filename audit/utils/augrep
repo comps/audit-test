@@ -41,6 +41,7 @@ usage: augrep [options...] condition...
     -i     --interpret     Same as --interpret-syscalls --interpret-ids
       --interpret-syscalls Interpret syscall numbers to names
       --interpret-ids      Interpret uids/gids to names
+      --interpret-times    Interpret time component of msg
     -m     --max-count=NUM stop after NUM matches
            --nosync        don't wait for auditd to finish flushing
     -q     --quiet         No output, just set exit status (like grep)
@@ -381,6 +382,10 @@ sub raw {
         $raw =~ s/\b(suid=)(\d+)\b/$1$n/ if defined($n = $self->get('suid'));
     }
 
+    if ($opt{'interpret-times'}) {
+        $raw =~ s/^(.*?\bmsg=).*?\):?/$1$n/gm if defined ($n = $self->get('msg'));
+    }
+
     return $raw;
 }
 
@@ -407,6 +412,11 @@ sub get {
         if ($k =~ /^(?:gid|egid|fsgid|ogid|sgid)$/) {
             return defined($name = getgrgid($v)) ? $name : $v;
         }
+    }
+
+    if ($opt{'interpret-times'} and $k eq 'msg') {
+        $v =~ s/\d+/POSIX::strftime('%D %T', localtime($&))/e;
+        return $v;
     }
 
     return $v;
@@ -573,7 +583,9 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         'gi=s'  => sub { push @ARGV, "gid==$_[1]" },
         'h'     => sub { print STDERR $ausearch_usage; exit 0 },
         'hn=s'  => sub { push @ARGV, "hostname$eq$_[1]" },      # XXX msg_1?
-        'i'     => sub { $opt{'interpret-ids'} = 1 },
+        'i'     => sub { $opt{'interpret-ids'} = 1;
+                         $opt{'interpret-times'} = 1;
+                         $opt{'interpret-syscalls'} = 1; },
         'if=s'  => sub { $opt{'f'} = $_[1] },
         'm=s'   => sub { push @ARGV, ($_[1] eq 'ALL') ?
                          "type!=" : "type=~\\b$_[1]\\b" },
@@ -586,7 +598,8 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
                             ? "msg_1=~\\bterminal=$_[1]\\b"
                             : "msg_1=~\\bterminal=\\S*$_[1]" },
         'ua=s'  => sub { push @ARGV, "(", "uid==$_[1]", "or",
-                                          "euid==$_[1]", ")" },
+                                          "euid==$_[1]", "or",
+                                          "auid==$_[1]", ")" },
         'ue=s'  => sub { push @ARGV, "euid==$_[1]" },
         'ui=s'  => sub { push @ARGV, "uid==$_[1]" },
         'ul=s'  => sub { push @ARGV, "auid==$_[1]" },
@@ -613,6 +626,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         'i|interpret',
         'interpret-ids',
         'interpret-syscalls',
+        'interpret-times',
         'm|max-count=i',
         'nosync',
         'q|quiet',
@@ -640,7 +654,9 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         exit 1; # could not resolve
     }
     if ($opt{'i'}) {
-        $opt{'interpret-ids'} = $opt{'interpret-syscalls'} = 1;
+        $opt{'interpret-ids'} = 1;
+        $opt{'interpret-syscalls'} = 1;
+        $opt{'interpret-times'} = 1;
     }
     die "augrep: argument required\n$usage" unless @ARGV;
 }
@@ -676,8 +692,12 @@ while (my $record = $reader->next_record) {
         }
     } elsif ($opt{'ausearch'}) {
         my ($time, $seq) = (split /[(:)]/, $record->get('msg'))[1,2];
-        printf "----\ntime->%s%s", 
-            defined($time) ? ctime(int $time) : "(null)\n", $record->raw;
+        if ($opt{'interpret-times'}) {
+            printf "----\n%s", $record->raw;
+        } else {
+            printf "----\ntime->%s%s", 
+                defined($time) ? ctime(int $time) : "(null)\n", $record->raw;
+        }
     } else {
         print $record->to_s."\n" unless $opt{'q'} or $opt{'c'};
     }

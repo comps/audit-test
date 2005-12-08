@@ -36,9 +36,18 @@ PATH=$TOPDIR/utils:$PATH
 
 source functions.bash
 
+# each of these requires sed -r
+collapse_interior_whitespace='s/[[:blank:]]+/ /g'
+remove_trailing_whitespace='s/[[:blank:]]*$//'
+remove_msg_space='s/(msg=audit[^)]*\)) :/\1:/'
+remove_daemon_commas='/^type=DAEMON_START/s/,[[:blank:]]+/ /g'
+
 echo "# augrep --ausearch -if audit.log $*" >&2
 augrep_output=$(augrep --ausearch -if audit.log "$@" \
-    | sed -r 's/[[:blank:]]+/ /g' | sort)
+    | sed -r "$collapse_interior_whitespace" \
+    | sed -r "$remove_daemon_commas" \
+    | tee /dev/stderr \
+    | sort)
 
 if [[ -z $augrep_output ]]; then
     exit_error "augrep couldn't find anything"
@@ -46,16 +55,21 @@ fi
 
 echo
 echo "# ausearch -if audit.log $*" >&2
-ausearch_output=$(ausearch -if audit.log "$@" | tee /dev/stderr \
-    | sed -r 's/[[:blank:]]+/ /g' | sort)
+ausearch_output=$(ausearch -if audit.log "$@" \
+    | sed -r "$collapse_interior_whitespace" \
+    | sed -r "$remove_trailing_whitespace" \
+    | sed -r "$remove_msg_space" \
+    | sed -r "$remove_daemon_commas" \
+    | tee /dev/stderr \
+    | sort)
 
 echo
 if [[ "$augrep_output" == "$ausearch_output" ]]; then
     exit_pass "output matches"
 else
     echo "diff augrep_output ausearch_output"
-    diff <(sed 's/[[:blank:]]/\n/g' <<<"$augrep_output") \
-	 <(sed 's/[[:blank:]]/\n/g' <<<"$ausearch_output")
+    diff -u <(sed 's/[[:blank:]]/\n/g' <<<"$augrep_output") \
+	    <(sed 's/[[:blank:]]/\n/g' <<<"$ausearch_output")
     echo
     exit_fail "discrepancies found"
 fi

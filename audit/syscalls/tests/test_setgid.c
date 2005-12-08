@@ -53,7 +53,7 @@ static int common_setgid(struct audit_data *context, int success)
     /* To produce failure case, switch to test user and 
      * attempt to set egid to root gid */
     if (!success) {
-	context->experror = -EPERM;
+	context_setexperror(context, EPERM);
 	gid = 0;
 
 	rc = setuidresgid_test();

@@ -66,7 +66,7 @@ int test_msgsnd(struct audit_data *context, int variation, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_queue;
-	context->experror = -EACCES;
+	context_setexperror(context, EACCES);
     }
 
     rc = context_setidentifiers(context);

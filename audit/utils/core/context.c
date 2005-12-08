@@ -26,6 +26,9 @@ void context_init(struct audit_data *context, int evtype)
     context->type     = evtype;
     context->pid      = getpid();
     context->loginuid = audit_getloginuid();
+
+    fprintf(stderr, "Setting context pid: %i\n", context->pid);
+    fprintf(stderr, "Setting context loginuid: %u\n", context->loginuid);
 }
 
 int context_initsyscall(struct audit_data *context, char *testname)
@@ -52,7 +55,8 @@ int context_initsyscall(struct audit_data *context, char *testname)
     context->u.syscall.sysname = sysname;
     context->u.syscall.sysnum  = sysnum;
     context->u.syscall.arch    = TS_BUILD_ARCH;
-    context->u.syscall.exit    = 0;
+
+    fprintf(stderr, "Setting context sysnum: %i\n", context->u.syscall.sysnum);
 
 exit:
     if (rc < 0)
@@ -74,22 +78,44 @@ int context_setidentifiers(struct audit_data *context)
     /* fsgid follows egid, unless set explicitly */
     context->fsgid = context->egid;
 
+    fprintf(stderr, 
+	    "Setting context uids: uid: %u euid: %u suid: %u fsuid: %u\n", 
+	    context->uid, context->euid, context->suid, context->fsuid);
+    fprintf(stderr, 
+	    "Setting context gids: gid: %u egid: %u sgid: %u fsgid: %u\n", 
+	    context->gid, context->egid, context->sgid, context->fsgid);
+
 exit:
     if (rc < 0)
 	fprintf(stderr, "Error: unable set context process identifiers.\n");
     return rc;
 }
 
+void context_setpid(struct audit_data *context, int pid)
+{
+    context->pid = pid;
+    fprintf(stderr, "Setting context pid: %i\n", context->pid);
+}
+
+void context_setexperror(struct audit_data *context, int error)
+{
+    context->experror = -error;
+    fprintf(stderr, "Setting operation expected error: %i\n", 
+	    context->experror);
+}
+
 void context_setbegin(struct audit_data *context)
 {
     context->begin_time = time(NULL);
-    fprintf(stderr, "Operation began at %s", ctime(&(context->begin_time)));
+    fprintf(stderr, "Setting operation start time: %s", 
+	    ctime(&(context->begin_time)));
 }
 
 void context_setend(struct audit_data *context)
 {
     context->end_time = time(NULL);
-    fprintf(stderr, "Operation ended at %s", ctime(&(context->end_time)));
+    fprintf(stderr, "Setting operation end time: %s", 
+	    ctime(&(context->end_time)));
 }
 
 /*
@@ -101,10 +127,15 @@ void context_setresult(struct audit_data * context, int exit, int error)
     if (exit < 0) {
 	context->success = 0;
 	context->error = context->u.syscall.exit = -errno;
+
+	fprintf(stderr, "Setting context error: %i\n", context->error);
     } else {
 	context->success = 1;
 	context->u.syscall.exit = exit;
     }
+
+    fprintf(stderr, "Setting context exit: %i\n", context->u.syscall.exit);
+    fprintf(stderr, "Setting context success: %u\n", context->success);
 }
 
 void context_setipc(struct audit_data *context, int qbytes, 
@@ -115,6 +146,13 @@ void context_setipc(struct audit_data *context, int qbytes,
     context->u.syscall.ipc_uid = uid;
     context->u.syscall.ipc_gid = gid;
     context->u.syscall.ipc_mode = msgflg;
+
+    fprintf(stderr, "Setting context ipc_qbytes: %x", 
+	    context->u.syscall.ipc_qbytes);
+    fprintf(stderr, "Setting context ipc_uid: %u", context->u.syscall.ipc_uid);
+    fprintf(stderr, "Setting context ipc_gid: %u", context->u.syscall.ipc_gid);
+    fprintf(stderr, "Setting context ipc_mode: %x", 
+	    context->u.syscall.ipc_mode);
 }
 
 void context_setsockaddr(struct audit_data *context, unsigned char *buf, 
@@ -129,7 +167,7 @@ void context_setsockaddr(struct audit_data *context, unsigned char *buf,
 	ptr+=2;
     }
     *ptr = '\0';
-    fprintf(stderr, "Setting context sockaddr to: %s\n",
+    fprintf(stderr, "Setting context sockaddr: %s\n",
 	    context->u.syscall.sockaddr);
 }
 
@@ -140,6 +178,7 @@ int context_setcwd(struct audit_data *context)
 	return -1;
     }
     context->type |= AUDIT_MSG_CWD;
+    fprintf(stderr, "Setting context cwd: %s\n", context->u.syscall.fs_cwd);
     return 0;
 }
 
@@ -147,18 +186,23 @@ void context_setsobj(struct audit_data *context, char *obj)
 {
     context->type |= AUDIT_MSG_PATH;
     strncpy(context->u.syscall.fs_sobj, obj, PATH_MAX);
+    fprintf(stderr, "Setting context object: %s\n", 
+	    context->u.syscall.fs_sobj);
 }
 
 void context_settobj(struct audit_data *context, char *obj)
 {
     context->type |= AUDIT_MSG_PATH;
     strncpy(context->u.syscall.fs_tobj, obj, PATH_MAX);
+    fprintf(stderr, "Setting context object: %s\n", 
+	    context->u.syscall.fs_tobj);
 }
 
 void context_setwatch(struct audit_data *context, char *obj)
 {
     context->type |= AUDIT_MSG_WATCH;
     strncpy(context->u.syscall.fs_watch, obj, PATH_MAX);
+    fprintf(stderr, "Setting context watch: %s\n", context->u.syscall.fs_watch);
 }
 
 char *context_getcwd(struct audit_data *context)

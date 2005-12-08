@@ -67,7 +67,7 @@ static int test_lsetxattr_file(struct audit_data *context, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_path;
-	context->experror = -EACCES;
+	context_setexperror(context, EACCES);
     }
 
     rc = context_setcwd(context);
@@ -126,7 +126,7 @@ static int test_lsetxattr_symlink(struct audit_data *context, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_path;
-	context->experror = -EACCES;
+	context_setexperror(context, EACCES);
     }
 
     rc = context_setcwd(context);

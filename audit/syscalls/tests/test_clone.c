@@ -60,7 +60,7 @@ static int common_clone(struct audit_data *context, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_free;
-	context->experror = -EPERM;
+	context_setexperror(context, EPERM);
     }
 
     rc = context_setidentifiers(context);

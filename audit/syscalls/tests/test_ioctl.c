@@ -56,7 +56,7 @@ int test_ioctl(struct audit_data *context, int variation, int success)
 	    goto exit;
 	}
     } else
-	context->experror = -EBADF;
+	context_setexperror(context, EBADF);
 
     rc = context_setidentifiers(context);
     if (rc < 0)

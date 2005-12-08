@@ -78,7 +78,7 @@ int test_init_module(struct audit_data *context, int variation, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_mem;
-	context->experror = -EPERM;
+	context_setexperror(context, EPERM);
     }
 
     rc = context_setidentifiers(context);

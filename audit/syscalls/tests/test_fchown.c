@@ -78,7 +78,7 @@ static int common_fchown(struct audit_data *context, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_path;
-	context->experror = -EPERM;
+	context_setexperror(context, EPERM);
     }
 
     context_setwatch(context, key);

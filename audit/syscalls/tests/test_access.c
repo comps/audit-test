@@ -58,7 +58,7 @@ int test_access(struct audit_data *context, int variation, int success)
 	rc = setresuid_test();
 	if (rc < 0)
 	    goto exit_path;
-	context->experror = -EACCES;
+	context_setexperror(context, EACCES);
     }
 
     rc = context_setcwd(context);

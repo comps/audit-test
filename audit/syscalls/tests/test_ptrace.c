@@ -58,7 +58,7 @@ int test_ptrace(struct audit_data *context, int variation, int success)
 	fprintf(stderr, "Created process: %d\n", pid);
     } else  {
 	pid = 1;
-	context->experror = -EPERM;
+	context_setexperror(context, EPERM);
     }
 
     rc = context_setidentifiers(context);

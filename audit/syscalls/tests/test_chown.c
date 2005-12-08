@@ -62,7 +62,7 @@ static int common_chown(struct audit_data *context, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_path;
-	context->experror = -EPERM;
+	context_setexperror(context, EPERM);
     }
 
     rc = context_setcwd(context);

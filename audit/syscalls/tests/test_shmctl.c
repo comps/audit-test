@@ -72,7 +72,7 @@ static int test_shmctl_setperms(struct audit_data *context, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_seg;
-        context->experror = -EPERM;
+        context_setexperror(context, EPERM);
     }
 
     rc = context_setidentifiers(context);
@@ -131,7 +131,7 @@ static int test_shmctl_remove(struct audit_data *context, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_seg;
-        context->experror = -EPERM;
+        context_setexperror(context, EPERM);
     }
 
     rc = context_setidentifiers(context);

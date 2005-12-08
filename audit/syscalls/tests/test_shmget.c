@@ -64,7 +64,7 @@ int test_shmget(struct audit_data *context, int variation, int success)
 
     if (!success) {
         flags |= IPC_EXCL;
-        context->experror = -EEXIST;
+        context_setexperror(context, EEXIST);
     }
 
     rc = context_setidentifiers(context);

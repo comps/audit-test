@@ -50,7 +50,7 @@ int test_ioperm(struct audit_data *context, int variation, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit;
-	context->experror = -EPERM;
+	context_setexperror(context, EPERM);
     }
 
     rc = context_setidentifiers(context);

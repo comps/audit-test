@@ -68,7 +68,7 @@ int common_fork(struct audit_data *context, int op, int success)
 		    strerror(errno));
 	    goto exit;
 	}
-	context->experror = -EAGAIN;
+	context_setexperror(context, EAGAIN);
     }
 
     rc = context_setidentifiers(context);

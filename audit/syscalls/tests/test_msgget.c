@@ -62,7 +62,7 @@ int test_msgget(struct audit_data *context, int variation, int success)
 
     if (!success) {
         msgflag |= IPC_EXCL;
-        context->experror = -EEXIST;
+        context_setexperror(context, EEXIST);
     }
 
     rc = context_setidentifiers(context);

@@ -64,7 +64,7 @@ static int common_semop(struct audit_data *context, int op, int success)
         rc = seteuid_test();
         if (rc < 0)
             goto exit_set;
-        context->experror = -EACCES;
+        context_setexperror(context, EACCES);
     }
 
     rc = context_setidentifiers(context);

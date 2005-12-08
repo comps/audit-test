@@ -82,7 +82,7 @@ int test_msgrcv(struct audit_data *context, int variation, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_free;
-	context->experror = -EACCES;
+	context_setexperror(context, EACCES);
     }
 
     rc = context_setidentifiers(context);

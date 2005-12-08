@@ -79,6 +79,8 @@ int createTempGroupName( char** user, int* uid );
 void context_init(struct audit_data *, int);
 int context_initsyscall(struct audit_data *, char *);
 int context_setidentifiers(struct audit_data *);
+void context_setpid(struct audit_data *, int);
+void context_setexperror(struct audit_data *, int);
 void context_setbegin(struct audit_data *);
 void context_setend(struct audit_data *);
 void context_setresult(struct audit_data *, int, int);

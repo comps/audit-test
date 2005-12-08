@@ -56,7 +56,7 @@ static int common_setreuid(struct audit_data *context, int success)
      * attempt to set saved uid to a value different from any of the
      * current process user ids */
     if (!success) {
-	context->experror = -EPERM;
+	context_setexperror(context, EPERM);
 	uid = testuid + 1;
 
 	rc = seteuid(testuid);

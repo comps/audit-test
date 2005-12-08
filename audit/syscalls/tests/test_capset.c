@@ -76,7 +76,7 @@ int test_capset(struct audit_data *context, int variation, int success)
      * effective set that is not in the permitted set. */
     if (!success) {
 	data->effective = ~data->permitted;
-	context->experror = -EPERM;
+	context_setexperror(context, EPERM);
 	fprintf(stderr, "Attempt to set effective capabilities: %x\n", 
 		data->effective);
     }

@@ -73,7 +73,7 @@ int test_mkdir(struct audit_data *context, int variation, int success)
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_path;
-	context->experror = -EACCES;
+	context_setexperror(context, EACCES);
     }
 
     rc = context_setcwd(context);

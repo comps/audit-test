@@ -46,7 +46,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-static int common_setfsuid_pre(struct audit_data *context)
+static int common_setfsuid_mod(struct audit_data *context)
 {
     int rc = 0;
     int fsuid;
@@ -72,7 +72,7 @@ static int common_setfsuid_pre(struct audit_data *context)
     context->fsuid = fsuid;
 
     /* Use a second call to setfsuid() to verify that the fsuid was
-     * not set; setfsuid() returns the previous fsuid if it sets
+     * set; setfsuid() returns the previous fsuid if it sets
      * fsuid, and the current fsuid if it does not, which always tells
      * us the result of the previous operation. */
     pre_fsuid = setfsuid(fsuid);
@@ -89,7 +89,7 @@ exit:
     return rc;
 }
 
-static int common_setfsuid_cur(struct audit_data *context)
+static int common_setfsuid_nomod(struct audit_data *context)
 {
     int rc = 0;
     int testuid;
@@ -138,9 +138,9 @@ int test_setfsuid(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
     case SYSCALL_MODFSID:
-	return common_setfsuid_pre(context);
+	return common_setfsuid_mod(context);
     case SYSCALL_NOMODFSID:
-	return common_setfsuid_cur(context);
+	return common_setfsuid_nomod(context);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
 		variation, context->u.syscall.sysname);
@@ -152,9 +152,9 @@ int test_setfsuid32(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
     case SYSCALL_MODFSID:
-	return common_setfsuid_pre(context);
+	return common_setfsuid_mod(context);
     case SYSCALL_NOMODFSID:
-	return common_setfsuid_cur(context);
+	return common_setfsuid_nomod(context);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
 		variation, context->u.syscall.sysname);

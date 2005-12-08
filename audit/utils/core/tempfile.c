@@ -46,6 +46,7 @@ char *init_tempdir(mode_t mode, uid_t uid, gid_t gid)
 {
     char *dname;
 
+    errno = 0;
     dname = (char *)malloc(strlen(TEST_TMP_TEMPLATE) + 1);
     if (!dname) {
 	fprintf(stderr, "Error: initializing tempdir: malloc(): %s\n",
@@ -85,6 +86,7 @@ char *init_tempfile(mode_t mode, uid_t uid, gid_t gid, char *name)
     char data[512];
     int count;
 
+    errno = 0;
     count = snprintf(data, sizeof(data), 
 		     "This tempfile created for testing %s audits.\n", name);
     if (count >= sizeof(data)) {
@@ -207,7 +209,6 @@ char *init_tempsym(char *target, uid_t uid, gid_t gid)
 	goto exit;
     }
 
-    errno = 0;
     if (realloc(spath, strlen(spath) + strlen(sname) + 1) == NULL) {
 	fprintf(stderr, "Error: initializing symlink: realloc(): %s\n",
 		strerror(errno));
@@ -215,8 +216,6 @@ char *init_tempsym(char *target, uid_t uid, gid_t gid)
 	spath = NULL;
 	goto exit;
     }
-
-    errno = 0;
     if (strcat(spath, sname) == NULL) {
 	fprintf(stderr, "Error: initializing symlink: strcat(): %s\n",
 		strerror(errno));
@@ -224,8 +223,6 @@ char *init_tempsym(char *target, uid_t uid, gid_t gid)
 	spath = NULL;
 	goto exit;
     }
-
-    errno = 0;
     if (symlink(target, spath) < 0) {
 	fprintf(stderr, "Error: initializing symlink: symlink(): %s\n",
 		strerror(errno));
@@ -251,6 +248,7 @@ exit:
 
 void destroy_tempdir(char *name)
 {
+    errno = 0;
     if (rmdir(name) < 0)
 	fprintf(stderr, "Error: removing tempdir: rmdir(%s): %s\n",
 		name, strerror(errno));
@@ -261,6 +259,7 @@ void destroy_tempdir(char *name)
 
 void destroy_tempfile(char *name)
 {
+    errno = 0;
     if (unlink(name) < 0)
 	fprintf(stderr, "Error: removing tempfile: unlink(%s): %s\n",
 		name, strerror(errno));
@@ -271,6 +270,7 @@ void destroy_tempfile(char *name)
 
 void destroy_tempsym(char *name)
 {
+    errno = 0;
     if (unlink(name) < 0) {
 	fprintf(stderr, "Error: removing symlink: unlink(%s): %s\n",
 		name, strerror(errno));

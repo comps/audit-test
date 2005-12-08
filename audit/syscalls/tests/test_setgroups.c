@@ -61,8 +61,6 @@ static int common_setgroups(struct audit_data *context, int success)
 	fprintf(stderr, "%i ", list[i]);
     fprintf(stderr, "\n");
 
-    /* To produce failure, become test user and attempt to set groups
-     * to list obtained as root user */
     if (!success) {
 	rc = seteuid_test();
 	if (rc < 0)
@@ -72,19 +70,21 @@ static int common_setgroups(struct audit_data *context, int success)
 
     rc = context_setidentifiers(context);
     if (rc < 0)
-	goto exit;
+	goto exit_suid;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%zx, %p)\n",
 	    context->u.syscall.sysname, size, &list);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, size, &list);
     context_setend(context);
     context_setresult(context, exit, errno);
 
+exit_suid:
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 exit:
-    if (!success)
-	seteuid(0); /* clean up from failure case */
     return rc;
 }
 

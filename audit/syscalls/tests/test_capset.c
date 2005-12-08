@@ -69,8 +69,6 @@ int test_capset(struct audit_data *context, int variation, int success)
     fprintf(stderr, "Inheritable capabilities: %x\n", data->inheritable);
     fprintf(stderr, "Permitted capabilities: %x\n", data->permitted);
      
-    /* To produce failure, attempt to set a capability in the
-     * effective set that is not in the permitted set. */
     if (!success) {
 	data->effective = ~data->permitted;
 	context_setexperror(context, EPERM);
@@ -82,10 +80,10 @@ int test_capset(struct audit_data *context, int variation, int success)
     if (rc < 0)
 	goto exit;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%p, %p)\n", 
 	    context->u.syscall.sysname, header, data);
+    errno = 0;
     exit = capset(header, data);
     context_setend(context);
     context_setresult(context, exit, errno);

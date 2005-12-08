@@ -74,17 +74,18 @@ static int common_chown(struct audit_data *context, int success)
     if (rc < 0)
 	goto exit_suid;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%s, %x, %x)\n", 
 	    context->u.syscall.sysname, path, owner, group);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, path, owner, group);
     context_setend(context);
     context_setresult(context, exit, errno);
 
 exit_suid:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_path:
     destroy_tempfile(path);

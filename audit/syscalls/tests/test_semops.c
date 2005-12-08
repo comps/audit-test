@@ -71,10 +71,10 @@ static int common_semop(struct audit_data *context, int op, int success)
     if (rc < 0)
         goto exit_root;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %p, %x, %p)\n", 
 	    context->u.syscall.sysname, semid, &sops, nsems, &timeout);
+    errno = 0;
     exit = (op == TEST_TIMED) ?
 	semtimedop(semid, &sops, nsems, &timeout) :
 	semop(semid, &sops, nsems);
@@ -82,10 +82,12 @@ static int common_semop(struct audit_data *context, int op, int success)
     context_setresult(context, exit, errno);
 
 exit_root:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_set:
+    errno = 0;
     if (semctl(semid, nsems, IPC_RMID) < 0)
 	fprintf(stderr, "Error: removing semaphore set: %s\n", strerror(errno));
 

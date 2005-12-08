@@ -70,10 +70,10 @@ int test_access(struct audit_data *context, int variation, int success)
     if (rc < 0)
 	goto exit_suid;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%s, %x)\n", 
 	    context->u.syscall.sysname, path, mode);
+    errno = 0;
     fd = syscall(context->u.syscall.sysnum, path, mode);
     context_setend(context);
     context_setresult(context, fd, errno);
@@ -83,8 +83,9 @@ int test_access(struct audit_data *context, int variation, int success)
 	fprintf(stderr, "Error: closing file: %s\n", strerror(errno));
 
 exit_suid:
-    if (!success && setresuid(0, 0, 0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (setresuid(0, 0, 0) < 0))
+	fprintf(stderr, "Error: setresuid(): %s\n", strerror(errno));
 
 exit_path:
     destroy_tempfile(path);

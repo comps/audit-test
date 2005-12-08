@@ -53,11 +53,12 @@ int common_fork(struct audit_data *context, int op, int success)
 	if (rc < 0)
 	    goto exit;
 
+	errno = 0;
 	rc = getrlimit(RLIMIT_NPROC, &slimit);
 	if (rc < 0) {
 	    fprintf(stderr, "Error: unable to get RLIMIT_NPROC limit: %s\n",
 		    strerror(errno));
-	    goto exit;
+	    goto exit_suid;
 	}
 
 	limit.rlim_cur = 1;
@@ -66,25 +67,24 @@ int common_fork(struct audit_data *context, int op, int success)
 	if (rc < 0) {
 	    fprintf(stderr, "Error: unable to set RLIMIT_NPROC limit: %s\n",
 		    strerror(errno));
-	    goto exit;
+	    goto exit_suid;
 	}
 	context_setexperror(context, EAGAIN);
     }
 
     rc = context_setidentifiers(context);
     if (rc < 0)
-	goto exit;
+	goto exit_rlimit;
 
-    errno = 0;
     context_setbegin(context);
-
+    fprintf(stderr, "Attempting %s()\n", context->u.syscall.sysname);
+    errno = 0;
     /* To test sys_fork, syscall() must be used, as the fork() library
      * routine doesn't call the fork system call on x86_64.
      *
      * To test sys_vfork, the vfork() library routine must be used, as
      * with syscall(), control doesn't return to the calling function
      * (parent) in the success case. */
-    fprintf(stderr, "Attempting %s()\n", context->u.syscall.sysname);
     if (op == TEST_FORK)
 	pid = syscall(context->u.syscall.sysnum);
     else if (op == TEST_VFORK)
@@ -94,13 +94,18 @@ int common_fork(struct audit_data *context, int op, int success)
     context_setend(context);
     context_setresult(context, pid, errno);
 
+exit_suid:
+    errno = 0;
+    if (!success && (setresuid(0, 0, 0) < 0))
+	fprintf(stderr, "Error: setresuid(): %s\n", strerror(errno));
+
+exit_rlimit:
+    errno = 0;
+    if (!success && (setrlimit(RLIMIT_NPROC, &slimit) < 0))
+	fprintf(stderr, "Error: unable to reset RLIMIT_NPROC limit: %s\n", 
+		strerror(errno));
+
 exit:
-    if (!success) {
-	if (setrlimit(RLIMIT_NPROC, &slimit) < 0)
-	    fprintf(stderr, "Error: unable to reset RLIMIT_NPROC limit: %s\n",
-		    strerror(errno));
-	setresuid(0, 0, 0); 
-    }
     return rc;
 }
 

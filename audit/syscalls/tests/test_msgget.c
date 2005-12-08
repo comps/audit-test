@@ -69,10 +69,10 @@ int test_msgget(struct audit_data *context, int variation, int success)
     if (rc < 0)
         goto exit_queue;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x)\n", 
             context->u.syscall.sysname, TEST_IPC_KEY, msgflag);
+    errno = 0;
     exit = msgget(TEST_IPC_KEY, msgflag);
     context_setend(context);
     context_setresult(context, exit, errno);
@@ -80,6 +80,7 @@ int test_msgget(struct audit_data *context, int variation, int success)
     fprintf(stderr, "Message queue id: %d\n", exit);
 
 exit_queue:
+    errno = 0;
     if (msgctl(qid, IPC_RMID, 0) < 0)
         fprintf(stderr, "Error: removing message queue: %s\n", strerror(errno));
 

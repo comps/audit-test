@@ -47,10 +47,11 @@ int test_delete_module(struct audit_data *context, int variation, int success)
     void *region;
     int exit = 0;
 
-    /* set up test kernel module */
     strncpy(module_name, getenv("AUDIT_KMOD_NAME") ?: "dummy", 19);
-    sprintf(module_path, "%s/%s.ko", getenv("AUDIT_KMOD_DIR") ?: ".", module_name);
+    sprintf(module_path, "%s/%s.ko", getenv("AUDIT_KMOD_DIR") ?: ".", 
+	    module_name);
     fprintf(stderr, "Module path: %s\n", module_path);
+    errno = 0;
     fd = open(module_path, O_RDONLY);
     if (fd < 0) {
 	fprintf(stderr, "Error: opening module path %s: %s\n", 
@@ -60,7 +61,8 @@ int test_delete_module(struct audit_data *context, int variation, int success)
     rc = fstat(fd, &mstat);
     if (rc < 0) {
 	rc = -1;
-	fprintf(stderr, "Error: getting module file size: %s\n", strerror(errno));
+	fprintf(stderr, "Error: getting module file size: %s\n", 
+		strerror(errno));
 	goto exit;
     }
     region = mmap(NULL, mstat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
@@ -69,9 +71,6 @@ int test_delete_module(struct audit_data *context, int variation, int success)
 	fprintf(stderr, "Error: mmap(): %s\n", strerror(errno));
 	goto exit;
     }
-
-    /* load module, so we can attempt to remove it */
-    errno = 0;
     rc = syscall(__NR_init_module, region, mstat.st_size, "");
     if (rc < 0) {
 	fprintf(stderr, "Error: loading module: %s\n", strerror(errno));
@@ -80,7 +79,6 @@ int test_delete_module(struct audit_data *context, int variation, int success)
     }
     fprintf(stderr, "Loaded module: %s\n", module_path);
 
-    /* To produce failure, attempt to delete module entry as test user */
     if (!success) {
 	rc = seteuid_test();
 	if (rc < 0)
@@ -90,26 +88,26 @@ int test_delete_module(struct audit_data *context, int variation, int success)
 
     rc = context_setidentifiers(context);
     if (rc < 0)
-	goto exit_mod;
+	goto exit_suid;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%s, %x)\n", 
 	    context->u.syscall.sysname, module_name, 0);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, module_name, 0);
     context_setend(context);
     context_setresult(context, exit, errno);
 
-exit_mod:
-    if (!success)
-	seteuid(0);
+exit_suid:
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
-    if (exit < 0) {
-	rc = syscall(__NR_delete_module, module_name, 0);
-	if (rc < 0)
-	    fprintf(stderr, "Error removing module: %s: %s\n",
-		    module_name, strerror(errno));
-    }
+exit_mod:
+    errno = 0;
+    if ((exit < 0) && (syscall(__NR_delete_module, module_name, 0) < 0))
+	fprintf(stderr, "Error removing module: %s: %s\n", 
+		module_name, strerror(errno));
 
 exit_mem:
     munmap(region, mstat.st_size);

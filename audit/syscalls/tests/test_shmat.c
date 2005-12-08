@@ -71,23 +71,26 @@ int test_shmat(struct audit_data *context, int variation, int success)
     if (rc < 0)
         goto exit_root;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x)\n", 
 	    context->u.syscall.sysname, shmid);
+    errno = 0;
     shmadd = (long)shmat(shmid, NULL, 0);
     context_setend(context);
     context_setresult(context, shmadd, errno);
 
+    errno = 0;
     if ((shmadd != -1) && (shmdt((void *)shmadd) < 0))
 	fprintf(stderr, "Error: can't detach from shared memory: %s\n", 
 		strerror(errno));
 
 exit_root:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_seg:
+    errno = 0;
     if (shmctl(shmid, IPC_RMID, NULL) < 0)
 	fprintf(stderr, "Error: removing shared mem segment: %s\n",
 		strerror(errno));

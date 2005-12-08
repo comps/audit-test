@@ -23,10 +23,12 @@ uid_t gettestuid(void)
 {
     struct passwd *pw;
 
+    errno = 0;
     pw = getpwnam(TEST_USER);
     if (!pw) {
-        fprintf(stderr, "Error: unable to get passwd info for test user (%s)\n",
-                TEST_USER);
+        fprintf(stderr, 
+                "Error: unable to get passwd info for test user (%s): %s\n",
+                TEST_USER, strerror(errno));
         return -1;
     }
     return pw->pw_uid;
@@ -36,10 +38,12 @@ gid_t gettestgid(void)
 {
     struct passwd *pw;
 
+    errno = 0;
     pw = getpwnam(TEST_USER);
     if (!pw) {
-        fprintf(stderr, "Error: unable to get passwd info for test user (%s)\n",
-                TEST_USER);
+        fprintf(stderr, 
+                "Error: unable to get passwd info for test user (%s): %s\n",
+                TEST_USER, strerror(errno));
         return -1;
     }
     return pw->pw_gid;
@@ -55,7 +59,6 @@ int seteuid_test()
         goto exit;
     }
 
-    errno = 0;
     rc = seteuid(uid);
     if (rc < 0)
         fprintf(stderr, "Error: seteuid() to %s: %s\n", TEST_USER,
@@ -76,7 +79,6 @@ int setresuid_test()
         goto exit;
     }
 
-    errno = 0;
     /* don't set saved uid, so we can switch back to root */
     rc = setresuid(uid, uid, -1);
     if (rc < 0)
@@ -97,7 +99,6 @@ int setuidresgid_test()
         goto exit;
     }
 
-    errno = 0;
     rc = setresgid(gid, gid, gid);
     if (rc < 0) {
         fprintf(stderr, "Error: setresgid() to %s: %s\n", TEST_USER, 
@@ -122,11 +123,9 @@ int setuidresgid_root()
         goto exit;
     }
 
-    errno = 0;
     rc = setresgid(0, 0, 0);
     if (rc < 0)
         fprintf(stderr, "Error: setresgid() to root: %s\n", strerror(errno));
-
 
 exit:
     return rc;

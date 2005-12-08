@@ -89,22 +89,24 @@ int test_msgrcv(struct audit_data *context, int variation, int success)
     if (rc < 0)
         goto exit_root;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %p, %x, %x, IPC_NOWAIT)\n", 
 	    context->u.syscall.sysname, qid, buf, buflen, TEST_MSG_TYPE);
+    errno = 0;
     exit = msgrcv(qid, buf, buflen, TEST_MSG_TYPE, IPC_NOWAIT);
     context_setend(context);
     context_setresult(context, exit, errno);
 
 exit_root:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_free:
     free(buf);
 
 exit_queue:
+    errno = 0;
     if (msgctl(qid, IPC_RMID, 0) < 0)
 	fprintf(stderr, "Error: removing message queue: %s\n", strerror(errno));
 

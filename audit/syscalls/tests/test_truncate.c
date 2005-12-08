@@ -69,23 +69,25 @@ int common_truncate(struct audit_data *context, int op, int success)
     if (rc < 0)
 	goto exit_suid;
 
-    errno = 0;
     context_setbegin(context);
     if (op == TEST_TRUNCATE) {
 	fprintf(stderr, "Attempting %s(%s, %x)\n", 
 		context->u.syscall.sysname, path, 0);
+	errno = 0;
 	exit = syscall(context->u.syscall.sysnum, path, 0);
     } else if (op == TEST_TRUNCATE64) {
 	fprintf(stderr, "Attempting %s(%s, %x, %x)\n", 
 		context->u.syscall.sysname, path, 0, 0);
+	errno = 0;
 	exit = syscall(context->u.syscall.sysnum, path, 0, 0);
     }
     context_setend(context);
     context_setresult(context, exit, errno);
 
 exit_suid:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_path:
     destroy_tempfile(path);

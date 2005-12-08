@@ -45,7 +45,6 @@ int test_ioperm(struct audit_data *context, int variation, int success)
     int rc = 0;
     int exit;
 
-    /* To produce failure, attempt to set port perms as unprivileged user */
     if (!success) {
 	rc = seteuid_test();
 	if (rc < 0)
@@ -55,20 +54,23 @@ int test_ioperm(struct audit_data *context, int variation, int success)
 
     rc = context_setidentifiers(context);
     if (rc < 0)
-	goto exit;
+	goto exit_suid;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x, %x)\n",
 	    context->u.syscall.sysname, TEST_PORT_ADDRESS,
 	    TEST_NUM_BYTES, TEST_PORT_PERMS);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, TEST_PORT_ADDRESS,
 		   TEST_NUM_BYTES, TEST_PORT_PERMS);
     context_setend(context);
     context_setresult(context, exit, errno);
 
+exit_suid:
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
+
 exit:
-    if (!success)
-	seteuid(0); /* clean up from failure case */
     return rc;
 }

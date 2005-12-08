@@ -52,8 +52,6 @@ static int common_setregid(struct audit_data *context, int success)
     }
     gid = testgid;
 
-    /* To produce failure case, switch to test user and 
-     * attempt to set the real gid to root's gid */
     if (!success) {
 	context_setexperror(context, EPERM);
 	gid = 0;
@@ -63,19 +61,20 @@ static int common_setregid(struct audit_data *context, int success)
 	    goto exit;
     }
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x)\n", 
 	    context->u.syscall.sysname, gid, -1);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, gid, -1);
     context_setend(context);
     context_setresult(context, exit, errno);
 
     rc = context_setidentifiers(context);
 
-exit:
     if (!success)
-	rc = setuidresgid_root();
+	setuidresgid_root();
+
+exit:
     return rc;
 }
 

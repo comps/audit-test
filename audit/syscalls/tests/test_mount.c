@@ -69,10 +69,10 @@ int test_mount(struct audit_data *context, int variation, int success)
     if (rc < 0)
 	goto exit_suid;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%s, %s, %s, %x, %p)\n", 
 	    context->u.syscall.sysname, source, mtpt, fstype, 0, NULL);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, source, mtpt, fstype, 0, NULL);
     context_setend(context);
     context_setresult(context, exit, errno);
@@ -82,8 +82,9 @@ int test_mount(struct audit_data *context, int variation, int success)
 	fprintf(stderr, "Error: umount(): %s\n", strerror(errno));
 
 exit_suid:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_path:
     destroy_tempdir(mtpt);

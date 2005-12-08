@@ -83,19 +83,21 @@ static int test_msgctl_setperms(struct audit_data *context, int success)
     context_setipc(context, buf.msg_qbytes, buf.msg_perm.uid,
 		   buf.msg_perm.gid, buf.msg_perm.mode);
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
 	    context->u.syscall.sysname, qid, IPC_SET, &buf);
+    errno = 0;
     exit = msgctl(qid, IPC_SET, &buf);
     context_setend(context);
     context_setresult(context, exit, errno);
 
 exit_root:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_queue:
+    errno = 0;
     if (msgctl(qid, IPC_RMID, NULL) < 0)
 	fprintf(stderr, "Error: removing message queue: %s\n", strerror(errno));
 
@@ -129,19 +131,21 @@ static int test_msgctl_remove(struct audit_data *context, int success)
     if (rc < 0)
         goto exit_root;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
 	    context->u.syscall.sysname, qid, IPC_RMID, NULL);
+    errno = 0;
     exit = msgctl(qid, IPC_RMID, NULL);
     context_setend(context);
     context_setresult(context, exit, errno);
 
 exit_root:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_queue:
+    errno = 0;
     if (exit < 0 && msgctl(qid, IPC_RMID, NULL) < 0)
 	fprintf(stderr, "Error: removing message queue: %s\n", strerror(errno));
 

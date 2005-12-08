@@ -71,10 +71,10 @@ int test_shmget(struct audit_data *context, int variation, int success)
     if (rc < 0)
         goto exit_seg;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %lx, %x)\n", 
 	    context->u.syscall.sysname, TEST_IPC_KEY, PAGE_SIZE, flags);
+    errno = 0;
     /* using library routine makes it portable between arches */
     exit = shmget(TEST_IPC_KEY, PAGE_SIZE, flags);
     context_setend(context);
@@ -83,6 +83,7 @@ int test_shmget(struct audit_data *context, int variation, int success)
     fprintf(stderr, "shared mem segment id: %d\n", exit);
 
 exit_seg:
+    errno = 0;
     if (shmctl(shmid, IPC_RMID, NULL) < 0)
         fprintf(stderr, "Error: removing shared mem segment: %s\n", 
 		strerror(errno));

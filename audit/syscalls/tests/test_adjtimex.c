@@ -56,15 +56,16 @@ int test_adjtimex(struct audit_data *context, int variation, int success)
     if (rc < 0)
 	goto exit;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%p)\n", context->u.syscall.sysname, &timex);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, &timex);
     context_setend(context);
     context_setresult(context, exit, errno);
 
 exit:
-    if (!success)
-	seteuid(0); /* clean up from failure case */
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
     return rc;
 }

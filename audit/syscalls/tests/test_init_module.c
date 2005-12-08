@@ -55,6 +55,7 @@ int test_init_module(struct audit_data *context, int variation, int success)
     syscall(__NR_delete_module, module_name, 0);
 
     fprintf(stderr, "Module path: %s\n", module_path);
+    errno = 0;
     fd = open(module_path, O_RDONLY);
     if (fd < 0) {
 	fprintf(stderr, "Error: opening module path %s: %s\n", 
@@ -64,7 +65,8 @@ int test_init_module(struct audit_data *context, int variation, int success)
     rc = fstat(fd, &mstat);
     if (rc < 0) {
 	rc = -1;
-	fprintf(stderr, "Error: getting module file size: %s\n", strerror(errno));
+	fprintf(stderr, "Error: getting module file size: %s\n", 
+		strerror(errno));
 	goto exit;
     }
     region = mmap(NULL, mstat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
@@ -83,23 +85,27 @@ int test_init_module(struct audit_data *context, int variation, int success)
 
     rc = context_setidentifiers(context);
     if (rc < 0)
-	goto exit_mem;
+	goto exit_suid;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%p, %x)\n", 
 	    context->u.syscall.sysname, region, (unsigned int)mstat.st_size);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, region, mstat.st_size, "");
     context_setend(context);
     context_setresult(context, exit, errno);
 
+    errno = 0;
     if ((exit != -1) && syscall(__NR_delete_module, module_name, 0) < 0)
 	fprintf(stderr, "Error removing module: %s: %s\n", 
 		module_name, strerror(errno));
 
+exit_suid:
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
+
 exit_mem:
-    if (!success)
-	seteuid(0); /* preserve potential error from delete_module */
     munmap(region, mstat.st_size);
 
 exit:

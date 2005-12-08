@@ -98,20 +98,22 @@ int test_link(struct audit_data *context, int variation, int success)
     if (rc < 0)
 	goto exit_suid;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%s, %s)\n", 
 	    context->u.syscall.sysname, oldpath, newpath);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, oldpath, newpath);
     context_setend(context);
     context_setresult(context, exit, errno);
 
+    errno = 0;
     if ((exit == 0) && (unlink(newpath) < 0))
 	fprintf(stderr, "Error: removing file: %s\n", strerror(errno));
 
 exit_suid:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_path:
     destroy_tempfile(oldpath);

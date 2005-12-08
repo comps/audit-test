@@ -52,9 +52,6 @@ static int common_setuid(struct audit_data *context, int success)
     }
     uid = 0;
 
-    /* To produce failure case, switch to test user and 
-     * attempt to set saved uid to a value different from any of the
-     * current process user ids */
     if (!success) {
 	context_setexperror(context, EPERM);
 	uid = testuid + 1;
@@ -64,19 +61,21 @@ static int common_setuid(struct audit_data *context, int success)
 	    goto exit;
     }
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x)\n",
 	    context->u.syscall.sysname, uid);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, uid);
     context_setend(context);
     context_setresult(context, exit, errno);
 
     rc = context_setidentifiers(context);
 
+    errno = 0;
+    if (seteuid(0) < 0)
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
+
 exit:
-    seteuid(0); /* always clean up */
-    fprintf(stderr, "seteuid(0) returned %d\n", rc);
     return rc;
 }
 

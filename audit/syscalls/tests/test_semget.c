@@ -70,10 +70,10 @@ int test_semget(struct audit_data *context, int variation, int success)
     if (rc < 0)
         goto exit_set;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x, %x)\n", 
             context->u.syscall.sysname, TEST_IPC_KEY, nsems, flag);
+    errno = 0;
     /* using library routine makes it portable between arches */
     exit = semget(TEST_IPC_KEY, nsems, flag);
     context_setend(context);
@@ -82,6 +82,7 @@ int test_semget(struct audit_data *context, int variation, int success)
     fprintf(stderr, "Semaphore set id: %d\n", exit);
 
 exit_set:
+    errno = 0;
     if (semctl(semid, nsems, IPC_RMID, 0) < 0)
         fprintf(stderr, "Error: removing semaphore set: %s\n", strerror(errno));
 

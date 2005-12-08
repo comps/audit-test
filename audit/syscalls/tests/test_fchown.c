@@ -66,6 +66,7 @@ static int common_fchown(struct audit_data *context, int success)
 	goto exit;
     }
 
+    errno = 0;
     rc = fd = open(path, O_RDWR);
     if (rc < 0) {
 	fprintf(stderr, "Error: Could not open %s: %s\n", path,
@@ -86,17 +87,18 @@ static int common_fchown(struct audit_data *context, int success)
     if (rc < 0)
 	goto exit_suid;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x, %x)\n", 
 	    context->u.syscall.sysname, fd, owner, group);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, fd, owner, group);
     context_setend(context);
     context_setresult(context, exit, errno);
 
 exit_suid:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_path:
     audit_rem_watch(path, key);

@@ -46,7 +46,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-static int common_setfsgid_pre(struct audit_data *context)
+static int common_setfsgid_mod(struct audit_data *context)
 {
     int rc = 0;
     int fsgid;
@@ -72,7 +72,7 @@ static int common_setfsgid_pre(struct audit_data *context)
     context->fsgid = fsgid;
 
     /* Use a second call to setfsgid() to verify that the fsgid was
-     * not set; setfsgid() returns the previous fsgid if it sets
+     * set; setfsgid() returns the previous fsgid if it sets
      * fsgid, and the current fsgid if it does not, which always tells
      * us the result of the previous operation. */
     pre_fsgid = setfsgid(fsgid);
@@ -89,7 +89,7 @@ exit:
     return rc;
 }
 
-static int common_setfsgid_cur(struct audit_data *context)
+static int common_setfsgid_nomod(struct audit_data *context)
 {
     int rc = 0;
     gid_t fsgid = 0;
@@ -132,9 +132,9 @@ int test_setfsgid(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
     case SYSCALL_MODFSID:
-	return common_setfsgid_pre(context);
+	return common_setfsgid_mod(context);
     case SYSCALL_NOMODFSID:
-	return common_setfsgid_cur(context);
+	return common_setfsgid_nomod(context);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
 		variation, context->u.syscall.sysname);
@@ -146,9 +146,9 @@ int test_setfsgid32(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
     case SYSCALL_MODFSID:
-	return common_setfsgid_pre(context);
+	return common_setfsgid_mod(context);
     case SYSCALL_NOMODFSID:
-	return common_setfsgid_cur(context);
+	return common_setfsgid_nomod(context);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
 		variation, context->u.syscall.sysname);

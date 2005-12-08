@@ -48,6 +48,7 @@ int test_ioctl(struct audit_data *context, int variation, int success)
     int exit;
 
     if (success) {
+	errno = 0;
 	fd = open(DEFAULT_DEVICE_FILE, O_RDWR, 0777);
 	if (fd < 0) {
 	    rc = -1;
@@ -65,10 +66,10 @@ int test_ioctl(struct audit_data *context, int variation, int success)
     fprintf(stderr, "Attempt to call %s(%d, %x, %p)\n", 
 	    context->u.syscall.sysname, fd, TCGETA, &tio);
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x, %p)\n",
 	    context->u.syscall.sysname, fd, TCGETA, &tio);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, fd, TCGETA, &tio);
     context_setend(context);
     context_setresult(context, exit, errno);

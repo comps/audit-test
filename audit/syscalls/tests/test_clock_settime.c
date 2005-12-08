@@ -40,14 +40,12 @@ int test_clock_settime(struct audit_data *context, int variation, int success)
     struct timespec tspec;
     int exit;
 
-    /* Get current time */
     rc = syscall(__NR_clock_gettime, CLOCK_REALTIME, &tspec);
     if (rc < 0) {
 	fprintf(stderr, "Error: getting current time: %s\n", strerror(errno));
 	goto exit;
     }
 
-    /* To produce failure, attempt to set system time as unprivileged user */
     if (!success) {
 	rc = seteuid_test();
 	if (rc < 0)
@@ -59,16 +57,17 @@ int test_clock_settime(struct audit_data *context, int variation, int success)
     if (rc < 0)
 	goto exit;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %p)\n", 
 	    context->u.syscall.sysname, CLOCK_REALTIME, &tspec);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, CLOCK_REALTIME, &tspec);
     context_setend(context);
     context_setresult(context, exit, errno);
 
 exit:
-    if (!success)
-	seteuid(0); /* clean up from failure case */
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
     return rc;
 }

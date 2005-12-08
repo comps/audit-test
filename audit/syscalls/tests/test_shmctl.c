@@ -85,19 +85,21 @@ static int test_shmctl_setperms(struct audit_data *context, int success)
     context_setipc(context, 0, buf.shm_perm.uid, 
 		   buf.shm_perm.gid, buf.shm_perm.mode);
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
 	    context->u.syscall.sysname, shmid, IPC_SET, &buf);
+    errno = 0;
     exit = shmctl(shmid, IPC_SET, &buf);
     context_setend(context);
     context_setresult(context, exit, errno);
 
 exit_root:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_seg:
+    errno = 0;
     if (shmctl(shmid, IPC_RMID, NULL) < 0)
 	fprintf(stderr, "Error: removing shared mem segment: %s\n",
 		strerror(errno));
@@ -132,20 +134,22 @@ static int test_shmctl_remove(struct audit_data *context, int success)
     if (rc < 0)
         goto exit_root;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
 	    context->u.syscall.sysname, shmid, IPC_RMID, NULL);
+    errno = 0;
     exit = shmctl(shmid, IPC_RMID, NULL);
     context_setend(context);
     context_setresult(context, exit, errno);
 
 exit_root:
-    if (!success && seteuid(0) < 0)
-	fprintf(stderr, "Error: seteuid(0): %s\n", strerror(errno));
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_seg:
-    if (exit < 0 && shmctl(shmid, IPC_RMID, NULL) < 0)
+    errno = 0;
+    if ((exit < 0) && (shmctl(shmid, IPC_RMID, NULL) < 0))
 	fprintf(stderr, "Error: removing shared mem segment: %s\n",
 		strerror(errno));
 

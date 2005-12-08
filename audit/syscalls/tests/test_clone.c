@@ -46,7 +46,6 @@ static int common_clone(struct audit_data *context, int success)
     char *cstack;
     pid_t pid;
 
-    /* Allocate memory for child stack */
     errno = 0;
     cstack = malloc(CHILD_STACK_MEM); 
     if (!cstack) {
@@ -55,7 +54,6 @@ static int common_clone(struct audit_data *context, int success)
     }
     fprintf(stderr, "Allocated %d for child stack\n", CHILD_STACK_MEM);
 
-    /* To produce failure, attempt to use CLONE_NEWNS as unprivileged user */
     if (!success) {
 	rc = seteuid_test();
 	if (rc < 0)
@@ -67,10 +65,10 @@ static int common_clone(struct audit_data *context, int success)
     if (rc < 0)
 	goto exit_free;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %p)\n", 
 	    context->u.syscall.sysname, flags, cstack);
+    errno = 0;
     pid = syscall(context->u.syscall.sysnum, flags, cstack);
 
     if (pid == 0) /* child */
@@ -83,8 +81,9 @@ exit_free:
     free(cstack);
 
 exit:
-    if (!success)
-	seteuid(0); /* clean up from failure case */
+    errno = 0;
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
     return rc;
 }
 

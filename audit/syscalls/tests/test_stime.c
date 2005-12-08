@@ -41,14 +41,12 @@ int test_stime(struct audit_data *context, int variation, int success)
     struct timezone tz;
     int exit;
 
-    /* Get current time */
     rc = gettimeofday(&tv, &tz);
     if (rc < 0) {
 	fprintf(stderr, "Error: getting current time: %s\n", strerror(errno));
 	goto exit;
     }
 
-    /* To produce failure, attempt to set time as unprivileged user */
     if (!success) {
 	rc = seteuid_test();
 	if (rc < 0)
@@ -58,18 +56,20 @@ int test_stime(struct audit_data *context, int variation, int success)
 
     rc = context_setidentifiers(context);
     if (rc < 0)
-	goto exit;
+	goto exit_suid;
 
-    errno = 0;
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%p)\n",
 	    context->u.syscall.sysname, &tv.tv_sec);
+    errno = 0;
     exit = syscall(context->u.syscall.sysnum, &tv.tv_sec);
     context_setend(context);
     context_setresult(context, exit, errno);
 
+exit_suid:
+    if (!success && (seteuid(0) < 0))
+	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
+
 exit:
-    if (!success)
-	seteuid(0); /* clean up from failure case */
     return rc;
 }

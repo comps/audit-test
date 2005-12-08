@@ -209,12 +209,7 @@ Arguments:\n\
   uid = passwd_data->pw_uid;
   gid = passwd_data->pw_gid;
 
-  // Save the CWD for audit_set_filters()
   getcwd(cwd, PATH_MAX);
-
-  if ((rc = audit_reload()) != 0) {
-    goto EXIT_ERROR;
-  }
 
   /*
   ** Loop through pam programs
@@ -256,15 +251,12 @@ Arguments:\n\
 
   printf("PASSED = %i, FAILED = %i\n", pass_testcases, fail_testcases);
 
-  audit_reload();
-
 EXIT_HELP:
   if (testcase != NULL)
     free (testcase);
   return !!rc;  // PASS=0, FAIL=1
 
 EXIT_ERROR:
-  audit_reload();
   printf("ERROR: Test aborted: errno = %i\n", errno);
   return 2;     // ERROR=2
 

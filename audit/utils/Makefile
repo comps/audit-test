@@ -33,14 +33,7 @@ UTILS_OBJ	= core/arch.o			\
 		  core/tempfile.o		\
 		  core/verify.o
 
-LAF_OBJ		= laf/laf_clear.o		\
-		  laf/laf_config.o		\
-		  laf/laf_read.o		\
-		  laf/laf_reload.o		\
-		  laf/laf_start.o		\
-		  laf/laf_stop.o		\
-		  laf/laf_verify.o		\
-		  laf/laf_watch.o
+LAF_OBJ		= laf/laf_watch.o
 
 RC_EXE		= rc_return
 RC_OBJ		= bin/rc_return.o

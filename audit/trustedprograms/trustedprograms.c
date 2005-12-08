@@ -217,7 +217,6 @@ Arguments:\n\
   uid = passwd_data->pw_uid;
   gid = passwd_data->pw_gid;
 
-  // Save the CWD for audit_set_filters()
   getcwd(cwd, PATH_MAX);
 
   /*

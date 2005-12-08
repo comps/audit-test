@@ -38,14 +38,6 @@
 /*
  * Audit Interaction
  */
-int audit_start();
-int audit_stop();
-int audit_clear_logs();
-int audit_reload();
-int audit_set_filters();
-int audit_verify_log(struct audit_data *);
-int audit_parse_log(struct audit_data *, struct audit_data *);
-
 char *audit_add_watch(const char *);
 void audit_rem_watch(const char *, const char *);
 

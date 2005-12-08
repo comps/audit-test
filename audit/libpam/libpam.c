@@ -56,6 +56,8 @@
 #include <pwd.h>
 #include <getopt.h>
 
+#include <libaudit.h>
+
 int pass_testcases = 0;
 int fail_testcases = 0;
 int skip_testcases = 0;
@@ -201,7 +203,7 @@ Arguments:\n\
 
   if (login_uid_data == NULL) {
     // Get login uid from system
-    login_uid = getLoginUID();
+    login_uid = audit_getloginuid();
   }
 
   uid = passwd_data->pw_uid;

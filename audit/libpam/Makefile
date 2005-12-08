@@ -57,5 +57,6 @@ SUB_DIRS        = tests utils
 
 include $(TOPDIR)/rules.mk
 
+$(LIBPAM_EXE): LDLIBS += -laudit
 $(LIBPAM_EXE): $(LIBPAM_OBJ) $(ALL_AR) $(UTILS_AR)
 	$(LINK_EXE)

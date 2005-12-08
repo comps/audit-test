@@ -27,7 +27,6 @@ UTILS_OBJ	= core/arch.o			\
 		  core/create_temp_user_name.o	\
 		  core/create_temp_group_name.o	\
 		  core/file_utils.o		\
-		  core/get_login_uid.o		\
 		  core/identifiers.o		\
 		  core/mysprintf.o		\
 		  core/run.o			\

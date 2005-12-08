@@ -126,7 +126,7 @@ void context_setresult(struct audit_data * context, int exit, int error)
 {
     if (exit < 0) {
 	context->success = 0;
-	context->error = context->u.syscall.exit = -errno;
+	context->error = context->u.syscall.exit = -error;
 
 	fprintf(stderr, "Setting context error: %i\n", context->error);
     } else {

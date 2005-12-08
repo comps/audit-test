@@ -146,6 +146,7 @@ function dmsg {
 
 function prf {
     if [[ $1 == -nolog ]]; then
+	shift
 	declare logging=false
     fi
     printf "$(colorize "$1")" "${@:2}"
@@ -452,10 +453,17 @@ function run_tests {
 		msg "<red>ERROR ($status)"
 		(( error++ ))
 	    fi
-	    vmsg "$begin_output"
-	    vmsg "$output"
-	    vmsg "$end_output"
-	    vmsg
+	    if $opt_debug; then
+		lmsg "$begin_output"
+		lmsg "$output"
+		lmsg "$end_output"
+		lmsg
+	    else
+		vmsg "$begin_output"
+		vmsg "$output"
+		vmsg "$end_output"
+		vmsg
+	    fi
 	fi
     done
 

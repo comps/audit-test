@@ -38,10 +38,7 @@ usage: augrep [options...] condition...
     -c     --count         Only print a count of matching lines
     -f     --file=logfile  Search a log other than /var/log/audit/audit.log
     -h     --help          Show this help message
-    -i     --interpret     Same as --interpret-syscalls --interpret-ids
-      --interpret-syscalls Interpret syscall numbers to names
-      --interpret-ids      Interpret uids/gids to names
-      --interpret-times    Interpret time component of msg
+    -i     --interpret     Convert numbers to names when possible
     -m     --max-count=NUM stop after NUM matches
            --nosync        don't wait for auditd to finish flushing
     -q     --quiet         No output, just set exit status (like grep)
@@ -363,12 +360,8 @@ sub raw {
     my $raw = $self->{'_raw'};
     my $n;
 
-    if ($opt{'interpret-syscalls'} and defined($n = $self->get('syscall'))) {
-        $raw =~ s/\b(syscall=)(\d+)\b/$1$n/;
-    }
-
-    if ($opt{'interpret-ids'}) {
-        # These are hardcoded so perl won't have to repeatedly compile the regex
+    if ($opt{'i'}) {
+        $raw =~ s/\b(syscall=)(\d+)\b/$1$n/ if defined($n = $self->get('syscall'));
         $raw =~ s/\b(uid=)(\d+)\b/$1$n/ if defined($n = $self->get('uid'));
         $raw =~ s/\b(gid=)(\d+)\b/$1$n/ if defined($n = $self->get('gid'));
         $raw =~ s/\b(auid=)(\d+)\b/$1$n/ if defined($n = $self->get('auid'));
@@ -380,10 +373,9 @@ sub raw {
         $raw =~ s/\b(ouid=)(\d+)\b/$1$n/ if defined($n = $self->get('ouid'));
         $raw =~ s/\b(sgid=)(\d+)\b/$1$n/ if defined($n = $self->get('sgid'));
         $raw =~ s/\b(suid=)(\d+)\b/$1$n/ if defined($n = $self->get('suid'));
-    }
-
-    if ($opt{'interpret-times'}) {
         $raw =~ s/^(.*?\bmsg=).*?\):?/$1$n/gm if defined ($n = $self->get('msg'));
+        $raw =~ s/\b(flags=)(\S+)\b/$1$n/ if defined($n = $self->get('flags'));
+        $raw =~ s/\b(arch=)(\S+)\b/$1$n/ if defined($n = $self->get('arch'));
     }
 
     return $raw;
@@ -394,29 +386,75 @@ sub _get {
     return $self->{$k};
 }
 
+our (%archtab) = (
+    'c0009026' => 'alpha',
+    '40000028' => 'arm',
+    '28'       => 'armeb',
+    '4000004c' => 'cris',
+    '2e'       => 'h8300',
+    '40000003' => 'i386',
+    'c0000032' => 'ia64',
+    '58'       => 'm32r',
+    '4'        => 'm68k',
+    '8'        => 'mips',
+    '40000008' => 'mipsel',
+    '80000008' => 'mips64',
+    'c0000008' => 'mipsel64',
+    'f'        => 'parisc',
+    '8000000f' => 'parisc64',
+    '14'       => 'ppc',
+    '80000015' => 'ppc64',
+    '16'       => 's390',
+    '80000016' => 's390x',
+    '2a'       => 'sh',
+    '4000002a' => 'shel',
+    '8000002a' => 'sh64',
+    'c000002a' => 'shel64',
+    '2'        => 'sparc',
+    '40000057' => 'v850',
+    'c000003e' => 'x86_64',
+);
+
+our (@flagtab) = qw(
+    follow directory continue parent noalt
+    atomic open create access
+);
+
 sub get {
     my ($self, $k) = @_;
     my $v = $self->{$k};
-    my $name;
 
     return undef unless defined $v;
 
-    if ($opt{'interpret-syscalls'} and $k eq 'syscall') {
-        return defined($name = SyscallTable->new->reverse($v)) ? $name->[0] : $v;
-    }
-
-    if ($opt{'interpret-ids'}) {
+    if ($opt{'i'}) {
+        if ($k eq 'syscall') {
+            my $name;
+            return defined($name = SyscallTable->new->reverse($v)) 
+            ? $name->[0] : $v;
+        }
         if ($k =~ /^(?:uid|auid|euid|fsuid|ouid|suid)$/) {
+            my $name;
             return defined($name = getpwuid($v)) ? $name : $v;
         }
         if ($k =~ /^(?:gid|egid|fsgid|ogid|sgid)$/) {
+            my $name;
             return defined($name = getgrgid($v)) ? $name : $v;
         }
-    }
-
-    if ($opt{'interpret-times'} and $k eq 'msg') {
-        $v =~ s/\d+/POSIX::strftime('%D %T', localtime($&))/e;
-        return $v;
+        if ($k eq 'msg') {
+            $v =~ s/\d+/POSIX::strftime('%D %T', localtime($&))/e;
+            return $v;
+        }
+        if ($k eq 'flags') {
+            my (@flags);
+            for (my $i = 0; $i < @flagtab; $i++) {
+                push @flags, $flagtab[$i] if ($v & (1<<$i));
+            }
+            $v = join(',', @flags) || 'none';
+            return $v;
+        }
+        if ($k eq 'arch') {
+            return $archtab{$v} || $v;
+        }
     }
 
     return $v;
@@ -583,9 +621,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         'gi=s'  => sub { push @ARGV, "gid==$_[1]" },
         'h'     => sub { print STDERR $ausearch_usage; exit 0 },
         'hn=s'  => sub { push @ARGV, "hostname$eq$_[1]" },      # XXX msg_1?
-        'i'     => sub { $opt{'interpret-ids'} = 1;
-                         $opt{'interpret-times'} = 1;
-                         $opt{'interpret-syscalls'} = 1; },
+        'i'     => sub { $opt{'i'} = 1; },
         'if=s'  => sub { $opt{'f'} = $_[1] },
         'm=s'   => sub { push @ARGV, ($_[1] eq 'ALL') ?
                          "type!=" : "type=~\\b$_[1]\\b" },
@@ -624,9 +660,6 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         'f|file=s',
         'h|help',
         'i|interpret',
-        'interpret-ids',
-        'interpret-syscalls',
-        'interpret-times',
         'm|max-count=i',
         'nosync',
         'q|quiet',
@@ -652,11 +685,6 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
             }
         }
         exit 1; # could not resolve
-    }
-    if ($opt{'i'}) {
-        $opt{'interpret-ids'} = 1;
-        $opt{'interpret-syscalls'} = 1;
-        $opt{'interpret-times'} = 1;
     }
     die "augrep: argument required\n$usage" unless @ARGV;
 }
@@ -692,7 +720,7 @@ while (my $record = $reader->next_record) {
         }
     } elsif ($opt{'ausearch'}) {
         my ($time, $seq) = (split /[(:)]/, $record->get('msg'))[1,2];
-        if ($opt{'interpret-times'}) {
+        if ($opt{'i'}) {
             printf "----\n%s", $record->raw;
         } else {
             printf "----\ntime->%s%s", 

@@ -36,16 +36,18 @@ PATH=$TOPDIR/utils:$PATH
 
 source functions.bash
 
-# each of these requires sed -r
+# some of these require sed -r, and all are compatible with it
 collapse_interior_whitespace='s/[[:blank:]]+/ /g'
 remove_trailing_whitespace='s/[[:blank:]]*$//'
 remove_msg_space='s/(msg=audit[^)]*\)) :/\1:/'
 remove_daemon_commas='/^type=DAEMON_START/s/,[[:blank:]]+/ /g'
+[[ $* == *-i* ]] && remove_quotes='s/"//g' || remove_quotes=''
 
 echo "# augrep --ausearch -if audit.log $*" >&2
 augrep_output=$(augrep --ausearch -if audit.log "$@" \
     | sed -r "$collapse_interior_whitespace" \
     | sed -r "$remove_daemon_commas" \
+    | sed -r "$remove_quotes" \
     | tee /dev/stderr \
     | sort)
 
@@ -60,6 +62,7 @@ ausearch_output=$(ausearch -if audit.log "$@" \
     | sed -r "$remove_trailing_whitespace" \
     | sed -r "$remove_msg_space" \
     | sed -r "$remove_daemon_commas" \
+    | sed -r "$remove_quotes" \
     | tee /dev/stderr \
     | sort)
 

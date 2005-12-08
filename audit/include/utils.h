@@ -52,18 +52,6 @@ void audit_rem_watch(const char *, const char *);
 /*
  * System Info Collection
  */
-typedef struct identifiers_s {
-    int ruid;
-    int euid;
-    int suid;
-    int fsuid;
-    int rgid;
-    int egid;
-    int sgid;
-    int fsgid;
-} identifiers_t;
-
-int getLAUSData(struct audit_data *);
 int getLoginUID();
 
 int get_auditarch(void);
@@ -92,7 +80,6 @@ void destroy_tempdir(char *);
 void destroy_tempfile(char *);
 void destroy_tempsym(char *);
 
-int createTempUser(char** user, int* uid, char** homedir);
 int createTempUserName(char** user, int* uid, char** homedir);
 int createTempGroupName( char** user, int* uid );
 

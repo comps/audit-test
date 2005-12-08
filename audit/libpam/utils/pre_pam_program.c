@@ -50,13 +50,6 @@ int prePAMProgram(struct audit_data* dataPtr) {
     goto EXIT;
   }
 
-  // Fill in laus_data structure
-  printf( "Calling getLAUSData\n" );
-  if( ( rc = getLAUSData( dataPtr ) ) != 0 ) {
-    printf( "Error returned from getLAUSData( dataPtr ): rc=%i\n", rc );
-    goto EXIT;
-  }
-
   //Forking a process will cause the saved ids to become that of the effective user
   //so a child cannot escalate its privledges
   dataPtr->suid = dataPtr->euid;

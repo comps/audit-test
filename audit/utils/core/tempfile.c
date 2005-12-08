@@ -66,7 +66,10 @@ char *init_tempdir(mode_t mode, uid_t uid, gid_t gid)
     if (common_setperms(dname, mode, uid, gid, 0) < 0)
 	goto exit_err;
 
-    fprintf(stderr, "Tempdir: %s (%o)\n", dname, mode);
+    if (mode == -1)
+	fprintf(stderr, "Permissions: %d:%d %s\n", uid, gid, dname);
+    else
+	fprintf(stderr, "Permissions: [%o] %d:%d %s\n", mode, uid, gid, dname);
 
     return dname;
 
@@ -122,7 +125,7 @@ char *init_tempfile(mode_t mode, uid_t uid, gid_t gid, char *name)
     if (common_setperms(fname, mode, uid, gid, 1) < 0)
 	goto exit_err;
 
-    fprintf(stderr, "Tempfile: %s (%o)\n", fname, mode);
+    fprintf(stderr, "Permissions: [%o] %d:%d %s\n", mode, uid, gid, fname);
 
     return fname;
 
@@ -231,7 +234,7 @@ char *init_tempsym(char *target, uid_t uid, gid_t gid)
 	goto exit;
     }
 
-    fprintf(stderr, "Created symlink: %s\n", spath);
+    fprintf(stderr, "Created symlink: %s -> %s\n", spath, target);
 
     if (lchown(spath, uid, gid) < 0) {
 	fprintf(stderr, "Error: initializing sysmlink: chown(): %s\n", 
@@ -239,6 +242,8 @@ char *init_tempsym(char *target, uid_t uid, gid_t gid)
 	destroy_tempsym(spath);
 	spath = NULL;
     }
+
+    fprintf(stderr, "Permissions: %d:%d %s\n", uid, gid, spath);
 
 exit:
     return spath;
@@ -266,21 +271,18 @@ void destroy_tempfile(char *name)
 
 void destroy_tempsym(char *name)
 {
-    char *save_name;
-
     if (unlink(name) < 0) {
 	fprintf(stderr, "Error: removing symlink: unlink(%s): %s\n",
 		name, strerror(errno));
 	return;
     }
+    fprintf(stderr, "Removed symlink: %s\n", name);
 
-    save_name = strdup(name);
     if (rmdir(dirname(name)) < 0)
 	fprintf(stderr, "Error: removing symlink: rmdir(%s): %s\n",
 		name, strerror(errno));
     else
-	fprintf(stderr, "Removed symlink: %s\n", save_name);
+	fprintf(stderr, "Removed tempdir: %s\n", name);
 
     free(name);
-    free(save_name);
 }

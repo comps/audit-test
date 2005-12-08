@@ -26,18 +26,18 @@
 source auditd_common.bash
 
 write_auditd_conf \
-    space_left=7 \
+    space_left=1 \
     space_left_action=$action \
     admin_space_left=0 || exit 2
 
-# Fill the filesystem hosting audit.log, leaving 1MB + 10KB available
-fill_disk ${audit_log%/*} $((1024 + 10)) || exit 2
+# Fill the filesystem hosting audit.log, leaving 1MB + 5KB available
+fill_disk ${audit_log%/*} $((1024 + 5)) || exit 2
 
 start_auditd || exit 2
 
-# each record is at least 150 bytes (based on empirical evidence), so writing
-# 100 records should always take us over (150 * 100 =~ 14k)
-write_records 100 || exit 2
+# each record is at least 80 bytes (based on empirical evidence), so writing
+# 200 records should always take us over (200 * 80 =~ 15k)
+write_records 200 || exit 2
 
 case $action in
     email)

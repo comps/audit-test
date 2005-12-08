@@ -28,14 +28,14 @@ source auditd_common.bash
 write_auditd_conf \
     disk_full_action=$action || exit 2
 
-# Fill the filesystem hosting audit.log, leaving 10k available
-fill_disk ${audit_log%/*} 10 || exit 2
+# Fill the filesystem hosting audit.log, leaving 5k available
+fill_disk ${audit_log%/*} 5 || exit 2
 
 start_auditd || exit 2
 
-# each record is at least 150 bytes (based on empirical evidence), so writing
-# 100 records should always take us over (100 * 150 =~ 14k)
-write_records 100 || exit 2
+# each record is at least 80 bytes (based on empirical evidence), so writing
+# 200 records should always take us over (200 * 80 =~ 15k)
+write_records 200 || exit 2
 
 case $action in
     syslog)

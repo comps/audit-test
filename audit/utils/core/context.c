@@ -122,7 +122,7 @@ void context_setend(struct audit_data *context)
  * Syscall Related Context
  */
 
-void context_setresult(struct audit_data * context, int exit, int error)
+void context_setresult(struct audit_data * context, long exit, int error)
 {
     if (exit < 0) {
 	context->success = 0;

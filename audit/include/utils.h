@@ -83,7 +83,7 @@ void context_setpid(struct audit_data *, int);
 void context_setexperror(struct audit_data *, int);
 void context_setbegin(struct audit_data *);
 void context_setend(struct audit_data *);
-void context_setresult(struct audit_data *, int, int);
+void context_setresult(struct audit_data *, long, int);
 void context_setipc(struct audit_data *, int, int, int, long);
 void context_setsockaddr(struct audit_data *, unsigned char *, size_t);
 int context_setcwd(struct audit_data *);

@@ -201,6 +201,8 @@ void context_dump(const struct audit_data *context)
 	    fprintf(stderr, "\tipc_gid   : %u\n", syscall->ipc_gid);
 	    fprintf(stderr, "\tipc_mode  : %x\n", syscall->ipc_mode);
 	}
+	if (context->type & AUDIT_MSG_SOCKADDR)
+	    fprintf(stderr, "\tsockaddr  : %s\n", syscall->sockaddr); 
 	if (context->type & AUDIT_MSG_CWD)
 	    fprintf(stderr, "\tfs_cwd    : %s\n", syscall->fs_cwd ?: "(null)");
 	if (context->type & AUDIT_MSG_WATCH)
@@ -208,9 +210,6 @@ void context_dump(const struct audit_data *context)
 	if (context->type & AUDIT_MSG_PATH) {
 	    fprintf(stderr, "\tfs_sobj   : %s\n", syscall->fs_sobj ?: "(null)");
 	    fprintf(stderr, "\tfs_tobj   : %s\n", syscall->fs_tobj ?: "(null)");
-	}
-	if (context->type & AUDIT_MSG_SOCKADDR) {
-	    /* fprintf(stderr, "\tsockaddr  : %s\n", syscall->sockaddr); */
 	}
     } else if (context->type == AUDIT_MSG_USER) {
 	fprintf(stderr, "\ttext: %s\n", context->u.user.buf);

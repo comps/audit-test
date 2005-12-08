@@ -35,34 +35,10 @@ UTILS_OBJ	= core/arch.o			\
 
 LAF_OBJ		= laf/laf_watch.o
 
-RC_EXE		= rc_return
-RC_OBJ		= bin/rc_return.o
-
-PTS_EXE		= get_pts
-PTS_OBJ		= bin/get_pts.o
-PTS_LINK	= /tmp/$(PTS_EXE)
-
-EXIT_EXE	= exit_with_pid_status
-EXIT_OBJ	= bin/exit_with_pid_status.o
-
-ALL_OBJ		= $(UTILS_OBJ) $(LAF_OBJ) $(RC_OBJ) $(PTS_OBJ) $(EXIT_OBJ)
-ALL_EXE		= $(RC_EXE) $(PTS_EXE) $(PTS_LINK) $(EXIT_EXE)
+ALL_OBJ		= $(UTILS_OBJ) $(LAF_OBJ)
 ALL_AR		= $(UTILS_AR)
 
 include $(TOPDIR)/rules.mk
 
 $(UTILS_AR): $(UTILS_OBJ) $(LAF_OBJ)
 	$(LINK_AR)
-
-$(EXIT_EXE): $(EXIT_OBJ)
-	$(LINK_EXE)
-
-$(RC_EXE): $(RC_OBJ)
-	$(LINK_EXE)
-
-$(PTS_EXE): $(PTS_OBJ)
-	$(LINK_EXE)
-
-.PHONY: $(PTS_LINK)
-$(PTS_LINK):
-	-ln -sfn `pwd`/$(PTS_EXE) $@

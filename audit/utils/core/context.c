@@ -147,11 +147,13 @@ void context_setipc(struct audit_data *context, int qbytes,
     context->u.syscall.ipc_gid = gid;
     context->u.syscall.ipc_mode = msgflg;
 
-    fprintf(stderr, "Setting context ipc_qbytes: %x", 
+    fprintf(stderr, "Setting context ipc_qbytes: %x\n", 
 	    context->u.syscall.ipc_qbytes);
-    fprintf(stderr, "Setting context ipc_uid: %u", context->u.syscall.ipc_uid);
-    fprintf(stderr, "Setting context ipc_gid: %u", context->u.syscall.ipc_gid);
-    fprintf(stderr, "Setting context ipc_mode: %x", 
+    fprintf(stderr, "Setting context ipc_uid: %u\n", 
+	    context->u.syscall.ipc_uid);
+    fprintf(stderr, "Setting context ipc_gid: %u\n", 
+	    context->u.syscall.ipc_gid);
+    fprintf(stderr, "Setting context ipc_mode: %x\n", 
 	    context->u.syscall.ipc_mode);
 }
 

@@ -72,14 +72,7 @@ int test_ptrace(struct audit_data *context, int variation, int success)
     if (exit >= 0)
 	wait(NULL);
     context_setend(context);
-
-    if (exit < 0) {
-	context->success = 0;
-	context->error = context->u.syscall.exit = -errno;
-    } else {
-	context->success = 1;
-	context->u.syscall.exit = exit;
-    }
+    context_setresult(context, exit, errno);
 
     if (exit >= 0 && ptrace(PTRACE_KILL, pid, NULL, NULL) < 0)
 	fprintf(stderr, "Error: ptrace(): %s\n", strerror(errno));

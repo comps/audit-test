@@ -40,6 +40,7 @@ int test_umask(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int mask;
+    int exit;
 
     /* save the current mask, so the syscall op is also the cleanup */
     mask = umask(022);
@@ -48,11 +49,11 @@ int test_umask(struct audit_data *context, int variation, int success)
     if (rc < 0)
         goto exit;
 
+    errno = 0;
     context_setbegin(context);
-    context->u.syscall.exit = umask(mask);
+    exit = umask(mask);
     context_setend(context);
-
-    context->success = 1;
+    context_setresult(context, exit, errno);
 
 exit:
     return rc;

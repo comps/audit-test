@@ -95,14 +95,7 @@ int test_msgrcv(struct audit_data *context, int variation, int success)
 	    qid, buf, buflen, TEST_MSG_TYPE);
     exit = msgrcv(qid, buf, buflen, TEST_MSG_TYPE, IPC_NOWAIT);
     context_setend(context);
-
-    if (exit < 0) {
-        context->success = 0;
-        context->error = context->u.syscall.exit = -errno;
-    } else {
-        context->success = 1;
-        context->u.syscall.exit = exit;
-    }
+    context_setresult(context, exit, errno);
 
 exit_root:
     if (!success && seteuid(0) < 0)

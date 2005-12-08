@@ -68,20 +68,9 @@ static int common_setuid(struct audit_data *context, int success)
     errno = 0;
     exit = syscall(context->u.syscall.sysnum, uid);
     context_setend(context);
-
-    fprintf(stderr, "setuid(%d) returned %d\n", uid, exit);
+    context_setresult(context, exit, errno);
 
     rc = context_setidentifiers(context);
-    if (rc < 0)
-	goto exit;
-
-    if (exit < 0) {
-	context->success = 0;
-	context->u.syscall.exit = context->error = -errno;
-    } else {
-	context->success = 1;
-	context->u.syscall.exit = exit;
-    }
 
 exit:
     seteuid(0); /* always clean up */

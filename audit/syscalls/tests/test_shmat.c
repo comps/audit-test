@@ -76,18 +76,11 @@ int test_shmat(struct audit_data *context, int variation, int success)
     fprintf(stderr, "Attempting shmat(%d, IPC_SET)\n", shmid);
     shmadd = (long)shmat(shmid, NULL, 0);
     context_setend(context);
+    context_setresult(context, shmadd, errno);
 
-    if (shmadd == -1) {
-        context->success = 0;
-        context->error = context->u.syscall.exit = -errno;
-    } else {
-        context->success = 1;
-        context->u.syscall.exit = shmadd;
-	
-	if (shmdt((void *)shmadd) < 0)
-	    fprintf(stderr, "Error: can't detach from shared memory: %s\n",
-		    strerror(errno));
-    }
+    if ((shmadd != -1) && (shmdt((void *)shmadd) < 0))
+	fprintf(stderr, "Error: can't detach from shared memory: %s\n", 
+		strerror(errno));
 
 exit_root:
     if (!success && seteuid(0) < 0)

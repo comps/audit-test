@@ -74,16 +74,9 @@ int test_msgget(struct audit_data *context, int variation, int success)
     fprintf(stderr, "Attempting msgget(%d, %d)\n", TEST_IPC_KEY, msgflag);
     exit = msgget(TEST_IPC_KEY, msgflag);
     context_setend(context);
+    context_setresult(context, exit, errno);
 
-    fprintf(stderr, "Message queue id: %d [%d]\n", exit, errno);
-
-    if (exit < 0) {
-        context->success = 0;
-        context->error = context->u.syscall.exit = -errno;
-    } else {
-        context->success = 1;
-        context->u.syscall.exit = exit;
-    }
+    fprintf(stderr, "Message queue id: %d\n", exit);
 
 exit_queue:
     if (msgctl(qid, IPC_RMID, 0) < 0)

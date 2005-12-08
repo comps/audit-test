@@ -91,14 +91,7 @@ int common_fork(struct audit_data *context, int op, int success)
     if (pid == 0)
 	_exit(0);
     context_setend(context);
-
-    if (pid < 0) {
-	context->success = 0;
-	context->error = context->u.syscall.exit = -errno;
-    } else {
-	context->success = 1;
-	context->u.syscall.exit = pid;
-    }
+    context_setresult(context, pid, errno);
 
 exit:
     if (!success) {

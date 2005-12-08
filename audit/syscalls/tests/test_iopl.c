@@ -59,19 +59,10 @@ int test_iopl(struct audit_data *context, int variation, int success)
     context_setbegin(context);
     exit = syscall(context->u.syscall.sysnum, 1);
     context_setend(context);
+    context_setresult(context, exit, errno);
 
-    if (exit < 0) {
-	context->success = 0;
-	context->u.syscall.exit = context->error = -errno;
-    } else {
-	context->success = 1;
-	context->u.syscall.exit = exit;
-
-	errno = 0;
-	rc = syscall(context->u.syscall.sysnum, 0);
-	if (rc < 0)
+    if ((exit != -1) && (syscall(context->u.syscall.sysnum, 0) < 0))
 	    fprintf(stderr, "Error: iopl(): %s\n", strerror(errno));
-    }
 
 exit:
     if (!success)

@@ -77,16 +77,9 @@ int test_semget(struct audit_data *context, int variation, int success)
     /* using library routine makes it portable between arches */
     exit = semget(TEST_IPC_KEY, nsems, flag);
     context_setend(context);
+    context_setresult(context, exit, errno);
 
-    fprintf(stderr, "Semaphore set id: %d [%d]\n", exit, errno);
-
-    if (exit < 0) {
-        context->success = 0;
-        context->error = context->u.syscall.exit = -errno;
-    } else {
-        context->success = 1;
-        context->u.syscall.exit = exit;
-    }
+    fprintf(stderr, "Semaphore set id: %d\n", exit);
 
 exit_set:
     if (semctl(semid, nsems, IPC_RMID, 0) < 0)

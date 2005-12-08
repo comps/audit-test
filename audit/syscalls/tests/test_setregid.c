@@ -67,20 +67,9 @@ static int common_setregid(struct audit_data *context, int success)
     errno = 0;
     exit = syscall(context->u.syscall.sysnum, gid, -1);
     context_setend(context);
-
-    fprintf(stderr, "setregid(%d, -1) returned %d\n", gid, exit);
+    context_setresult(context, exit, errno);
 
     rc = context_setidentifiers(context);
-    if (rc < 0)
-	goto exit;
-
-    if (exit < 0) {
-	context->success = 0;
-	context->u.syscall.exit = context->error = -errno;
-    } else {
-	context->success = 1;
-	context->u.syscall.exit = exit;
-    }
 
 exit:
     if (!success)

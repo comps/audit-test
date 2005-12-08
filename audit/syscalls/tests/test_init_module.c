@@ -89,19 +89,11 @@ int test_init_module(struct audit_data *context, int variation, int success)
     context_setbegin(context);
     exit = syscall(context->u.syscall.sysnum, region, mstat.st_size, "");
     context_setend(context);
+    context_setresult(context, exit, errno);
 
-    if (exit < 0) {
-	context->success = 0;
-	context->u.syscall.exit = context->error = -errno;
-    } else {
-	context->success = 1;
-	context->u.syscall.exit = exit;
-
-	rc = syscall(__NR_delete_module, module_name, 0);
-	if (rc < 0)
-	    fprintf(stderr, "Error removing module: %s: %s\n",
-		    module_name, strerror(errno));
-    }
+    if ((exit != -1) && syscall(__NR_delete_module, module_name, 0) < 0)
+	fprintf(stderr, "Error removing module: %s: %s\n", 
+		module_name, strerror(errno));
 
 exit_mem:
     if (!success)

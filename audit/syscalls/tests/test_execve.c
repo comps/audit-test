@@ -40,7 +40,7 @@ int test_execve(struct audit_data *context, int variation, int success)
     int rc = 0;
     char *cmd = NULL;
     pid_t pid;
-    int status, exit;
+    int status, error;
 
     rc = context_setidentifiers(context);
     if (rc < 0)
@@ -77,10 +77,9 @@ int test_execve(struct audit_data *context, int variation, int success)
     }
     context_setend(context);
     
-    exit = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+    error = WIFEXITED(status) ? WEXITSTATUS(status) : EINTR;
+    context_setresult(context, (error ? -1 : 0), error);
     context_setpid(context, pid);
-    context->success = (exit == 0);
-    context->error = context->u.syscall.exit = -exit;
 
 exit_free:
     if (!success)

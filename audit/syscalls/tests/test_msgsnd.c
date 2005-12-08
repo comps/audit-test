@@ -89,14 +89,7 @@ int test_msgsnd(struct audit_data *context, int variation, int success)
 	    qid, buf->mtype, buf->mtext, buflen);
     exit = msgsnd(qid, buf, buflen, IPC_NOWAIT);
     context_setend(context);
-
-    if (exit < 0) {
-        context->success = 0;
-        context->error = context->u.syscall.exit = -errno;
-    } else {
-        context->success = 1;
-        context->u.syscall.exit = exit;
-    }
+    context_setresult(context, exit, errno);
 
     free(buf);
 exit_root:

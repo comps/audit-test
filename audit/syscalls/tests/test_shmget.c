@@ -78,16 +78,9 @@ int test_shmget(struct audit_data *context, int variation, int success)
     /* using library routine makes it portable between arches */
     exit = shmget(TEST_IPC_KEY, PAGE_SIZE, flags);
     context_setend(context);
+    context_setresult(context, exit, errno);
 
-    fprintf(stderr, "shared mem segment id: %d [%d]\n", exit, errno);
-
-    if (exit < 0) {
-        context->success = 0;
-        context->error = context->u.syscall.exit = -errno;
-    } else {
-        context->success = 1;
-        context->u.syscall.exit = exit;
-    }
+    fprintf(stderr, "shared mem segment id: %d\n", exit);
 
 exit_seg:
     if (shmctl(shmid, IPC_RMID, NULL) < 0)

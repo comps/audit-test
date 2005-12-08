@@ -77,14 +77,7 @@ static int common_semop(struct audit_data *context, int op, int success)
 	semtimedop(semid, &sops, nsems, &timeout) :
 	semop(semid, &sops, nsems);
     context_setend(context);
-
-    if (exit < 0) {
-        context->success = 0;
-        context->error = context->u.syscall.exit = -errno;
-    } else {
-        context->success = 1;
-        context->u.syscall.exit = exit;
-    }
+    context_setresult(context, exit, errno);
 
 exit_root:
     if (!success && seteuid(0) < 0)

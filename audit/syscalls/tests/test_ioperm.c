@@ -66,14 +66,7 @@ int test_ioperm(struct audit_data *context, int variation, int success)
     exit = syscall(context->u.syscall.sysnum, TEST_PORT_ADDRESS,
 		   TEST_NUM_BYTES, TEST_PORT_PERMS);
     context_setend(context);
-
-    if (exit < 0) {
-	context->success = 0;
-	context->u.syscall.exit = context->error = -errno;
-    } else {
-	context->success = 1;
-	context->u.syscall.exit = exit;
-    }
+    context_setresult(context, exit, errno);
 
 exit:
     if (!success)

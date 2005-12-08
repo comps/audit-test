@@ -61,14 +61,7 @@ int test_adjtimex(struct audit_data *context, int variation, int success)
     context_setbegin(context);
     exit = syscall(context->u.syscall.sysnum, &timex);
     context_setend(context);
-
-    if (exit < 0) {
-	context->success = 0;
-	context->u.syscall.exit = context->error = -errno;
-    } else {
-	context->success = 1;
-	context->u.syscall.exit = exit;
-    }
+    context_setresult(context, exit, errno);
 
 exit:
     if (!success)

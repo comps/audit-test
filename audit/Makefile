@@ -19,6 +19,8 @@
 
 TOPDIR		= .
 
+include $(TOPDIR)/rules.mk
+
 RUN_DIRS	= syscalls
 
 ifeq ($(MODE), $(NATIVE))
@@ -32,8 +34,6 @@ endif
 
 SUB_DIRS	= $(RUN_DIRS) \
 		  utils
-
-include $(TOPDIR)/rules.mk
 
 run:
 	@for l in run rollup; do \

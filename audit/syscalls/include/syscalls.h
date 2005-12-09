@@ -39,12 +39,10 @@
  * Syscall Test Variations
  */
 #define TESTSC_BASIC    0
-#define TESTSC_REMOVE   1
-#define TESTSC_SETPERMS 2
-#define TESTSC_FILE     3
-#define TESTSC_SYMLINK  4
-#define TESTSC_MODIFY   5
-#define TESTSC_NOMODIFY 6
+#define TESTSC_FILE     1
+#define TESTSC_SYMLINK  2
+#define TESTSC_MODIFY   3
+#define TESTSC_NOMODIFY 4
 
 /*
  * Default Values
@@ -100,7 +98,8 @@ int test_lsetxattr(struct audit_data *, int, int);
 int test_mkdir(struct audit_data *, int, int);
 int test_mknod(struct audit_data *, int, int);
 int test_mount(struct audit_data *, int, int);
-int test_msgctl(struct audit_data *, int, int);
+int test_msgctl_rmid(struct audit_data *, int, int);
+int test_msgctl_set(struct audit_data *, int, int);
 int test_msgget(struct audit_data *, int, int);
 int test_msgrcv(struct audit_data *, int, int);
 int test_msgsnd(struct audit_data *, int, int);
@@ -109,7 +108,8 @@ int test_ptrace(struct audit_data *, int, int);
 int test_removexattr(struct audit_data *, int, int);
 int test_rename(struct audit_data *, int, int);
 int test_rmdir(struct audit_data *, int, int);
-int test_semctl(struct audit_data *, int, int);
+int test_semctl_rmid(struct audit_data *, int, int);
+int test_semctl_set(struct audit_data *, int, int);
 int test_semget(struct audit_data *, int, int);
 int test_semop(struct audit_data *, int, int);
 int test_semtimedop(struct audit_data *, int, int);
@@ -134,7 +134,8 @@ int test_setuid(struct audit_data *, int, int);
 int test_setuid32(struct audit_data *, int, int);
 int test_setxattr(struct audit_data *, int, int);
 int test_shmat(struct audit_data *, int, int);
-int test_shmctl(struct audit_data *, int, int);
+int test_shmctl_rmid(struct audit_data *, int, int);
+int test_shmctl_set(struct audit_data *, int, int);
 int test_shmget(struct audit_data *, int, int);
 int test_stime(struct audit_data *, int, int);
 int test_swapon(struct audit_data *, int, int);

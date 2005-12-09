@@ -52,7 +52,7 @@
 #include <asm/page.h>
 #include <sys/shm.h>
 
-static int test_shmctl_setperms(struct audit_data *context, int success)
+int test_shmctl_set(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int shmid;
@@ -108,7 +108,7 @@ exit:
     return rc;
 }
 
-static int test_shmctl_remove(struct audit_data *context, int success)
+int test_shmctl_rmid(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int shmid;
@@ -155,18 +155,4 @@ exit_seg:
 
 exit:
     return rc;
-}
-
-int test_shmctl(struct audit_data *context, int variation, int success)
-{
-    switch(variation) {
-    case TESTSC_REMOVE:
-	return test_shmctl_remove(context, success);
-    case TESTSC_SETPERMS:
-	return test_shmctl_setperms(context, success);
-    default:
-	fprintf(stderr, "Test variation [%i] unsupported for %s()\n", 
-		variation, context->u.syscall.sysname);
-	return -1;
-    }
 }

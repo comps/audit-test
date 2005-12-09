@@ -51,7 +51,7 @@
 #endif
 #include <sys/msg.h>
 
-static int test_msgctl_setperms(struct audit_data *context, int success)
+int test_msgctl_set(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int qid;
@@ -105,7 +105,7 @@ exit:
     return rc;
 }
 
-static int test_msgctl_remove(struct audit_data *context, int success)
+int test_msgctl_rmid(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int qid;
@@ -151,18 +151,4 @@ exit_queue:
 
 exit:
     return rc;
-}
-
-int test_msgctl(struct audit_data *context, int variation, int success)
-{
-    switch(variation) {
-    case TESTSC_REMOVE:
-	return test_msgctl_remove(context, success);
-    case TESTSC_SETPERMS:
-	return test_msgctl_setperms(context, success);
-    default:
-	fprintf(stderr, "Test variation [%i] unsupported for %s()\n", 
-		variation, context->u.syscall.sysname);
-	return -1;
-    }
 }

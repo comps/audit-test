@@ -40,7 +40,7 @@
 
 #define DEFAULT_DEVICE_FILE "/dev/tty"
 
-int test_ioctl(struct audit_data *context, int variation, int success)
+int test_ioctl_tcgeta(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int fd = -1;
@@ -62,9 +62,6 @@ int test_ioctl(struct audit_data *context, int variation, int success)
     rc = context_setidentifiers(context);
     if (rc < 0)
 	goto exit;
-
-    fprintf(stderr, "Attempt to call %s(%d, %x, %p)\n", 
-	    context->u.syscall.sysname, fd, TCGETA, &tio);
 
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x, %p)\n",

@@ -56,7 +56,7 @@ static struct syscall_tests syscall_table[] = {
     { "fremovexattr", &test_fremovexattr }, 
     { "fsetxattr", &test_fsetxattr }, 
     { "init_module", &test_init_module }, 
-    { "ioctl", &test_ioctl },
+    { "ioctl-tcgeta", &test_ioctl_tcgeta },
     { "ioperm", &test_ioperm }, 
     { "iopl", &test_iopl }, 
     { "ipc-msgctl-rmid", &test_msgctl_rmid },

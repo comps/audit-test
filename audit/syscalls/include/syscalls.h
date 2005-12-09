@@ -87,7 +87,7 @@ int test_fork(struct audit_data *, int, int);
 int test_fremovexattr(struct audit_data *, int, int);
 int test_fsetxattr(struct audit_data *, int, int);
 int test_init_module(struct audit_data *, int, int);
-int test_ioctl(struct audit_data *, int, int);
+int test_ioctl_tcgeta(struct audit_data *, int, int);
 int test_ioperm(struct audit_data *, int, int);
 int test_iopl(struct audit_data *, int, int);
 int test_lchown(struct audit_data *, int, int);

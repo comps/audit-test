@@ -21,7 +21,7 @@ TOPDIR		= ..
 TESTDIR		= .
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
-SYSCALLS_OBJ	= syscalls.o syscalls_table.o
+SYSCALLS_OBJ	= syscalls.o syscalls_lookup.o
 SYSCALLS_EXE	= syscalls
 
 UTILS_AR	= $(TOPDIR)/utils/testutils.a

@@ -74,8 +74,8 @@ int test_bind(struct audit_data *context, int variation, int success)
     fprintf(stderr, "Attempting %s(%x, %p, %x)\n", 
 	    context->u.syscall.sysname, sockfd, &my_addr, addrlen);
     errno = 0;
-    exit = syscall(context->u.syscall.sysnum, sockfd, 
-		   (struct sockaddr *)&my_addr, addrlen);
+    /* use library routine for compatibility between arches */
+    exit = bind(sockfd, (struct sockaddr *)&my_addr, addrlen);
     context_setend(context);
     context_setresult(context, exit, errno);
 

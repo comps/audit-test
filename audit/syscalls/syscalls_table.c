@@ -120,6 +120,7 @@ static struct syscall_tests syscall_table[] = {
     { "shmctl-rmid", &test_shmctl_rmid }, 
     { "shmctl-set", &test_shmctl_set }, 
     { "shmget", &test_shmget }, 
+    { "socketcall-bind", &test_bind }, 
     { "stime", &test_stime }, 
     { "swapon", &test_swapon }, 
     { "symlink", &test_symlink }, 

@@ -178,9 +178,9 @@ exit:
 int test_lremovexattr(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
-    case SYSCALL_FILE:
+    case TESTSC_FILE:
 	return test_lremovexattr_file(context, success);
-    case SYSCALL_SYMLINK:
+    case TESTSC_SYMLINK:
 	return test_lremovexattr_symlink(context, success);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",

@@ -26,10 +26,10 @@
  *  SYSCALLS:
  *  setfsuid(), setfsuid32()
  *
- *  TESTCASE: modfsid successful
+ *  TESTCASE: modify successful
  *  As root, attempt to set fsuid to test user's uid.
  *
- *  TESTCASE: nomodfsid successful
+ *  TESTCASE: nomodify successful
  *  As test user attempt to set fsuid to test user's uid+1;
  *
  *  NOTES:
@@ -46,7 +46,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-static int common_setfsuid_mod(struct audit_data *context)
+static int common_setfsuid_modify(struct audit_data *context)
 {
     int rc = 0;
     int fsuid;
@@ -89,7 +89,7 @@ exit:
     return rc;
 }
 
-static int common_setfsuid_nomod(struct audit_data *context)
+static int common_setfsuid_nomodify(struct audit_data *context)
 {
     int rc = 0;
     int testuid;
@@ -137,10 +137,10 @@ exit:
 int test_setfsuid(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
-    case SYSCALL_MODFSID:
-	return common_setfsuid_mod(context);
-    case SYSCALL_NOMODFSID:
-	return common_setfsuid_nomod(context);
+    case TESTSC_MODIFY:
+	return common_setfsuid_modify(context);
+    case TESTSC_NOMODIFY:
+	return common_setfsuid_nomodify(context);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
 		variation, context->u.syscall.sysname);
@@ -151,10 +151,10 @@ int test_setfsuid(struct audit_data *context, int variation, int success)
 int test_setfsuid32(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
-    case SYSCALL_MODFSID:
-	return common_setfsuid_mod(context);
-    case SYSCALL_NOMODFSID:
-	return common_setfsuid_nomod(context);
+    case TESTSC_MODIFY:
+	return common_setfsuid_modify(context);
+    case TESTSC_NOMODIFY:
+	return common_setfsuid_nomodify(context);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
 		variation, context->u.syscall.sysname);

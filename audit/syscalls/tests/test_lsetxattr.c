@@ -166,9 +166,9 @@ exit:
 int test_lsetxattr(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
-    case SYSCALL_FILE:
+    case TESTSC_FILE:
 	return test_lsetxattr_file(context, success);
-    case SYSCALL_SYMLINK:
+    case TESTSC_SYMLINK:
 	return test_lsetxattr_symlink(context, success);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",

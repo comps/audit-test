@@ -169,9 +169,9 @@ exit:
 int test_lchown(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
-    case SYSCALL_FILE:
+    case TESTSC_FILE:
 	return common_lchown_file(context, success);
-    case SYSCALL_SYMLINK:
+    case TESTSC_SYMLINK:
 	return common_lchown_symlink(context, success);
     default:
         fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
@@ -183,9 +183,9 @@ int test_lchown(struct audit_data *context, int variation, int success)
 int test_lchown32(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
-    case SYSCALL_FILE:
+    case TESTSC_FILE:
 	return common_lchown_file(context, success);
-    case SYSCALL_SYMLINK:
+    case TESTSC_SYMLINK:
 	return common_lchown_symlink(context, success);
     default:
         fprintf(stderr, "Test variation [%i] unsupported for %s()\n",

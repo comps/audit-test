@@ -26,10 +26,10 @@
  *  SYSCALLS:
  *  setfsgid(), setfsgid32()
  *
- *  TESTCASE: modfsid successful
+ *  TESTCASE: modify successful
  *  As root, attempt to set fsgid to test user's gid.
  *
- *  TESTCASE: nomodfsid successful
+ *  TESTCASE: nomodify successful
  *  As test user with test user gids, attempt to set fsgid to root's gid.
  *
  *  NOTES:
@@ -46,7 +46,7 @@
 #include "includes.h"
 #include "syscalls.h"
 
-static int common_setfsgid_mod(struct audit_data *context)
+static int common_setfsgid_modify(struct audit_data *context)
 {
     int rc = 0;
     int fsgid;
@@ -89,7 +89,7 @@ exit:
     return rc;
 }
 
-static int common_setfsgid_nomod(struct audit_data *context)
+static int common_setfsgid_nomodify(struct audit_data *context)
 {
     int rc = 0;
     gid_t fsgid = 0;
@@ -131,10 +131,10 @@ exit:
 int test_setfsgid(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
-    case SYSCALL_MODFSID:
-	return common_setfsgid_mod(context);
-    case SYSCALL_NOMODFSID:
-	return common_setfsgid_nomod(context);
+    case TESTSC_MODIFY:
+	return common_setfsgid_modify(context);
+    case TESTSC_NOMODIFY:
+	return common_setfsgid_nomodify(context);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
 		variation, context->u.syscall.sysname);
@@ -145,10 +145,10 @@ int test_setfsgid(struct audit_data *context, int variation, int success)
 int test_setfsgid32(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
-    case SYSCALL_MODFSID:
-	return common_setfsgid_mod(context);
-    case SYSCALL_NOMODFSID:
-	return common_setfsgid_nomod(context);
+    case TESTSC_MODIFY:
+	return common_setfsgid_modify(context);
+    case TESTSC_NOMODIFY:
+	return common_setfsgid_nomodify(context);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n",
 		variation, context->u.syscall.sysname);

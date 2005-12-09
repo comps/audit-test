@@ -156,9 +156,9 @@ exit:
 int test_msgctl(struct audit_data *context, int variation, int success)
 {
     switch(variation) {
-    case SYSCALL_REMOVE:
+    case TESTSC_REMOVE:
 	return test_msgctl_remove(context, success);
-    case SYSCALL_SETPERMS:
+    case TESTSC_SETPERMS:
 	return test_msgctl_setperms(context, success);
     default:
 	fprintf(stderr, "Test variation [%i] unsupported for %s()\n", 

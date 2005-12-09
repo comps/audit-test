@@ -38,13 +38,13 @@
 /*
  * Syscall Test Variations
  */
-#define SYSCALL_BASIC    0
-#define SYSCALL_REMOVE   1
-#define SYSCALL_SETPERMS 2
-#define SYSCALL_FILE     3
-#define SYSCALL_SYMLINK  4
-#define SYSCALL_MODFSID  5
-#define SYSCALL_NOMODFSID 6
+#define TESTSC_BASIC    0
+#define TESTSC_REMOVE   1
+#define TESTSC_SETPERMS 2
+#define TESTSC_FILE     3
+#define TESTSC_SYMLINK  4
+#define TESTSC_MODIFY   5
+#define TESTSC_NOMODIFY 6
 
 /*
  * Default Values

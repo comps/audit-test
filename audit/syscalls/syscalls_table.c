@@ -115,13 +115,13 @@ static struct syscall_tests syscall_table[] = {
 };
 
 static struct syscall_variations syscall_vtable[] = {
-    { "basic", SYSCALL_BASIC },
-    { "remove", SYSCALL_REMOVE },
-    { "setperms", SYSCALL_SETPERMS },
-    { "file", SYSCALL_FILE },
-    { "symlink", SYSCALL_SYMLINK },
-    { "modfsid", SYSCALL_MODFSID },
-    { "nomodfsid", SYSCALL_NOMODFSID },
+    { "basic", TESTSC_BASIC },
+    { "remove", TESTSC_REMOVE },
+    { "setperms", TESTSC_SETPERMS },
+    { "file", TESTSC_FILE },
+    { "symlink", TESTSC_SYMLINK },
+    { "modify", TESTSC_MODIFY },
+    { "nomodify", TESTSC_NOMODIFY },
 };
 
 int (*lookup_testcase(char *testcase))(struct audit_data *, int, int)

@@ -132,16 +132,18 @@ int (*lookup_testcase(char *testcase))(struct audit_data *, int, int)
 	if (!strcmp(testcase, syscall_table[i].testname)) {
 	    return syscall_table[i].testp;
 	}
+    fprintf(stderr, "Error: testcase not found: %s\n", testcase);
     return NULL;
 }
 
-int lookup_variation(char *varstr)
+int lookup_variation(char *variation)
 {
     int i;
 
     for (i = 0; i < sizeof(syscall_vtable)/sizeof(syscall_vtable[0]); i++)
-	if (!strcmp(varstr, syscall_vtable[i].varname)) {
+	if (!strcmp(variation, syscall_vtable[i].varname)) {
 	    return syscall_vtable[i].varnum;
 	}
+    fprintf(stderr, "Error: variation not found: %s\n", variation);
     return -1;
 }

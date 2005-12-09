@@ -105,17 +105,9 @@ int main(int argc, char **argv)
     }
 
     test_handle = lookup_testcase(options.testcase);
-    if (!test_handle) {
-	ecode = TEST_ERROR;
-	fprintf(stderr, "Error: test \"%s\" not found\n", options.testcase);
-	goto exit;
-    }
-
     varnum = lookup_variation(options.variation);
-    if (varnum < 0) {
+    if (!test_handle || (varnum < 0)) {
 	ecode = TEST_ERROR;
-	fprintf(stderr, "Error: variation \"%s\" not found\n", 
-		options.variation);
 	goto exit;
     }
 

@@ -84,58 +84,42 @@ static int parse_command_line(int argc, char **argv,
     return rc;
 }
 
-static int lookup_variation(char *varstr)
-{
-    if (!varstr || (strcmp(varstr, "basic") == 0))
-	return SYSCALL_BASIC;
-    if (strcmp(varstr, "remove") == 0)
-	return SYSCALL_REMOVE;
-    if (strcmp(varstr, "setperms") == 0)
-	return SYSCALL_SETPERMS;
-    if (strcmp(varstr, "file") == 0)
-	return SYSCALL_FILE;
-    if (strcmp(varstr, "symlink") == 0)
-	return SYSCALL_SYMLINK;
-    if (strcmp(varstr, "modfsid") == 0)
-	return SYSCALL_MODFSID;
-    if (strcmp(varstr, "nomodfsid") == 0)
-	return SYSCALL_NOMODFSID;
-    fprintf(stderr, "Warning: unknown variation: %s\n", varstr);
-    return -1;
-}
-
 int main(int argc, char **argv)
 {
-    int			rc = 0;
     ts_exit		ecode = TEST_EXPECTED;
     struct syscall_opts options;
     struct audit_data 	context;
     int			(*test_handle)(struct audit_data *, int, int);
+    int			varnum;
 
-    rc = parse_command_line(argc, argv, &options);
-    if (rc || options.help) {
+    if ((parse_command_line(argc, argv, &options) < 0) || options.help) {
 	ecode = TEST_ERROR;
 	usage();
 	goto exit;
     }
 
     context_init(&context, AUDIT_MSG_SYSCALL);
-    rc = context_initsyscall(&context, options.testcase);
-    if (rc) {
+    if (context_initsyscall(&context, options.testcase) < 0) {
 	ecode = TEST_ERROR;
 	goto exit;
     }
 
-    rc = lookup_testcase(&test_handle, options.testcase);
-    if (rc) {
+    test_handle = lookup_testcase(options.testcase);
+    if (!test_handle) {
 	ecode = TEST_ERROR;
 	fprintf(stderr, "Error: test \"%s\" not found\n", options.testcase);
 	goto exit;
     }
 
-    rc = test_handle(&context, lookup_variation(options.variation), 
-		     options.success);
-    if (rc) {
+    varnum = lookup_variation(options.variation);
+    if (varnum < 0) {
+	ecode = TEST_ERROR;
+	fprintf(stderr, "Error: variation \"%s\" not found\n", 
+		options.variation);
+	goto exit;
+    }
+
+    if (test_handle(&context, varnum, options.success) < 0) {
 	ecode = TEST_ERROR;
 	fprintf(stderr, "Error: testcase unable to complete\n");
 	goto exit;

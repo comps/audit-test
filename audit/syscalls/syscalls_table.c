@@ -24,99 +24,124 @@
  * Syscall Test Lookup Table
  */
 struct syscall_tests {
-    int         (*testp)(struct audit_data *, int, int);
     char        *testname;
+    int         (*testp)(struct audit_data *, int, int);
+};
+
+struct syscall_variations {
+    char        *varname;
+    int		varnum;
 };
 
 static struct syscall_tests syscall_table[] = {
-    { &test_access, "access" }, 
-    { &test_adjtimex, "adjtimex" }, 
-    { &test_bind, "bind" }, 
-    { &test_capset, "capset" }, 
-    { &test_chdir, "chdir" }, 
-    { &test_chmod, "chmod" }, 
-    { &test_chown, "chown" }, 
-    { &test_chown32, "chown32" }, 
-    { &test_clock_settime, "clock_settime" }, 
-    { &test_clone, "clone" }, 
-    { &test_clone2, "clone2" }, 
-    { &test_creat, "creat" }, 
-    { &test_delete_module, "delete_module" }, 
-    { &test_execve, "execve" }, 
-    { &test_fchmod, "fchmod" }, 
-    { &test_fchown, "fchown" }, 
-    { &test_fchown32, "fchown32" }, 
-    { &test_fork, "fork" }, 
-    { &test_fremovexattr, "fremovexattr" }, 
-    { &test_fsetxattr, "fsetxattr" }, 
-    { &test_init_module, "init_module" }, 
-    { &test_ioctl, "ioctl" },
-    { &test_ioperm, "ioperm" }, 
-    { &test_iopl, "iopl" }, 
-    { &test_lchown, "lchown" }, 
-    { &test_lchown32, "lchown32" }, 
-    { &test_link, "link" }, 
-    { &test_lremovexattr, "lremovexattr" }, 
-    { &test_lsetxattr, "lsetxattr" }, 
-    { &test_mkdir, "mkdir" }, 
-    { &test_mknod, "mknod" }, 
-    { &test_mount, "mount" }, 
-    { &test_msgctl, "msgctl" }, 
-    { &test_msgsnd, "msgsnd" },
-    { &test_msgrcv, "msgrcv" },
-    { &test_msgget, "msgget" }, 
-    { &test_open,  "open" },
-    { &test_ptrace,  "ptrace" }, 
-    { &test_removexattr, "removexattr" }, 
-    { &test_rename, "rename" }, 
-    { &test_rmdir, "rmdir" }, 
-    { &test_semctl, "semctl" }, 
-    { &test_semget, "semget" }, 
-    { &test_semop, "semop" },
-    { &test_semtimedop, "semtimedop" },
-    { &test_setfsgid, "setfsgid" }, 
-    { &test_setfsgid32, "setfsgid32" }, 
-    { &test_setfsuid, "setfsuid" }, 
-    { &test_setfsuid32, "setfsuid32" }, 
-    { &test_setgid, "setgid" }, 
-    { &test_setgid32, "setgid32" }, 
-    { &test_setgroups, "setgroups" }, 
-    { &test_setgroups32, "setgroups32" }, 
-    { &test_setregid, "setregid" }, 
-    { &test_setregid32, "setregid32" }, 
-    { &test_setresgid, "setresgid" }, 
-    { &test_setresgid32, "setresgid32" }, 
-    { &test_setresuid, "setresuid" }, 
-    { &test_setresuid32, "setresuid32" }, 
-    { &test_setreuid, "setreuid" }, 
-    { &test_setreuid32, "setreuid32" }, 
-    { &test_settimeofday, "settimeofday" }, 
-    { &test_setuid, "setuid" }, 
-    { &test_setuid32, "setuid32" }, 
-    { &test_setxattr, "setxattr" }, 
-    { &test_shmat, "shmat" }, 
-    { &test_shmctl, "shmctl" }, 
-    { &test_shmget, "shmget" }, 
-    { &test_stime, "stime" }, 
-    { &test_swapon, "swapon" }, 
-    { &test_symlink, "symlink" }, 
-    { &test_truncate, "truncate" }, 
-    { &test_truncate64, "truncate64" }, 
-    { &test_umask, "umask" }, 
-    { &test_unlink, "unlink" }, 
-    { &test_utime, "utime" }, 
-    { &test_utimes, "utimes" }, 
-    { &test_vfork, "vfork" }, 
+    { "access", &test_access }, 
+    { "adjtimex", &test_adjtimex }, 
+    { "bind", &test_bind }, 
+    { "capset", &test_capset }, 
+    { "chdir", &test_chdir }, 
+    { "chmod", &test_chmod }, 
+    { "chown32", &test_chown32 }, 
+    { "chown", &test_chown }, 
+    { "clock_settime", &test_clock_settime }, 
+    { "clone2", &test_clone2 }, 
+    { "clone", &test_clone }, 
+    { "creat", &test_creat }, 
+    { "delete_module", &test_delete_module }, 
+    { "execve", &test_execve }, 
+    { "fchmod", &test_fchmod }, 
+    { "fchown32", &test_fchown32 }, 
+    { "fchown", &test_fchown }, 
+    { "fork", &test_fork }, 
+    { "fremovexattr", &test_fremovexattr }, 
+    { "fsetxattr", &test_fsetxattr }, 
+    { "init_module", &test_init_module }, 
+    { "ioctl", &test_ioctl },
+    { "ioperm", &test_ioperm }, 
+    { "iopl", &test_iopl }, 
+    { "lchown32", &test_lchown32 }, 
+    { "lchown", &test_lchown }, 
+    { "link", &test_link }, 
+    { "lremovexattr", &test_lremovexattr }, 
+    { "lsetxattr", &test_lsetxattr }, 
+    { "mkdir", &test_mkdir }, 
+    { "mknod", &test_mknod }, 
+    { "mount", &test_mount }, 
+    { "msgctl", &test_msgctl }, 
+    { "msgget", &test_msgget }, 
+    { "msgrcv", &test_msgrcv },
+    { "msgsnd", &test_msgsnd },
+    { "open", &test_open },
+    { "ptrace", &test_ptrace }, 
+    { "removexattr", &test_removexattr }, 
+    { "rename", &test_rename }, 
+    { "rmdir", &test_rmdir }, 
+    { "semctl", &test_semctl }, 
+    { "semget", &test_semget }, 
+    { "semop", &test_semop },
+    { "semtimedop", &test_semtimedop },
+    { "setfsgid32", &test_setfsgid32 }, 
+    { "setfsgid", &test_setfsgid }, 
+    { "setfsuid32", &test_setfsuid32 }, 
+    { "setfsuid", &test_setfsuid }, 
+    { "setgid32", &test_setgid32 }, 
+    { "setgid", &test_setgid }, 
+    { "setgroups32", &test_setgroups32 }, 
+    { "setgroups", &test_setgroups }, 
+    { "setregid32", &test_setregid32 }, 
+    { "setregid", &test_setregid }, 
+    { "setresgid32", &test_setresgid32 }, 
+    { "setresgid", &test_setresgid }, 
+    { "setresuid32", &test_setresuid32 }, 
+    { "setresuid", &test_setresuid }, 
+    { "setreuid32", &test_setreuid32 }, 
+    { "setreuid", &test_setreuid }, 
+    { "settimeofday", &test_settimeofday }, 
+    { "setuid32", &test_setuid32 }, 
+    { "setuid", &test_setuid }, 
+    { "setxattr", &test_setxattr }, 
+    { "shmat", &test_shmat }, 
+    { "shmctl", &test_shmctl }, 
+    { "shmget", &test_shmget }, 
+    { "stime", &test_stime }, 
+    { "swapon", &test_swapon }, 
+    { "symlink", &test_symlink }, 
+    { "truncate64", &test_truncate64 }, 
+    { "truncate", &test_truncate }, 
+    { "umask", &test_umask }, 
+    { "unlink", &test_unlink }, 
+    { "utimes", &test_utimes }, 
+    { "utime", &test_utime }, 
+    { "vfork", &test_vfork }, 
 };
 
-int lookup_testcase(int (**test_h)(), char *testcase)
+static struct syscall_variations syscall_vtable[] = {
+    { "basic", SYSCALL_BASIC },
+    { "remove", SYSCALL_REMOVE },
+    { "setperms", SYSCALL_SETPERMS },
+    { "file", SYSCALL_FILE },
+    { "symlink", SYSCALL_SYMLINK },
+    { "modfsid", SYSCALL_MODFSID },
+    { "nomodfsid", SYSCALL_NOMODFSID },
+};
+
+int (*lookup_testcase(char *testcase))(struct audit_data *, int, int)
 {
     int i;
 
     for (i = 0; i < sizeof(syscall_table)/sizeof(syscall_table[0]); i++)
 	if (!strcmp(testcase, syscall_table[i].testname)) {
-	    *test_h = syscall_table[i].testp;
-	    return 0;
+	    return syscall_table[i].testp;
+	}
+    return NULL;
+}
+
+int lookup_variation(char *varstr)
+{
+    int i;
+
+    for (i = 0; i < sizeof(syscall_vtable)/sizeof(syscall_vtable[0]); i++)
+	if (!strcmp(varstr, syscall_vtable[i].varname)) {
+	    return syscall_vtable[i].varnum;
 	}
     return -1;
 }

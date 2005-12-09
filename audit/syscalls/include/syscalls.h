@@ -58,6 +58,9 @@
 #define TEST_SYM_XATTR_NAME   "trusted.md5sum"
 #define TEST_SYM_XATTR_VALUE  "0"
 
+int (*lookup_testcase(char *))(struct audit_data *, int, int);
+int lookup_variation(char *);
+
 /*
  * Syscall Test Function Prototypes
  *
@@ -142,7 +145,5 @@ int test_unlink(struct audit_data *, int, int);
 int test_utime(struct audit_data *, int, int);
 int test_utimes(struct audit_data *, int, int);
 int test_vfork(struct audit_data *, int, int);
-
-int lookup_testcase(int (**test_h)(), char *testcase);
 
 #endif

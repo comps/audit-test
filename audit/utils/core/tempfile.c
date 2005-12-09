@@ -199,20 +199,21 @@ exit_err:
 
 char *init_tempsym(char *target, uid_t uid, gid_t gid)
 {
-    char *spath;
+    char *spath, *tmp;
     char *sname = "/sym";
 
-    spath = init_tempdir(-1, uid, gid);
-    if (!spath) {
+    tmp = init_tempdir(-1, uid, gid);
+    if (!tmp) {
 	fprintf(stderr, "Error: initializing symlink directory\n");
 	spath = NULL;
 	goto exit;
     }
 
-    if (realloc(spath, strlen(spath) + strlen(sname) + 1) == NULL) {
+    spath = realloc(tmp, strlen(tmp) + strlen(sname) + 1);
+    if (!spath) {
 	fprintf(stderr, "Error: initializing symlink: realloc(): %s\n",
 		strerror(errno));
-	destroy_tempdir(spath);
+	destroy_tempdir(tmp);
 	spath = NULL;
 	goto exit;
     }

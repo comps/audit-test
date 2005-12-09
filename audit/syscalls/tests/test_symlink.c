@@ -42,7 +42,7 @@
 int test_symlink(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    char *oldpath, *newpath;
+    char *oldpath, *newpath, *tmp;
     char *lname = "/link";
     int exit = -1;
 
@@ -53,19 +53,22 @@ int test_symlink(struct audit_data *context, int variation, int success)
 	goto exit;
     }
 
-    newpath = init_tempdir(S_IRWXU, context->euid, context->egid);
-    if (!newpath) {
+    tmp = init_tempdir(S_IRWXU, context->euid, context->egid);
+    if (!tmp) {
 	destroy_tempfile(oldpath);
 	rc = -1;
 	goto exit;
     }
 
     errno = 0;
-    if (realloc(newpath, strlen(newpath) + strlen(lname) + 1) == NULL) {
+    newpath = realloc(tmp, strlen(tmp) + strlen(lname) + 1);
+    if (!newpath) {
 	fprintf(stderr, "Error: initializing path: realloc(): %s\n",
 		strerror(errno));
+	destroy_tempfile(oldpath);
+	destroy_tempdir(tmp);
 	rc = -1;
-	goto exit_path;
+	goto exit;
     }
 
     if (strcat(newpath, lname) == NULL) {

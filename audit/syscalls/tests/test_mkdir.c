@@ -42,23 +42,25 @@
 int test_mkdir(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    char *path;
+    char *path, *tmp;
     char *newname = "/newdir";
     mode_t mode = S_IRWXU|S_IRWXO;
     int exit;
 
-    path = init_tempdir(S_IRWXU, context->euid, context->egid);
-    if (!path) {
+    tmp = init_tempdir(S_IRWXU, context->euid, context->egid);
+    if (!tmp) {
 	rc = -1;
 	goto exit;
     }
 
     errno = 0;
-    if (realloc(path, strlen(path) + strlen(newname) + 1) == NULL) {
+    path = realloc(tmp, strlen(tmp) + strlen(newname) + 1);
+    if (!path) {
 	fprintf(stderr, "Error: initializing path: realloc(): %s\n",
 		strerror(errno));
+	destroy_tempdir(tmp);
 	rc = -1;
-	goto exit_path;
+	goto exit;
     }
 
     if (strcat(path, newname) == NULL) {

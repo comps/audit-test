@@ -31,14 +31,14 @@ void context_init(struct audit_data *context, int evtype)
     fprintf(stderr, "Setting context loginuid: %u\n", context->loginuid);
 }
 
-int context_initsyscall(struct audit_data *context, char *testname)
+int context_initsyscall(struct audit_data *context, char *sname)
 {
     int rc = 0;
     char *sysname;
     int sysnum;
 
     errno = 0;
-    sysname = strdup(testname);
+    sysname = strdup(sname);
     if (!sysname) {
 	rc = -1;
 	fprintf(stderr, "Error: strdup(): %s\n", strerror(errno));

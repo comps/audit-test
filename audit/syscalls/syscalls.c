@@ -89,6 +89,7 @@ int main(int argc, char **argv)
     ts_exit		ecode = TEST_EXPECTED;
     struct syscall_opts options;
     struct audit_data 	context;
+    char		*sysname = NULL;
     int			(*test_handle)(struct audit_data *, int, int);
     int			varnum;
 
@@ -98,8 +99,8 @@ int main(int argc, char **argv)
 	goto exit;
     }
 
-    context_init(&context, AUDIT_MSG_SYSCALL);
-    if (context_initsyscall(&context, options.testcase) < 0) {
+    sysname = lookup_sysname(options.testcase);
+    if (!sysname) {
 	ecode = TEST_ERROR;
 	goto exit;
     }
@@ -107,6 +108,12 @@ int main(int argc, char **argv)
     test_handle = lookup_testcase(options.testcase);
     varnum = lookup_variation(options.variation);
     if (!test_handle || (varnum < 0)) {
+	ecode = TEST_ERROR;
+	goto exit;
+    }
+
+    context_init(&context, AUDIT_MSG_SYSCALL);
+    if (context_initsyscall(&context, sysname) < 0) {
 	ecode = TEST_ERROR;
 	goto exit;
     }
@@ -124,6 +131,8 @@ int main(int argc, char **argv)
     ecode = verify_logresult(&context);
 
 exit:
+    if (sysname)
+	free(sysname);
     context_release(&context);
     return ecode;
 }

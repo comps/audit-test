@@ -19,6 +19,7 @@
 
 #include "includes.h"
 #include "syscalls.h"
+#include <regex.h>
 
 /*
  * Syscall Test Lookup Table
@@ -146,4 +147,39 @@ int lookup_variation(char *variation)
 	}
     fprintf(stderr, "Error: variation not found: %s\n", variation);
     return -1;
+}
+
+char *lookup_sysname(char *testname)
+{
+    char *sysname = NULL;
+    char *regex = "^([^-]*)(-.*)?";
+    regex_t pbuf;
+    regmatch_t *pmatch;
+    int nmatch, syslen;
+
+    errno = 0;
+    if (regcomp(&pbuf, regex, REG_EXTENDED) != 0) {
+	fprintf(stderr, "Error: unable to compile regex %s: %s\n", regex,
+		strerror(errno));
+	return NULL;
+    }
+    
+    nmatch = pbuf.re_nsub + 1;
+    pmatch = malloc(sizeof(regmatch_t) * nmatch);
+    if (!pmatch) {
+	fprintf(stderr, "Error: malloc(): %s\n", strerror(errno));
+	return NULL;
+    }
+
+    if (regexec(&pbuf, testname, nmatch, pmatch, 0) != 0) {
+	fprintf(stderr, "Error: incorrect testname format: %s\n", testname);
+	goto exit;
+    }
+    syslen = pmatch[nmatch-2].rm_eo - pmatch[nmatch-2].rm_so;
+    sysname = strndup(testname + pmatch[nmatch-2].rm_so, syslen + 1);
+    sysname[syslen] = '\0';
+
+exit:
+    free(pmatch);
+    return sysname;
 }

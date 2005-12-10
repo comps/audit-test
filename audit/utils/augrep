@@ -27,13 +27,14 @@ use strict;
 ######################################################################
 
 (my $zero = $0) =~ s|.*/||;
-(my $version = '$Revision$') =~ s/.*?(\d.*\d).*/augrep version $1\n/;
+(my $version = '$Revision$') =~ s{.*?(\d.*\d).*}
+                                       {augrok version 1.0 (svn $1)\n};
 my $found = 0;
 my %opt = (
     'f' => '/var/log/audit/audit.log',
 );
 my $usage = <<EOT;
-usage: augrep [options...] condition...
+usage: augrok [options...] condition...
 
     -c     --count         Only print a count of matching lines
     -f     --file=logfile  Search a log other than /var/log/audit/audit.log
@@ -215,6 +216,74 @@ sub next_record {
 }
 
 ######################################################################
+# Audit Parser
+######################################################################
+
+package AuditParser;
+
+sub new {
+    my ($class, $line) = @_;
+    my $self = \$line;
+    bless $self, $class;
+    return $self;
+}
+
+our $key_re = q{
+    [^\s"'=]+ |         # normal keys
+    auditd\ pid |       # DAEMON_START, DAEMON_END
+    sending\ pid |      # DAEMON_END
+    login\ pid |        # LOGIN
+    (?:old|new)\ auid | # LOGIN
+    user\ pid           # USER_AUTH
+};
+
+sub next_field {
+    my ($self) = @_;
+    if (
+            $$self =~ s/  # -- simple value --
+        \A(\s*)           # $1 = leading ws
+        ($key_re)         # $2 = key, incl known keys with ws
+            =             # no ws around equal sign
+        (?!['"])          # first char of value cannot be a quote
+        ()                # $3 = empty (no quotes)
+        (                 # $4 = value
+            (?:
+                [^\\\s]+ |          # normal chars; no ws allowed
+                (?:\\[0-7]{1,3})+ | # escaped octal
+                (?:\\.)             # escaped character
+            )*                      # repeat to capture all of value
+        )
+                //xo or
+            $$self =~ s/  # -- quoted value--
+        \A(\s*)           # $1 = leading ws
+        ($key_re)         # $2 = key, incl known keys with ws
+            =             # no ws around equal sign
+        (['"])            # $3 = leading quote
+        (                 # $4 = value
+            (?: [^\\] |             # normal chars
+                (?:\\[0-7]{1,3}) |  # escaped octal
+                (?:\\.)             # escaped character
+            )*?           # repeat to capture all of value
+        )
+        \3                # backreference to end quote
+                //xo or
+            $$self =~ s/  # -- extra text --
+        \A(\s*)           # $1 = leading ws
+        (\S+)             # $2 = only capture one token at a time
+                //x
+    ) {
+        return $2, $4, $1, $3;  # key, value, leading ws, quotes
+    }
+
+    if ($$self =~ /\S/) {
+        chomp($$self);
+        print STDERR "$zero: WARNING: could not parse [$$self]";
+    }
+
+    return ();
+}
+
+######################################################################
 # Audit Record
 ######################################################################
 
@@ -228,71 +297,36 @@ sub new {
     bless $self, $class;
 
     if (defined $line) {
-        $self->{'_raw'} = $line;
-        $self->parse($line);
+        $self->{'_raw'} = $line if $opt{'raw'} or $opt{'ausearch'};
+        $self->merge($line);
     }
 
     return $self;
 }
 
-sub parse {
-    my ($self, $line) = @_;
-    my $orig = $line;
-    my $key_re = q{
-            [^\s"'=]+ |         # normal keys
-            auditd\ pid |       # DAEMON_START, DAEMON_END
-            sending\ pid |      # DAEMON_END
-            login\ pid |        # LOGIN
-            (?:old|new)\ auid | # LOGIN
-            user\ pid           # USER_AUTH
-        };
+sub merge {
+    my ($self, $other) = @_;
 
-    while (
-            $line =~ s/   # -- simple value --
-        \A\s*             # skip leading ws
-        ($key_re)         # $1 = key, incl known keys with ws
-            =             # no ws around equal sign
-        (?!['"])          # first char of value cannot be a quote
-        ()                # $2 = empty (no quotes)
-        (                 # $3 = value
-            (?:
-                [^\\\s]+ |          # normal chars; no ws allowed
-                (?:\\[0-7]{1,3})+ | # escaped octal
-                (?:\\.)             # escaped character
-            )*                      # repeat to capture all of value
-        )
-                //xo or
-            $line =~ s/   # -- quoted value--
-        \A\s*             # skip leading ws
-        ($key_re)         # $1 = key, incl known keys with ws
-            =             # no ws around equal sign
-        (['"])            # $2 = leading quote
-        (                 # $3 = value
-            (?: [^\\] |             # normal chars
-                (?:\\[0-7]{1,3}) |  # escaped octal
-                (?:\\.)             # escaped character
-            )*?           # repeat to capture all of value
-        )
-        \2                # backreference to end quote
-                //xo or
-            $line =~ s/   # -- extra text --
-        \A\s*             # skip leading ws
-        (\S+)             # only capture one token at a time
-                //x
-    ) {
-        my ($k, $v) = ($1, $3);
-        if (defined $v) {
-            $k =~ s/\s+/_/g;
-            $v =~ s/^(['"])(.*)\1$/$2/;
-            $self->merge_kv($k, $v);
-        } else {
-            $self->merge_kv('extra_text', $k);
+    # argument is an AuditRecord reference
+    if (ref($other) eq 'AuditRecord') {
+        for my $k ($other->keys) {
+            $self->merge_kv($k, $other->_get($k));
         }
     }
 
-    return unless $line =~ /\S/;
-    chomp($line);
-    print STDERR "augrep: WARNING: could not parse [$line] from: $orig";
+    # argument is (presumably) a string to parse
+    else {
+        my $parser = AuditParser->new($other);
+        while (my ($k, $v) = $parser->next_field) {
+            if (defined $v) {
+                $k =~ s/\s+/_/g;
+                $v =~ s/^(['"])(.*)\1$/$2/;
+                $self->merge_kv($k, $v);
+            } else {
+                $self->merge_kv('extra_text', $k);
+            }
+        }
+    }
 }
 
 sub merge_kv {
@@ -344,13 +378,6 @@ sub merge_kv {
     $self->{$k} = $v;
 }
 
-sub merge {
-    my ($self, $other) = @_;
-    for my $k ($other->keys) {
-        $self->merge_kv($k, $other->_get($k));
-    }
-}
-
 sub _raw {
     my ($self) = @_;
     return $self->{'_raw'};
@@ -359,27 +386,33 @@ sub _raw {
 sub raw {
     my ($self) = @_;
     my $raw = $self->{'_raw'};
-    my $n;
 
-    if ($opt{'i'}) {
-        $raw =~ s/\b(syscall=)(\d+)\b/$1$n/ if defined($n = $self->get('syscall'));
-        $raw =~ s/\b(uid=)(\d+)\b/$1$n/ if defined($n = $self->get('uid'));
-        $raw =~ s/\b(gid=)(\d+)\b/$1$n/ if defined($n = $self->get('gid'));
-        $raw =~ s/\b(auid=)(\d+)\b/$1$n/ if defined($n = $self->get('auid'));
-        $raw =~ s/\b(egid=)(\d+)\b/$1$n/ if defined($n = $self->get('egid'));
-        $raw =~ s/\b(euid=)(\d+)\b/$1$n/ if defined($n = $self->get('euid'));
-        $raw =~ s/\b(fsgid=)(\d+)\b/$1$n/ if defined($n = $self->get('fsgid'));
-        $raw =~ s/\b(fsuid=)(\d+)\b/$1$n/ if defined($n = $self->get('fsuid'));
-        $raw =~ s/\b(ogid=)(\d+)\b/$1$n/ if defined($n = $self->get('ogid'));
-        $raw =~ s/\b(ouid=)(\d+)\b/$1$n/ if defined($n = $self->get('ouid'));
-        $raw =~ s/\b(sgid=)(\d+)\b/$1$n/ if defined($n = $self->get('sgid'));
-        $raw =~ s/\b(suid=)(\d+)\b/$1$n/ if defined($n = $self->get('suid'));
-        $raw =~ s/^(.*?\bmsg=).*?\):?/$1$n/gm if defined ($n = $self->get('msg'));
-        $raw =~ s/\b(flags=)(\S+)\b/$1$n/ if defined($n = $self->get('flags'));
-        $raw =~ s/\b(arch=)(\S+)\b/$1$n/ if defined($n = $self->get('arch'));
+    return $raw unless $opt{'i'};
+
+    # since we're interpreting the fields, run the text through the parser
+    # again, this time interpreting the values.  Doing this as a second pass
+    # ensures that we're not wasting effort interpreting more records than are
+    # matched by the expression on the command-line.
+    my $parser = AuditParser->new($raw);
+    my $type = $self->{'type'};
+    $raw = '';
+
+    while (my ($k, $v, $ws, $q) = $parser->next_field) {
+        if (defined $v) {
+            # Fix up auditd-generated records which use a comma-space separator.
+            # This is necessary for interp to work!
+            if (defined $type 
+                    and ($type eq 'DAEMON_START' or $type eq 'DAEMON_END') 
+                    and $k ne 'extra_text'
+                    and substr($v, -1) eq ',') {
+                chop($v);
+            }
+            $raw .= "$ws$k=$q".interp($k, $v)."$q";
+        } else {
+            $raw .= $ws.$k; # misc text
+        }
     }
-
-    return $raw;
+    return $raw."\n";
 }
 
 sub _get {
@@ -387,6 +420,15 @@ sub _get {
     return $self->{$k};
 }
 
+sub get {
+    my ($self, $k) = @_;
+    my $v = $self->{$k};
+
+    return (defined $v and $opt{'i'}) ? interp($k, $v) : $v;
+}
+
+# This list should be fairly static.  It was generated using
+# gcc -E -dM /usr/include/linux/audit.h | grep '^#define AUDIT_ARCH_'
 our (%archtab) = (
     'c0009026' => 'alpha',
     '40000028' => 'arm',
@@ -415,50 +457,219 @@ our (%archtab) = (
     '40000057' => 'v850',
     'c000003e' => 'x86_64',
 );
+our (%archtab_r);
+while (my ($bits, $name) = each %archtab) {
+    $archtab_r{$name} = $bits;
+}
 
-our (@flagtab) = qw(
-    follow directory continue parent noalt
-    atomic open create access
+# This list should be fairly static.  It was retrieved from audit-1.0.12
+our (@flagtab) = (
+    'follow',     # 0x0001
+    'directory',  # 0x0002
+    'continue',   # 0x0004
+    'parent',     # 0x0008
+    'noalt',      # 0x0010
+    'atomic',     # 0x0020
+    'open',       # 0x0040
+    'create',     # 0x0080
+    'access',     # 0x0100
+);
+our %flagtab_r;
+{ my $ctr=0; %flagtab_r = map { $_ => (1<<$ctr++) } @flagtab; }
+
+# This list should be fairly static (and hopefully platform-independent).  It
+# was generated using
+# gcc -E -dM /usr/include/sys/stat.h | grep '^#define __S_IF' | sort -n -k3
+our (%modetab) = (
+    0010000 => 'fifo',
+    0020000 => 'char',
+    0040000 => 'dir',
+    0060000 => 'block',
+    0100000 => 'file',
+    0120000 => 'symlink',
+    0140000 => 'socket',
+);
+our (%modetab_r);
+while (my ($bits, $name) = each %modetab) {
+    $modetab_r{$name} = $bits;
+}
+
+# Forward interpretations should return interpreted text or undef if there was
+# no interpretation to be done.
+#
+# Reverse interpretations (those starting with '_') should interpreted text or
+# undef if there was no interpretation to be done.  Unlike forward
+# interpretations, reverse interpretations should die if there is a problem.
+our (%interptab) = (
+    'id'          => sub { scalar getpwuid $_[0]; },
+    '_id'         => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getpwnam $_[0];
+        die "$zero: Error: unknown user \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'uid'         => sub { scalar getpwuid $_[0]; },
+    '_uid'        => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getpwnam $_[0];
+        die "$zero: Error: unknown user \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'auid'        => sub { scalar getpwuid $_[0]; },
+    '_auid'       => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getpwnam $_[0];
+        die "$zero: Error: unknown user \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'euid'        => sub { scalar getpwuid $_[0]; },
+    '_euid'       => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getpwnam $_[0];
+        die "$zero: Error: unknown user \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'fsuid'       => sub { scalar getpwuid $_[0]; },
+    '_fsuid'      => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getpwnam $_[0];
+        die "$zero: Error: unknown user \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'inode_uid'   => sub { scalar getpwuid $_[0]; },
+    '_inode_uid'  => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getpwnam $_[0];
+        die "$zero: Error: unknown user \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'iuid'        => sub { scalar getpwuid $_[0]; },
+    '_iuid'       => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getpwnam $_[0];
+        die "$zero: Error: unknown user \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'ouid'        => sub { scalar getpwuid $_[0]; },
+    '_ouid'       => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getpwnam $_[0];
+        die "$zero: Error: unknown user \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'suid'        => sub { scalar getpwuid $_[0]; },
+    '_suid'       => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getpwnam $_[0];
+        die "$zero: Error: unknown user \"$_[0]\"\n" unless defined $id;
+        $id; },
+
+    'gid'         => sub { scalar getgrgid $_[0]; },
+    '_gid'        => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getgrnam $_[0];
+        die "$zero: Error: unknown group \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'egid'        => sub { scalar getgrgid $_[0]; },
+    '_egid'       => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getgrnam $_[0];
+        die "$zero: Error: unknown group \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'fsgid'       => sub { scalar getgrgid $_[0]; },
+    '_fsgid'      => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getgrnam $_[0];
+        die "$zero: Error: unknown group \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'inode_gid'   => sub { scalar getgrgid $_[0]; },
+    '_inode_gid'  => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getgrnam $_[0];
+        die "$zero: Error: unknown group \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'igid'        => sub { scalar getgrgid $_[0]; },
+    '_igid'       => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getgrnam $_[0];
+        die "$zero: Error: unknown group \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'ogid'        => sub { scalar getgrgid $_[0]; },
+    '_ogid'       => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getgrnam $_[0];
+        die "$zero: Error: unknown group \"$_[0]\"\n" unless defined $id;
+        $id; },
+    'sgid'        => sub { scalar getgrgid $_[0]; },
+    '_sgid'       => sub {
+        return undef unless $_[0] =~ /\D/;
+        my $id = getgrnam $_[0];
+        die "$zero: Error: unknown group \"$_[0]\"\n" unless defined $id;
+        $id; },
+
+    'arch'        => sub { $archtab{$_[0]}; },
+    '_arch'       => sub {
+        $archtab_r{$_[0]} or
+        ($_[0] =~ /[[:^xdigit:]]/
+                and die "$zero: Error: unknown arch \"$_[0]\"\n") or
+        undef; },
+
+    'flags'       => sub {
+        my (@flags);
+        for (my $i = 0; $i < @flagtab; $i++) {
+            push @flags, $flagtab[$i] if ($_[0] & (1<<$i));
+        }
+        join(',', @flags) || 'none'; },
+    '_flags'      => sub {
+        return undef if $_[0] =~ /^\d+$/;
+        my $value = 0;
+        for my $f (split ',', $_[0]) {
+            my $bits = $flagtab_r{$f};
+            die "$zero: Error: unknown flag \"$f\"\n" unless defined $bits;
+            $value |= $bits;
+        }
+        $value; },
+
+    'mode'        => sub {
+        my $mode = $modetab{oct($_[0]) & 0170000};
+        $mode ? sprintf("%s,%03o", $mode, oct($_[0]) & 0777) : undef; },
+    '_mode'       => sub {
+        return undef if $_[0] =~ /^[0-7]+$/;
+        my ($s, $bits) = split ',', $_[0];
+        my $type = $modetab_r{$s};
+        die "$zero: Error: unknown type \"$type\"\n" unless defined $type;
+        sprintf("%07o", ($type << 4) | oct($bits)); },
+
+    'msg'         => sub {
+        my $v = $_[0];
+        return undef unless $v =~ s/^(audit\()(\d+)(?=\.\d+:\d+\))/
+            $1 . POSIX::strftime('%D %T', localtime($2))/e;
+        $v; },
+
+    'syscall'     => sub {
+        my $name = SyscallTable->new->reverse($_[0]);
+        defined($name) ? $name->[0] : undef; },
+    '_syscall'    => sub {
+        return undef if $_[0] =~ /^\d+$/;
+        my $num = SyscallTable->new->resolve($_[0]);
+        die "$zero: Error: unknown syscall \"$_[0]\"\n" unless defined $num;
+        $num; },
 );
 
-sub get {
-    my ($self, $k) = @_;
-    my $v = $self->{$k};
+# NB: this is not a method
+sub interp {
+    my ($k, $v) = @_;
+    my ($subr, $iv);
 
-    return undef unless defined $v;
+    # deserialize keys so the interpretation routine is found
+    $k =~ s/_\d+$//;
 
-    if ($opt{'i'}) {
-        if ($k eq 'syscall') {
-            my $name;
-            return defined($name = SyscallTable->new->reverse($v)) 
-            ? $name->[0] : $v;
-        }
-        if ($k =~ /^(?:uid|auid|euid|fsuid|ouid|suid)$/) {
-            my $name;
-            return defined($name = getpwuid($v)) ? $name : $v;
-        }
-        if ($k =~ /^(?:gid|egid|fsgid|ogid|sgid)$/) {
-            my $name;
-            return defined($name = getgrgid($v)) ? $name : $v;
-        }
-        if ($k eq 'msg') {
-            $v =~ s/\d+/POSIX::strftime('%D %T', localtime($&))/e;
-            return $v;
-        }
-        if ($k eq 'flags') {
-            my (@flags);
-            for (my $i = 0; $i < @flagtab; $i++) {
-                push @flags, $flagtab[$i] if ($v & (1<<$i));
-            }
-            $v = join(',', @flags) || 'none';
-            return $v;
-        }
-        if ($k eq 'arch') {
-            return $archtab{$v} || $v;
-        }
-    }
+    $iv = &$subr($v) if $subr = $interptab{$k};
+    return defined $iv ? $iv : $v;
+}
 
-    return $v;
+# NB: this is not a method
+sub rinterp {
+    my ($k, $v) = @_;
+    my ($subr, $iv);
+
+    # deserialize keys so the interpretation routine is found
+    $k =~ s/_\d+$//;
+
+    $iv = &$subr($v) if $subr = $interptab{"_$k"};
+    return defined $iv ? $iv : $v;
 }
 
 sub keys {
@@ -466,16 +677,28 @@ sub keys {
     return CORE::keys %$self;
 }
 
+# NB: this is not a method
+sub quote {
+    my ($v) = @_;
+    if ($v =~ /".*'|'.*"/) {
+        # escape contained double-quotes then wrap in double-quotes
+        $v =~ s/"/\\"/g; $v = "\"$v\"";
+    }
+    elsif ($v =~ /"/) {
+        # wrap in single-quotes
+        $v = "'$v'";
+    }
+    elsif ($v =~ /[\s']/) {
+        # wrap in double-quotes
+        $v = "\"$v\"";
+    }
+    return $v;
+}
+
 sub to_s {
     my ($self) = @_;
-    return join(' ', 
-        map {
-            my $v = $self->get($_);
-            ($v =~ /"/ and $v = "'$v'")
-                or ($v =~ /['\s]/ and $v = "\"$v\"")
-                or ($v =~ /,$/ and $v = "\"$v\"");
-            "$_=$v"
-        } @{$self->{'_order'}});
+    return join(' ',
+        map "$_=".quote($self->get($_)), @{$self->{'_order'}});
 }
 
 sub test {
@@ -495,26 +718,9 @@ sub test {
 
         # string comparison, handling surrouding quotes
         if ($a =~ s{^(\w+)=(?:=|(?!~))(.*)}{}) {
-            my ($k, $v) = ($1, $2);
+            my ($k, $v) = ($1, rinterp($1, $2));
             if ($k eq 'msg_time' or $k eq 'msg_seq') {
                 $a = "$k==$v";      # punt to numeric comparison
-            } elsif ($k =~ /^(?:uid|auid|euid|fsuid|ouid|suid)$/
-                    and $v =~ /\D/) {
-                my $uid = getpwnam($v);
-                die "User does not exist: $v\n" unless defined $uid;
-                $a = "$k==$uid";
-                # fall through to numeric comparison
-            } elsif ($k =~ /^(?:gid|egid|fsgid|ogid|sgid)$/
-                    and $v =~ /\D/) {
-                my $gid = getgrnam($v);
-                die "Group does not exist: $v\n" unless defined $gid;
-                $a = "$k==$gid";
-                # fall through to numeric comparison
-            } elsif ($k eq 'syscall' and $v =~ /\D/) {
-                my $num = SyscallTable->new->resolve($v);
-                die "Unknown syscall: $v\n" unless defined $num;
-                $a = "$k==$num";
-                # fall through to numeric comparison
             } else {
                 $a = qq(
                     ((substr(\$self->{'$k'}, 0, 1) =~ /['"]/) ?
@@ -527,7 +733,7 @@ sub test {
 
         # numeric comparison
         if ($a =~ s{^(\w+)(<=|>=|=(?:=|(?!~))|<|>)(.*)}{}) {
-            my ($k, $op, $v) = ($1, $2, $3);
+            my ($k, $op, $v) = ($1, $2, rinterp($1, $3));
             if ($k eq 'msg_time') {
                 chomp($v = `date +\%s -d '$v'`) if $v =~ /[^\d.]/;
                 $a = qq(
@@ -553,7 +759,7 @@ sub test {
 
         # regex comparions
         if ($a =~ s{^(\w+)(!~|=~|~)(.*)}{}) {
-            my ($k, $op, $v) = ($1, $2, $3);
+            my ($k, $op, $v) = ($1, $2, rinterp($1, $3));
             $a = qq(
                 ((substr(\$self->{'$k'}, 0, 1) =~ /['"]/) ?
                  (substr(\$self->{'$k'}, 1, -1) $op m{$v}) :
@@ -650,7 +856,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
             $ARGV[-1] =~ s/^(msg_time.=)(.*)/$1.(length($2)?"$2 ":"").$_[0]/e
         },
     );
-    die "ausearch: argument required\n$ausearch_usage" unless @ARGV;
+    die "$zero: argument required\n$ausearch_usage" unless @ARGV;
 
 } else {
     Getopt::Long::Configure("default", "bundling");
@@ -687,7 +893,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         }
         exit 1; # could not resolve
     }
-    die "augrep: argument required\n$usage" unless @ARGV;
+    die "$zero: argument required\n$usage" unless @ARGV;
 }
 
 # Unless --nosync is given, wait for the auditd backlog to reach zero, as
@@ -698,12 +904,12 @@ if ($> == 0 and not $opt{'nosync'}) {
         ($backlog = `/sbin/auditctl -s`) =~ s/.*?\bbacklog=(\d+).*/$1/s;
         last if $backlog == 0;
         if ($i % 10 == 0 and $opt{'debug'}) {
-            print STDERR "augrep: waiting on backlog ($backlog)\n";
+            print STDERR "$zero: waiting on backlog ($backlog)\n";
         }
         select(undef, undef, undef, 0.1);
     }
     if ($i == 30) {
-        print STDERR "augrep: WARNING: backlog=$backlog after 3 seconds\n";
+        print STDERR "$zero: WARNING: backlog=$backlog after 3 seconds\n";
     }
 }
 
@@ -740,17 +946,17 @@ __END__
 
 =head1 NAME
 
-augrep - audit.log search tool
+augrok - audit.log search tool
 
 =head1 SYNOPSIS
 
-B<augrep> [I<-chqvV>] 
+B<augrok> [I<-chqvV>] 
 [I<--ausearch --count --help --quiet --raw --version>] 
 [I<-f logfile | --file logfile>] [I<--seek offset>] expression...
 
-B<augrep> I<--resolve syscall>
+B<augrok> I<--resolve syscall>
 
-B<augrep> I<--ausearch options...>
+B<augrok> I<--ausearch options...>
 
 =head1 DESCRIPTION
 
@@ -775,8 +981,8 @@ example: '(' type=~SYSCALL ')'
 
 In addition to the keys in audit.log, two special keys are provided: msg_time
 and msg_seq.  These are the time and sequence values extracted from the msg
-entry.  In particular, msg_time is special because augrep will automatically
-parse the comparison value into the seconds-since-epoch format used by augrep,
+entry.  In particular, msg_time is special because augrok will automatically
+parse the comparison value into the seconds-since-epoch format used by augrok,
 for example, the following will find all messages that occurred during the
 specified half-hour: 'msg_time>=14:00' 'msg_time<14:30'
 
@@ -788,7 +994,7 @@ specified half-hour: 'msg_time>=14:00' 'msg_time<14:30'
 
 If this is found anywhere on the command-line, all of the other options are
 interpeted in ausearch mode.  For the usage, try --ausearch -h or read
-ausearch(8).  Another way of invoking ausearch mode is to run augrep through
+ausearch(8).  Another way of invoking ausearch mode is to run augrok through
 a symbolic link called ausearch.
 
 =item B<-c --count>
@@ -837,12 +1043,12 @@ Show version information.
 
 To count the number of records with type=SYSCALL:
 
-    $ augrep -c type=~SYSCALL
+    $ augrok -c type=~SYSCALL
     537
 
 To find a specific record:
 
-    $ augrep msg=='audit(1124137373.408:565):'
+    $ augrok msg=='audit(1124137373.408:565):'
     type=SYSCALL,FS_WATCH,FS_INODE,CWD,PATH msg=audit(1124137373.408:565):
     arch=c0000032 syscall=1210 success=yes exit=0 a0=6000000000006388
     a1=6000000000006390 a2=c00000000000048c a3=2000000000244238 items=1

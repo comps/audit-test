@@ -100,7 +100,7 @@ audit_rec_gen $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."
-augrep --seek=$log_mark "name==$tmp1" "auid==$user_auid"
+augrok --seek=$log_mark "name==$tmp1" "auid==$user_auid"
 ret_val=$?
 
 #

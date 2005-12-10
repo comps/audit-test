@@ -31,5 +31,5 @@ npid=$(pidof auditd)
 
 auid=$(</proc/$$/loginuid)
 
-augrep -m1 type=DAEMON_END auid=$auid auditd_pid=$opid
-augrep -m1 type=DAEMON_START auid=$auid auditd_pid=$npid
+augrok -m1 type=DAEMON_END auid=$auid auditd_pid=$opid
+augrok -m1 type=DAEMON_START auid=$auid auditd_pid=$npid

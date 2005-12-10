@@ -95,7 +95,7 @@ audit_rec_gen $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."
-augrep --seek=$log_mark "watch==$(basename $tmp1)" "inode==$f_inode"
+augrok --seek=$log_mark "watch==$(basename $tmp1)" "inode==$f_inode"
 ret_val=$?
 
 #

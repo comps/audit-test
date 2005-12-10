@@ -66,7 +66,7 @@ The library should be loaded with this snippet at the top of the test case:
     source functions.bash
 
 This snippet additionally puts the utils directory in the PATH, which is helpful
-for running augrep and other shared utility programs.
+for running augrok and other shared utility programs.
 
 If you augment functions.bash, beware that it is expected to behave a litle
 differently from the test cases.  Zero status is success, non-zero is error

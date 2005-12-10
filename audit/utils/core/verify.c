@@ -57,7 +57,7 @@ ts_exit verify_logresult(struct audit_data *context)
     int count = 0;
 
     if (context->type & AUDIT_MSG_SYSCALL) {
-	count = snprintf(cmd, sizeof(cmd), "augrep -m1 'type=~SYSCALL' "
+	count = snprintf(cmd, sizeof(cmd), "augrok -m1 'type=~SYSCALL' "
 			 "syscall==%d 'success==%s' " 
 			 "exit==%d pid==%d auid==%u uid==%u gid==%u " 
 			 "euid==%u suid==%u fsuid==%u " 
@@ -110,11 +110,11 @@ ts_exit verify_logresult(struct audit_data *context)
 				  context->u.syscall.fs_tobj);
 	}
     } else if (context->type & AUDIT_MSG_USER) {
-	count = snprintf(cmd, sizeof(cmd), "augrep -m1 'type=~USER' "
+	count = snprintf(cmd, sizeof(cmd), "augrok -m1 'type=~USER' "
 			 "msg_1=~\"%s\"",
 			 context->comm);
     } else if (context->type & AUDIT_MSG_DAEMON) {
-	count = snprintf(cmd, sizeof(cmd), "augrep -m1 msg_1=~\"%s\"",
+	count = snprintf(cmd, sizeof(cmd), "augrok -m1 msg_1=~\"%s\"",
 			 context->comm);
     }
 

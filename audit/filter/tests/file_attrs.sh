@@ -122,7 +122,7 @@ for iter_file in $file_real $file_real.hard; do
         
     # look for the audit record
     echo "notice: testing for audit record ..."
-    augrep --seek=$log_mark "inode==$f_inode"
+    augrok --seek=$log_mark "inode==$f_inode"
     ret_val_tmp=$?
     [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
 
@@ -151,7 +151,7 @@ for iter_file in $file_real $file_real.hard; do
         
     # look for the audit record
     echo "notice: testing for audit record ..."
-    augrep --seek=$log_mark "name==$iter_file" "dev==$f_fs_dev_num"
+    augrok --seek=$log_mark "name==$iter_file" "dev==$f_fs_dev_num"
     ret_val_tmp=$?
     [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
 

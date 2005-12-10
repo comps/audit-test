@@ -43,7 +43,7 @@ echo -n "System time restored "
 date +"%D %T"
 
 # Check for the records
-[ `augrep --count --seek $AUDIT_SEEK type==USYS_CONFIG msg_1=="hwclock: op=changing system time id=0 res=success"` == 2 ] && exit 0;
+[ `augrok --count --seek $AUDIT_SEEK type==USYS_CONFIG msg_1=="hwclock: op=changing system time id=0 res=success"` == 2 ] && exit 0;
 
 # There weren't exactly 2 records therefor the test failed
 exit 1;

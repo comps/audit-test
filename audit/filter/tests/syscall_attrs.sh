@@ -99,7 +99,7 @@ chown root:root $tmp1 || exit_error "unable to set the permissions on the test f
 
 # get syscall information
 syscall_name="open"
-syscall_num="$(augrep --resolve $syscall_name)"
+syscall_num="$(augrok --resolve $syscall_name)"
 [ "$syscall_num" = "" ] && exit_error "unable to determine the syscall number for $syscall_name"
 
 # display syscall information
@@ -122,7 +122,7 @@ audit_rec_gen_ok $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."
-augrep --seek=$log_mark "syscall==$syscall_num" "name==$tmp1" "success==yes"
+augrok --seek=$log_mark "syscall==$syscall_num" "name==$tmp1" "success==yes"
 ret_val_tmp=$?
 [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
 
@@ -151,7 +151,7 @@ audit_rec_gen_fail $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."
-augrep --seek=$log_mark "syscall==$syscall_num" "name==$tmp1" "success==no"
+augrok --seek=$log_mark "syscall==$syscall_num" "name==$tmp1" "success==no"
 ret_val_tmp=$?
 [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
 
@@ -180,7 +180,7 @@ audit_rec_gen_ok $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."
-augrep --seek=$log_mark "name==$tmp1" "syscall==$syscall_num"
+augrok --seek=$log_mark "name==$tmp1" "syscall==$syscall_num"
 ret_val_tmp=$?
 [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
 
@@ -208,7 +208,7 @@ audit_rec_gen_ok $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."
-augrep --seek=$log_mark "name==$tmp1" "syscall==$syscall_num"
+augrok --seek=$log_mark "name==$tmp1" "syscall==$syscall_num"
 ret_val_tmp=$?
 [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
 

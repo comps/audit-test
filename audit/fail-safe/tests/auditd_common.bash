@@ -92,7 +92,7 @@ prepend_cleanup '{
     echo
     echo "Audit log snippet"
     echo "--- start audit.log --------------------------------------------------------"
-    augrep "type!=AGRIFFIS"
+    augrok "type!=AGRIFFIS"
     echo "--- end audit.log ----------------------------------------------------------"
 }'
 

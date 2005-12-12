@@ -91,6 +91,19 @@ exit:
     return rc;
 }
 
+/* allow fsgid and fsuid to be explicitly set */
+void context_setfsgid(struct audit_data *context, int fsgid)
+{
+    context->fsgid = fsgid;
+    fprintf(stderr, "Setting context fsgid (explicitly): %i\n", context->fsgid);
+}
+
+void context_setfsuid(struct audit_data *context, int fsuid)
+{
+    context->fsuid = fsuid;
+    fprintf(stderr, "Setting context fsuid (explicitly): %i\n", context->fsuid);
+}
+
 void context_setpid(struct audit_data *context, int pid)
 {
     context->pid = pid;

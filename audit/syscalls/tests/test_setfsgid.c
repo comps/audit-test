@@ -68,8 +68,6 @@ static int common_setfsgid_modify(struct audit_data *context)
     exit = syscall(context->u.syscall.sysnum, fsgid);
     context_setend(context);
     context_setresult(context, exit, 0);
-    /* make context reflect the fact that we just set fsgid */
-    context->fsgid = fsgid;
 
     /* Use a second call to setfsgid() to verify that the fsgid was
      * set; setfsgid() returns the previous fsgid if it sets
@@ -81,6 +79,9 @@ static int common_setfsgid_modify(struct audit_data *context)
 		"Error: fsgid was not modified in operation as expected.\n");
 	rc = -1;
     }
+
+    /* make context reflect the fact that we explicitly set fsgid */
+    context_setfsgid(context, fsgid);
 
     if (setegid(0) < 0)
 	fprintf(stderr, "Error: setegid(): %s\n", strerror(errno));

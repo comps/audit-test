@@ -68,8 +68,6 @@ static int common_setfsuid_modify(struct audit_data *context)
     exit = syscall(context->u.syscall.sysnum, fsuid);
     context_setend(context);
     context_setresult(context, exit, 0);
-    /* make context reflect the fact that we just set fsuid */
-    context->fsuid = fsuid;
 
     /* Use a second call to setfsuid() to verify that the fsuid was
      * set; setfsuid() returns the previous fsuid if it sets
@@ -81,6 +79,9 @@ static int common_setfsuid_modify(struct audit_data *context)
 		"Error: fsuid was not modified in operation as expected.\n");
 	rc = -1;
     }
+
+    /* make context reflect the fact that we explicitly set fsuid */
+    context_setfsuid(context, fsuid);
 
     if (seteuid(0) < 0)
 	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));

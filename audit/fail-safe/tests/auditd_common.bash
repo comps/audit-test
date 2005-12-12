@@ -265,8 +265,6 @@ function check_email {
 # common startup
 ######################################################################
 
-trap "cleanup; exit" 0 1 2 3 15
-
 if [[ -z $action ]]; then
     echo "Please specify a variation on the command-line"
     exit 2

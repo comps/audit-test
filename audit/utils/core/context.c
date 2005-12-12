@@ -124,7 +124,7 @@ void context_setend(struct audit_data *context)
 
 void context_setresult(struct audit_data * context, long exit, int error)
 {
-    if (exit < 0) {
+    if ((exit < 0) && (exit > -256)) {
 	context->success = 0;
 	context->error = context->u.syscall.exit = -error;
 

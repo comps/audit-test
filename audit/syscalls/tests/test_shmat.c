@@ -49,7 +49,7 @@ int test_shmat(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
     int shmid;
-    long shmadd;
+    void *shmadd;
 
     errno = 0;
     rc = shmid = shmget(IPC_PRIVATE, PAGE_SIZE, S_IRWXU|IPC_CREAT);
@@ -75,12 +75,12 @@ int test_shmat(struct audit_data *context, int variation, int success)
     fprintf(stderr, "Attempting %s(%x)\n", 
 	    context->u.syscall.sysname, shmid);
     errno = 0;
-    shmadd = (long)shmat(shmid, NULL, 0);
+    shmadd = shmat(shmid, NULL, 0);
     context_setend(context);
-    context_setresult(context, shmadd, errno);
+    context_setresult(context, (long)shmadd, errno);
 
     errno = 0;
-    if ((shmadd != -1) && (shmdt((void *)shmadd) < 0))
+    if (((unsigned long)shmadd != (unsigned long)-1) && (shmdt(shmadd) < 0))
 	fprintf(stderr, "Error: can't detach from shared memory: %s\n", 
 		strerror(errno));
 

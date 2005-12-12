@@ -1,6 +1,6 @@
 /* =======================================================================
- * Copyright (C) 2005 Hewlett-Packard Company
- * Written by Amy Griffis <amy.griffis@hp.com>
+ *   (c) Copyright Hewlett-Packard Development Company, L.P., 2005 
+ *   Written by Amy Griffis <amy.griffis@hp.com>
  * 
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by

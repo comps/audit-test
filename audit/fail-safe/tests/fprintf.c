@@ -1,5 +1,5 @@
 /* =======================================================================
- * Copyright (C) 2005 Hewlett-Packard Company
+ * (c) Copyright Hewlett-Packard Development Company, L.P., 2005
  * Written by Aron Griffis <aron@hp.com>
  * 
  *   This program is free software; you can redistribute it and/or modify

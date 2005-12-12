@@ -268,8 +268,7 @@ function startup {
     start_auditd >/dev/null || die
 
     # Add the test user which is used for unprivileged tests
-    rm -rf "/home/$TEST_USER"
-    userdel $TEST_USER &>/dev/null
+    userdel -r $TEST_USER &>/dev/null
     groupdel $TEST_USER &>/dev/null
     dmsg "Adding group $TEST_USER"
     groupadd "$TEST_USER" || die
@@ -282,8 +281,7 @@ function startup {
 	if [[ -n $TEST_USER ]]; then
 	    # Remove the test user
 	    dmsg "Removing user $TEST_USER"
-	    rm -rf "/home/$TEST_USER"
-	    userdel "$TEST_USER" &>/dev/null
+	    userdel -r "$TEST_USER" &>/dev/null
 	    dmsg "Removing group $TEST_USER"
 	    groupdel "$TEST_USER" &>/dev/null
 	fi

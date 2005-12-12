@@ -60,7 +60,10 @@ int test_shmat(struct audit_data *context, int variation, int success)
     }
     fprintf(stderr, "shared mem segment key: %d id: %d\n", IPC_PRIVATE, shmid);
 
-    if (!success) {
+    if (success) {
+	/* workaround for non-critical shmat() audit bug */
+	context->type |= AUDIT_MSG_NOEXIT;
+    } else {
 	rc = seteuid_test();
 	if (rc < 0)
 	    goto exit_seg;

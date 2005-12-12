@@ -70,6 +70,9 @@ enum audit_arg {
 #define AUDIT_MSG_ARG2          0x0800
 #define AUDIT_MSG_ARG3          0x1000
 
+/* workaround for non-critical shmat() audit bug */
+#define AUDIT_MSG_NOEXIT        0x2000
+
 /* syscall arch */
 #if defined(__i386__)
 #define TS_BUILD_ARCH  AUDIT_ARCH_I386

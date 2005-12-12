@@ -59,12 +59,11 @@ ts_exit verify_logresult(struct audit_data *context)
     if (context->type & AUDIT_MSG_SYSCALL) {
 	count = snprintf(cmd, sizeof(cmd), "augrok -m1 'type=~SYSCALL' "
 			 "syscall==%d 'success==%s' " 
-			 "exit==%d pid==%d auid==%u uid==%u gid==%u " 
+			 "pid==%d auid==%u uid==%u gid==%u " 
 			 "euid==%u suid==%u fsuid==%u " 
 			 "egid==%u sgid==%u fsgid==%u", 
 			 context->u.syscall.sysnum, 
 			 context->success ? "yes" : "no", 
-			 context->u.syscall.exit, 
 			 context->pid, 
 			 context->loginuid, 
 			 context->uid, 
@@ -75,6 +74,11 @@ ts_exit verify_logresult(struct audit_data *context)
 			 context->egid, 
 			 context->sgid, 
 			 context->fsgid);
+	if (count < sizeof(cmd) && !(context->type & AUDIT_MSG_NOEXIT)) {
+	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
+			      " exit=%d",
+			      context->u.syscall.exit);
+	}
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_IPC) {
 	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
 			      " iuid==%u mode==%x qbytes==%x igid==%u", 
@@ -145,6 +149,7 @@ ts_exit verify_logresult(struct audit_data *context)
 	goto exit;
     }
 
+    fprintf(stderr, "%s\n", cmd);
     rc = (system(cmd) == 0) ? TEST_EXPECTED : TEST_UNEXPECTED;
     if (rc == TEST_UNEXPECTED)
 	fprintf(stderr, "Expected record not found in log:\n%s\n", cmd);

@@ -70,6 +70,9 @@ int test_shmget(struct audit_data *context, int variation, int success)
     rc = context_setidentifiers(context);
     if (rc < 0)
         goto exit_seg;
+#if defined (__i386)
+    context_setarg(context, 0, SHMGET);
+#endif
 
     context_setbegin(context);
 #if defined (__x86_64) || defined (__ia64)

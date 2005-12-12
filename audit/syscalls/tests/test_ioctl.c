@@ -62,6 +62,7 @@ int test_ioctl_tcgeta(struct audit_data *context, int variation, int success)
     rc = context_setidentifiers(context);
     if (rc < 0)
 	goto exit;
+    context_setarg(context, 1, TCGETA);
 
     context_setbegin(context);
     fprintf(stderr, "Attempting %s(%x, %x, %p)\n",

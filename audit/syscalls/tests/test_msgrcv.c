@@ -88,6 +88,9 @@ int test_msgrcv(struct audit_data *context, int variation, int success)
     rc = context_setidentifiers(context);
     if (rc < 0)
         goto exit_root;
+#if defined (__i386)
+    context_setarg(context, 0, MSGRCV);
+#endif
 
     context_setbegin(context);
 #if defined (__x86_64) || defined (__ia64)

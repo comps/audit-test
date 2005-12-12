@@ -41,10 +41,9 @@
 #endif
 #include <sys/sem.h>
 
-#define TEST_NOTIMED 1
-#define TEST_TIMED   2
-
-/* not defined in headers */
+/* SEMOP is not defined in ia64 headers, and 
+ * SEMTIMEDOP is not defined in any headers. */
+#define SEMOP      1
 #define SEMTIMEDOP 4
 
 static int common_semop(struct audit_data *context, int op, int success)
@@ -73,21 +72,22 @@ static int common_semop(struct audit_data *context, int op, int success)
     rc = context_setidentifiers(context);
     if (rc < 0)
         goto exit_root;
+#if defined (__i386)
+    context_setarg(context, 0, op);
+#endif
 
     context_setbegin(context);
 #if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x, %p, %x, %p)\n", 
 	    context->u.syscall.sysname, semid, &sops, nsems, 
-	    (op == TEST_TIMED) ? &timeout : NULL);
+	    (op == SEMTIMEDOP) ? &timeout : NULL);
 #else
     fprintf(stderr, "Attempting %s(%x, %x, %p, %x, %p)\n", 
-	    context->u.syscall.sysname, 
-	    (op == TEST_TIMED) ? SEMTIMEDOP : SEMOP, 
-	    semid, &sops, nsems, 
-	    (op == TEST_TIMED) ? &timeout : NULL);
+	    context->u.syscall.sysname,  op, semid, &sops, nsems, 
+	    (op == SEMTIMEDOP) ? &timeout : NULL);
 #endif
     errno = 0;
-    exit = (op == TEST_TIMED) ?
+    exit = (op == SEMTIMEDOP) ?
 	semtimedop(semid, &sops, nsems, &timeout) :
 	semop(semid, &sops, nsems);
     context_setend(context);
@@ -109,10 +109,10 @@ exit:
 
 int test_semop(struct audit_data *context, int variation, int success)
 {
-    return common_semop(context, TEST_NOTIMED, success);
+    return common_semop(context, SEMOP, success);
 }
 
 int test_semtimedop(struct audit_data *context, int variation, int success)
 {
-    return common_semop(context, TEST_TIMED, success);
+    return common_semop(context, SEMTIMEDOP, success);
 }

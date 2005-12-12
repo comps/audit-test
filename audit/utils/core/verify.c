@@ -109,6 +109,27 @@ ts_exit verify_logresult(struct audit_data *context)
 				  " name==%s", 
 				  context->u.syscall.fs_tobj);
 	}
+
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_ARG0) {
+	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
+			      " a0==%x", 
+			      context->u.syscall.arg[0]);
+	}
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_ARG1) {
+	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
+			      " a1==%x", 
+			      context->u.syscall.arg[1]);
+	}
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_ARG2) {
+	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
+			      " a2==%x", 
+			      context->u.syscall.arg[2]);
+	}
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_ARG3) {
+	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
+			      " a3==%x", 
+			      context->u.syscall.arg[3]);
+	}
     } else if (context->type & AUDIT_MSG_USER) {
 	count = snprintf(cmd, sizeof(cmd), "augrok -m1 'type=~USER' "
 			 "msg_1=~\"%s\"",

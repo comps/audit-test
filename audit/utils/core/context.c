@@ -207,6 +207,29 @@ void context_setwatch(struct audit_data *context, char *obj)
     fprintf(stderr, "Setting context watch: %s\n", context->u.syscall.fs_watch);
 }
 
+void context_setarg(struct audit_data *context, int argnum, int arg)
+{
+    switch(argnum) {
+    case 0:
+	context->type |= AUDIT_MSG_ARG0;
+	break;
+    case 1:
+	context->type |= AUDIT_MSG_ARG1;
+	break;
+    case 2:
+	context->type |= AUDIT_MSG_ARG2;
+	break;
+    case 3:
+	context->type |= AUDIT_MSG_ARG3;
+	break;
+    default:
+	return;
+    }
+    context->u.syscall.arg[argnum] = arg;
+    fprintf(stderr, "Setting context arg[%i]: %x\n", argnum,
+	    context->u.syscall.arg[argnum]);
+}
+
 char *context_getcwd(struct audit_data *context)
 {
     return context->u.syscall.fs_cwd;

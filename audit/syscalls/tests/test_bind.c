@@ -70,6 +70,9 @@ int test_bind(struct audit_data *context, int variation, int success)
     rc = context_setidentifiers(context);
     if (rc < 0)
 	goto exit_suid;
+#if defined (__i386__)
+    context_setarg(context, 0, SYS_BIND);
+#endif
 
     context_setbegin(context);
 #if defined (__x86_64) || defined (__ia64)

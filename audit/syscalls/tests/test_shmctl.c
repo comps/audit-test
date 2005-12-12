@@ -78,6 +78,12 @@ int test_shmctl_set(struct audit_data *context, int variation, int success)
     rc = context_setidentifiers(context);
     if (rc < 0)
         goto exit_root;
+#if defined (__x86_64) || defined (__ia64)
+    context_setarg(context, 1, IPC_SET);
+#else
+    context_setarg(context, 0, SHMCTL);
+    context_setarg(context, 2, IPC_SET | 0x100); /* unknown flag set in call */
+#endif
 
     memset(&buf, 0, sizeof(buf));
     buf.shm_perm.uid = gettestuid();
@@ -138,6 +144,12 @@ int test_shmctl_rmid(struct audit_data *context, int variation, int success)
     rc = context_setidentifiers(context);
     if (rc < 0)
         goto exit_root;
+#if defined (__x86_64) || defined (__ia64)
+    context_setarg(context, 1, IPC_RMID);
+#else
+    context_setarg(context, 0, SHMCTL);
+    context_setarg(context, 2, IPC_RMID | 0x100); /* unknown flag set in call */
+#endif
 
     context_setbegin(context);
 #if defined (__x86_64) || defined (__ia64)

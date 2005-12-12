@@ -56,15 +56,19 @@ enum audit_arg {
  */
 
 /* message type */
-#define AUDIT_MSG_LOGIN         0x001
-#define AUDIT_MSG_SYSCALL	0x002
-#define AUDIT_MSG_CWD           0x004
-#define AUDIT_MSG_IPC           0x008
-#define AUDIT_MSG_SOCKADDR      0x010
-#define AUDIT_MSG_WATCH         0x020
-#define AUDIT_MSG_PATH          0x040
-#define AUDIT_MSG_USER          0x080
-#define AUDIT_MSG_DAEMON        0x100
+#define AUDIT_MSG_DAEMON        0x0001
+#define AUDIT_MSG_LOGIN         0x0002
+#define AUDIT_MSG_USER          0x0004
+#define AUDIT_MSG_SYSCALL	0x0008
+#define AUDIT_MSG_CWD           0x0010
+#define AUDIT_MSG_IPC           0x0020
+#define AUDIT_MSG_SOCKADDR      0x0040
+#define AUDIT_MSG_WATCH         0x0080
+#define AUDIT_MSG_PATH          0x0100
+#define AUDIT_MSG_ARG0          0x0200
+#define AUDIT_MSG_ARG1          0x0400
+#define AUDIT_MSG_ARG2          0x0800
+#define AUDIT_MSG_ARG3          0x1000
 
 /* syscall arch */
 #if defined(__i386__)
@@ -102,9 +106,8 @@ struct audit_syscall {
     char          fs_sobj[PATH_MAX];  /* source object */
     char          fs_tobj[PATH_MAX];  /* target object */
     char          fs_watch[PATH_MAX]; /* audit watch */
-    /* will be deprecated */
-    unsigned int  arglen;
-    char          *args;
+    /* syscall args */
+    int           arg[4];
 };
 
 struct audit_user {

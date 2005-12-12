@@ -72,6 +72,9 @@ int test_msgsnd(struct audit_data *context, int variation, int success)
     rc = context_setidentifiers(context);
     if (rc < 0)
         goto exit_root;
+#if defined (__i386)
+    context_setarg(context, 0, MSGSND);
+#endif
 
     buflen = sizeof(struct msgbuf) + strlen(msg) + 1;
     buf = (struct msgbuf *)malloc(buflen);

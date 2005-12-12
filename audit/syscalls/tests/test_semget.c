@@ -71,8 +71,13 @@ int test_semget(struct audit_data *context, int variation, int success)
         goto exit_set;
 
     context_setbegin(context);
+#if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x, %x, %x)\n", 
             context->u.syscall.sysname, TEST_IPC_KEY, nsems, flag);
+#else
+    fprintf(stderr, "Attempting %s(%x, %x, %x, %x)\n", 
+            context->u.syscall.sysname, SEMGET, TEST_IPC_KEY, nsems, flag);
+#endif
     errno = 0;
     /* using library routine makes it portable between arches */
     exit = semget(TEST_IPC_KEY, nsems, flag);

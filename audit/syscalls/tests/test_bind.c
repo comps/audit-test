@@ -37,6 +37,7 @@
 #include "syscalls.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <linux/net.h>
 
 int test_bind(struct audit_data *context, int variation, int success)
 {
@@ -71,10 +72,16 @@ int test_bind(struct audit_data *context, int variation, int success)
 	goto exit_suid;
 
     context_setbegin(context);
-    fprintf(stderr, "Attempting %s(%x, %p, %x)\n", 
-	    context->u.syscall.sysname, sockfd, &my_addr, addrlen);
+#if defined (__x86_64) || defined (__ia64)
+	fprintf(stderr, "Attempting %s(%x, %p, %x)\n", 
+		context->u.syscall.sysname, sockfd, &my_addr, addrlen);
+#else
+	fprintf(stderr, "Attempting %s(%x, %x, %p, %x)\n", 
+		context->u.syscall.sysname, SYS_BIND, sockfd,
+		&my_addr, addrlen);
+#endif
     errno = 0;
-    /* use library routine for compatibility between arches */
+    /* using library routine for compatibility */
     exit = bind(sockfd, (struct sockaddr *)&my_addr, addrlen);
     context_setend(context);
     context_setresult(context, exit, errno);

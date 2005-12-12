@@ -86,8 +86,13 @@ int test_shmctl_set(struct audit_data *context, int variation, int success)
 		   buf.shm_perm.gid, buf.shm_perm.mode);
 
     context_setbegin(context);
+#if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
 	    context->u.syscall.sysname, shmid, IPC_SET, &buf);
+#else
+    fprintf(stderr, "Attempting %s(%x, %x, %x, %p)\n", 
+	    context->u.syscall.sysname, SHMCTL, shmid, IPC_SET, &buf);
+#endif
     errno = 0;
     exit = shmctl(shmid, IPC_SET, &buf);
     context_setend(context);
@@ -135,8 +140,13 @@ int test_shmctl_rmid(struct audit_data *context, int variation, int success)
         goto exit_root;
 
     context_setbegin(context);
+#if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
 	    context->u.syscall.sysname, shmid, IPC_RMID, NULL);
+#else
+    fprintf(stderr, "Attempting %s(%x, %x, %x, %p)\n", 
+	    context->u.syscall.sysname, SHMCTL, shmid, IPC_RMID, NULL);
+#endif
     errno = 0;
     exit = shmctl(shmid, IPC_RMID, NULL);
     context_setend(context);

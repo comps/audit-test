@@ -90,8 +90,14 @@ int test_msgrcv(struct audit_data *context, int variation, int success)
         goto exit_root;
 
     context_setbegin(context);
+#if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x, %p, %x, %x, IPC_NOWAIT)\n", 
 	    context->u.syscall.sysname, qid, buf, buflen, TEST_MSG_TYPE);
+#else
+    fprintf(stderr, "Attempting %s(%x, %x, %p, %x, %x, IPC_NOWAIT)\n", 
+	    context->u.syscall.sysname, MSGRCV, qid, buf, buflen,
+	    TEST_MSG_TYPE);
+#endif
     errno = 0;
     exit = msgrcv(qid, buf, buflen, TEST_MSG_TYPE, IPC_NOWAIT);
     context_setend(context);

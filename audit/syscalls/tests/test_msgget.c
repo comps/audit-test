@@ -70,8 +70,13 @@ int test_msgget(struct audit_data *context, int variation, int success)
         goto exit_queue;
 
     context_setbegin(context);
+#if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x, %x)\n", 
             context->u.syscall.sysname, TEST_IPC_KEY, msgflag);
+#else
+    fprintf(stderr, "Attempting %s(%x, %x, %x)\n", 
+            context->u.syscall.sysname, MSGGET, TEST_IPC_KEY, msgflag);
+#endif
     errno = 0;
     exit = msgget(TEST_IPC_KEY, msgflag);
     context_setend(context);

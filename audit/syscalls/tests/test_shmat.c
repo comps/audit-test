@@ -72,8 +72,13 @@ int test_shmat(struct audit_data *context, int variation, int success)
         goto exit_root;
 
     context_setbegin(context);
+#if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x)\n", 
 	    context->u.syscall.sysname, shmid);
+#else
+    fprintf(stderr, "Attempting %s(%x, %x)\n", 
+	    context->u.syscall.sysname, SHMAT, shmid);
+#endif
     errno = 0;
     shmadd = shmat(shmid, NULL, 0);
     context_setend(context);

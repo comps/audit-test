@@ -72,8 +72,13 @@ int test_shmget(struct audit_data *context, int variation, int success)
         goto exit_seg;
 
     context_setbegin(context);
+#if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x, %lx, %x)\n", 
 	    context->u.syscall.sysname, TEST_IPC_KEY, PAGE_SIZE, flags);
+#else
+    fprintf(stderr, "Attempting %s(%x, %x, %lx, %x)\n", 
+	    context->u.syscall.sysname, SHMGET, TEST_IPC_KEY, PAGE_SIZE, flags);
+#endif
     errno = 0;
     /* using library routine makes it portable between arches */
     exit = shmget(TEST_IPC_KEY, PAGE_SIZE, flags);

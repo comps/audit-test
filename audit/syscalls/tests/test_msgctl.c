@@ -84,8 +84,13 @@ int test_msgctl_set(struct audit_data *context, int variation, int success)
 		   buf.msg_perm.gid, buf.msg_perm.mode);
 
     context_setbegin(context);
+#if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
 	    context->u.syscall.sysname, qid, IPC_SET, &buf);
+#else
+    fprintf(stderr, "Attempting %s(%x, %x, %x, %p)\n", 
+	    context->u.syscall.sysname, MSGCTL, qid, IPC_SET, &buf);
+#endif
     errno = 0;
     exit = msgctl(qid, IPC_SET, &buf);
     context_setend(context);
@@ -132,8 +137,13 @@ int test_msgctl_rmid(struct audit_data *context, int variation, int success)
         goto exit_root;
 
     context_setbegin(context);
+#if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x, %x, %p)\n", 
 	    context->u.syscall.sysname, qid, IPC_RMID, NULL);
+#else
+    fprintf(stderr, "Attempting %s(%x, %x, %x, %p)\n", 
+	    context->u.syscall.sysname, MSGCTL, qid, IPC_RMID, NULL);
+#endif
     errno = 0;
     exit = msgctl(qid, IPC_RMID, NULL);
     context_setend(context);

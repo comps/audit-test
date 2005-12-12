@@ -44,6 +44,9 @@
 #define TEST_NOTIMED 1
 #define TEST_TIMED   2
 
+/* not defined in headers */
+#define SEMTIMEDOP 4
+
 static int common_semop(struct audit_data *context, int op, int success)
 {
     int rc = 0;
@@ -72,8 +75,17 @@ static int common_semop(struct audit_data *context, int op, int success)
         goto exit_root;
 
     context_setbegin(context);
+#if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x, %p, %x, %p)\n", 
-	    context->u.syscall.sysname, semid, &sops, nsems, &timeout);
+	    context->u.syscall.sysname, semid, &sops, nsems, 
+	    (op == TEST_TIMED) ? &timeout : NULL);
+#else
+    fprintf(stderr, "Attempting %s(%x, %x, %p, %x, %p)\n", 
+	    context->u.syscall.sysname, 
+	    (op == TEST_TIMED) ? SEMTIMEDOP : SEMOP, 
+	    semid, &sops, nsems, 
+	    (op == TEST_TIMED) ? &timeout : NULL);
+#endif
     errno = 0;
     exit = (op == TEST_TIMED) ?
 	semtimedop(semid, &sops, nsems, &timeout) :

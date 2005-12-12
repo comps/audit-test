@@ -84,8 +84,13 @@ int test_msgsnd(struct audit_data *context, int variation, int success)
     strcpy(buf->mtext, msg);
 
     context_setbegin(context);
+#if defined (__x86_64) || defined (__ia64)
     fprintf(stderr, "Attempting %s(%x, %p, %x, %x)\n", 
 	    context->u.syscall.sysname, qid, buf, buflen, IPC_NOWAIT);
+#else
+    fprintf(stderr, "Attempting %s(%x, %x, %p, %x, %x)\n", 
+	    context->u.syscall.sysname, MSGSND, qid, buf, buflen, IPC_NOWAIT);
+#endif
     errno = 0;
     exit = msgsnd(qid, buf, buflen, IPC_NOWAIT);
     context_setend(context);

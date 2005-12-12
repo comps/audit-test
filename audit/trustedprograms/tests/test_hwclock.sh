@@ -20,6 +20,13 @@
 HWCLOCK="/sbin/hwclock"
 AUDIT_LOG="/var/log/audit/audit.log"
 
+# Fetch the UTC setting from the system clock configuration
+source /etc/sysconfig/clock
+case $UTC in
+    true|yes) UTCFLAG=--utc ;;
+    *) unset UTCFLAG ;;
+esac
+
 ## Test 1
 #
 # Change the system time and check for the audit event:
@@ -27,23 +34,24 @@ AUDIT_LOG="/var/log/audit/audit.log"
 #       msg='hwclock: op=changing system time id=0 res=success'
 
 # Store off the audit log offset
-AUDIT_SEEK=`wc -c $AUDIT_LOG | awk '{print $1}'`
+AUDIT_SEEK=$(wc -c < $AUDIT_LOG)
 
-# Save off the current time
-ALT_TIME="1/1/00 00:00:00"
-UTC_TIME=`/bin/date -u +"%D %T"`
+# Alter the hardware clock
+echo "$(hwclock) -- original hardware clock"
+$HWCLOCK --set --date "1/1/2000 00:00:00"
+echo "$(hwclock) -- altered hardware clock"
 
-# Set the time, then restore it
-echo "Setting hwclock to   $ALT_TIME"
-
-$HWCLOCK --set --date="$ALT_TIME"
-$HWCLOCK -u --set --date="$UTC_TIME"
-
-echo -n "System time restored "
-date +"%D %T"
+# Restore the hwclock
+$HWCLOCK $UTCFLAG --systohc
+echo "$(hwclock) -- restored hardware clock"
 
 # Check for the records
-[ `augrok --count --seek $AUDIT_SEEK type==USYS_CONFIG msg_1=="hwclock: op=changing system time id=0 res=success"` == 2 ] && exit 0;
-
-# There weren't exactly 2 records therefor the test failed
-exit 1;
+count=$(augrok --count --seek $AUDIT_SEEK type==USYS_CONFIG \
+    msg_1=="hwclock: op=changing system time id=0 res=success")
+if [[ $count == 2 ]]; then
+    echo "pass: augrok found 2 hwclock records"
+    exit 0
+else
+    echo "fail: augrok found $count records, expecting only 2"
+    exit 1
+fi

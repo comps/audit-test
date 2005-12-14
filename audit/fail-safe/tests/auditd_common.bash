@@ -81,20 +81,25 @@ function fill_disk {
     # So far, this only happens on tmpfs, so don't worry about deleting the temp
     # file later.
     declare dir=$1 free=$2
-    echo "Filling $dir, leaving $free KB free"
-    dd if=/dev/zero of="$dir/bogus" bs=1024 count=$free || return 2
-    cat </dev/zero >"$dir/bloat"
-    rm -f "$dir/bogus"
-    df -k $dir/
-}
+    declare bloat=$dir/bloat
+    declare before during after
+    declare header=$(df -k "$dir" | head -n1)
 
-prepend_cleanup '{
     echo
-    echo "Audit log snippet"
-    echo "--- start audit.log --------------------------------------------------------"
-    augrok "type!=AGRIFFIS"
-    echo "--- end audit.log ----------------------------------------------------------"
-}'
+    echo "Filling $dir, leaving $free KB free"
+    before=$(df -k "$dir" | sed -rn '2s/^.{7}/BEFORE /p')
+
+    cat </dev/zero >"$bloat" 2>/dev/null
+    during=$(df -k "$dir" | sed -rn '2s/^.{7}/DURING /p')
+
+    free=$free bloat=$bloat perl -we '
+	die "failed to truncate $ENV{bloat}\n" unless 
+	truncate $ENV{"bloat"}, (stat $ENV{"bloat"})[7] - 1024*$ENV{"free"}' \
+	|| return 2
+    after=$(df -k "$dir" | sed -rn '2s/^.{7}/AFTER  /p')
+
+    printf "%s\n%s\n%s\n%s\n\n" "$header" "$before" "$during" "$after"
+}
 
 function check_rotate {
     if [[ ! -s "$audit_log.1" ]]; then
@@ -301,3 +306,11 @@ fi
 if [[ $(type -t pre_$action) == function ]]; then
     pre_$action
 fi
+
+prepend_cleanup '{
+    echo
+    echo "Audit log snippet"
+    echo "--- start audit.log --------------------------------------------------------"
+    augrok "type!=AGRIFFIS"
+    echo "--- end audit.log ----------------------------------------------------------"
+}'

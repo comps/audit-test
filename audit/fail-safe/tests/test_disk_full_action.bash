@@ -29,6 +29,7 @@ write_auditd_conf \
     disk_full_action=$action || exit 2
 
 # Fill the filesystem hosting audit.log, leaving 5k available
+:> ${audit_log}	# so the metadata for this exists in the tmpfs
 fill_disk ${audit_log%/*} 5 || exit 2
 
 start_auditd || exit 2

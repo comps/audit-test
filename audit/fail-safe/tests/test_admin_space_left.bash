@@ -31,6 +31,7 @@ write_auditd_conf \
     space_left=2 || exit 2
 
 # Fill the filesystem hosting audit.log, leaving 1MB + 5KB available
+:> ${audit_log}	# so the metadata for this exists in the tmpfs
 fill_disk ${audit_log%/*} $((1024 + 5)) || exit 2
 
 start_auditd || exit 2

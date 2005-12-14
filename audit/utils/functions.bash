@@ -136,9 +136,9 @@ function start_auditd {
 
     # auditd daemonizes before it is ready to receive records from the kernel.
     # make sure it's receiving before continuing.
+    echo -n "start_auditd: Waiting for auditd to start"
     for ((i = 0; i < 100; i++)); do
 	auditctl -m "$s"
-	echo -n "start_auditd: Waiting for auditd to start"
 	if tail -n10 /var/log/audit/audit.log | grep -Fq "$s"; then
 	    echo
 	    return 0

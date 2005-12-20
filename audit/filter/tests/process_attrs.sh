@@ -17,6 +17,11 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+#
+# process_attrs.sh - This filter test is designed to test the ability to use
+#                    auditctl to specify a kernel filter for the audit logs.
+#                    Specifically it tests:
+#           Test 1 - The ability to filter based on login uid (auid)
 
 #
 # configuration
@@ -89,6 +94,8 @@ user_auid="$(cat /proc/self/loginuid)"
 echo "notice: user information"
 echo " uid       = $(id -u)"
 echo " login id  = $user_auid"
+
+### Test 1 - Filter on login uid (auid)
 
 # set an audit filter
 echo "notice: setting a filter for the login uid ..."

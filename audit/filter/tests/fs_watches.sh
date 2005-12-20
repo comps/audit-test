@@ -17,6 +17,11 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+#
+# fs_watches.sh - This filter test is designed to test the ability to use
+#                 auditctl to specify a kernel filter for the audit logs.
+#                 Specifically it tests:
+#        Test 1 - The ability to filter based on a filesystem watch
 
 #
 # configuration
@@ -84,6 +89,8 @@ f_inode="$(stat -c '%i' $tmp1)"
 echo "notice: file information"
 echo " file  = $tmp1"
 echo " inode = $f_inode"
+
+### Test 1 - Filter on a file (fs watch)
 
 # set an audit filter
 echo "notice: setting a watch for the file ..."

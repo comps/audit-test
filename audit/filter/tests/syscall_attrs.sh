@@ -17,6 +17,15 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+#
+# syscall_attrs.sh - This filter test is designed to test the ability to use
+#                    auditctl to specify a kernel filter for the audit logs.
+#                    Specifically it tests:
+#           Test 1 - The ability to filter on syscall success
+#           Test 2 - The ability to filter on syscall failure
+#           Test 3 - The ability to filter on a syscall by name
+#           Test 4 - The ability to filter on a syscall by number
+
 
 #
 # configuration
@@ -108,8 +117,8 @@ echo " platform       = $(uname -i)"
 echo " syscall name   = $syscall_name"
 echo " syscall number = $syscall_num"
 
-### success check
 
+### Test 1 - Filter on syscall success
 echo ""
 
 # set an audit filter
@@ -137,8 +146,8 @@ fi
 auditctl -d $filter_rule $filter_field
 filter_field=""
 
-### fail check
 
+### Test 2 - Filter on syscall failure
 echo ""
 
 # set an audit filter
@@ -166,8 +175,8 @@ fi
 auditctl -d $filter_rule $filter_field
 filter_field=""
 
-### syscall name check
 
+### Test 3 - Filter on the syscall by name
 echo ""
 
 # set an audit filter
@@ -194,8 +203,8 @@ fi
 # remove the filter
 auditctl -d $filter_rule
 
-### syscall number check
 
+### Test 4 - Filter on the syscall by number
 echo ""
 
 # set an audit filter

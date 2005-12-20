@@ -17,6 +17,12 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+#
+# file_attrs.sh - This filter test is designed to test the ability to use
+#                 auditctl to specify a kernel filter for the audit logs.
+#                 Specifically it tests:
+#        Test 1 - The ability to filter based on an inode number
+#        Test 2 - The ability to filter based on a device number
 
 #
 # configuration
@@ -108,8 +114,8 @@ for iter_file in $file_real $file_real.hard; do
     echo " fs_dev     = $f_fs_dev"
     echo " fs_dev_num = $f_fs_dev_num"
 
-    ### inode check
 
+    ### Test 1 - Filter on an inode number
     echo ""
 
     # set an audit filter
@@ -137,8 +143,8 @@ for iter_file in $file_real $file_real.hard; do
     auditctl -d $filter_rule $filter_field
     filter_field=""
 
-    ### device number check
     
+    ### Test 2 - Filter on a device number
     echo ""
 
     # set an audit filter

@@ -1,0 +1,12 @@
+Current TODO items:
+
+- Update syscall coverage docs
+- Rewrite libpam tests in bash
+- Rewrite trustedprograms tests in bash
+- Update syscall tests for fsetxattr, fchmod, fchown, fremovexattr to
+  use context_settobj() instead of audit_add_watch()
+- Add more filesystem audit unit tests: link and symlink handling,
+  file replacement, etc.
+- Improve code for dropping privs in syscall tests
+- Make all references to struct audit_data via accessors (syscall tests)
+- Introduce stackable test execution modes: capp, lspp, etc. 

@@ -11,6 +11,14 @@ normal user, you can do:
 make all
 sudo make run
 
+Dependencies
+------------
+
+audit-test requires the following packages in order to run:
+
+expect
+audit-libs-devel
+
 | Using run.bash
 +---------------
 

@@ -1,5 +1,6 @@
 /**********************************************************************
 **   Copyright (C) International Business Machines  Corp., 2003
+**   Copyright (C) Hewlett-Packard Development Company, L.P., 2005
 **
 **   This program is free software;  you can redistribute it and/or modify
 **   it under the terms of the GNU General Public License as published by
@@ -26,6 +27,7 @@
 **
 **  HISTORY:
 **    06/03 originated by Daniel H. Jones (danjones@us.ibm.com)
+**    12/05 Adapted by Matt Anderson <mra@hp.com>
 **
 **********************************************************************/
 

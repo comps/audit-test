@@ -1,5 +1,6 @@
 /**********************************************************************
  **   Copyright (C) International Business Machines  Corp., 2003
+ **   Copyright (C) Hewlett-Packard Development Company, L.P., 2005
  **
  **   This program is free software;  you can redistribute it and/or modify
  **   it under the terms of the GNU General Public License as published by
@@ -36,6 +37,7 @@
  **  HISTORY    :
  **    07/2003 Originated by Dustin Kirkland <k1rkland@us.ibm.com>
  **    07/2003 Adapted by Michael A. Halcrow <mike@halcrow.us>
+ **    12/2005 Adapted by Matt Anderson <mra@hp.com>
  **
  **********************************************************************/
 #include "includes.h"

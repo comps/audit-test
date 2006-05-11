@@ -1,6 +1,11 @@
+This test suite is known to work with RHEL4 Update 2 when
+configured according to the HP Evaluated Configuration Guide.
+It was tested with the x86, x86_64 and ia64 architectures.
+Code exists for other architectures but no other architectures
+have never been tested with this version of the test suite.  
+
 Current TODO items:
 
-- Update syscall coverage docs
 - Rewrite libpam tests in bash
 - Rewrite trustedprograms tests in bash
 - Update syscall tests for fsetxattr, fchmod, fchown, fremovexattr to
@@ -9,4 +14,6 @@ Current TODO items:
   file replacement, etc.
 - Improve code for dropping privs in syscall tests
 - Make all references to struct audit_data via accessors (syscall tests)
+- Update tests to run on FC5/RHEL5
+- Update tests for LSPP coverage 
 - Introduce stackable test execution modes: capp, lspp, etc. 

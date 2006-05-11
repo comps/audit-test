@@ -4,6 +4,8 @@
 | Quickstart
 +-----------
 
+Check the TODO file for the current state of the test suite.
+
 sudo make run
 
 It's not actually necessary to build as root.  If you'd prefer to build as a

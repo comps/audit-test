@@ -2,7 +2,7 @@ This test suite is known to work with RHEL4 Update 2 when
 configured according to the HP Evaluated Configuration Guide.
 It was tested with the x86, x86_64 and ia64 architectures.
 Code exists for other architectures but no other architectures
-have never been tested with this version of the test suite.  
+have been tested with this version of the test suite.  
 
 Current TODO items:
 

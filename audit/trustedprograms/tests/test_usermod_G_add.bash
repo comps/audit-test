@@ -1,5 +1,5 @@
+#!/bin/bash
 ###############################################################################
-# Copyright (C) International Business Machines  Corp., 2003
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 #
 #   This program is free software;  you can redistribute it and/or modify
@@ -16,21 +16,27 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+# 
+# PURPOSE:
+# FIXME
 
-TOPDIR		= ../..
-TESTDIR		= ..
-CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
+source tp_functions.bash || exit 2
 
-TP_UTILS_AR	= trustedprogram_test_utils.a
-TP_UTILS_OBJ	= post_trustedprogram.o		\
-		  pre_trustedprogram.o		\
-		  trusted_program.o		\
-		  shadow_test_setup.o
+# setup
+useradd -n -G users -u $uid $user || exit_error "useradd failed"
 
-ALL_AR		= $(TP_UTILS_AR)
-ALL_OBJ		= $(TP_UTILS_OBJ)
+# test
+setpid usermod -G users,games $user || exit_error "usermod failed"
 
-include $(TOPDIR)/rules.mk
+for msg_1 in \
+    "usermod: op=adding user to group acct=$user res=success" \
+    "usermod: op=adding user to shadow group acct=$user res=success"
+do
+    augrep -q type=USER_CHAUTHTOK \
+            user_pid=$pid \
+            uid=$EUID \
+            auid=$(</proc/self/loginuid) \
+            msg_1="$msg_1" || exit_fail "missing: \"$msg_1\""
+done
 
-$(TP_UTILS_AR): $(TP_UTILS_OBJ)
-	$(LINK_AR)
+exit_pass

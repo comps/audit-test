@@ -1,5 +1,5 @@
+#!/bin/bash
 ###############################################################################
-# Copyright (C) International Business Machines  Corp., 2003
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 #
 #   This program is free software;  you can redistribute it and/or modify
@@ -16,7 +16,28 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+# 
+# PURPOSE:
+# FIXME
 
-TOPDIR		= ../..
+source tp_functions.bash || exit 2
 
-include $(TOPDIR)/rules.mk
+# setup
+useradd -n -u $uid $user || exit_error "useradd failed"
+read user2 uid2 <<<"$(generate_unique_user)"
+
+# test
+setpid usermod -d /home/$user2 -m $user || exit_error "usermod failed"
+
+for msg_1 in \
+    "usermod: op=changing home directory acct=$user res=success" \
+    "usermod: op=moving home directory acct=$user res=success"
+do
+    augrep -q type=USER_CHAUTHTOK \
+            user_pid=$pid \
+            uid=$EUID \
+            auid=$(</proc/self/loginuid) \
+            msg_1="$msg_1" || exit_fail "missing: \"$msg_1\""
+done
+
+exit_pass

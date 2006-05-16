@@ -1,5 +1,5 @@
+#!/bin/bash
 ###############################################################################
-# Copyright (C) International Business Machines  Corp., 2003
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 #
 #   This program is free software;  you can redistribute it and/or modify
@@ -16,7 +16,21 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+# 
+# PURPOSE:
+# FIXME
 
-TOPDIR		= ../..
+source tp_functions.bash || exit 2
 
-include $(TOPDIR)/rules.mk
+# test
+setpid groupadd -g $gid $group || exit_error "groupadd failed"
+
+if ! augrep -q type=USER_CHAUTHTOK \
+        user_pid=$pid \
+        uid=$EUID \
+        auid=$(</proc/self/loginuid) \
+        msg_1="groupadd: op=adding group acct=$group res=success"; then
+    exit_fail "failed to find audit.log entry"
+fi
+
+exit_pass

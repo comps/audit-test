@@ -175,7 +175,7 @@ void context_setsockaddr(struct audit_data *context, unsigned char *buf,
 			 size_t len)
 {
     int i;
-    unsigned char* ptr = context->u.syscall.sockaddr;
+    char* ptr = context->u.syscall.sockaddr;
 
     context->type |= AUDIT_MSG_SOCKADDR;
     for (i = 0; i < len; i++) {

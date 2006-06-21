@@ -24,8 +24,8 @@
 /*
  * Audit Interaction
  */
-char *audit_add_watch(const char *);
-void audit_rem_watch(const char *, const char *);
+char *autest_add_watch(const char *);
+void autest_rem_watch(const char *, const char *);
 
 /*
  * System Info Collection

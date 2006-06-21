@@ -38,7 +38,7 @@
 #if defined(__powerpc64__)
 #include <asm-ppc64/ipc.h>
 #elif !defined(__ia64__)
-#include <asm/ipc.h>
+#include <asm-generic/ipc.h>
 #endif
 #include <sys/sem.h>
 

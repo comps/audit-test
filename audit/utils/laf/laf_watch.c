@@ -20,7 +20,7 @@
 
 #include "includes.h"
 
-char *audit_add_watch(const char *path)
+char *autest_add_watch(const char *path)
 {
     char *k, *key = NULL;
     char cmd[512] = { 0 };
@@ -54,7 +54,7 @@ exit_err:
     return NULL;
 }
 
-void audit_rem_watch(const char *path, const char *key)
+void autest_rem_watch(const char *path, const char *key)
 {
     char cmd[512] = { 0 };
     int count;

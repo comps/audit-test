@@ -56,7 +56,7 @@ int test_fremovexattr(struct audit_data *context, int variation, int success)
 	goto exit;
     }
 
-    key = audit_add_watch(path);
+    key = autest_add_watch(path);
     if (!key) {
 	destroy_tempfile(path);
 	rc = -1;
@@ -106,7 +106,7 @@ exit_suid:
 	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_path:
-    audit_rem_watch(path, key);
+    autest_rem_watch(path, key);
     destroy_tempfile(path);
     free(key);
 

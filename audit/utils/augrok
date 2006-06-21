@@ -834,7 +834,14 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
                          "type!=" : "type=~\\b$_[1]\\b" },
         'p=i'   => sub { push @ARGV, "pid==$_[1]" },
         'sc=s'  => sub { push @ARGV, "syscall==$_[1]" },        # XXX names
-        'sv=s'  => sub { push @ARGV, "success==$_[1]" },
+	# ausearch >= 1.0.12 tries hard to understand the various variants
+        'sv=s'  => sub {
+		$_[1] =~ /yes/i
+		? push @ARGV, "(", "success==yes", "or", "msg_1=~res=success",
+                                   "or", "msg_1=~result=Success", ")"
+		: push @ARGV, "(", "success==no", "or", "msg_1=~res=failed",
+                                    "or", "msg_1=~result=[^=]*[Ff]ail", ")"
+	},
         'ts'    => sub { push @ARGV, "msg_time>=" },            # see <> below
         'te'    => sub { push @ARGV, "msg_time<=" },            # see <> below
         'tm'    => sub { push @ARGV, ($eq eq '==')

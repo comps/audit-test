@@ -35,7 +35,8 @@ shopt -s extglob
 auditd_conf=/etc/auditd.conf
 auditd_orig=$(mktemp $auditd_conf.XXXXXX) || exit 2
 audit_log=/var/log/audit/audit.log
-eal_mail=/var/mail/eal
+# get recipient of root mail from /etc/aliases "root: jdoe, jsmith" line
+eal_mail=/var/mail/$(sed -n 's/^root:[ \t]*\([^,]*\).*/\1/p' /etc/aliases)
 messages=/var/log/messages
 tmp1=$(mktemp) || exit 2
 tmp2=$(mktemp) || exit 2

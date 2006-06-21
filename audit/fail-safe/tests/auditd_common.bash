@@ -244,7 +244,7 @@ function check_single {
 }
 
 function pre_email {
-    if [[ -f /var/mail/eal ]]; then
+    if [[ -f "$eal_mail" ]]; then
 	eal_mail_lines=$(wc -l < "$eal_mail")
     else
 	eal_mail_lines=0
@@ -300,7 +300,7 @@ write_auditd_conf \
 # email actions aren't fully available until version 1.0.8, so don't write
 # this config item unless that's what we're testing.
 if [[ $action == email ]]; then
-    write_auditd_conf action_mail_acct=eal
+    write_auditd_conf action_mail_acct=root
 fi
 
 if [[ $(type -t pre_$action) == function ]]; then

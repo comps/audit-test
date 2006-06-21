@@ -18,6 +18,24 @@
 ###############################################################################
 
 TOPDIR		= ..
-SUB_DIRS	= tests
+TESTDIR		= .
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
+
+TP_EXE		= trustedprograms
+TP_OBJ		= trustedprograms.o
+
+UTILS_AR	= $(TOPDIR)/utils/testutils.a
+TESTS_AR	= $(TESTDIR)/tests/trustedprogram_test.a
+TUTILS_AR	= $(TESTDIR)/utils/trustedprogram_test_utils.a
+
+ALL_OBJ		= $(TP_OBJ)
+ALL_EXE		= $(TP_EXE)
+ALL_AR		= $(TESTS_AR) $(TUTILS_AR)
+
+SUB_DIRS	= tests utils
 
 include $(TOPDIR)/rules.mk
+
+$(TP_EXE): LDLIBS += -laudit
+$(TP_EXE): $(TP_OBJ) $(TESTS_AR) $(TUTILS_AR) $(UTILS_AR)
+	$(LINK_EXE)

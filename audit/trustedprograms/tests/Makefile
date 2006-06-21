@@ -18,5 +18,25 @@
 ###############################################################################
 
 TOPDIR		= ../..
+TESTDIR		= ..
+CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
+
+TESTS_AR	= trustedprogram_test.a
+TESTS_OBJ	= test_gpasswd.o \
+		  test_groupadd.o \
+		  test_groupdel.o \
+		  test_groupmod.o \
+		  test_passwd.o \
+		  test_useradd.o \
+		  test_userdel.o \
+		  test_usermod.o 
+
+TP_UTILS_AR	= ../utils/trustedprogram_test_utils.a
+
+ALL_AR		= $(TESTS_AR)
+ALL_OBJ		= $(TESTS_OBJ)
 
 include $(TOPDIR)/rules.mk
+
+$(TESTS_AR): $(TESTS_OBJ) $(TP_UTILS_AR)
+	$(LINK_AR)

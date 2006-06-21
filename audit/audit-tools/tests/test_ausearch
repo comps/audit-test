@@ -43,8 +43,8 @@ remove_msg_space='s/(msg=audit[^)]*\)) :/\1:/'
 remove_daemon_commas='/^type=DAEMON_START/s/,[[:blank:]]+/ /g'
 [[ $* == *-i* ]] && remove_quotes='s/"//g' || remove_quotes=''
 
-echo "# augrok --ausearch -if audit.log $*" >&2
-augrok_output=$(augrok --ausearch -if audit.log "$@" \
+echo "# augrok --ausearch -if auditlog.sample $*" >&2
+augrok_output=$(augrok --ausearch -if auditlog.sample "$@" \
     | sed -r "$collapse_interior_whitespace" \
     | sed -r "$remove_daemon_commas" \
     | sed -r "$remove_quotes" \
@@ -56,8 +56,8 @@ if [[ -z $augrok_output ]]; then
 fi
 
 echo
-echo "# ausearch -if audit.log $*" >&2
-ausearch_output=$(ausearch -if audit.log "$@" \
+echo "# ausearch -if auditlog.sample $*" >&2
+ausearch_output=$(ausearch -if auditlog.sample "$@" \
     | sed -r "$collapse_interior_whitespace" \
     | sed -r "$remove_trailing_whitespace" \
     | sed -r "$remove_msg_space" \

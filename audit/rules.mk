@@ -175,23 +175,22 @@ _showrpms: subdirs_quiet
 # Dependency rules
 ##########################################################################
 
-.PHONY: deps depsdir
-DEP_FILES = $(addprefix .deps/, $(ALL_OBJS:.o=.d))
+DEP_FILES = $(addprefix .deps/, $(ALL_OBJ:.o=.d))
 
-deps: depsdir $(DEP_FILES)
+.PHONY: deps
 
-depsdir:
-	@mkdir -p .deps
+deps: $(DEP_FILES)
 
 # See http://www.gnu.org/software/make/manual/html_node/make_47.html#SEC51
 # "4.14 Generating Prerequisites Automatically"
 .deps/%.d: %.c
+	@mkdir -p .deps
 	@echo Creating dependencies for $<
-	@$(SHELL) -ec '$(CC) $(CFLAGS) $(INCLUDES) -MM $< \
+	@$(SHELL) -ec '$(CC) $(CFLAGS) $(CPPFLAGS) -MM $< \
 		| sed '\''s@\($*\)\.o[ :]*@\1.o $@: @g'\'' > $@; \
 		[ -s $@ ] || $(RM) $@'
 
--include .deps/*.d
+-include $(DEP_FILES)
 
 # How to build missing things like libraries
 ../%:

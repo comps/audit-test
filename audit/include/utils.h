@@ -78,6 +78,8 @@ int context_setcwd(struct audit_data *);
 void context_setsobj(struct audit_data *, char *);
 void context_settobj(struct audit_data *, char *);
 void context_setwatch(struct audit_data *, char *);
+void context_setdev(struct audit_data *, dev_t);
+void context_setino(struct audit_data *, ino_t);
 void context_setarg(struct audit_data *, int, int);
 char *context_getcwd(struct audit_data *);
 void context_dump(const struct audit_data *);

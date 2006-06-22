@@ -109,10 +109,19 @@ ts_exit verify_logresult(struct audit_data *context)
 				  " name==%s name_1==%s", 
 				  context->u.syscall.fs_sobj,
 				  context->u.syscall.fs_tobj);
-	    else
+	    else if (strcmp(context->u.syscall.fs_tobj, ""))
 		count += snprintf(&cmd[count], sizeof(cmd)-count, 
 				  " name==%s", 
 				  context->u.syscall.fs_tobj);
+	    else {
+		count += snprintf(&cmd[count], sizeof(cmd)-count, 
+				  " dev==%02x:%02x", 
+				  major(context->u.syscall.fs_dev),
+				  minor(context->u.syscall.fs_dev));
+		count += snprintf(&cmd[count], sizeof(cmd)-count, 
+				  " inode==%d", 
+				  (int)context->u.syscall.fs_ino);
+	    }
 	}
 
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_ARG0) {

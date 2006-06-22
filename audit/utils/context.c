@@ -221,6 +221,20 @@ void context_setwatch(struct audit_data *context, char *obj)
     fprintf(stderr, "Setting context watch: %s\n", context->u.syscall.fs_watch);
 }
 
+void context_setdev(struct audit_data *context, dev_t dev)
+{
+    context->type |= AUDIT_MSG_PATH;
+    context->u.syscall.fs_dev = dev;
+    fprintf(stderr, "Setting context dev: %d\n", (int)context->u.syscall.fs_dev);
+}
+
+void context_setino(struct audit_data *context, ino_t ino)
+{
+    context->type |= AUDIT_MSG_PATH;
+    context->u.syscall.fs_ino = ino;
+    fprintf(stderr, "Setting context ino: %d\n", (int)context->u.syscall.fs_ino);
+}
+
 void context_setarg(struct audit_data *context, int argnum, int arg)
 {
     switch(argnum) {
@@ -293,6 +307,8 @@ void context_dump(const struct audit_data *context)
 	if (context->type & AUDIT_MSG_PATH) {
 	    fprintf(stderr, "\tfs_sobj   : %s\n", syscall->fs_sobj ?: "(null)");
 	    fprintf(stderr, "\tfs_tobj   : %s\n", syscall->fs_tobj ?: "(null)");
+	    fprintf(stderr, "\tfs_dev    : %02x:%02x\n", major(syscall->fs_dev), minor(syscall->fs_dev));
+	    fprintf(stderr, "\tfs_ino    : %d\n", (int)syscall->fs_ino);
 	}
     } else if (context->type == AUDIT_MSG_USER) {
 	fprintf(stderr, "\ttext: %s\n", context->u.user.buf);

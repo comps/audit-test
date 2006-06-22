@@ -108,6 +108,8 @@ struct audit_syscall {
     char          fs_sobj[PATH_MAX];  /* source object */
     char          fs_tobj[PATH_MAX];  /* target object */
     char          fs_watch[PATH_MAX]; /* audit watch */
+    dev_t         fs_dev;             /* object device number */
+    ino_t         fs_ino;             /* object inode number */
     /* syscall args */
     int           arg[4];
 };

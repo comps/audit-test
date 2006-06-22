@@ -41,21 +41,15 @@
 int test_fchmod(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    char *path, *key;
+    char *path;
     int fd;
+    struct stat stats;
     int mode = S_IRWXU|S_IRWXO;
     int exit;
 
     path = init_tempfile(S_IRWXU, context->euid, context->egid,
 			 context->u.syscall.sysname);
     if (!path) {
-	rc = -1;
-	goto exit;
-    }
-
-    key = autest_add_watch(path);
-    if (!key) {
-	destroy_tempfile(path);
 	rc = -1;
 	goto exit;
     }
@@ -69,6 +63,15 @@ int test_fchmod(struct audit_data *context, int variation, int success)
     }
     fprintf(stderr, "Opened file: %s fd: %i\n", path, fd);
 
+    rc = fstat(fd, &stats);
+    if (rc < 0) {
+	fprintf(stderr, "Error: Could not fstat %s: %s\n", path,
+		strerror(errno));
+	goto exit_path;
+    }
+    context_setdev(context, stats.st_dev);
+    context_setino(context, stats.st_ino);
+
     if (!success) {
 	rc = seteuid_test();
 	if (rc < 0)
@@ -76,7 +79,6 @@ int test_fchmod(struct audit_data *context, int variation, int success)
 	context_setexperror(context, EPERM);
     }
 
-    context_setwatch(context, key);
     rc = context_setidentifiers(context);
     if (rc < 0)
 	goto exit_suid;
@@ -95,9 +97,7 @@ exit_suid:
 	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_path:
-    autest_rem_watch(path, key);
     destroy_tempfile(path);
-    free(key);
 
 exit:
     return rc;

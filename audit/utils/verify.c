@@ -82,7 +82,7 @@ ts_exit verify_logresult(struct audit_data *context)
 	}
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_IPC) {
 	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
-			      " iuid==%u mode==%x qbytes==%x igid==%u", 
+			      " ouid==%u mode==%x qbytes==%x ogid==%u", 
 			      context->u.syscall.ipc_uid, 
 			      context->u.syscall.ipc_mode, 
 			      context->u.syscall.ipc_qbytes, 

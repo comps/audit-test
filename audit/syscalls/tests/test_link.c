@@ -37,12 +37,11 @@
 
 #include "includes.h"
 #include "syscalls.h"
-#include <libgen.h>
 
 int test_link(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    char *oldpath, *newpath, *tmp;
+    char *oldpath, *newpath, *tmp, *dir;
     char *lname = "/link";
     int exit;
 
@@ -59,6 +58,7 @@ int test_link(struct audit_data *context, int variation, int success)
 	rc = -1;
 	goto exit;
     }
+    dir = strdup(tmp);
 
     errno = 0;
     newpath = realloc(tmp, strlen(tmp) + strlen(lname) + 1);
@@ -66,7 +66,8 @@ int test_link(struct audit_data *context, int variation, int success)
 	fprintf(stderr, "Error: initializing path: realloc(): %s\n",
 		strerror(errno));
 	destroy_tempfile(oldpath);
-	destroy_tempdir(tmp);
+	destroy_tempdir(dir);
+	free(tmp);
 	rc = -1;
 	goto exit;
     }
@@ -89,13 +90,12 @@ int test_link(struct audit_data *context, int variation, int success)
     rc = context_setcwd(context);
     if (rc < 0)
 	goto exit_suid;
-    /* We are setting the source and target objects opposite of what
-     * would be expected, to match the ordering in the audit record.
-     * The audit record doesn't actually call them "source" or
-     * "target" as this testsuite does, so it wouldn't be considered a
-     * product bug. */
-    context_settobj(context, oldpath);
-    context_setsobj(context, newpath);
+    context_settype(context, AUDIT_MSG_PATH_LINK);
+    context_setsobj(context, oldpath);
+    context_settobj(context, newpath);
+    if (success)
+	context_settdir(context, dir);
+
 
     rc = context_setidentifiers(context);
     if (rc < 0)
@@ -120,7 +120,8 @@ exit_suid:
 
 exit_path:
     destroy_tempfile(oldpath);
-    destroy_tempdir(dirname(newpath));
+    destroy_tempdir(dir);
+    free(newpath);
 
 exit:
     return rc;

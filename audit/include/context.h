@@ -55,22 +55,27 @@ enum audit_arg {
  */
 
 /* message type */
-#define AUDIT_MSG_DAEMON        0x0001
-#define AUDIT_MSG_LOGIN         0x0002
-#define AUDIT_MSG_USER          0x0004
-#define AUDIT_MSG_SYSCALL	0x0008
-#define AUDIT_MSG_CWD           0x0010
-#define AUDIT_MSG_IPC           0x0020
-#define AUDIT_MSG_SOCKADDR      0x0040
-#define AUDIT_MSG_WATCH         0x0080
-#define AUDIT_MSG_PATH          0x0100
-#define AUDIT_MSG_ARG0          0x0200
-#define AUDIT_MSG_ARG1          0x0400
-#define AUDIT_MSG_ARG2          0x0800
-#define AUDIT_MSG_ARG3          0x1000
+#define AUDIT_MSG_DAEMON        0x000001
+#define AUDIT_MSG_LOGIN         0x000002
+#define AUDIT_MSG_USER          0x000004
+#define AUDIT_MSG_SYSCALL       0x000008
+#define AUDIT_MSG_CWD           0x000010
+#define AUDIT_MSG_IPC           0x000020
+#define AUDIT_MSG_SOCKADDR      0x000040
+#define AUDIT_MSG_WATCH         0x000080
+#define AUDIT_MSG_PATH          0x000100
+#define AUDIT_MSG_PATH_DIR      0x000200
+#define AUDIT_MSG_PATH_LINK     0x000400
+#define AUDIT_MSG_PATH_SYMLINK  0x000800
+#define AUDIT_MSG_PATH_RENAME   0x001000
+#define AUDIT_MSG_PATH_INODE    0x002000
+#define AUDIT_MSG_ARG0          0x010000
+#define AUDIT_MSG_ARG1          0x020000
+#define AUDIT_MSG_ARG2          0x040000
+#define AUDIT_MSG_ARG3          0x080000
 
 /* workaround for non-critical shmat() audit bug */
-#define AUDIT_MSG_NOEXIT        0x2000
+#define AUDIT_MSG_NOEXIT        0x100000
 
 /* syscall arch */
 #if defined(__i386__)
@@ -105,7 +110,9 @@ struct audit_syscall {
     char          sockaddr[(sizeof(struct sockaddr_in) * 2) + 1];
     /* filesystem */
     char          fs_cwd[PATH_MAX];
+    char          fs_sdir[PATH_MAX];  /* source directory */
     char          fs_sobj[PATH_MAX];  /* source object */
+    char          fs_tdir[PATH_MAX];  /* target directory */
     char          fs_tobj[PATH_MAX];  /* target object */
     char          fs_watch[PATH_MAX]; /* audit watch */
     dev_t         fs_dev;             /* object device number */

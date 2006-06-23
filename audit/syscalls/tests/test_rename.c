@@ -36,11 +36,12 @@
 
 #include "includes.h"
 #include "syscalls.h"
+#include <libgen.h>
 
 int test_rename(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    char *oldpath, *newpath;
+    char *oldpath, *newpath, *dir;
     int exit = -1;
 
     oldpath = init_tempfile(S_IRWXU|S_IRWXO, context->euid, context->egid,
@@ -56,6 +57,7 @@ int test_rename(struct audit_data *context, int variation, int success)
 	rc = -1;
 	goto exit;
     }
+    dir = strdup(newpath);
 
     if (!success) {
 	rc = seteuid_test();
@@ -67,6 +69,8 @@ int test_rename(struct audit_data *context, int variation, int success)
     rc = context_setcwd(context);
     if (rc < 0)
 	goto exit_suid;
+    context_settype(context, AUDIT_MSG_PATH_RENAME);
+    context_setsdir(context, dirname(dir));
     context_setsobj(context, oldpath);
     context_settobj(context, newpath);
 
@@ -88,11 +92,13 @@ exit_suid:
 	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_path:
+    errno = 0;
     if (exit < 0)
 	destroy_tempfile(oldpath);
     else
 	free(oldpath);
     destroy_tempfile(newpath);
+    free(dir);
 
 exit:
     return rc;

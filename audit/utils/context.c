@@ -92,6 +92,11 @@ exit:
     return rc;
 }
 
+void context_settype(struct audit_data *context, unsigned int type)
+{
+    context->type |= type;
+}
+
 /* allow fsgid and fsuid to be explicitly set */
 void context_setfsgid(struct audit_data *context, int fsgid)
 {
@@ -198,17 +203,29 @@ int context_setcwd(struct audit_data *context)
     return 0;
 }
 
+void context_setsdir(struct audit_data *context, char *dir)
+{
+    strncpy(context->u.syscall.fs_sdir, dir, PATH_MAX);
+    fprintf(stderr, "Setting context directory: %s\n", 
+	    context->u.syscall.fs_sdir);
+}
+
 void context_setsobj(struct audit_data *context, char *obj)
 {
-    context->type |= AUDIT_MSG_PATH;
     strncpy(context->u.syscall.fs_sobj, obj, PATH_MAX);
     fprintf(stderr, "Setting context object: %s\n", 
 	    context->u.syscall.fs_sobj);
 }
 
+void context_settdir(struct audit_data *context, char *dir)
+{
+    strncpy(context->u.syscall.fs_tdir, dir, PATH_MAX);
+    fprintf(stderr, "Setting context directory: %s\n", 
+	    context->u.syscall.fs_tdir);
+}
+
 void context_settobj(struct audit_data *context, char *obj)
 {
-    context->type |= AUDIT_MSG_PATH;
     strncpy(context->u.syscall.fs_tobj, obj, PATH_MAX);
     fprintf(stderr, "Setting context object: %s\n", 
 	    context->u.syscall.fs_tobj);
@@ -223,14 +240,12 @@ void context_setwatch(struct audit_data *context, char *obj)
 
 void context_setdev(struct audit_data *context, dev_t dev)
 {
-    context->type |= AUDIT_MSG_PATH;
     context->u.syscall.fs_dev = dev;
     fprintf(stderr, "Setting context dev: %d\n", (int)context->u.syscall.fs_dev);
 }
 
 void context_setino(struct audit_data *context, ino_t ino)
 {
-    context->type |= AUDIT_MSG_PATH;
     context->u.syscall.fs_ino = ino;
     fprintf(stderr, "Setting context ino: %d\n", (int)context->u.syscall.fs_ino);
 }
@@ -304,9 +319,14 @@ void context_dump(const struct audit_data *context)
 	    fprintf(stderr, "\tfs_cwd    : %s\n", syscall->fs_cwd ?: "(null)");
 	if (context->type & AUDIT_MSG_WATCH)
 	    fprintf(stderr, "\tfs_watch  : %s\n", syscall->fs_watch ?:"(null)");
-	if (context->type & AUDIT_MSG_PATH) {
+	if (context->type &
+	    (AUDIT_MSG_PATH|AUDIT_MSG_PATH_DIR|AUDIT_MSG_PATH_LINK|AUDIT_MSG_PATH_SYMLINK|AUDIT_MSG_PATH_RENAME)) {
+	    fprintf(stderr, "\tfs_sdir   : %s\n", syscall->fs_sdir ?: "(null)");
 	    fprintf(stderr, "\tfs_sobj   : %s\n", syscall->fs_sobj ?: "(null)");
+	    fprintf(stderr, "\tfs_tdir   : %s\n", syscall->fs_tdir ?: "(null)");
 	    fprintf(stderr, "\tfs_tobj   : %s\n", syscall->fs_tobj ?: "(null)");
+	}
+	if (context->type & AUDIT_MSG_PATH_INODE) {
 	    fprintf(stderr, "\tfs_dev    : %02x:%02x\n", major(syscall->fs_dev), minor(syscall->fs_dev));
 	    fprintf(stderr, "\tfs_ino    : %d\n", (int)syscall->fs_ino);
 	}

@@ -37,12 +37,11 @@
 
 #include "includes.h"
 #include "syscalls.h"
-#include <libgen.h>
 
 int test_mknod(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    char *path, *tmp;
+    char *tmp, *dir, *path;
     char *newname = "/blkdev";
     mode_t mode = S_IRWXU|S_IRWXO;
     dev_t dev = S_IFBLK;
@@ -53,13 +52,15 @@ int test_mknod(struct audit_data *context, int variation, int success)
 	rc = -1;
 	goto exit;
     }
+    dir = strdup(tmp);
 
     errno = 0;
     path = realloc(tmp, strlen(tmp) + strlen(newname) + 1);
     if (!path) {
 	fprintf(stderr, "Error: initializing path: realloc(): %s\n",
 		strerror(errno));
-	destroy_tempdir(tmp);
+	destroy_tempdir(dir);
+	free(tmp);
 	rc = -1;
 	goto exit;
     }
@@ -81,7 +82,14 @@ int test_mknod(struct audit_data *context, int variation, int success)
     rc = context_setcwd(context);
     if (rc < 0)
 	goto exit_suid;
-    context_settobj(context, path);
+    if (success) {
+	context_settype(context, AUDIT_MSG_PATH_DIR);
+	context_settdir(context, dir);
+	context_settobj(context, path);
+    } else {
+	context_settype(context, AUDIT_MSG_PATH);
+	context_settobj(context, path);
+    }
 
     rc = context_setidentifiers(context);
     if (rc < 0)
@@ -105,7 +113,8 @@ exit_suid:
 	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_path:
-    destroy_tempdir(dirname(path));
+    destroy_tempdir(dir);
+    free(path);
 
 exit:
     return rc;

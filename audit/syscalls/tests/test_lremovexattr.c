@@ -81,6 +81,7 @@ static int test_lremovexattr_file(struct audit_data *context, int success)
     rc = context_setcwd(context);
     if (rc < 0)
 	goto exit_suid;
+    context_settype(context, AUDIT_MSG_PATH);
     context_settobj(context, path);
 
     rc = context_setidentifiers(context);
@@ -148,6 +149,7 @@ static int test_lremovexattr_symlink(struct audit_data *context, int success)
     rc = context_setcwd(context);
     if (rc < 0)
 	goto exit_suid;
+    context_settype(context, AUDIT_MSG_PATH);
     context_settobj(context, path);
 
     rc = context_setidentifiers(context);

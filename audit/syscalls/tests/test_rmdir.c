@@ -36,11 +36,12 @@
 
 #include "includes.h"
 #include "syscalls.h"
+#include <libgen.h>
 
 int test_rmdir(struct audit_data *context, int variation, int success)
 {
     int rc = 0;
-    char *path;
+    char *path, *dir;
     int exit = -1;
 
     path = init_tempdir(S_IRWXU, context->euid, context->egid);
@@ -48,6 +49,7 @@ int test_rmdir(struct audit_data *context, int variation, int success)
 	rc = -1;
 	goto exit;
     }
+    dir = strdup(path);
 
     if (!success) {
 	rc = seteuid_test();
@@ -59,6 +61,8 @@ int test_rmdir(struct audit_data *context, int variation, int success)
     rc = context_setcwd(context);
     if (rc < 0)
 	goto exit_suid;
+    context_settype(context, AUDIT_MSG_PATH_DIR);
+    context_settdir(context, dirname(dir));
     context_settobj(context, path);
 
     rc = context_setidentifiers(context);
@@ -79,10 +83,12 @@ exit_suid:
 	fprintf(stderr, "Error: seteuid(): %s\n", strerror(errno));
 
 exit_path:
+    errno = 0;
     if (exit < 0)
 	destroy_tempdir(path);
     else
 	free(path);
+    free(dir);
 
 exit:
     return rc;

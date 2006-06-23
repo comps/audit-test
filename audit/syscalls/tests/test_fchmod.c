@@ -69,6 +69,7 @@ int test_fchmod(struct audit_data *context, int variation, int success)
 		strerror(errno));
 	goto exit_path;
     }
+    context_settype(context, AUDIT_MSG_PATH_INODE);
     context_setdev(context, stats.st_dev);
     context_setino(context, stats.st_ino);
 

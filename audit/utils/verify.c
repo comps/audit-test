@@ -93,6 +93,7 @@ ts_exit verify_logresult(struct audit_data *context)
 			      " saddr=%s", 
 			      context->u.syscall.sockaddr); 
 	}
+
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_CWD) {
 	    count += snprintf(&cmd[count], sizeof(cmd)-count, 
 			      " cwd==%s", 
@@ -104,24 +105,57 @@ ts_exit verify_logresult(struct audit_data *context)
 			      context->u.syscall.fs_watch);
 	}
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH) {
-	    if (strcmp(context->u.syscall.fs_sobj, ""))
+	    count += snprintf(&cmd[count], sizeof(cmd)-count,
+			      " name==%s",
+			      context->u.syscall.fs_tobj);
+	}
+	/* note that audit record has a trailing / on directory name */
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH_DIR) {
+	    count += snprintf(&cmd[count], sizeof(cmd)-count,
+			      " name==%s/ name_1==%s",
+			      context->u.syscall.fs_tdir,
+			      context->u.syscall.fs_tobj);
+	}
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH_LINK) {
+	    if (strcmp(context->u.syscall.fs_tdir, ""))
+		count += snprintf(&cmd[count], sizeof(cmd)-count, 
+				  " name==%s/ name_1==%s name_2==%s", 
+				  context->u.syscall.fs_tdir,
+				  context->u.syscall.fs_sobj,
+				  context->u.syscall.fs_tobj);
+	    else
+		count += snprintf(&cmd[count], sizeof(cmd)-count, 
+				  " name==%s name_1==%s", 
+				  context->u.syscall.fs_tobj,
+				  context->u.syscall.fs_sobj);
+	}
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH_SYMLINK) {
+	    if (strcmp(context->u.syscall.fs_tdir, ""))
+		count += snprintf(&cmd[count], sizeof(cmd)-count, 
+				  " name==%s name_1==%s/ name_2==%s", 
+				  context->u.syscall.fs_sobj,
+				  context->u.syscall.fs_tdir,
+				  context->u.syscall.fs_tobj);
+	    else
 		count += snprintf(&cmd[count], sizeof(cmd)-count, 
 				  " name==%s name_1==%s", 
 				  context->u.syscall.fs_sobj,
 				  context->u.syscall.fs_tobj);
-	    else if (strcmp(context->u.syscall.fs_tobj, ""))
+	}
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH_RENAME) {
+	    /* audit orders names differently depending on operation success */
+	    count += snprintf(&cmd[count], sizeof(cmd)-count,
+			      " name==%s/ name_1==%s name_2==%s",
+			      context->u.syscall.fs_sdir,
+			      context->success ? context->u.syscall.fs_sobj : context->u.syscall.fs_tobj,
+			      context->success ? context->u.syscall.fs_tobj : context->u.syscall.fs_sobj);
+	}
+	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH_INODE) {
 		count += snprintf(&cmd[count], sizeof(cmd)-count, 
-				  " name==%s", 
-				  context->u.syscall.fs_tobj);
-	    else {
-		count += snprintf(&cmd[count], sizeof(cmd)-count, 
-				  " dev==%02x:%02x", 
+				  " dev==%02x:%02x inode==%d", 
 				  major(context->u.syscall.fs_dev),
-				  minor(context->u.syscall.fs_dev));
-		count += snprintf(&cmd[count], sizeof(cmd)-count, 
-				  " inode==%d", 
+				  minor(context->u.syscall.fs_dev),
 				  (int)context->u.syscall.fs_ino);
-	    }
 	}
 
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_ARG0) {

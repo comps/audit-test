@@ -63,6 +63,7 @@ int common_truncate(struct audit_data *context, int op, int success)
     rc = context_setcwd(context);
     if (rc < 0)
 	goto exit_suid;
+    context_settype(context, AUDIT_MSG_PATH);
     context_settobj(context, path);
 
     rc = context_setidentifiers(context);

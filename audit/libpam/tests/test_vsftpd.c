@@ -75,7 +75,7 @@ int test_vsftpd(struct audit_data* dataPtr) {
     goto EXIT;
   }
   // Create user
-  command = mysprintf( "/usr/sbin/useradd -u %d -d %s -m -p %s %s", uid, home, encryptedpassword, user );
+  command = mysprintf( "/usr/sbin/useradd -n -u %d -d %s -m -p %s %s", uid, home, encryptedpassword, user );
   if( ( rc = system( command ) ) == -1 ) {
     printf( "Error creating user [%s]\n", user );
     goto EXIT;
@@ -137,12 +137,12 @@ int test_vsftpd(struct audit_data* dataPtr) {
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
   dataPtr->type = AUDIT_MSG_USER;
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./usr/sbin/vsftpd.*hostname=127.0.0.1, addr=127.0.0.1, terminal=. result=Success", user);
+  dataPtr->comm = mysprintf("PAM: authentication acct=%s : exe=./usr/sbin/vsftpd.*hostname=localhost.localdomain, addr=127.0.0.1, terminal=. res=success.*", user);
   verifyPAMProgram( dataPtr );
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
   dataPtr->type = AUDIT_MSG_USER;
-  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=./usr/sbin/vsftpd.*hostname=127.0.0.1, addr=127.0.0.1, terminal=. result=Success", user);
+  dataPtr->comm = mysprintf("PAM: accounting acct=%s : exe=./usr/sbin/vsftpd.*hostname=localhost.localdomain, addr=127.0.0.1, terminal=. res=success.*", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
@@ -195,7 +195,7 @@ int test_vsftpd(struct audit_data* dataPtr) {
 
   //strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
   dataPtr->type = AUDIT_MSG_USER;
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./usr/sbin/vsftpd.*hostname=127.0.0.1, addr=127.0.0.1, terminal=. result=Authentication failure", user);
+  dataPtr->comm = mysprintf("PAM: authentication acct=%s : exe=./usr/sbin/vsftpd.*hostname=localhost.localdomain, addr=127.0.0.1, terminal=. res=failed.*", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup

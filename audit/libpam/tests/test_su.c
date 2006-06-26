@@ -151,12 +151,12 @@ int test_su(struct audit_data* dataPtr) {
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
   dataPtr->type = AUDIT_MSG_USER;
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./bin/su.*terminal=pts/%d result=Success",
+  dataPtr->comm = mysprintf("PAM: authentication acct=%s : exe=./bin/su.*terminal=pts/%d res=success.*",
 				user, pts);
   verifyPAMProgram( dataPtr );
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=./bin/su.*terminal=pts.%d result=Success",
+  dataPtr->comm = mysprintf("PAM: accounting acct=%s : exe=./bin/su.*terminal=pts.%d res=success.*",
 				user, pts);
   verifyPAMProgram( dataPtr );
 
@@ -214,7 +214,7 @@ int test_su(struct audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
 
   //strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./bin/su.*result=Authentication failure", user);
+  dataPtr->comm = mysprintf("PAM: authentication acct=%s : exe=./bin/su.*res=failed.*", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup

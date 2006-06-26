@@ -109,7 +109,7 @@ int test_login(struct audit_data* dataPtr) {
     goto EXIT;
   }
   // Create user
-  command = mysprintf( "/usr/sbin/useradd -u %d -d %s -m -p %s %s; echo \"export TERM=vt100\" >> ~%s/.profile",
+  command = mysprintf( "/usr/sbin/useradd -n -u %d -d %s -m -p %s %s; echo \"export TERM=vt100\" >> ~%s/.profile",
 			uid, home, encryptedpassword, user, user );
   if( ( rc = system( command ) ) == -1 ) {
     printf( "Error creating user [%s]\n", user );
@@ -181,13 +181,13 @@ int test_login(struct audit_data* dataPtr) {
   dataPtr->loginuid = dataPtr->egid = dataPtr->sgid = dataPtr->gid = dataPtr->fsgid = NO_ID_CHECK;
   dataPtr->type = AUDIT_MSG_USER;
 
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./bin/login.* terminal=pts/%d result=Success", user, pts); 
+  dataPtr->comm = mysprintf("PAM: authentication acct=%s : exe=./bin/login.* terminal=pts/%d res=success.*", user, pts); 
   verifyPAMProgram( dataPtr );
 
-  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=./bin/login.* terminal=pts/%d result=Success", user, pts);
+  dataPtr->comm = mysprintf("PAM: accounting acct=%s : exe=./bin/login.* terminal=pts/%d res=success.*", user, pts);
   verifyPAMProgram( dataPtr );
 
-  dataPtr->comm = mysprintf("PAM session open: user=%s exe=./bin/login.* terminal=pts/%d result=Success", user, pts);
+  dataPtr->comm = mysprintf("PAM: session open acct=%s : exe=./bin/login.* terminal=pts/%d res=success.*", user, pts);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
@@ -249,7 +249,7 @@ expect -re \"Password: \" { exp_send \"%s\\r\"} \n",
   dataPtr->type = AUDIT_MSG_USER;
 
   //strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./bin/login.* terminal=pts/.*result=Authentication failure", user);
+  dataPtr->comm = mysprintf("PAM: authentication acct=%s : exe=./bin/login.* terminal=pts/.*res=failed.*", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup

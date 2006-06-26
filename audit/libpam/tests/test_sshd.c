@@ -135,12 +135,12 @@ int test_sshd(struct audit_data* dataPtr) {
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
   dataPtr->type = AUDIT_MSG_DAEMON;
-  dataPtr->comm = mysprintf("PAM setcred: user=%s exe=./usr/sbin/sshd.*terminal=ssh result=Success", user);
+  dataPtr->comm = mysprintf("PAM: setcred acct=%s : exe=./usr/sbin/sshd.*terminal=ssh res=success.*", user);
   verifyPAMProgram( dataPtr );
 
   //strncpy(dataPtr->msg_evname, "AUTH_success", sizeof(dataPtr->msg_evname));
   dataPtr->type = AUDIT_MSG_USER;
-  dataPtr->comm = mysprintf("PAM accounting: user=%s exe=./usr/sbin/sshd.*terminal=ssh result=Success", user);
+  dataPtr->comm = mysprintf("PAM: accounting acct=%s : exe=./usr/sbin/sshd.*terminal=ssh res=success.*", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup
@@ -199,7 +199,7 @@ int test_sshd(struct audit_data* dataPtr) {
 
   
   //strncpy(dataPtr->msg_evname, "AUTH_failure", sizeof(dataPtr->msg_evname));
-  dataPtr->comm = mysprintf("PAM authentication: user=%s exe=./usr/sbin/sshd.*terminal=ssh result=Authentication failure", user);
+  dataPtr->comm = mysprintf("PAM: authentication acct=%s : exe=./usr/sbin/sshd.*terminal=ssh res=failed.*", user);
   verifyPAMProgram( dataPtr );
 
   // Cleanup

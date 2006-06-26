@@ -98,10 +98,10 @@ for iter_file in $file_real $file_real.hard; do
     # collect file information
     f_inode="$(stat -c '%i' $iter_file)"
     f_fs_mount=$(dirname $iter_file)
-    while [ "$(cat /etc/fstab | awk -v DIR=$f_fs_mount '{ if ( $2 == DIR ) print $2 }')" = "" ]; do
+    while [ "$(mount | awk -v DIR=$f_fs_mount '{ if ( $3 == DIR ) print $3 }')" = "" ]; do
         f_fs_mount=$(dirname $f_fs_mount)
     done
-    f_fs_dev="$(cat /etc/fstab | awk -v DIR=$f_fs_mount '{ if ( $2 == DIR ) print $1 }')"
+    f_fs_dev="$(mount | awk -v DIR=$f_fs_mount '{ if ( $3 == DIR ) print $1 }')"
     f_fs_dev_major="$(stat -Lc '%t' $f_fs_dev)"
     f_fs_dev_minor="$(stat -Lc '%T' $f_fs_dev)"
     f_fs_dev_num=$(printf "%.2x:%.2x" "0x$f_fs_dev_major" "0x$f_fs_dev_minor")

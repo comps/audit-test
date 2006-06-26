@@ -102,8 +102,14 @@ audit_rec_gen $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."
-augrok --seek=$log_mark "watch==$(basename $tmp1)" "inode==$f_inode"
+augrok --seek=$log_mark "name==$tmp1" "inode==$f_inode"
 ret_val=$?
+
+if [ "$ret_val_tmp" = "0" ]; then
+    echo "notice: found audit record - PASS"
+else
+    echo "notice: did not find audit record - FAIL"
+fi
 
 #
 # done

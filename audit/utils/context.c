@@ -231,13 +231,6 @@ void context_settobj(struct audit_data *context, char *obj)
 	    context->u.syscall.fs_tobj);
 }
 
-void context_setwatch(struct audit_data *context, char *obj)
-{
-    context->type |= AUDIT_MSG_WATCH;
-    strncpy(context->u.syscall.fs_watch, obj, PATH_MAX);
-    fprintf(stderr, "Setting context watch: %s\n", context->u.syscall.fs_watch);
-}
-
 void context_setdev(struct audit_data *context, dev_t dev)
 {
     context->u.syscall.fs_dev = dev;
@@ -317,8 +310,6 @@ void context_dump(const struct audit_data *context)
 	    fprintf(stderr, "\tsockaddr  : %s\n", syscall->sockaddr); 
 	if (context->type & AUDIT_MSG_CWD)
 	    fprintf(stderr, "\tfs_cwd    : %s\n", syscall->fs_cwd ?: "(null)");
-	if (context->type & AUDIT_MSG_WATCH)
-	    fprintf(stderr, "\tfs_watch  : %s\n", syscall->fs_watch ?:"(null)");
 	if (context->type &
 	    (AUDIT_MSG_PATH|AUDIT_MSG_PATH_DIR|AUDIT_MSG_PATH_LINK|AUDIT_MSG_PATH_SYMLINK|AUDIT_MSG_PATH_RENAME)) {
 	    fprintf(stderr, "\tfs_sdir   : %s\n", syscall->fs_sdir ?: "(null)");

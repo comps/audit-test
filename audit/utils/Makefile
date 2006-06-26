@@ -33,12 +33,10 @@ UTILS_OBJ	= arch.o			\
 		  tempfile.o			\
 		  verify.o
 
-LAF_OBJ		= laf_watch.o
-
-ALL_OBJ		= $(UTILS_OBJ) $(LAF_OBJ)
+ALL_OBJ		= $(UTILS_OBJ)
 ALL_AR		= $(UTILS_AR)
 
 include $(TOPDIR)/rules.mk
 
-$(UTILS_AR): $(UTILS_OBJ) $(LAF_OBJ)
+$(UTILS_AR): $(UTILS_OBJ)
 	$(LINK_AR)

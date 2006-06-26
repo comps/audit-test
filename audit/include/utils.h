@@ -22,12 +22,6 @@
 #define _UTILS_H
 
 /*
- * Audit Interaction
- */
-char *autest_add_watch(const char *);
-void autest_rem_watch(const char *, const char *);
-
-/*
  * System Info Collection
  */
 int get_auditarch(void);
@@ -80,7 +74,6 @@ void context_setsdir(struct audit_data *, char *);
 void context_setsobj(struct audit_data *, char *);
 void context_settdir(struct audit_data *, char *);
 void context_settobj(struct audit_data *, char *);
-void context_setwatch(struct audit_data *, char *);
 void context_setdev(struct audit_data *, dev_t);
 void context_setino(struct audit_data *, ino_t);
 void context_setarg(struct audit_data *, int, int);

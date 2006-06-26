@@ -62,7 +62,7 @@ enum audit_arg {
 #define AUDIT_MSG_CWD           0x000010
 #define AUDIT_MSG_IPC           0x000020
 #define AUDIT_MSG_SOCKADDR      0x000040
-#define AUDIT_MSG_WATCH         0x000080
+/* unused                       0x000080 */
 #define AUDIT_MSG_PATH          0x000100
 #define AUDIT_MSG_PATH_DIR      0x000200
 #define AUDIT_MSG_PATH_LINK     0x000400
@@ -114,7 +114,6 @@ struct audit_syscall {
     char          fs_sobj[PATH_MAX];  /* source object */
     char          fs_tdir[PATH_MAX];  /* target directory */
     char          fs_tobj[PATH_MAX];  /* target object */
-    char          fs_watch[PATH_MAX]; /* audit watch */
     dev_t         fs_dev;             /* object device number */
     ino_t         fs_ino;             /* object inode number */
     /* syscall args */

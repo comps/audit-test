@@ -70,8 +70,8 @@
 
 ./audit_trail_protection/audit_trail_protection.c
 1: stat() file, check root ownership, check permissions
-	/etc/audit.rules
-	/etc/auditd.conf
+	/etc/audit/audit.rules
+	/etc/audit/auditd.conf
 
 
 audit_tools/ssh01

@@ -53,7 +53,7 @@ int testFilePermissions( char* filename ) {
 
 int main() {
   int rc = 0;
-  rc |= testFilePermissions( "/etc/auditd.conf" );
-  rc |= testFilePermissions( "/etc/audit.rules" );
+  rc |= testFilePermissions( "/etc/audit/auditd.conf" );
+  rc |= testFilePermissions( "/etc/audit/audit.rules" );
   return rc;
 }

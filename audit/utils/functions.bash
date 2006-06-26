@@ -32,7 +32,7 @@ shopt -s extglob
 # global vars
 ######################################################################
 
-auditd_conf=/etc/auditd.conf
+auditd_conf=/etc/audit/auditd.conf
 auditd_orig=$(mktemp $auditd_conf.XXXXXX) || exit 2
 audit_log=/var/log/audit/audit.log
 # get recipient of root mail from /etc/aliases "root: jdoe, jsmith" line
@@ -198,7 +198,7 @@ function rotate_audit_logs {
         if [[ audit.log -ef $tmp ]]; then
 	    echo "rotate_audit_logs: Seems that USR1 is not supported"
             stop_auditd
-            num_logs=$(awk '$1=="num_logs"{print $3;exit}' /etc/auditd.conf)
+            num_logs=$(awk '$1=="num_logs"{print $3;exit}' $auditd_conf)
             while ((--num_logs > 0)); do
                 if ((num_logs == 1)); then
 		    [[ -f audit.log ]] && mv -f audit.log audit.log.1

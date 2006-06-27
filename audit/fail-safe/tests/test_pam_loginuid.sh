@@ -43,7 +43,7 @@ function cleanup {
 trap 'cleanup; exit' 0 1 2 3 15
 
 # make sure pam_loginuid is configured with require_auditd
-sed -i.testsave 's/^pam_loginuid\.so.*/& require_auditd/' /etc/pam.d/sshd \
+sed -i.testsave '/pam_loginuid\.so/s/$/ require_auditd/' /etc/pam.d/sshd \
     || exit 2
 
 # attempt to login with auditd running; should work

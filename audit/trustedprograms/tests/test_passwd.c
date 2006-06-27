@@ -157,7 +157,7 @@ int test_passwd(struct audit_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->comm = mysprintf( "PAM chauthtok: user=%s .* result=Success", user );
+  dataPtr->comm = mysprintf( "PAM: chauthtok acct=%s : exe=./usr/bin/passwd.*res=success.*", user );
   dataPtr->type = AUDIT_MSG_USER;
 
    sleep(6); 
@@ -217,7 +217,7 @@ int test_passwd(struct audit_data* dataPtr) {
   free( command );
 
   // Set up dataPtr to compare against audit record
-  dataPtr->comm = mysprintf( "PAM chauthtok: user=%s .* result=Authentication failure", user);
+  dataPtr->comm = mysprintf( "PAM: chauthtok acct=%s : exe=./usr/bin/passwd.*res=failed.*", user);
   dataPtr->type = AUDIT_MSG_USER;
 
   // Check for audit record

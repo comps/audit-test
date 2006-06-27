@@ -91,7 +91,7 @@ int test_groupdel(struct audit_data* dataPtr) {
   command = mysprintf( "/usr/sbin/groupdel %s", group );
 
   dataPtr->type = AUDIT_MSG_USER;
-  dataPtr->comm = mysprintf( "groupdel: op=deleting group acct=%s res=success", group );
+  dataPtr->comm = mysprintf( "op=deleting group acct=%s exe=./usr/sbin/groupdel.*res=success.*", group );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
   

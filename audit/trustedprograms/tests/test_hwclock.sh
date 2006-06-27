@@ -47,7 +47,7 @@ echo "$(hwclock) -- restored hardware clock"
 
 # Check for the records
 count=$(augrok --count --seek $AUDIT_SEEK type==USYS_CONFIG \
-    msg_1=="hwclock: op=changing system time id=0 res=success")
+    msg_1=~"changing system time: exe=./sbin/hwclock.*res=success.*")
 if [[ $count == 2 ]]; then
     echo "pass: augrok found 2 hwclock records"
     exit 0

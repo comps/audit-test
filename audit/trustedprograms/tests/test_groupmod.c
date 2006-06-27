@@ -90,7 +90,7 @@ int test_groupmod(struct audit_data* dataPtr) {
   // Execution
   command = mysprintf( "/usr/sbin/groupmod -g %d %s", new_gid, Group );
   dataPtr->type = AUDIT_MSG_USER;
-  dataPtr->comm = mysprintf( "groupmod: op=modifing group acct=%s res=success", Group );
+  dataPtr->comm = mysprintf( "op=modifing group acct=%s exe=./usr/sbin/groupmod.*res=success.*", Group );
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 

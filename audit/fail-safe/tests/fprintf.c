@@ -24,7 +24,7 @@
 #include <string.h>
 #include <unistd.h>
 
-int fprintf(FILE *stream, const char *format, ...)
+int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
 {
     va_list ap;
     int status;

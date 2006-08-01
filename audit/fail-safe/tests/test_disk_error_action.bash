@@ -29,16 +29,19 @@ write_auditd_conf \
     disk_error_action=$action || exit 2
 
 (
+    # fake a disk error by preloading fprintf to fail on USER messages
     export LD_PRELOAD="$PWD/fprintf.so $LD_PRELOAD"
+    echo "Preloading $LD_PRELOAD"
+    # don't use start_auditd because it will send USER messages
     auditd || { auditd -f; exit 2; }
-    sleep 2     # rather than the more complex version in start_auditd
-)
+    sleep 2
+) || exit $?
 
 write_records 100 || exit 2
 
 case $action in
     syslog)
-        check_$action "Audit daemon detected an error writing an event to disk" ;;
+        check_$action "write: Audit daemon detected an error writing an event to disk (Input/output error)" ;;
     *)
         check_$action ;;
 esac

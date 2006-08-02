@@ -142,7 +142,7 @@ function check_syslog {
 }
 
 function check_ignore {
-    declare strace_pid
+    declare strace_pid seconds
 
     # strace-4.5.13-0.EL4.1, at least on em64t and ia64, has double-free issues
     # *on exit* when tracing auditd.  This doesn't seem to affect our use of the
@@ -151,20 +151,26 @@ function check_ignore {
     MALLOC_CHECK_=0 strace -p $(pidof auditd) -ff -e trace=write -s 1024 -o "$tmp1" &
     strace_pid=$!
     sleep 1	# wait for strace to get started
+
     write_records 10
     auditctl -m "$zero $$"
     write_records 10
-    sleep 1	# make sure strace is up to date
-    kill $strace_pid
 
-    if grep -Fm1 "$zero $$" "$tmp1"; then
-	echo "check_ignore: cool, auditd is still attempting to write"
-	return 0
-    else
-	echo "check_ignore: it appears auditd is suspended:"
-	cat "$tmp1"
-	return 1
-    fi
+    # in the disk_full_action test, it can take a while for strace to
+    # see all of the writes
+    for ((seconds = 60; seconds > 0; seconds--)); do
+	sleep 1
+	if grep -Fm1 "$zero $$" "$tmp1"; then
+	    echo "check_ignore: cool, auditd is still attempting to write"
+	    echo "waited $((60 - seconds)) seconds to find magic write"
+	    kill $strace_pid
+	    return 0
+	fi
+    done
+    kill $strace_pid
+    echo "check_ignore: it appears auditd is suspended:"
+    cat "$tmp1"
+    return 1
 }
 
 function check_suspend {

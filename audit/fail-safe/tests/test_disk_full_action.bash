@@ -35,8 +35,8 @@ fill_disk ${audit_log%/*} 5 || exit 2
 start_auditd || exit 2
 
 # each record is at least 80 bytes (based on empirical evidence), so writing
-# 200 records should always take us over (200 * 80 =~ 15k)
-write_records 200 || exit 2
+# 65 records should always take us over (65 * 80 =~ 5k)
+write_records 65 || exit 2
 
 case $action in
     syslog)

@@ -52,8 +52,8 @@ int test_ioctl_tcgeta(struct audit_data *context, int variation, int success)
 	fd = open(DEFAULT_DEVICE_FILE, O_RDWR, 0777);
 	if (fd < 0) {
 	    rc = -1;
-	    fprintf(stderr, "Error: Cannot open tty device %s\n", 
-		    DEFAULT_DEVICE_FILE);
+	    fprintf(stderr, "Error: Cannot open tty device %s: %s\n", 
+		    DEFAULT_DEVICE_FILE, strerror(errno));
 	    goto exit;
 	}
     } else

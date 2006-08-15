@@ -219,7 +219,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf("usermod: op=changing name acct=%s res=success", userNew );
+  dataPtr->comm = mysprintf("op=changing name acct=%s.*exe=./usr/sbin/usermod.*res=success.*", userNew );
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -309,7 +309,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf("usermod: op=removing user from shadow group acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=removing user from shadow group acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -402,7 +402,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-   dataPtr->comm = mysprintf("usermod: op=adding user to shadow group acct=%s res=success", user );
+   dataPtr->comm = mysprintf("op=adding user to shadow group acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user );
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -470,11 +470,11 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf("usermod: op=changing home directory acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=changing home directory acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  dataPtr->comm = mysprintf("usermod: op=moving home directory acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=moving home directory acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -549,19 +549,19 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf("usermod: op=changing uid acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=changing uid acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  dataPtr->comm = mysprintf("usermod: op=changing home directory acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=changing home directory acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  dataPtr->comm = mysprintf("usermod: op=moving home directory acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=moving home directory acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  dataPtr->comm = mysprintf("usermod: op=changing home directory owner acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=changing home directory owner acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -643,7 +643,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf("usermod: op=changing uid acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=changing uid acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -701,7 +701,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf("usermod: op=changing password acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=changing password acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -773,7 +773,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf("usermod: op=changing primary group acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=changing primary group acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -841,7 +841,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf("usermod: op=changing comment acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=changing comment acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -893,7 +893,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf("usermod: op=changing home directory acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=changing home directory acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -945,7 +945,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf("usermod: op=changing user shell acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=changing user shell acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -997,7 +997,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf( "usermod: op=changing inactive days acct=%s res=success", user);
+  dataPtr->comm = mysprintf( "op=changing inactive days acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -1050,7 +1050,7 @@ int test_usermod(struct audit_data* dataPtr) {
   free( command );
 
   // Check for audit records
-  dataPtr->comm = mysprintf( "usermod: op=changing expiration date acct=%s res=success", user);
+  dataPtr->comm = mysprintf( "op=changing expiration date acct=%s.*exe=./usr/sbin/usermod.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 

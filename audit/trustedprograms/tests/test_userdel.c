@@ -100,7 +100,7 @@ int test_userdel(struct audit_data* dataPtr) {
   sleep( 1 ); // MH: To give time for /etc/passwd to be sync'd
   command = mysprintf( "/usr/sbin/userdel %s", user );
   dataPtr->comm = 
-    mysprintf("userdel: op=deleting user entries acct=%s res=success", user );
+    mysprintf("op=deleting user entries acct=%s.*exe=./usr/sbin/userdel.*res=success.*", user );
   runTrustedProgramWithoutVerify(dataPtr, command );
   verifyTrustedProgram( dataPtr );
 
@@ -147,15 +147,15 @@ int test_userdel(struct audit_data* dataPtr) {
   runTrustedProgramWithoutVerify( dataPtr, command );
   sleep( 1 ); 
 
-  dataPtr->comm = mysprintf("userdel: op=deleting user entries acct=%s res=success", user );
+  dataPtr->comm = mysprintf("op=deleting user entries acct=%s.*exe=./usr/sbin/userdel.*res=success.*", user );
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  dataPtr->comm = mysprintf("userdel: op=deleting mail file acct=%s res=success", user);
+  dataPtr->comm = mysprintf("op=deleting mail file acct=%s.*exe=./usr/sbin/userdel.*res=success.*", user);
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  dataPtr->comm = mysprintf("userdel: op=deleting home directory acct=%s res=success", user );
+  dataPtr->comm = mysprintf("op=deleting home directory acct=%s.*exe=./usr/sbin/userdel.*res=success.*", user );
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
@@ -194,11 +194,11 @@ int test_userdel(struct audit_data* dataPtr) {
   runTrustedProgramWithoutVerify( dataPtr, command );
 
   // Check
-  dataPtr->comm = mysprintf("userdel: op=deleting user entries acct=%s res=success", user );
+  dataPtr->comm = mysprintf("op=deleting user entries acct=%s.*exe=./usr/sbin/userdel.*res=success.*", user );
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 
-  dataPtr->comm = mysprintf("userdel: op=deleting home directory acct=%s res=success", user );
+  dataPtr->comm = mysprintf("op=deleting home directory acct=%s.*exe=./usr/sbin/userdel.*res=success.*", user );
   verifyTrustedProgram( dataPtr );
   free( dataPtr->comm );
 

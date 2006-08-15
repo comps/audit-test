@@ -256,7 +256,7 @@ int test_gpasswd(struct audit_data* dataPtr) {
   dataPtr->pid = NO_PID_CHECK;
   dataPtr->type = AUDIT_MSG_USER;
 
-  dataPtr->comm = mysprintf( "op=changing password acct=%s exe==./usr/bin/gpasswd.*res=success.*", group);
+  dataPtr->comm = mysprintf( "op=changing password acct=%s exe=./usr/bin/gpasswd.*res=success.*", group);
   runTrustedProgramWithoutVerify( dataPtr, command );
   verifyTrustedProgram( dataPtr );
 

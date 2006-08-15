@@ -44,10 +44,5 @@ expect timeout {
 } "Re-enter new password:" {
     send_user "Changing password...\n"
     send "42\r"
-    sleep 1
-    exit 0
+    exp_continue
 }
-
-send_user "Error\n"
-
-exit -1

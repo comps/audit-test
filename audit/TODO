@@ -7,13 +7,11 @@ have been tested with this version of the test suite.
 Current TODO items:
 
 - Rewrite libpam tests in bash
-- Rewrite trustedprograms tests in bash
-- Update syscall tests for fsetxattr, fchmod, fchown, fremovexattr to
-  use context_settobj() instead of audit_add_watch()
 - Add more filesystem audit unit tests: link and symlink handling,
   file replacement, etc.
 - Improve code for dropping privs in syscall tests
 - Make all references to struct audit_data via accessors (syscall tests)
-- Update tests to run on FC5/RHEL5
+- Update tests to run on FC5/RHEL5 (mostly done, need to test RHEL5 beta on all
+  supported arches)
 - Update tests for LSPP coverage 
 - Introduce stackable test execution modes: capp, lspp, etc. 

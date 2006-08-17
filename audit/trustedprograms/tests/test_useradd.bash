@@ -1,5 +1,5 @@
+#!/bin/bash
 ###############################################################################
-# Copyright (C) International Business Machines  Corp., 2003
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 #
 #   This program is free software;  you can redistribute it and/or modify
@@ -16,7 +16,28 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+# 
+# PURPOSE:
+# Verify audit of new user creation, including adding the new user to a group
+# and creating the new user's home directory.
 
-TOPDIR		= ../..
+source tp_functions.bash || exit 2
 
-include $(TOPDIR)/rules.mk
+# test
+setpid useradd -n -m -G games -u $uid -d /home/$user $user \
+    || exit_error "useradd failed"
+
+for msg_1 in \
+    "op=adding user acct=$user exe=./usr/sbin/useradd.*res=success.*" \
+    "op=adding user to group acct=$user exe=./usr/sbin/useradd.*res=success.*" \
+    "op=adding user to shadow group acct=$user exe=./usr/sbin/useradd.*res=success.*" \
+    "op=adding home directory acct=$user exe=./usr/sbin/useradd.*res=success.*"
+do
+    augrok -q type=USER_CHAUTHTOK \
+            user_pid=$pid \
+            uid=$EUID \
+            auid=$(</proc/self/loginuid) \
+            msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
+done
+
+exit_pass

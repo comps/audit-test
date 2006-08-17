@@ -1,5 +1,5 @@
+#!/bin/bash
 ###############################################################################
-# Copyright (C) International Business Machines  Corp., 2003
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 #
 #   This program is free software;  you can redistribute it and/or modify
@@ -16,7 +16,27 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+# 
+# PURPOSE:
+# Verify audit of changes to the default information for new users.
 
-TOPDIR		= ../..
+source tp_functions.bash || exit 2
 
-include $(TOPDIR)/rules.mk
+# setup
+backup /etc/default/useradd  # will be restored automatically
+
+# test
+setpid useradd -D -g games -b /tmp -e 2038-01-18 -f 42 -s /bin/true \
+    || exit_error "useradd failed"
+
+for msg_1 in \
+    '^op=changing user defaults id=.* exe=./usr/sbin/useradd.*res=success.*'
+do
+    augrok -q type=USER_CHAUTHTOK \
+            user_pid=$pid \
+            uid=$EUID \
+            auid=$(</proc/self/loginuid) \
+            msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
+done
+
+exit_pass

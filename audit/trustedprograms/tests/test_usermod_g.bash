@@ -1,5 +1,5 @@
+#!/bin/bash
 ###############################################################################
-# Copyright (C) International Business Machines  Corp., 2003
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 #
 #   This program is free software;  you can redistribute it and/or modify
@@ -16,7 +16,30 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+# 
+# PURPOSE:
+# Verify audit of changes to a user's default group.
 
-TOPDIR		= ../..
+source tp_functions.bash || exit 2
 
-include $(TOPDIR)/rules.mk
+# setup
+useradd -n -u $uid $user || exit_error "useradd failed"
+read group2 gid2 <<<"$(generate_unique_group)"
+groupadd -g $gid2 $group2 || exit_error "groupadd failed"
+
+append_cleanup "grep -q '^$group2:' /etc/group && groupdel '$group2'"
+
+# test
+setpid usermod -g $gid2 $user || exit_error "usermod failed"
+
+for msg_1 in \
+    "op=changing primary group acct=$user exe=./usr/sbin/usermod.*res=success.*"
+do
+    augrok -q type=USER_CHAUTHTOK \
+            user_pid=$pid \
+            uid=$EUID \
+            auid=$(</proc/self/loginuid) \
+            msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
+done
+
+exit_pass

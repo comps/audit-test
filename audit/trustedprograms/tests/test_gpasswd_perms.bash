@@ -1,5 +1,5 @@
+#!/bin/bash
 ###############################################################################
-# Copyright (C) International Business Machines  Corp., 2003
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 #
 #   This program is free software;  you can redistribute it and/or modify
@@ -16,7 +16,37 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+# 
+# PURPOSE:
+# Verify audit of attempts to modify group password as an ordinary user.
 
-TOPDIR		= ../..
+source tp_functions.bash || exit 2
 
-include $(TOPDIR)/rules.mk
+# setup
+groupadd -g $gid $group || exit_error "groupadd failed"
+
+# test
+newpass=$(date +%s)
+chown $TEST_USER "$tmp1"
+su $TEST_USER -c "
+    expect -c '
+        spawn gpasswd $group
+        expect {
+            -nocase \"new password:\" {send \"$newpass\"; exp_continue}
+            eof
+        }
+        set pidfile [open \"$tmp1\" w]
+        puts \$pidfile [exp_pid]'"
+pid=$(<$tmp1)
+
+for msg_1 in \
+    "op=modify group acct=$group exe=./usr/bin/gpasswd.*res=failed.*"
+do
+    augrok -q type=USER_CHAUTHTOK \
+            user_pid=$pid \
+            uid=$(id -u $TEST_USER) \
+            auid=$(</proc/self/loginuid) \
+            msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
+done
+
+exit_pass

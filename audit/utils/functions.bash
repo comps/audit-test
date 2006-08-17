@@ -34,6 +34,8 @@ shopt -s extglob
 
 auditd_conf=/etc/audit/auditd.conf
 auditd_orig=$(mktemp $auditd_conf.XXXXXX) || exit 2
+useradd_conf=/etc/default/useradd
+useradd_orig=$(mktemp $useradd_conf.XXXXXX) || exit 2
 audit_log=/var/log/audit/audit.log
 
 # get recipient of root mail from /etc/aliases "root: jdoe, jsmith" line
@@ -116,6 +118,8 @@ function backup {
 # auditd functions
 ######################################################################
 
+# the following functions for writing conf files should eventually be refactored
+# into a common function.
 function write_auditd_conf {
     declare x key value
 
@@ -130,6 +134,25 @@ function write_auditd_conf {
 	value=${x#*=}
 	sed -i "/^$key[[:blank:]]*=/d" "$auditd_conf"
 	echo "$key = $value" >> "$auditd_conf"
+    done
+}
+
+function write_useradd_conf {
+    declare x key value
+
+    ls /etc/default
+
+    # Save off the auditd configuration
+    if [[ ! -s "$useradd_orig" ]]; then 
+	cp -a -v "$useradd_conf" "$useradd_orig"
+    fi
+
+    # Replace configuration lines; slow but works
+    for x in "$@"; do
+	key=${x%%=*}
+	value=${x#*=}
+	sed -i "/^$key[[:blank:]]*=/d" "$useradd_conf"
+	echo "$key=$value" >> "$useradd_conf"
     done
 }
 

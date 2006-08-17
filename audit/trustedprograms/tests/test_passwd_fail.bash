@@ -1,6 +1,6 @@
+#!/bin/bash
 ###############################################################################
-# Copyright (C) International Business Machines  Corp., 2003
-# (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+# (c) Copyright Hewlett-Packard Development Company, L.P., 2006
 #
 #   This program is free software;  you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -16,7 +16,34 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+# 
+# PURPOSE:
+# Verify audit of an unsuccessful user password change.
 
-TOPDIR		= ../..
+source tp_functions.bash || exit 2
 
-include $(TOPDIR)/rules.mk
+# test
+newpass=123
+chown $TEST_USER "$tmp1"
+su $TEST_USER -c "
+    expect -c '
+        spawn passwd
+        expect {
+            -nocase \"unix password:\" {send \"$newpass\\r\"; exp_continue}
+            eof
+        }
+        set pidfile [open \"$tmp1\" w]
+        puts \$pidfile [exp_pid]'"
+pid=$(<$tmp1)
+
+for msg_1 in \
+    "PAM: chauthtok acct=$TEST_USER : exe=./usr/bin/passwd.*res=failed.*"
+do
+    augrok -q type=USER_CHAUTHTOK \
+            user_pid=$pid \
+            uid=$(id -u $TEST_USER) \
+            auid=$(</proc/self/loginuid) \
+            msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
+done
+
+exit_pass

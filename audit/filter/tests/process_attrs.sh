@@ -41,17 +41,6 @@ prepend_cleanup '
     # remove the filter we set earlier
     [ -n "$filter_field" ] && auditctl -d $filter_rule $filter_field 2>/dev/null'
 
-# generate an audit record for the given file and update the
-# audit log marker
-function audit_rec_gen {
-    if [ -f "$1" ]; then
-        log_mark=$(stat -c %s $audit_log)
-        cat "$1" > /dev/null
-    else
-        exit_error "unable to find file \"$1\""
-    fi
-}
-
 #
 # main
 #
@@ -62,9 +51,6 @@ echo ""
 
 # return value
 ret_val=0
-
-# audit log marker
-log_mark=$(stat -c %s $audit_log)
 
 # create the test files
 echo "notice: creating the test file ..."
@@ -85,8 +71,11 @@ echo "notice: setting a filter for the login uid ..."
 filter_field="-F auid=$user_auid"
 auditctl -a $filter_rule $filter_field
 
+# audit log marker
+log_mark=$(stat -c %s $audit_log)
+
 # generate an audit event
-audit_rec_gen $tmp1
+do_open_file $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."

@@ -46,4 +46,23 @@ function get_fs_dev {
     return 0
 }
 
+function do_open_file {
+    [[ -e "$1" ]] || exit_error "$1 does not exist"
+
+    if [[ -n $2 && $2 = "fail" ]]; then
+        chmod 0600 $1 \
+            || exit_error "unable to set the permissions on the test file"
+        chown root:root $1 \
+            || exit_error "unable to set the permissions on the test file"
+
+        [[ -n $TEST_USER ]] \
+            || exit_error "run in the harness or define \$TEST_USER"
+        /bin/su $TEST_USER bash -c "cat \"$1\"" 2> /dev/null
+
+        return 0
+    fi
+
+    cat "$1" > /dev/null
+}
+
 set -x

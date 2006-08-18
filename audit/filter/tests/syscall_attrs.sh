@@ -45,30 +45,6 @@ prepend_cleanup '
     # remove the filter we set earlier
     auditctl -d $filter_rule $filter_field 2>/dev/null'
 
-# generate a successful audit record for the given file and update the audit
-# log marker
-function audit_rec_gen_ok {
-    if [ -f "$1" ]; then
-        log_mark=$(stat -c %s $audit_log)
-        cat "$1" > /dev/null
-    else
-        exit_error "unable to find file \"$1\""
-    fi
-}
-
-# generate a failure audit record for the given file and update the audit log
-# marker
-function audit_rec_gen_fail {
-    [ "$TEST_USER" = "" ] && exit_error "run in the harness or define \$TEST_USER"
-    if [ -f "$1" ]; then
-        log_mark=$(stat -c %s $audit_log)
-        /bin/su $TEST_USER bash -c "cat \"$1\"" 2> /dev/null
-    else
-        exit_error "unable to find file \"$1\""
-    fi
-}
-
-
 #
 # main
 #
@@ -79,9 +55,6 @@ echo ""
 
 # return value
 ret_val=0
-
-# audit log marker
-log_mark=$(stat -c %s $audit_log)
 
 # create the test files
 echo "notice: creating the test file ..."
@@ -109,8 +82,11 @@ echo "notice: setting a filter for the syscall success ..."
 filter_field="-F success=1"
 auditctl -a $filter_rule $filter_field
 
+# audit log marker
+log_mark=$(stat -c %s $audit_log)
+
 # generate an audit event
-audit_rec_gen_ok $tmp1
+do_open_file $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."
@@ -138,8 +114,11 @@ echo "notice: setting a filter for the syscall failure ..."
 filter_field="-F success!=1"
 auditctl -a $filter_rule $filter_field
 
+# audit log marker
+log_mark=$(stat -c %s $audit_log)
+
 # generate an audit event
-audit_rec_gen_fail $tmp1
+do_open_file $tmp1 "fail"
 
 # check for the audit record
 echo "notice: testing for audit record ..."
@@ -167,8 +146,11 @@ echo "notice: setting a filter for the syscall name ..."
 filter_rule="exit,always -S open"
 auditctl -a $filter_rule
 
+# audit log marker
+log_mark=$(stat -c %s $audit_log)
+
 # generate an audit event
-audit_rec_gen_ok $tmp1
+do_open_file $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."
@@ -195,8 +177,11 @@ echo "notice: setting a filter for the syscall number ..."
 filter_rule="exit,always -S $syscall_num"
 auditctl -a $filter_rule
 
+# audit log marker
+log_mark=$(stat -c %s $audit_log)
+
 # generate an audit event
-audit_rec_gen_ok $tmp1
+do_open_file $tmp1
 
 # check for the audit record
 echo "notice: testing for audit record ..."

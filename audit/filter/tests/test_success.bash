@@ -1,6 +1,6 @@
 #!/bin/bash
 ###############################################################################
-# (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+# (c) Copyright Hewlett-Packard Development Company, L.P., 2006
 #
 #   This program is free software;  you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -17,25 +17,40 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
 #
-# PURPOSE: Test the ability to filter based on a filesystem watch,
-#          specifically for accesses of the watched object.
+# PURPOSE:
+# Test the ability to filter on syscall success or failure.
 
 source filter_functions.bash || exit 2
 
 # setup
-prepend_cleanup '
-    auditctl -d exit,always -S open -F path=$tmp1'
+syscall_name="open"
+syscall_num="$(augrok --resolve $syscall_name)" \
+    || exit_error "unable to determine the syscall number for $syscall_name"
 
-auditctl -a exit,always -S open -F path=$tmp1
+op=$1
+case $op in
+    yes)
+        gen_audit_event="do_open_file $tmp1"
+        filter_field="-F success=1"
+        ;;
+    no)
+        gen_audit_event="do_open_file $tmp1 fail"
+        filter_field="-F success!=1"
+        ;;
+    *) exit_fail "unknown test operation" ;;
+esac
+filter_rule="exit,always -S open"
 
-inode="$(stat -c '%i' $tmp1)"
-log_mark="$(stat -c %s $audit_log)"
+auditctl -a $filter_rule $filter_field
+prepend_cleanup "auditctl -d $filter_rule $filter_field"
 
-# test
-cat "$tmp1"
+# audit log marker
+log_mark=$(stat -c %s $audit_log)
 
-# verify audit record
-augrok --seek=$log_mark "name==$tmp1" "inode==$inode" \
+# generate an audit event
+eval "$gen_audit_event"
+
+augrok --seek=$log_mark "syscall==$syscall_num" "name==$tmp1" "success==$op" \
     || exit_fail "Expected record not found."
 
 exit_pass

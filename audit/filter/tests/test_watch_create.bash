@@ -17,8 +17,8 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
 #
-# PURPOSE: Test the ability to filter based on a filesystem watch,
-#          specifically for objects created at the watched path.
+# PURPOSE:
+# Test the ability to filter for objects created at a watched path.
 
 source filter_functions.bash || exit 2
 

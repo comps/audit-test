@@ -1,5 +1,4 @@
-#!/bin/sh
-
+#!/bin/bash
 ###############################################################################
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 #
@@ -18,44 +17,16 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
 #
-# process_attrs.sh - This filter test is designed to test the ability to use
-#                    auditctl to specify a kernel filter for the audit logs.
-#                    Specifically it tests:
-#           Test 1 - The ability to filter based on login uid (auid)
+# PURPOSE:
+# Test the ability to filter on login uid (auid).
 
-#
-# configuration
-#
+source filter_functions.bash || exit 2
 
-source filter_functions.bash
-
-# used in auditctl (i.e., auditctl -[a|d] $filter_rule)
-filter_rule="exit,always -S open"
-
-#
-# helper functions
-#
-
-# override the test harness cleanup function
-prepend_cleanup '
-    # remove the filter we set earlier
-    [ -n "$filter_field" ] && auditctl -d $filter_rule $filter_field 2>/dev/null'
-
-#
-# main
-#
-
-# return value
-ret_val=0
-
-# get user information
+# setup
 user_auid="$(cat /proc/self/loginuid)"
 
-### Test 1 - Filter on login uid (auid)
-
-# set an audit filter
-filter_field="-F auid=$user_auid"
-auditctl -a $filter_rule $filter_field
+auditctl -a exit,always -S open -F auid=$user_auid
+prepend_cleanup "auditctl -d exit,always -S open -F auid=$user_auid"
 
 # audit log marker
 log_mark=$(stat -c %s $audit_log)
@@ -63,8 +34,7 @@ log_mark=$(stat -c %s $audit_log)
 # generate an audit event
 do_open_file $tmp1
 
-# check for the audit record
-augrok --seek=$log_mark "name==$tmp1" "auid==$user_auid"
-ret_val=$?
+augrok --seek=$log_mark "name==$tmp1" "auid==$user_auid" \
+    || exit_fail "Expected record not found."
 
-exit $ret_val
+exit_pass

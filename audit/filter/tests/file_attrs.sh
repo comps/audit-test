@@ -48,21 +48,14 @@ prepend_cleanup '
 # main
 #
 
-# startup banner
-echo "notice: starting $(basename $0) test ($(date))"
-echo ""
-
 # return value
 ret_val=0
 
 # create the test files
 file_real=$tmp1
-echo "notice: creating the test files ..."
-touch $file_real 2> /dev/null || exit_error "unable to create temporary file for testing"
 ln $file_real $file_real.hard || exit_error "unable to create hard linked file"
 
 for iter_file in $file_real $file_real.hard; do
-    echo ""
 
     # collect file information
     f_inode="$(stat -c '%i' $iter_file)"
@@ -75,20 +68,9 @@ for iter_file in $file_real $file_real.hard; do
     f_fs_dev_minor="$(stat -Lc '%T' $f_fs_dev)"
     f_fs_dev_num=$(printf "%.2x:%.2x" "0x$f_fs_dev_major" "0x$f_fs_dev_minor")
 
-    # display file information
-    echo "notice: test file information"
-    echo " path       = $iter_file"
-    echo " inode      = $f_inode"
-    echo " fs_mount   = $f_fs_mount"
-    echo " fs_dev     = $f_fs_dev"
-    echo " fs_dev_num = $f_fs_dev_num"
-
-
     ### Test 1 - Filter on an inode number
-    echo ""
 
     # set an audit filter
-    echo "notice: setting a filter for the inode ..."
     filter_field="-F inode=$f_inode"
     auditctl -a $filter_rule $filter_field
 
@@ -99,7 +81,6 @@ for iter_file in $file_real $file_real.hard; do
     do_open_file $iter_file
         
     # look for the audit record
-    echo "notice: testing for audit record ..."
     augrok --seek=$log_mark "inode==$f_inode"
     ret_val_tmp=$?
     [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
@@ -117,10 +98,8 @@ for iter_file in $file_real $file_real.hard; do
 
     
     ### Test 2 - Filter on a device number
-    echo ""
 
     # set an audit filter
-    echo "notice: setting a filter for the device number ..."
     filter_field="-F devmajor=0x$f_fs_dev_major -F devminor=0x$f_fs_dev_minor"
     auditctl -a $filter_rule $filter_field
 
@@ -131,7 +110,6 @@ for iter_file in $file_real $file_real.hard; do
     do_open_file $iter_file
         
     # look for the audit record
-    echo "notice: testing for audit record ..."
     augrok --seek=$log_mark "name==$iter_file" "dev==$f_fs_dev_num"
     ret_val_tmp=$?
     [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
@@ -149,10 +127,4 @@ for iter_file in $file_real $file_real.hard; do
 
 done
 
-#
-# done
-#
-
-echo ""
-echo "notice: finished $(basename $0) test (exit = $ret_val)"
 exit $ret_val

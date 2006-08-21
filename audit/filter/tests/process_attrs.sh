@@ -45,29 +45,15 @@ prepend_cleanup '
 # main
 #
 
-# startup banner
-echo "notice: starting $(basename $0) test ($(date))"
-echo ""
-
 # return value
 ret_val=0
-
-# create the test files
-echo "notice: creating the test file ..."
-touch $tmp1 2> /dev/null || exit_error "unable to create temporary file for testing"
 
 # get user information
 user_auid="$(cat /proc/self/loginuid)"
 
-# display file information
-echo "notice: user information"
-echo " uid       = $(id -u)"
-echo " login id  = $user_auid"
-
 ### Test 1 - Filter on login uid (auid)
 
 # set an audit filter
-echo "notice: setting a filter for the login uid ..."
 filter_field="-F auid=$user_auid"
 auditctl -a $filter_rule $filter_field
 
@@ -78,14 +64,7 @@ log_mark=$(stat -c %s $audit_log)
 do_open_file $tmp1
 
 # check for the audit record
-echo "notice: testing for audit record ..."
 augrok --seek=$log_mark "name==$tmp1" "auid==$user_auid"
 ret_val=$?
 
-#
-# done
-#
-
-echo ""
-echo "notice: finished $(basename $0) test (exit = $ret_val)"
 exit $ret_val

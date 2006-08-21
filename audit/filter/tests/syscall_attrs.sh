@@ -49,16 +49,10 @@ prepend_cleanup '
 # main
 #
 
-# startup banner
-echo "notice: starting $(basename $0) test ($(date))"
-echo ""
-
 # return value
 ret_val=0
 
 # create the test files
-echo "notice: creating the test file ..."
-touch $tmp1 2> /dev/null || exit_error "unable to create temporary file for testing"
 chmod 0600 $tmp1 || exit_error "unable to set the permissions on the test file"
 chown root:root $tmp1 || exit_error "unable to set the permissions on the test file"
 
@@ -67,18 +61,9 @@ syscall_name="open"
 syscall_num="$(augrok --resolve $syscall_name)"
 [ "$syscall_num" = "" ] && exit_error "unable to determine the syscall number for $syscall_name"
 
-# display syscall information
-echo "notice: syscall information"
-echo " platform       = $(uname -i)"
-echo " syscall name   = $syscall_name"
-echo " syscall number = $syscall_num"
-
-
 ### Test 1 - Filter on syscall success
-echo ""
 
 # set an audit filter
-echo "notice: setting a filter for the syscall success ..."
 filter_field="-F success=1"
 auditctl -a $filter_rule $filter_field
 
@@ -89,7 +74,6 @@ log_mark=$(stat -c %s $audit_log)
 do_open_file $tmp1
 
 # check for the audit record
-echo "notice: testing for audit record ..."
 augrok --seek=$log_mark "syscall==$syscall_num" "name==$tmp1" "success==yes"
 ret_val_tmp=$?
 [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
@@ -107,10 +91,8 @@ filter_field=""
 
 
 ### Test 2 - Filter on syscall failure
-echo ""
 
 # set an audit filter
-echo "notice: setting a filter for the syscall failure ..."
 filter_field="-F success!=1"
 auditctl -a $filter_rule $filter_field
 
@@ -121,7 +103,6 @@ log_mark=$(stat -c %s $audit_log)
 do_open_file $tmp1 "fail"
 
 # check for the audit record
-echo "notice: testing for audit record ..."
 augrok --seek=$log_mark "syscall==$syscall_num" "name==$tmp1" "success==no"
 ret_val_tmp=$?
 [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
@@ -139,10 +120,8 @@ filter_field=""
 
 
 ### Test 3 - Filter on the syscall by name
-echo ""
 
 # set an audit filter
-echo "notice: setting a filter for the syscall name ..."
 filter_rule="exit,always -S open"
 auditctl -a $filter_rule
 
@@ -153,7 +132,6 @@ log_mark=$(stat -c %s $audit_log)
 do_open_file $tmp1
 
 # check for the audit record
-echo "notice: testing for audit record ..."
 augrok --seek=$log_mark "name==$tmp1" "syscall==$syscall_num"
 ret_val_tmp=$?
 [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
@@ -170,10 +148,8 @@ auditctl -d $filter_rule
 
 
 ### Test 4 - Filter on the syscall by number
-echo ""
 
 # set an audit filter
-echo "notice: setting a filter for the syscall number ..."
 filter_rule="exit,always -S $syscall_num"
 auditctl -a $filter_rule
 
@@ -184,7 +160,6 @@ log_mark=$(stat -c %s $audit_log)
 do_open_file $tmp1
 
 # check for the audit record
-echo "notice: testing for audit record ..."
 augrok --seek=$log_mark "name==$tmp1" "syscall==$syscall_num"
 ret_val_tmp=$?
 [ "$ret_val" = "0" ] && ret_val=$ret_val_tmp
@@ -199,10 +174,4 @@ fi
 # remove the filter
 auditctl -d $filter_rule
 
-#
-# done
-#
-
-echo ""
-echo "notice: finished $(basename $0) test (exit = $ret_val)"
 exit $ret_val

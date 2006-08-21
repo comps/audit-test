@@ -52,10 +52,6 @@ prepend_cleanup '
 # return value
 ret_val=0
 
-# create the test files
-chmod 0600 $tmp1 || exit_error "unable to set the permissions on the test file"
-chown root:root $tmp1 || exit_error "unable to set the permissions on the test file"
-
 # get syscall information
 syscall_name="open"
 syscall_num="$(augrok --resolve $syscall_name)"

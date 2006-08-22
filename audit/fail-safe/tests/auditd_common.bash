@@ -159,13 +159,13 @@ function check_ignore {
     # in the disk_full_action test, it can take a while for strace to
     # see all of the writes
     for ((seconds = 60; seconds > 0; seconds--)); do
-	sleep 1
 	if grep -Fm1 "$zero $$" "$tmp1"; then
 	    echo "check_ignore: cool, auditd is still attempting to write"
 	    echo "waited $((60 - seconds)) seconds to find magic write"
 	    kill $strace_pid
 	    return 0
 	fi
+	sleep 1
     done
     kill $strace_pid
     echo "check_ignore: it appears auditd is suspended:"

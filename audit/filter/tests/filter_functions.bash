@@ -54,17 +54,7 @@ function get_event_obj {
 }
 
 function get_fs_dev {
-    declare fs_dev
-    declare fs_mount=$(dirname $1)
-
-    while [ "$(mount | awk -v DIR=$fs_mount '{ if ( $3 == DIR ) print $3 }')" = "" ]; do
-        fs_mount=$(dirname $fs_mount)
-    done
-
-    fs_dev="$(mount | awk -v DIR=$fs_mount '{ if ( $3 == DIR ) print $1 }')"
-    echo $fs_dev
-
-    return 0
+    df "$1" | tail -n1 | awk '{print $1}'
 }
 
 function do_open_file {

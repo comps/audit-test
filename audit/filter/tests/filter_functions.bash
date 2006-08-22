@@ -32,6 +32,27 @@ PATH=$TOPDIR/utils:$PATH
 
 source functions.bash
 
+function get_event_obj {
+    declare op=$1
+    declare fs_obj
+    
+    case $op in
+        file) fs_obj=$tmp1 ;;
+        link)
+            ln $tmp1 $tmp1.$op
+            fs_obj=$tmp1.$op
+            ;;
+        symlink)
+            ln -s $tmp1 $tmp1.$op
+            fs_obj=$tmp1.$op
+            ;;
+        *) exit_error "unknown fs object type" ;;
+    esac
+    echo $fs_obj
+
+    return 0
+}
+
 function get_fs_dev {
     declare fs_dev
     declare fs_mount=$(dirname $1)

@@ -24,25 +24,13 @@
 source filter_functions.bash || exit 2
 
 # setup
-op=$1
+watch=$tmp1
 
-case $op in
-    file)
-        event_obj=$tmp1 ;;
-    link|symlink)
-        if [ $op == "link" ]; then
-            ln $tmp1 $tmp1.$op
-        else
-            ln -s $tmp1 $tmp1.$op
-        fi
-        prepend_cleanup "rm -f $tmp1.$op"
-        event_obj=$tmp1.$op
-        ;;
-    *) exit_fail "unknown test operation" ;;
-esac
+event_obj=$(get_event_obj $1)
+[[ $event_obj != $watch ]] && prepend_cleanup "rm -f $event_obj"
 
-auditctl -a exit,always -S open -F key=$tmp1 -F path=$tmp1
-prepend_cleanup "auditctl -d exit,always -S open -F key=$tmp1 -F path=$tmp1"
+auditctl -a exit,always -S open -F key=$watch -F path=$watch
+prepend_cleanup "auditctl -d exit,always -S open -F key=$watch -F path=$watch"
 
 log_mark="$(stat -c %s $audit_log)"
 
@@ -50,7 +38,7 @@ log_mark="$(stat -c %s $audit_log)"
 do_open_file $event_obj
 
 # verify audit record
-augrok --seek=$log_mark "type=~SYSCALL" key==$tmp1 \
+augrok --seek=$log_mark "type=~SYSCALL" key==$watch \
     || exit_fail "Expected record not found."
 
 exit_pass

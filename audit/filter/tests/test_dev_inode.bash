@@ -24,27 +24,13 @@
 source filter_functions.bash || exit 2
 
 # setup
-op=$1
-
-case $op in
-    file)
-        event_obj=$tmp1 ;;
-    link|symlink)
-        if [ $op == "link" ]; then
-            ln $tmp1 $tmp1.$op
-        else
-            ln -s $tmp1 $tmp1.$op
-        fi
-        prepend_cleanup "rm -f $tmp1.$op"
-        event_obj=$tmp1.$op
-        ;;
-    *) exit_fail "unknown test operation" ;;
-esac
-
 inode="$(stat -c '%i' $tmp1)"
 dev="$(get_fs_dev $tmp1)"
 major="$(stat -Lc '%t' $dev)"
 minor="$(stat -Lc '%T' $dev)"
+
+event_obj=$(get_event_obj $1)
+[[ $event_obj != $tmp1 ]] && prepend_cleanup "rm -f $event_obj"
 
 auditctl -a exit,always -S open -F key=$tmp1 -F inode=$inode \
     -F devmajor=$major -F devminor=$minor

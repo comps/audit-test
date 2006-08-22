@@ -23,7 +23,7 @@
 source filter_functions.bash || exit 2
 
 # setup
-user_auid="$(cat /proc/self/loginuid)"
+user_auid=$(cat /proc/self/loginuid)
 
 auditctl -a exit,always -S open -F auid=$user_auid
 prepend_cleanup "auditctl -d exit,always -S open -F auid=$user_auid"

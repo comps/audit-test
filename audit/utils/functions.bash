@@ -56,7 +56,7 @@ zero=${0##*/}
 # This can be prepended or appended by calling prepend_cleanup or append_cleanup
 # below
 function cleanup {
-    if [[ -s "$auditd_orig" ]]; then 
+    if [[ -s $auditd_orig ]]; then 
         auditctl -D
         service auditd stop
         killall auditd
@@ -143,7 +143,7 @@ function write_useradd_conf {
     ls /etc/default
 
     # Save off the auditd configuration
-    if [[ ! -s "$useradd_orig" ]]; then 
+    if [[ ! -s $useradd_orig ]]; then 
 	cp -a -v "$useradd_conf" "$useradd_orig"
     fi
 

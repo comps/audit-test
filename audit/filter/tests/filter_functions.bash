@@ -58,9 +58,9 @@ function get_fs_dev {
 }
 
 function do_open_file {
-    [[ -e "$1" ]] || exit_error "$1 does not exist"
+    [[ -e $1 ]] || exit_error "$1 does not exist"
 
-    if [[ -n $2 && $2 = "fail" ]]; then
+    if [[ $2 == "fail" ]]; then
         chmod 0600 $1 \
             || exit_error "unable to set the permissions on the test file"
         chown root:root $1 \

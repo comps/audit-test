@@ -24,7 +24,7 @@ source filter_functions.bash || exit 2
 
 # setup
 syscall_name="open"
-syscall_num="$(augrok --resolve $syscall_name)" \
+syscall_num=$(augrok --resolve $syscall_name) \
     || exit_error "unable to determine the syscall number for $syscall_name"
 
 op=$1

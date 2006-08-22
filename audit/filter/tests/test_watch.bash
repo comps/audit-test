@@ -32,7 +32,7 @@ event_obj=$(get_event_obj $1)
 auditctl -a exit,always -S open -F key=$watch -F path=$watch
 prepend_cleanup "auditctl -d exit,always -S open -F key=$watch -F path=$watch"
 
-log_mark="$(stat -c %s $audit_log)"
+log_mark=$(stat -c %s $audit_log)
 
 # test
 do_open_file $event_obj

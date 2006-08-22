@@ -24,10 +24,10 @@
 source filter_functions.bash || exit 2
 
 # setup
-inode="$(stat -c '%i' $tmp1)"
-dev="$(get_fs_dev $tmp1)"
-major="$(stat -Lc '%t' $dev)"
-minor="$(stat -Lc '%T' $dev)"
+inode=$(stat -c '%i' $tmp1)
+dev=$(get_fs_dev $tmp1)
+major=$(stat -Lc '%t' $dev)
+minor=$(stat -Lc '%T' $dev)
 
 event_obj=$(get_event_obj $1)
 [[ $event_obj != $tmp1 ]] && prepend_cleanup "rm -f $event_obj"
@@ -39,7 +39,7 @@ prepend_cleanup "
     auditctl -d exit,always -S open -F key=$tmp1 -F inode=$inode \
 -F devmajor=$major -F devminor=$minor"
 
-log_mark="$(stat -c %s $audit_log)"
+log_mark=$(stat -c %s $audit_log)
 
 # test
 do_open_file $event_obj

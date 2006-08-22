@@ -250,7 +250,7 @@ function check_single {
 }
 
 function pre_email {
-    if [[ -f "$eal_mail" ]]; then
+    if [[ -f $eal_mail ]]; then
 	eal_mail_lines=$(wc -l < "$eal_mail")
     else
 	eal_mail_lines=0
@@ -259,7 +259,7 @@ function pre_email {
 
 function check_email {
     sleep 2	# wait for the mail to arrive
-    if [[ ! -f "$eal_mail" ]]; then
+    if [[ ! -f $eal_mail ]]; then
 	echo "check_email: "$eal_mail" does not exist"
 	return 2
     fi

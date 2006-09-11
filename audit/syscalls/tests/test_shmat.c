@@ -42,7 +42,6 @@
 #elif !defined(__ia64__)
 #include <asm-generic/ipc.h>
 #endif
-#include <asm/page.h>
 #include <sys/shm.h>
 
 int test_shmat(struct audit_data *context, int variation, int success)
@@ -52,7 +51,7 @@ int test_shmat(struct audit_data *context, int variation, int success)
     void *shmadd;
 
     errno = 0;
-    rc = shmid = shmget(IPC_PRIVATE, PAGE_SIZE, S_IRWXU|IPC_CREAT);
+    rc = shmid = shmget(IPC_PRIVATE, getpagesize(), S_IRWXU|IPC_CREAT);
     if (rc < 0) {
 	fprintf(stderr, "Error: can't create shared mem segment: %s\n",
 		strerror(errno));

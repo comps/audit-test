@@ -43,7 +43,6 @@
 #elif !defined(__ia64__)
 #include <asm-generic/ipc.h>
 #endif
-#include <asm/page.h>
 #include <sys/shm.h>
 
 int test_shmget(struct audit_data *context, int variation, int success)
@@ -52,9 +51,10 @@ int test_shmget(struct audit_data *context, int variation, int success)
     int flags = S_IRWXU|IPC_CREAT;
     int shmid;
     int exit;
+    int page_size = getpagesize();
 
     errno = 0;
-    rc = shmid = shmget(TEST_IPC_KEY, PAGE_SIZE, S_IRWXU|IPC_CREAT);
+    rc = shmid = shmget(TEST_IPC_KEY, page_size, S_IRWXU|IPC_CREAT);
     if (rc < 0) {
         fprintf(stderr, "Error: can't create shared mem segment: %s\n",
                 strerror(errno));
@@ -76,15 +76,15 @@ int test_shmget(struct audit_data *context, int variation, int success)
 
     context_setbegin(context);
 #if defined (__x86_64) || defined (__ia64)
-    fprintf(stderr, "Attempting %s(%x, %lx, %x)\n", 
-	    context->u.syscall.sysname, TEST_IPC_KEY, PAGE_SIZE, flags);
+    fprintf(stderr, "Attempting %s(%x, %x, %x)\n", 
+	    context->u.syscall.sysname, TEST_IPC_KEY, page_size, flags);
 #else
-    fprintf(stderr, "Attempting %s(%x, %x, %lx, %x)\n", 
-	    context->u.syscall.sysname, SHMGET, TEST_IPC_KEY, PAGE_SIZE, flags);
+    fprintf(stderr, "Attempting %s(%x, %x, %x, %x)\n", 
+	    context->u.syscall.sysname, SHMGET, TEST_IPC_KEY, page_size, flags);
 #endif
     errno = 0;
     /* using library routine makes it portable between arches */
-    exit = shmget(TEST_IPC_KEY, PAGE_SIZE, flags);
+    exit = shmget(TEST_IPC_KEY, page_size, flags);
     context_setend(context);
     context_setresult(context, exit, errno);
 

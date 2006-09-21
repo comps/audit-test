@@ -264,7 +264,8 @@ function startup {
         die "Please run this suite as root"
     fi
 
-    # Make sure auditd is running
+    # Initialize audit configuration and make sure auditd is running
+    initialize_auditd_conf
     start_auditd >/dev/null || die
 
     # Add the test user which is used for unprivileged tests

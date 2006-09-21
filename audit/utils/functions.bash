@@ -118,6 +118,19 @@ function backup {
 # auditd functions
 ######################################################################
 
+# initialize auditd.conf for testsuite
+# called from run.bash
+function initialize_auditd_conf {
+
+    # Save off the auditd configuration
+    if [[ ! -s "$auditd_orig" ]]; then 
+	cp -a "$auditd_conf" "$auditd_orig"
+    fi
+
+    # remove configuration for audit dispatcher
+    sed -i 's/^[Dd][Ii][Ss][Pp].*//' "$auditd_conf"
+}
+
 # the following functions for writing conf files should eventually be refactored
 # into a common function.
 function write_auditd_conf {

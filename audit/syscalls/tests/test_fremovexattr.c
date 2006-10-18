@@ -38,7 +38,7 @@
 
 #include "includes.h"
 #include "syscalls.h"
-#include <attr/xattr.h>
+#include <sys/xattr.h>
 
 int test_fremovexattr(struct audit_data *context, int variation, int success)
 {

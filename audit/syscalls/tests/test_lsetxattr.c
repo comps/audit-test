@@ -45,7 +45,7 @@
 
 #include "includes.h"
 #include "syscalls.h"
-#include <attr/xattr.h>
+#include <sys/xattr.h>
 
 static int test_lsetxattr_file(struct audit_data *context, int success)
 {

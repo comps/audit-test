@@ -255,7 +255,10 @@ function cleanup_hook {
 
 function startup {
     export TEST_USER=testuser
-    export TEST_USER_PASSWD=gentoo    # encrypted below
+    export TEST_USER_PASSWD='2many$ECret$'
+
+    # testuser's password encrypted with crypt(3)
+    declare passwd_encrypted=AGf3dBtMYAdUQ
 
     dmsg "Starting up"
 
@@ -274,9 +277,7 @@ function startup {
     dmsg "Adding group $TEST_USER"
     groupadd "$TEST_USER" || die
     dmsg "Adding user $TEST_USER"
-    useradd -g "$TEST_USER" -m "$TEST_USER" || die
-    sed -i "/^$TEST_USER:/"'s|:[^:]*:|:$1$N1PtB8Kg$d6gItPaB3lSpG/GiDOXEM1:|' \
-        /etc/shadow
+    useradd -g "$TEST_USER" -p "$passwd_encrypted" -m "$TEST_USER" || die
 
     append_cleanup '
 	if [[ -n $TEST_USER ]]; then

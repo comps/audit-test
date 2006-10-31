@@ -255,10 +255,10 @@ function cleanup_hook {
 
 function startup {
     export TEST_USER=testuser
-    export TEST_USER_PASSWD='2many$ECret$'
+    export TEST_USER_PASSWD='2manySecre+S'
 
-    # testuser's password encrypted with crypt(3)
-    declare passwd_encrypted=AGf3dBtMYAdUQ
+    # testuser's password encrypted with perl -pe 's/.*/crypt $&, "AG"/e'
+    declare passwd_encrypted=AGVR9oEWQg4.k
 
     dmsg "Starting up"
 
@@ -421,15 +421,16 @@ function run_tests {
 	fi
 
 	output=$(
-	    ( run_test "$t" 2>&1 | tee $hee; exit ${PIPESTATUS[0]}; ) &
-	    pid=$!
+# note that putting run_test in the background results in no tty for pam tests
+	    ( run_test "$t" 2>&1 | tee $hee; exit ${PIPESTATUS[0]}; ) # &
+#	    pid=$!
 # opt_timeout is disabled for now due to a bash bug.  If the timeout is put into
 # the background and $pid exits before wait is called, the wait will fail
 # because bash claims $pid is not a child of this shell.
 #	    if [[ $opt_timeout > 0 ]]; then
 #		( sleep $opt_timeout; kill $pid; ) &>/dev/null &
 #	    fi
-	    wait $pid
+#	    wait $pid
 	) 2>&1
 	status=$?
 

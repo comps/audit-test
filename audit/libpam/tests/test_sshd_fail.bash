@@ -1,6 +1,6 @@
+#!/bin/bash
 ###############################################################################
-# Copyright (C) International Business Machines  Corp., 2003
-# (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+# (c) Copyright Hewlett-Packard Development Company, L.P., 2006
 #
 #   This program is free software;  you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -16,7 +16,20 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
+# 
+# PURPOSE:
+# Verify audit of failed ssh.
 
-TOPDIR		= ../..
+source pam_functions.bash || exit 2
 
-include $(TOPDIR)/rules.mk
+# test
+expect -c '
+    spawn ssh $env(TEST_USER)@localhost
+    expect -nocase {Are you sure you want to continue} {send "yes\r"}
+    expect -nocase {password: $} {send "badpassword\r"}
+    expect -nocase {permission denied} {close; wait}'
+
+msg_1="acct=$TEST_USER : exe=./usr/sbin/sshd.*terminal=ssh res=failed.*"
+augrok -q type=USER_AUTH msg_1=~"PAM: authentication $msg_1" || exit_fail
+
+exit_pass

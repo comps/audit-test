@@ -39,24 +39,6 @@
 ##########################################################################
 
 TOPDIR          = ..
-TESTDIR		= .
-CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
-
-UTILS_AR 	= $(TOPDIR)/utils/testutils.a
-LIBPAM_TESTS_AR	= tests/libpam_test.a
-LIBPAM_UTILS_AR = utils/libpam_test_utils.a
-
-LIBPAM_EXE	= libpam
-LIBPAM_OBJ	= libpam.o
-
-ALL_EXE		= $(LIBPAM_EXE)
-ALL_OBJ		= $(LIBPAM_OBJ)
-ALL_AR		= $(LIBPAM_TESTS_AR) $(LIBPAM_UTILS_AR)
-
 SUB_DIRS        = tests utils
 
 include $(TOPDIR)/rules.mk
-
-$(LIBPAM_EXE): LDLIBS += -laudit
-$(LIBPAM_EXE): $(LIBPAM_OBJ) $(ALL_AR) $(UTILS_AR)
-	$(LINK_EXE)

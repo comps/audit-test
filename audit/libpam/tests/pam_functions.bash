@@ -1,5 +1,5 @@
+#!/bin/bash
 ###############################################################################
-# Copyright (C) International Business Machines  Corp., 2003
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
 #
 #   This program is free software;  you can redistribute it and/or modify
@@ -17,6 +17,19 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ###############################################################################
 
-TOPDIR		= ../..
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+if [[ -z $TOPDIR ]]; then
+    TOPDIR=$(
+    while [[ ! $PWD -ef / ]]; do
+        [[ -f rules.mk ]] && { echo $PWD; exit 0; }
+        cd ..
+    done
+    exit 1
+    ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 2; }
+    export TOPDIR
+fi
+PATH=$TOPDIR/utils:$PATH
 
-include $(TOPDIR)/rules.mk
+source functions.bash
+
+set -x

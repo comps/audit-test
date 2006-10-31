@@ -24,12 +24,7 @@ CPPFLAGS 	+= -I$(TOPDIR)/include -I$(UTILSDIR)/include
 UTILS_AR	= testutils.a
 UTILS_OBJ	= arch.o			\
 		  context.o			\
-		  create_temp_user_name.o	\
-		  create_temp_group_name.o	\
-		  file_utils.o			\
 		  identifiers.o			\
-		  mysprintf.o			\
-		  run.o				\
 		  tempfile.o			\
 		  verify.o
 

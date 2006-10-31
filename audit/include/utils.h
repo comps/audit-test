@@ -34,12 +34,6 @@ int setuidresgid_test(void);
 int setuidresgid_root(void);
 
 /*
- * File Content Preservation
- */
-int backupFile(char*);
-int restoreFile(char*);
-
-/*
  * Temp Data Creation
  */
 char *init_tempdir(mode_t, uid_t, gid_t);
@@ -49,9 +43,6 @@ char *init_tempsym(char *, uid_t, gid_t);
 void destroy_tempdir(char *);
 void destroy_tempfile(char *);
 void destroy_tempsym(char *);
-
-int createTempUserName(char** user, int* uid, char** homedir);
-int createTempGroupName( char** user, int* uid );
 
 /*
  * System context accessor routines
@@ -86,30 +77,5 @@ void context_release(struct audit_data *);
  */
 ts_exit verify_opresult(struct audit_data *, int);
 ts_exit verify_logresult(struct audit_data *);
-
-/*
- * Shell Command Utilities
- */
-int run(char* command); 
-char* mysprintf(char* fmt, ...);
-#define RUNCOMMAND(cmd, ...) \
-do {									\
-    char* command = mysprintf(cmd, ## __VA_ARGS__);			\
-    if ((rc = system(command)) == -1) {					\
-	fprintf(stderr, "Error running command: [%s]\n", command);	\
-    }									\
-    free(command);							\
-} while (0)								\
-
-#define RUNCOMMANDORDIE(cmd, ...) \
-do {									\
-    char* command = mysprintf(cmd, ## __VA_ARGS__ );			\
-    if ((rc = system(command)) == -1) {					\
-	fprintf(stderr, "Error running command: [%s]\n", command);	\
-	free(command);							\
-	goto EXIT_CLEANUP;						\
-    }									\
-    free(command);							\
-} while (0)
 
 #endif	/* _UTILS_H */

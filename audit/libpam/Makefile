@@ -39,6 +39,6 @@
 ##########################################################################
 
 TOPDIR          = ..
-SUB_DIRS        = tests utils
+SUB_DIRS        = tests
 
 include $(TOPDIR)/rules.mk

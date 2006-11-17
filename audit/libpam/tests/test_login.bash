@@ -35,8 +35,10 @@ backup /var/run/utmp
     expect -c '
         spawn login
         expect -nocase {login: $} {send "$env(TEST_USER)\r"}
-        expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
-        expect -timeout 1 timeout {send "PS1=:\\::\r"}
+        expect -nocase {password: $} {
+            send "$env(TEST_USER_PASSWD)\r"
+            send "PS1=:\\::\r"
+        }
         expect {:::$} {send "tty > $env(tmp1)\r"}
         expect {:::$} {close; wait}'
 )

@@ -26,8 +26,10 @@ source pam_functions.bash || exit 2
 expect -c '
     spawn ssh $env(TEST_USER)@localhost
     expect -nocase {Are you sure you want to continue} {send "yes\r"}
-    expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
-    expect -timeout 1 timeout {send "PS1=:\\::\r"}
+    expect -nocase {password: $} {
+        send "$env(TEST_USER_PASSWD)\r"
+        send "PS1=:\\::\r"
+    }
     expect {:::$} {close; wait}'
 
 msg_1="acct=$TEST_USER : exe=./usr/sbin/sshd.*terminal=ssh res=success.*"

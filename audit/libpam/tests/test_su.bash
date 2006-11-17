@@ -49,7 +49,9 @@ fi
 # This is reached through the perl -e 'system...' above
 expect -c '
     spawn /bin/su - $env(TEST_USER)
-    expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
-    expect -timeout 1 timeout {send "PS1=:\\::\r"}
+    expect -nocase {password: $} {
+        send "$env(TEST_USER_PASSWD)\r"
+        send "PS1=:\\::\r"
+    }
     expect {:::$} {send "tty > $env(tmp1)\r"}
     expect {:::$} {close; wait}'

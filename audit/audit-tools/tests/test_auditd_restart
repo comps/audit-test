@@ -25,11 +25,11 @@ set -x
 
 export AUDIT_SEEK=$(stat -c %s /var/log/audit/audit.log)
 
-opid=$(pidof auditd)
 service auditd restart
 npid=$(pidof auditd)
 
 auid=$(</proc/$$/loginuid)
 
-augrok -m1 type=DAEMON_END auid=$auid auditd_pid=$opid
-augrok -m1 type=DAEMON_START auid=$auid auditd_pid=$npid
+augrok -m1 type=DAEMON_END auid=$auid res=success
+augrok -m1 type=DAEMON_START auid=$auid pid=$npid auditd_pid=$npid res=success
+

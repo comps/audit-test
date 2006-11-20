@@ -22,6 +22,10 @@
 
 source pam_functions.bash || exit 2
 
+# setup
+setsebool -P ftp_home_dir=1
+append_cleanup "setsebool -P ftp_home_dir=0"
+
 # test
 expect -c '
     spawn ftp localhost
@@ -29,7 +33,7 @@ expect -c '
     expect -nocase {password:$} {send "$env(TEST_USER_PASSWD)\r"}
     expect {ftp> $} {send "quit\r"}'
 
-msg_1="acct=$TEST_USER : exe=./usr/sbin/vsftp.*hostname=localhost, addr=127.0.0.1, terminal=ftp res=success.*"
+msg_1="acct=$TEST_USER : exe=./usr/sbin/vsftp.*hostname=localhost.*, addr=127.0.0.1, terminal=ftp res=success.*"
 augrok -q type=USER_AUTH msg_1=~"PAM: authentication $msg_1" || exit_fail
 augrok -q type=USER_ACCT msg_1=~"PAM: accounting $msg_1" || exit_fail
 

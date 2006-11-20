@@ -29,7 +29,7 @@ expect -c '
     expect -nocase {password:$} {send "badpassword\r"}
     expect {ftp> $} {send "quit\r"}'
 
-msg_1="acct=$TEST_USER : exe=./usr/sbin/vsftp.*hostname=localhost, addr=127.0.0.1, terminal=ftp res=failed.*"
+msg_1="acct=$TEST_USER : exe=./usr/sbin/vsftp.*hostname=localhost.*, addr=127.0.0.1, terminal=ftp res=failed.*"
 augrok -q type=USER_AUTH msg_1=~"PAM: authentication $msg_1" || exit_fail
 
 exit_pass

@@ -26,8 +26,12 @@ source filter_functions.bash || exit 2
 # setup
 inode=$(stat -c '%i' $tmp1)
 dev=$(get_fs_dev $tmp1)
+
+# stat returns hex numbers and auditctl wants decimal
 major=$(stat -Lc '%t' $dev)
+major=$((0x$major))
 minor=$(stat -Lc '%T' $dev)
+minor=$((0x$minor))
 
 event_obj=$(get_event_obj $1)
 [[ $event_obj != $tmp1 ]] && prepend_cleanup "rm -f $event_obj"

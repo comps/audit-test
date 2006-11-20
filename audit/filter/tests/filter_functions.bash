@@ -54,7 +54,7 @@ function get_event_obj {
 }
 
 function get_fs_dev {
-    df "$1" | tail -n1 | awk '{print $1}'
+    df "$1" | grep -v ^Filesystem | head -n1 | awk '{print $1}'
 }
 
 function do_open_file {

@@ -32,6 +32,16 @@ PATH=$TOPDIR/utils:$PATH
 
 source functions.bash
 
+######################################################################
+# global variables
+######################################################################
+
+useradd_conf=/etc/default/useradd
+
+######################################################################
+# common functions
+######################################################################
+
 function generate_unique {
     declare file=$1
     declare i name id
@@ -83,11 +93,12 @@ function setpid {
 read group gid <<<"$(generate_unique_group)"
 read user uid <<<"$(generate_unique_user)"
 
-write_useradd_conf \
-    CREATE_MAIL_SPOOL=yes
-
-append_cleanup "mv \"$useradd_orig\" \"$useradd_conf\""
 append_cleanup "grep -q '^$user:' /etc/passwd && userdel -r '$user'"
 append_cleanup "grep -q '^$group:' /etc/group && groupdel '$group'"
 
 set -x
+
+backup "$useradd_conf"
+write_config \
+    "$useradd_conf" \
+    CREATE_MAIL_SPOOL=yes

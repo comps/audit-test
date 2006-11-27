@@ -23,7 +23,8 @@
 source tp_functions.bash || exit 2
 
 # setup
-backup /etc/default/useradd  # will be restored automatically
+# save off the current copy, will be restored automatically
+backup "$useradd_conf"
 
 # test
 setpid useradd -D -g games -b /tmp -e 2038-01-18 -f 42 -s /bin/true \

@@ -34,8 +34,6 @@ shopt -s extglob
 
 auditd_conf=/etc/audit/auditd.conf
 auditd_orig=$(mktemp $auditd_conf.XXXXXX) || exit 2
-useradd_conf=/etc/default/useradd
-useradd_orig=$(mktemp $useradd_conf.XXXXXX) || exit 2
 audit_log=/var/log/audit/audit.log
 
 # get recipient of root mail from /etc/aliases "root: jdoe, jsmith" line
@@ -114,6 +112,21 @@ function backup {
     done
 }
 
+# write values to config files
+# write_config <config file> <key=value>...
+function write_config {
+    declare x key value config=$1
+    shift
+
+    # Replace configuration lines; slow but works
+    for x in "$@"; do
+	key=${x%%=*}
+	value=${x#*=}
+	sed -i "/^$key[[:blank:]]*=/d" "$config"
+	echo "$key=$value" >> "$config"
+    done
+}
+
 ######################################################################
 # auditd functions
 ######################################################################
@@ -131,8 +144,6 @@ function initialize_auditd_conf {
     sed -i 's/^[Dd][Ii][Ss][Pp].*//' "$auditd_conf"
 }
 
-# the following functions for writing conf files should eventually be refactored
-# into a common function.
 function write_auditd_conf {
     declare x key value
 
@@ -141,32 +152,7 @@ function write_auditd_conf {
 	cp -a "$auditd_conf" "$auditd_orig"
     fi
 
-    # Replace configuration lines; slow but works
-    for x in "$@"; do
-	key=${x%%=*}
-	value=${x#*=}
-	sed -i "/^$key[[:blank:]]*=/d" "$auditd_conf"
-	echo "$key = $value" >> "$auditd_conf"
-    done
-}
-
-function write_useradd_conf {
-    declare x key value
-
-    ls /etc/default
-
-    # Save off the auditd configuration
-    if [[ ! -s $useradd_orig ]]; then 
-	cp -a -v "$useradd_conf" "$useradd_orig"
-    fi
-
-    # Replace configuration lines; slow but works
-    for x in "$@"; do
-	key=${x%%=*}
-	value=${x#*=}
-	sed -i "/^$key[[:blank:]]*=/d" "$useradd_conf"
-	echo "$key=$value" >> "$useradd_conf"
-    done
+    write_config "$auditd_conf" "$@"
 }
 
 function start_auditd {

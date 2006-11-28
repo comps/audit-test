@@ -36,13 +36,6 @@ auditd_conf=/etc/audit/auditd.conf
 auditd_orig=$(mktemp $auditd_conf.XXXXXX) || exit 2
 audit_log=/var/log/audit/audit.log
 
-# get recipient of root mail from /etc/aliases "root: jdoe, jsmith" line
-ralias=$(sed -n 's/^root:[ \t]*\([^,]*\).*/\1/p' /etc/aliases)
-[[ -z $ralias ]] && ralias=root
-eal_mail=/var/mail/$ralias
-unset ralias
-
-messages=/var/log/messages
 tmp1=$(mktemp) || exit 2
 tmp2=$(mktemp) || exit 2
 zero=${0##*/}

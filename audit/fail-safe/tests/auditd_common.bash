@@ -37,7 +37,13 @@ source functions.bash
 # global variables
 ######################################################################
 
-zero=${0##*/}
+# get recipient of root mail from /etc/aliases "root: jdoe, jsmith" line
+ralias=$(sed -n 's/^root:[ \t]*\([^,]*\).*/\1/p' /etc/aliases)
+[[ -z $ralias ]] && ralias=root
+eal_mail=/var/mail/$ralias
+unset ralias
+
+messages=/var/log/messages
 action=$1
 total_written=0
 

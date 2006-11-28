@@ -113,9 +113,21 @@ function backup {
 }
 
 # write values to config files
-# write_config <config file> <key=value>...
+# write_config [-s] <config file> <key=value>...
 function write_config {
-    declare x key value config=$1
+    declare x key value config=$1 dospace=false
+
+    args=$(getopt -o s -n "$0" -- "$@")
+    eval set -- "$args"
+    while true; do
+	case $1 in
+	    -s) dospace=true; shift ;;
+	    --) shift; break ;;
+	     *) exit_error "write_config: failed to process cmdline args" ;;
+	esac
+    done
+
+    config=$1
     shift
 
     # Replace configuration lines; slow but works
@@ -123,7 +135,11 @@ function write_config {
 	key=${x%%=*}
 	value=${x#*=}
 	sed -i "/^$key[[:blank:]]*=/d" "$config"
-	echo "$key=$value" >> "$config"
+	if $dospace; then
+            echo "$key = $value" >> "$config"
+        else
+            echo "$key=$value" >> "$config"
+        fi
     done
 }
 
@@ -152,7 +168,7 @@ function write_auditd_conf {
 	cp -a "$auditd_conf" "$auditd_orig"
     fi
 
-    write_config "$auditd_conf" "$@"
+    write_config -s "$auditd_conf" "$@"
 }
 
 function start_auditd {

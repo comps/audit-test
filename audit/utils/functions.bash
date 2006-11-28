@@ -33,7 +33,6 @@ shopt -s extglob
 ######################################################################
 
 auditd_conf=/etc/audit/auditd.conf
-auditd_orig=$(mktemp $auditd_conf.XXXXXX) || exit 2
 audit_log=/var/log/audit/audit.log
 
 tmp1=$(mktemp) || exit 2
@@ -47,15 +46,7 @@ zero=${0##*/}
 # This can be prepended or appended by calling prepend_cleanup or append_cleanup
 # below
 function cleanup {
-    if [[ -s $auditd_orig ]]; then 
-        auditctl -D
-        service auditd stop
-        killall auditd
-        mv "$auditd_orig" "$auditd_conf"
-        umount /var/log/audit
-        service auditd start
-    fi
-    rm -f "$auditd_orig" "$tmp1" "$tmp2"
+    rm -f "$tmp1" "$tmp2"
 }
 
 # can override to cleanup &>/dev/null when appropriate
@@ -106,14 +97,17 @@ function backup {
 }
 
 # write values to config files
-# write_config [-s] <config file> <key=value>...
+# write_config [-sc] <config file> <key[=value]>...
+# 	-r	remove line for specified key, instead of replacing
+# 	-s	use spaces for key/value pairs
 function write_config {
-    declare x key value config=$1 dospace=false
+    declare x key value config=$1 dospace=false remove=false
 
-    args=$(getopt -o s -n "$0" -- "$@")
+    args=$(getopt -o rs -n "$0" -- "$@")
     eval set -- "$args"
     while true; do
 	case $1 in
+	    -r) remove=true; shift ;;
 	    -s) dospace=true; shift ;;
 	    --) shift; break ;;
 	     *) exit_error "write_config: failed to process cmdline args" ;;
@@ -123,11 +117,14 @@ function write_config {
     config=$1
     shift
 
-    # Replace configuration lines; slow but works
+    # Remove or replace configuration lines; slow but works
     for x in "$@"; do
 	key=${x%%=*}
 	value=${x#*=}
+
 	sed -i "/^$key[[:blank:]]*=/d" "$config"
+	[[ $remove == true ]] && return 0
+
 	if $dospace; then
             echo "$key = $value" >> "$config"
         else
@@ -139,30 +136,6 @@ function write_config {
 ######################################################################
 # auditd functions
 ######################################################################
-
-# initialize auditd.conf for testsuite
-# called from run.bash
-function initialize_auditd_conf {
-
-    # Save off the auditd configuration
-    if [[ ! -s "$auditd_orig" ]]; then 
-	cp -a "$auditd_conf" "$auditd_orig"
-    fi
-
-    # remove configuration for audit dispatcher
-    sed -i 's/^[Dd][Ii][Ss][Pp].*//' "$auditd_conf"
-}
-
-function write_auditd_conf {
-    declare x key value
-
-    # Save off the auditd configuration
-    if [[ ! -s "$auditd_orig" ]]; then 
-	cp -a "$auditd_conf" "$auditd_orig"
-    fi
-
-    write_config -s "$auditd_conf" "$@"
-}
 
 function start_auditd {
     declare i s="starting auditd $$: can you hear me now?"

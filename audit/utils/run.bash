@@ -268,7 +268,9 @@ function startup {
     fi
 
     # Initialize audit configuration and make sure auditd is running
-    initialize_auditd_conf
+    prepend_cleanup "killall -HUP auditd" # do right after restoring config
+    backup "$auditd_conf"		  # backup uses prepend_cleanup
+    write_config -r "$auditd_conf" dispatcher DISP_qos
     start_auditd >/dev/null || die
 
     # Add the test user which is used for unprivileged tests

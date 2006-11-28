@@ -25,7 +25,7 @@
 
 source auditd_common.bash
 
-write_auditd_conf \
+write_config -s "$auditd_conf" \
     disk_error_action=$action || exit 2
 
 (

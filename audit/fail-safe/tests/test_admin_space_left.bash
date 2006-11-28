@@ -25,7 +25,7 @@
 
 source auditd_common.bash
 
-write_auditd_conf \
+write_config -s "$auditd_conf" \
     admin_space_left=1 \
     admin_space_left_action=$action \
     space_left=2 || exit 2

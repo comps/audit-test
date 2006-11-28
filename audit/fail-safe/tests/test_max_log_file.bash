@@ -27,7 +27,7 @@ source auditd_common.bash
 
 max_log_file=1	# 1 megabyte, that is
 
-write_auditd_conf \
+write_config -s "$auditd_conf" \
     num_logs=2 \
     max_log_file=$max_log_file \
     max_log_file_action=$action || exit 2

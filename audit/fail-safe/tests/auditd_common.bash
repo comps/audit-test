@@ -298,8 +298,16 @@ mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit
 chmod 750 /var/log/audit
 chcon system_u:object_r:auditd_log_t /var/log/audit
 
+prepend_cleanup '
+    umount /var/log/audit
+    service auditd start'
+backup "$auditd_conf"	# restore done via prepend_cleanup
+prepend_cleanup '
+    service auditd stop
+    killall auditd'
+
 # default config ignores all problems
-write_auditd_conf \
+write_config -s "$auditd_conf" \
     log_file=/var/log/audit/audit.log \
     log_format=RAW \
     flush=SYNC \
@@ -316,7 +324,7 @@ write_auditd_conf \
 # email actions aren't fully available until version 1.0.8, so don't write
 # this config item unless that's what we're testing.
 if [[ $action == email ]]; then
-    write_auditd_conf action_mail_acct=root
+    write_config -s "$auditd_conf" action_mail_acct=root
 fi
 
 if [[ $(type -t pre_$action) == function ]]; then

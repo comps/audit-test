@@ -287,6 +287,10 @@ stop_auditd
 # use 8MB tmpfs for audit logs
 if mount | grep /var/log/audit; then exit 2; fi
 mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit
+# fix permissions for temporary audit logs
+# FIXME: chcon should be conditionalized based on the presence of selinux
+chmod 750 /var/log/audit
+chcon system_u:object_r:auditd_log_t /var/log/audit
 
 # default config ignores all problems
 write_auditd_conf \

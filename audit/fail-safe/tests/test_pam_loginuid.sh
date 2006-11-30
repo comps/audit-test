@@ -32,26 +32,23 @@
 #  11/05 Mods to use global TEST_USER by Aron Griffis <aron@hp.com>
 #
 
+source testcase.bash
+
 export RHOST="localhost"
 # TEST_USER and TEST_USER_PASSWD are set in run.bash startup()
 
-function cleanup {
-  # restore original pam config
-  mv /etc/pam.d/sshd.testsave /etc/pam.d/sshd
-  killall -0 auditd &>/dev/null || /etc/init.d/auditd start
-}
-trap 'cleanup; exit' 0 1 2 3 15
-
+# setup
 # make sure pam_loginuid is configured with require_auditd
-sed -i.testsave '/pam_loginuid\.so/s/$/ require_auditd/' /etc/pam.d/sshd \
-    || exit 2
+backup /etc/pam.d/sshd  # restored automatically
+sed -i '/pam_loginuid\.so/s/$/ require_auditd/' /etc/pam.d/sshd || exit_error
+# make sure auditd is running after test
+prepend_cleanup 'killall -0 auditd &>/dev/null || service auditd start'
 
 # attempt to login with auditd running; should work
-./ssh01_s1 || exit 1
+./ssh01_s1 || exit_fail
 
 # attempt to login with auditd off; should fail
-service auditd stop || exit 2
-./ssh01_s1 && exit 1
+service auditd stop || exit_error
+./ssh01_s1 && exit_exit_fail
 
-# tests passed
-exit 0
+exit_pass

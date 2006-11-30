@@ -34,7 +34,7 @@ if [[ -z $TOPDIR ]]; then
 fi
 PATH=$TOPDIR/utils:$PATH
 
-source functions.bash
+source testcase.bash
 
 # some of these require sed -r, and all are compatible with it
 collapse_interior_whitespace='s/[[:blank:]]+/ /g'

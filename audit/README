@@ -171,9 +171,14 @@ startup_hook()
       not prior to each test.  If you need special setup prior to
       running each test, put it in run_test
 
-cleanup_hook()
+cleanup_pre_hook()
 
     - default is: true (see run.bash)
 
-    - runs after looping through all the tests
+    - runs after looping through all the tests, before default cleanup
 
+cleanup_post_hook()
+
+    - default is: true (see run.bash)
+
+    - runs after looping through all the tests, after default cleanup

@@ -61,6 +61,8 @@ declare opt_log=run.log
 declare opt_rollup=rollup.log
 declare opt_timeout=30
 
+auditd_orig=$(mktemp $auditd_conf.XXXXXX) || exit 2
+
 #----------------------------------------------------------------------
 # utility functions
 #----------------------------------------------------------------------
@@ -249,7 +251,12 @@ function startup_hook {
 }
 
 # this can be overridden in run.conf
-function cleanup_hook {
+function cleanup_pre_hook {
+    true
+}
+
+# this can be overridden in run.conf
+function cleanup_post_hook {
     true
 }
 
@@ -268,8 +275,7 @@ function startup {
     fi
 
     # Initialize audit configuration and make sure auditd is running
-    prepend_cleanup "killall -HUP auditd" # do right after restoring config
-    backup "$auditd_conf"		  # backup uses prepend_cleanup
+    cp -a "$auditd_conf" "$auditd_orig" || die
     write_config -r "$auditd_conf" dispatcher DISP_qos
     start_auditd >/dev/null || die
 
@@ -281,17 +287,29 @@ function startup {
     dmsg "Adding user $TEST_USER"
     useradd -g "$TEST_USER" -p "$passwd_encrypted" -m "$TEST_USER" || die
 
-    append_cleanup '
-	if [[ -n $TEST_USER ]]; then
-	    # Remove the test user
-	    dmsg "Removing user $TEST_USER"
-	    userdel -r "$TEST_USER" &>/dev/null
-	    dmsg "Removing group $TEST_USER"
-	    groupdel "$TEST_USER" &>/dev/null
-	fi
-	cleanup_hook'
-
     startup_hook
+}
+
+function cleanup {
+    cleanup_pre_hook
+
+    # Remove the test user
+    if [[ -n $TEST_USER ]]; then
+	# Remove the test user
+	dmsg "Removing user $TEST_USER"
+	userdel -r "$TEST_USER" &>/dev/null
+	dmsg "Removing group $TEST_USER"
+	groupdel "$TEST_USER" &>/dev/null
+    fi
+
+    # Restore the original auditd configuration
+    if [[ -s $auditd_orig ]]; then 
+        mv "$auditd_orig" "$auditd_conf"
+	killall -HUP auditd
+    fi
+    rm -f "$auditd_orig"
+
+    cleanup_post_hook
 }
 
 # cleanup function should send output via dmsg

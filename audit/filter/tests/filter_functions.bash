@@ -30,7 +30,7 @@ if [[ -z $TOPDIR ]]; then
 fi
 PATH=$TOPDIR/utils:$PATH
 
-source functions.bash
+source testcase.bash
 
 function get_event_obj {
     declare op=$1

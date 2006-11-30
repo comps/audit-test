@@ -24,7 +24,7 @@ source pam_functions.bash || exit 2
 
 # setup
 setsebool -P ftp_home_dir=1
-append_cleanup "setsebool -P ftp_home_dir=0"
+prepend_cleanup "setsebool -P ftp_home_dir=0"
 
 # test
 expect -c '

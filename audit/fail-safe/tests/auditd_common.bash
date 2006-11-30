@@ -31,7 +31,7 @@ if [[ -z $TOPDIR ]]; then
 fi
 PATH=$TOPDIR/utils:$PATH
 
-source functions.bash
+source testcase.bash
 
 ######################################################################
 # global variables
@@ -212,12 +212,10 @@ function check_keep_logs {
 function pre_halt {
     declare mask_runlevel=${1:-0}
 
-    eval "function cleanup {
-	$(type cleanup | sed '1,3d;$d')
-	if [[ -s /sbin/init.agriffis ]]; then
-	    mv /sbin/init.agriffis /sbin/init
-	fi
-    }"
+    append_cleanup '
+    if [[ -s /sbin/init.agriffis ]]; then
+	mv /sbin/init.agriffis /sbin/init
+    fi'
 
     # replace /sbin/init with our own version
     if [[ ! -s /sbin/init.agriffis ]]; then

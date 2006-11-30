@@ -27,7 +27,7 @@ useradd -n -u $uid $user || exit_error "useradd failed"
 read group2 gid2 <<<"$(generate_unique_group)"
 groupadd -g $gid2 $group2 || exit_error "groupadd failed"
 
-append_cleanup "grep -q '^$group2:' /etc/group && groupdel '$group2'"
+prepend_cleanup "grep -q '^$group2:' /etc/group && groupdel '$group2'"
 
 # test
 setpid usermod -g $gid2 $user || exit_error "usermod failed"

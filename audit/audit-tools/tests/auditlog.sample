@@ -1,6 +1,10 @@
 type=DAEMON_START msg=audit(1133817257.143:186) auditd start, ver=1.0.3, format=raw, auid=10208, auditd pid=25495
+type=DAEMON_CONFIG msg=audit(1168028796.315:7533) config changed, auid=500 pid=15465 res=success
 type=CONFIG_CHANGE msg=audit(1133817257.142:49946): audit_enabled=1 old=1 by auid=10208
 type=CONFIG_CHANGE msg=audit(1133817257.346:49947): audit_backlog_limit=256 old=256 by auid=10208
+type=CONFIG_CHANGE msg=audit(1168030931.528:451): auid=500 op=add rule key=(null) list=4 res=1
+type=CONFIG_CHANGE msg=audit(1168030937.871:452): auid=500 op=add rule key=(null) list=4 res=0
+type=LOGIN msg=audit(1168031806.396:457): login pid=15671 uid=0 old auid=4294967295 new auid=500
 type=USER msg=audit(1133817257.347:49948): user pid=25504 uid=0 auid=10208 msg='testing 1-2-3 testing'
 type=USER_CHAUTHTOK msg=audit(1133817257.367:49949): user pid=25521 uid=0 auid=10208 msg='groupadd: op=adding group acct=testuser1 res=success'
 type=USER_CHAUTHTOK msg=audit(1133817257.477:49950): user pid=25522 uid=0 auid=10208 msg='groupdel: op=deleting group acct=testuser1 res=success'

@@ -842,7 +842,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
 				   "res==success", "or", "msg_1=~res=success",
 				   "or", "msg_1=~result=Success", "or",
 				   "type=LOGIN", "or", "type=CONFIG_CHANGE",
-				   "and", "res!=failed", ")"
+				   "and", "res!=0", ")"
 		: push @ARGV, "(", "success==no", "or", "res==0", "or",
 				   "res==failed", "or", "msg_1=~res=failed",
 				   "or", "msg_1=~result=[^=]*[Ff]ail", ")"

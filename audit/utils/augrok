@@ -834,13 +834,18 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
                          "type!=" : "type=~\\b$_[1]\\b" },
         'p=i'   => sub { push @ARGV, "pid==$_[1]" },
         'sc=s'  => sub { push @ARGV, "syscall==$_[1]" },        # XXX names
-	# ausearch >= 1.0.12 tries hard to understand the various variants
+	# success/failure definitions according to ausearch >= 1.3
+	# XXX add avc messages
         'sv=s'  => sub {
 		$_[1] =~ /yes/i
-		? push @ARGV, "(", "success==yes", "or", "msg_1=~res=success",
-                                   "or", "msg_1=~result=Success", ")"
-		: push @ARGV, "(", "success==no", "or", "msg_1=~res=failed",
-                                    "or", "msg_1=~result=[^=]*[Ff]ail", ")"
+		? push @ARGV, "(", "success==yes", "or", "res==1", "or",
+				   "res==success", "or", "msg_1=~res=success",
+				   "or", "msg_1=~result=Success", "or",
+				   "type=LOGIN", "or", "type=CONFIG_CHANGE",
+				   "and", "res!=failed", ")"
+		: push @ARGV, "(", "success==no", "or", "res==0", "or",
+				   "res==failed", "or", "msg_1=~res=failed",
+				   "or", "msg_1=~result=[^=]*[Ff]ail", ")"
 	},
         'ts'    => sub { push @ARGV, "msg_time>=" },            # see <> below
         'te'    => sub { push @ARGV, "msg_time<=" },            # see <> below

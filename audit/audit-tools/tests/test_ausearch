@@ -45,9 +45,10 @@ remove_daemon_commas='/^type=DAEMON_START/s/,[[:blank:]]+/ /g'
 
 echo "# augrok --ausearch -if auditlog.sample $*" >&2
 augrok_output=$(augrok --ausearch -if auditlog.sample "$@" \
-    | sed -r "$collapse_interior_whitespace" \
-    | sed -r "$remove_daemon_commas" \
-    | sed -r "$remove_quotes" \
+    | sed -r "
+	$collapse_interior_whitespace
+	$remove_daemon_commas
+	$remove_quotes" \
     | tee /dev/stderr \
     | sort)
 
@@ -58,11 +59,12 @@ fi
 echo
 echo "# ausearch -if auditlog.sample $*" >&2
 ausearch_output=$(ausearch -if auditlog.sample "$@" \
-    | sed -r "$collapse_interior_whitespace" \
-    | sed -r "$remove_trailing_whitespace" \
-    | sed -r "$remove_msg_space" \
-    | sed -r "$remove_daemon_commas" \
-    | sed -r "$remove_quotes" \
+    | sed -r "
+	$collapse_interior_whitespace
+	$remove_trailing_whitespace
+	$remove_msg_space
+	$remove_daemon_commas
+	$remove_quotes" \
     | tee /dev/stderr \
     | sort)
 

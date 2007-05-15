@@ -1,0 +1,41 @@
+# LSPP labeled networking test server
+#  listens on IPv6/TCP port 5000 for unlabeled connections
+#  listens on IPv4/TCP port 5001 for labeled connections
+
+service lblnet_tst
+{
+	id              = lblnet_tst
+        type            = UNLISTED
+        flags           = REUSE IPv6
+        wait            = no
+        user            = root
+        disable         = no
+
+	instances	= 1
+
+        socket_type     = stream
+	protocol        = tcp
+	port            = 5000
+
+        server = /usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server
+	server_args     = -i -t 10
+}
+
+service lblnet_tst_labeled
+{
+	id              = lblnet_tst_labeled
+        type            = UNLISTED
+        flags           = REUSE IPv4 LABELED
+        wait            = no
+        user            = root
+        disable         = no
+
+	instances	= 1
+
+        socket_type     = stream
+	protocol        = tcp
+	port            = 5001
+
+        server = /usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server
+	server_args     = -i -t 10
+}

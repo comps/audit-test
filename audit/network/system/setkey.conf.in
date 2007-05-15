@@ -1,0 +1,218 @@
+#!/sbin/setkey -f
+#
+# This file contains the SPD configuration for the IPsec subsystem
+
+# clear the SAD and SPD
+flush;
+spdflush;
+
+######################################################################
+# LSPP Test Configuration
+######################################################################
+
+# NOTE: please see http://www.nsa.gov/selinux/list-archive/0609/16874.cfm
+#       and the setkey manpage for details on using labeled IPsec
+
+# ESP between this machine and itself using IPv4/TCP
+spdadd 127.0.0.1 127.0.0.1[5300] tcp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+        -P out ipsec esp/transport//require;
+spdadd 127.0.0.1[5300] 127.0.0.1 tcp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+        -P in ipsec esp/transport//require;
+
+# AH between this machine and the test server using IPv4/TCP
+spdadd %LOCAL_IPV4% %REMOTE_IPV4%[5300] tcp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+	-P out ipsec ah/transport//require;
+spdadd %REMOTE_IPV4%[5300] %LOCAL_IPV4% tcp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+	-P in ipsec ah/transport//require;
+spdadd %LOCAL_IPV4%[5300] %REMOTE_IPV4% tcp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+	-P in ipsec ah/transport//require;
+spdadd %REMOTE_IPV4%  %LOCAL_IPV4%[5300] tcp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+	-P out ipsec ah/transport//require;
+
+# ESP between this machine and itself using IPv4/UDP
+#  only allow SystemLow (s0) on port 5300
+spdadd 127.0.0.1 127.0.0.1[5300] udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+        -P out ipsec esp/transport//require;
+spdadd 127.0.0.1 127.0.0.1[5300] udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+        -P out discard;
+spdadd 127.0.0.1[5300] 127.0.0.1 udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+        -P in ipsec esp/transport//require;
+spdadd 127.0.0.1[5300]  127.0.0.1 udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+        -P in discard;
+#  only allow SystemHigh (s15:c0.c1023) on port 5301
+spdadd 127.0.0.1 127.0.0.1[5301] udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+        -P out ipsec esp/transport//require;
+spdadd 127.0.0.1 127.0.0.1[5301] udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022"
+        -P out discard;
+spdadd 127.0.0.1[5301] 127.0.0.1 udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+        -P in ipsec esp/transport//require;
+spdadd 127.0.0.1[5301] 127.0.0.1 udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022"
+        -P in discard;
+
+# AH between this machine and the test server using IPv4/UDP
+#  only allow SystemLow (s0) on port 5300
+spdadd %LOCAL_IPV4% %REMOTE_IPV4%[5300] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+	-P out ipsec ah/transport//require;
+spdadd %LOCAL_IPV4% %REMOTE_IPV4%[5300] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+	-P out discard;
+spdadd %REMOTE_IPV4%[5300] %LOCAL_IPV4% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+	-P in ipsec ah/transport//require;
+spdadd %REMOTE_IPV4%[5300]  %LOCAL_IPV4% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+	-P in discard;
+spdadd %LOCAL_IPV4%[5300] %REMOTE_IPV4% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+	-P in ipsec ah/transport//require;
+spdadd %LOCAL_IPV4%[5300] %REMOTE_IPV4% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+	-P in discard;
+spdadd %REMOTE_IPV4% %LOCAL_IPV4%[5300] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+	-P out ipsec ah/transport//require;
+spdadd %REMOTE_IPV4% %LOCAL_IPV4%[5300] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+	-P out discard;
+#  only allow SystemHigh (s15:c0.c1023) on port 5301
+spdadd %LOCAL_IPV4% %REMOTE_IPV4%[5301] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+	-P out ipsec ah/transport//require;
+spdadd %LOCAL_IPV4% %REMOTE_IPV4%[5301] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022"
+	-P out discard;
+spdadd %REMOTE_IPV4%[5301] %LOCAL_IPV4% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+	-P in ipsec ah/transport//require;
+spdadd %REMOTE_IPV4%[5301] %LOCAL_IPV4% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022"
+	-P in discard;
+spdadd %LOCAL_IPV4%[5301] %REMOTE_IPV4% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+	-P in ipsec ah/transport//require;
+spdadd %LOCAL_IPV4%[5301] %REMOTE_IPV4% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1022"
+	-P in discard;
+spdadd %REMOTE_IPV4% %LOCAL_IPV4%[5301] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+	-P out ipsec ah/transport//require;
+spdadd %REMOTE_IPV4% %LOCAL_IPV4%[5301] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1022"
+	-P out discard;
+
+# ESP between this machine and itself using IPv6/TCP
+spdadd ::1 ::1[5300] tcp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+        -P out ipsec esp/transport//require;
+spdadd ::1[5300] ::1 tcp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+        -P in ipsec esp/transport//require;
+
+# AH between this machine and the test server using IPv6/TCP
+spdadd %LOCAL_IPV6% %REMOTE_IPV6%[5300] tcp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+	-P out ipsec ah/transport//require;
+spdadd %REMOTE_IPV6%[5300] %LOCAL_IPV6% tcp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+	-P in ipsec ah/transport//require;
+spdadd %LOCAL_IPV6%[5300] %REMOTE_IPV6% tcp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+	-P in ipsec ah/transport//require;
+spdadd %REMOTE_IPV6%  %LOCAL_IPV6%[5300] tcp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
+	-P out ipsec ah/transport//require;
+
+# ESP between this machine and itself using IPv6/UDP
+#  only allow SystemLow (s0) on port 5300
+spdadd ::1 ::1[5300] udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+        -P out ipsec esp/transport//require;
+spdadd ::1 ::1[5300] udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+        -P out discard;
+spdadd ::1[5300] ::1 udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+        -P in ipsec esp/transport//require;
+spdadd ::1[5300]  ::1 udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+        -P in discard;
+#  only allow SystemHigh (s15:c0.c1023) on port 5301
+spdadd ::1 ::1[5301] udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+        -P out ipsec esp/transport//require;
+spdadd ::1 ::1[5301] udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022"
+        -P out discard;
+spdadd ::1[5301] ::1 udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+        -P in ipsec esp/transport//require;
+spdadd ::1[5301] ::1 udp
+        -ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022"
+        -P in discard;
+
+# AH between this machine and the test server using IPv6/UDP
+#  only allow SystemLow (s0) on port 5300
+spdadd %LOCAL_IPV6% %REMOTE_IPV6%[5300] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+	-P out ipsec ah/transport//require;
+spdadd %LOCAL_IPV6% %REMOTE_IPV6%[5300] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+	-P out discard;
+spdadd %REMOTE_IPV6%[5300] %LOCAL_IPV6% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+	-P in ipsec ah/transport//require;
+spdadd %REMOTE_IPV6%[5300]  %LOCAL_IPV6% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+	-P in discard;
+spdadd %LOCAL_IPV6%[5300] %REMOTE_IPV6% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+	-P in ipsec ah/transport//require;
+spdadd %LOCAL_IPV6%[5300] %REMOTE_IPV6% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+	-P in discard;
+spdadd %REMOTE_IPV6% %LOCAL_IPV6%[5300] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0"
+	-P out ipsec ah/transport//require;
+spdadd %REMOTE_IPV6% %LOCAL_IPV6%[5300] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023"
+	-P out discard;
+#  only allow SystemHigh (s15:c0.c1023) on port 5301
+spdadd %LOCAL_IPV6% %REMOTE_IPV6%[5301] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+	-P out ipsec ah/transport//require;
+spdadd %LOCAL_IPV6% %REMOTE_IPV6%[5301] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022"
+	-P out discard;
+spdadd %REMOTE_IPV6%[5301] %LOCAL_IPV6% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+	-P in ipsec ah/transport//require;
+spdadd %REMOTE_IPV6%[5301] %LOCAL_IPV6% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022"
+	-P in discard;
+spdadd %LOCAL_IPV6%[5301] %REMOTE_IPV6% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+	-P in ipsec ah/transport//require;
+spdadd %LOCAL_IPV6%[5301] %REMOTE_IPV6% udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1022"
+	-P in discard;
+spdadd %REMOTE_IPV6% %LOCAL_IPV6%[5301] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s15:c0.c1023"
+	-P out ipsec ah/transport//require;
+spdadd %REMOTE_IPV6% %LOCAL_IPV6%[5301] udp
+	-ctx 1 1 "system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1022"
+	-P out discard;

@@ -20,7 +20,7 @@
 # PURPOSE:
 # Verify audit of an unsuccessful user password change.
 
-source tp_functions.bash || exit 2
+source tp_auth_functions.bash || exit 2
 
 # test
 newpass=123
@@ -29,7 +29,7 @@ su $TEST_USER -c "
     expect -c '
         spawn passwd
         expect {
-            -nocase \"unix password:\" {send \"$newpass\\r\"; exp_continue}
+            -nocase \"password:\" {send \"$newpass\\r\"; exp_continue}
             eof
         }
         set pidfile [open \"$tmp1\" w]

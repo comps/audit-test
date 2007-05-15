@@ -38,7 +38,7 @@ log_mark=$(stat -c %s $audit_log)
 do_open_file $event_obj
 
 # verify audit record
-augrok --seek=$log_mark "type=~SYSCALL" key==$watch \
+augrok --seek=$log_mark type==SYSCALL key==$watch \
     || exit_fail "Expected record not found."
 
 exit_pass

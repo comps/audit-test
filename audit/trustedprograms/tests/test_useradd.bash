@@ -21,7 +21,7 @@
 # Verify audit of new user creation, including adding the new user to a group
 # and creating the new user's home directory.
 
-source tp_functions.bash || exit 2
+source tp_auth_functions.bash || exit 2
 
 # test
 setpid useradd -n -m -G games -u $uid -d /home/$user $user \

@@ -86,7 +86,7 @@ static int parse_command_line(int argc, char **argv,
 
 int main(int argc, char **argv)
 {
-    ts_exit		ecode = TEST_EXPECTED;
+    ts_exit		ecode = TEST_SUCCESS;
     struct syscall_opts options;
     struct audit_data 	context;
     char		*sysname = NULL;
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     }
 
     ecode = verify_opresult(&context, options.success);
-    if (ecode != TEST_EXPECTED)
+    if (ecode != TEST_SUCCESS)
 	goto exit;
 
     ecode = verify_logresult(&context);

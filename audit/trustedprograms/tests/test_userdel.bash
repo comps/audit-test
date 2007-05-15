@@ -21,7 +21,7 @@
 # Verify audit of user removal, including removal of mail file and home
 # directory.
 
-source tp_functions.bash || exit 2
+source tp_auth_functions.bash || exit 2
 
 # setup
 useradd -n -m -u $uid $user || exit_error "useradd failed"

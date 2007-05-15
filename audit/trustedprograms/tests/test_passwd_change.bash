@@ -20,17 +20,17 @@
 # PURPOSE:
 # Verify audit of user password change.
 
-source tp_functions.bash || exit 2
+source tp_auth_functions.bash || exit 2
 
 # setup
 useradd -n -u $uid $user || exit_error "useradd failed"
 
 # test
-newpass=$(date +%s)
+newpass=$(date +OsLO\!%sMo)
 expect -c "
     spawn passwd $user
     expect {
-        -nocase \"new unix password:\" {send \"$newpass\\r\"; exp_continue}
+        -nocase \"new password:\" {send \"$newpass\\r\"; exp_continue}
         eof
     }
     set pidfile [open \"$tmp1\" w]

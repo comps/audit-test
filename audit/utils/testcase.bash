@@ -28,6 +28,16 @@ source functions.bash
 # global vars
 ######################################################################
 
+# make sure TMPDIR isn't set in the caller's environment
+# and catch if it is set to the null string
+if [[ -n ${TMPDIR+set} ]]; then
+    append_cleanup "export TMPDIR=$TMPDIR"	
+    unset TMPDIR
+fi
+
+# create the shared tmp file
+localtmp=$(mktemp -p $TOPDIR) || exit 2
+
 tmp1=$(mktemp) || exit 2
 tmp2=$(mktemp) || exit 2
 
@@ -38,7 +48,7 @@ tmp2=$(mktemp) || exit 2
 # This can be prepended or appended by calling prepend_cleanup or append_cleanup
 # below
 function test_cleanup {
-    rm -f "$tmp1" "$tmp2"
+    rm -f "$tmp1" "$tmp2" "$localtmp"
 }
 
 # can override to cleanup &>/dev/null when appropriate
@@ -56,24 +66,6 @@ function append_cleanup {
 	$(type test_cleanup | sed '1,3d;$d')
 	$*
     }"
-}
-
-function exit_pass {
-    [[ -n $* ]] && echo "pass: $*" >&2
-    # this will call the cleanup function automatically because of trap 0
-    exit 0
-}
-
-function exit_fail {
-    [[ -n $* ]] && echo "fail: $*" >&2
-    # this will call the cleanup function automatically because of trap 0
-    exit 1
-}
-
-function exit_error {
-    [[ -n $* ]] && echo "error: $*" >&2
-    # this will call the cleanup function automatically because of trap 0
-    exit 2
 }
 
 # backup files, with automatic restore when the script exits.

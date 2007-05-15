@@ -85,6 +85,44 @@ all: deps subdirs $(ALL_AR) $(ALL_EXE) $(ALL_SO)
 
 run:
 
+# Re-used in toplevel Makefile
+check_set_PPROFILE = \
+	if [[ $$PPROFILE != capp && $$PPROFILE != lspp ]]; then \
+	  export PPROFILE=capp ; \
+	  if [[ "$$(getenforce)" == "Enforcing" ]] &&  \
+	        (/usr/sbin/sestatus | grep -q mls); then \
+	    if [[ "$$(secon -r)" != "lspp_test_r" ]]; then \
+	      echo "SELinux MLS policy is enabled but you are not in lspp_test_r" ; \
+	      exit 1; \
+	    else \
+	      export PPROFILE=lspp ; \
+	    fi \
+	  fi \
+	fi 
+
+check_set_PASSWD = \
+	while [[ -z $$PASSWD ]]; do \
+	    trap 'stty echo; exit' 1 2; \
+	    read -sp "Login user password: " PASSWD; echo; export PASSWD; \
+	    trap - 1 2; \
+	done 
+
+check_set_LBLNET_SVR_IPV4 = \
+	while [[ -z $$LBLNET_SVR_IPV4 ]]; do \
+	    trap 'stty echo; exit' 1 2; \
+	    read -p "Remote test server IPv4 address: " LBLNET_SVR_IPV4; \
+		echo; export LBLNET_SVR_IPV4; \
+	    trap - 1 2; \
+	done
+
+check_set_LBLNET_SVR_IPV6 = \
+	while [[ -z $$LBLNET_SVR_IPV6 ]]; do \
+	    trap 'stty echo; exit' 1 2; \
+	    read -p "Remote test server IPv6 address: " LBLNET_SVR_IPV6; \
+		echo; export LBLNET_SVR_IPV6; \
+	    trap - 1 2; \
+	done
+
 ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard run.conf)),)
 all: run.bash
 
@@ -92,6 +130,8 @@ run.bash:
 	[[ -f run.bash ]] || ln -sfn $(TOPDIR)/utils/run.bash run.bash
 
 run: all
+	@$(check_set_PPROFILE); \
+	$(check_set_PASSWD); \
 	./run.bash
 endif
 
@@ -147,11 +187,11 @@ verifyme: subdirs
 
 verify:
 	$(MAKE) verifyme
-	@if ! mount | grep -q "^$$(df . | tail -n1 | cut -f1 -d\ ) .*(.*user_xattr"; then \
+	@if ! mount | grep -q "^$$(df . | head -n2 | tail -n1 | cut -f1 -d\ ) .*(.*user_xattr"; then \
 		echo "please set 'user_xattr' for this filesystem'"; \
 		exit 1; \
 	fi
-	@if ! mount | grep -q "^$$(df . | tail -n1 | cut -f1 -d\ ) .*(.*acl"; then \
+	@if ! mount | grep -q "^$$(df . | head -n2 | tail -n1 | cut -f1 -d\ ) .*(.*acl"; then \
 		echo "please set 'acl' for this filesystem'"; \
 		exit 1; \
 	fi
@@ -190,7 +230,9 @@ deps: $(DEP_FILES)
 		| sed '\''s@\($*\)\.o[ :]*@\1.o $@: @g'\'' > $@; \
 		[ -s $@ ] || $(RM) $@'
 
+ifneq ($(DEP_FILES),)
 -include $(DEP_FILES)
+endif
 
 # How to build missing things like libraries
 ../%:

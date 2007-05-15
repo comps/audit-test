@@ -1,0 +1,50 @@
+#######
+#
+# LSPP test SELinux file contexts
+#
+#
+
+###
+#
+# generic directories
+#
+
+# base directories
+/usr/local/eal4_testing		-d	gen_context(system_u:object_r:lspp_test_dir_t,s0)
+/usr/local/eal4_testing/(.*)?	-d	gen_context(system_u:object_r:lspp_test_dir_t,s0)
+
+###
+#
+# specific directories
+#
+
+# network test driver
+/usr/local/eal4_testing/audit-test/utils/network-server	-d	gen_context(system_u:object_r:lspp_test_harness_dir_t,s0)
+
+# unprivileged tests
+/usr/local/eal4_testing/audit-test/utils/bin	-d	gen_context(system_u:object_r:lspp_test_exec_dir_t,s0)
+
+###
+#
+# generic files
+#
+
+# base file
+/usr/local/eal4_testing/(.*)?	--	gen_context(system_u:object_r:lspp_test_file_t,s0)
+
+# configuration files
+/usr/local/eal4_testing/audit-test/(.*)?/run.conf	--	gen_context(system_u:object_r:lspp_test_conf_t,s0)
+
+# log files
+/usr/local/eal4_testing/(.*)?\.log	--	gen_context(system_u:object_r:lspp_test_output_t,s0)
+
+###
+#
+# specific files
+#
+
+# network test driver
+/usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server	--	gen_context(system_u:object_r:lspp_harness_exec_t,s0)
+
+# unprivileged test applets
+/usr/local/eal4_testing/audit-test/utils/bin/do_[a-zA-Z0-9_\-]+	--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)

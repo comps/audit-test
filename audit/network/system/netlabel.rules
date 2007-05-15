@@ -1,0 +1,11 @@
+# This file contains the configuration for the NetLabel subsystem
+
+######################################################################
+# LSPP Test Configuration
+######################################################################
+
+# CIPSO DOI definition
+cipsov4 add pass doi:100 tags:1
+
+# LSM domain mapping
+map add domain:lspp_test_netlabel_t protocol:cipsov4,100

@@ -1,0 +1,18 @@
+# file for pre-shared keys used for IKE authentication
+# format is:  'identifier' 'key'
+# For example:
+#
+#  10.1.1.1             flibbertigibbet
+#  www.example.com      12345
+#  foo@www.example.com  micropachycephalosaurus
+
+######################################################################
+# LSPP Test Configuration
+######################################################################
+
+127.0.0.1	mekmitasdigoat
+::1		mekmitasdigoat
+%LOCAL_IPV4%	mekmitasdigoat
+%LOCAL_IPV6%	mekmitasdigoat
+%REMOTE_IPV4%	mekmitasdigoat
+%REMOTE_IPV6%	mekmitasdigoat

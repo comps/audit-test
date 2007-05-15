@@ -20,7 +20,7 @@
 # PURPOSE:
 # Verify audit of attempts to modify group password as an ordinary user.
 
-source tp_functions.bash || exit 2
+source tp_auth_functions.bash || exit 2
 
 # setup
 groupadd -g $gid $group || exit_error "groupadd failed"

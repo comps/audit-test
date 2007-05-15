@@ -29,17 +29,22 @@ RUN_DIRS       += fail-safe \
 		  audit-trail-protection \
 		  audit-tools \
 		  libpam \
-		  trustedprograms
+		  trustedprograms \
+		  network
 endif
 
 SUB_DIRS	= $(RUN_DIRS) \
 		  utils
 
-run:
+run: 
 	@for l in run rollup; do \
 	    echo "audit.$$l.log will be collected from subdirectories when the test completes" >audit.$$l.log; \
 	done
-	$(MAKE) all
+	@$(check_set_PPROFILE); \
+	$(check_set_PASSWD); \
+	$(check_set_LBLNET_SVR_IPV4); \
+	$(check_set_LBLNET_SVR_IPV6); \
+	$(MAKE) all && \
 	for x in $(RUN_DIRS); do make -C $$x run; done
 	@# tty output has color, generated logs don't, so collect them
 	@# instead of redirecting output of the above loop.
@@ -85,3 +90,16 @@ rpm: dist
 	mv /usr/src/redhat/SRPMS/audit-test-$$rev-1.* . && \
 	echo && \
 	ls -l audit-test-$$rev-1.*
+
+.PHONY: policy
+policy:
+	cd utils/selinux-policy && \
+	$(MAKE) clean && \
+	$(MAKE) && \
+	$(MAKE) install && \
+	$(MAKE) relabel
+
+.PHONY: netconfig
+netconfig:
+	cd network/system && $(MAKE) install
+	cd utils/network-server && $(MAKE) install

@@ -22,6 +22,14 @@
 
 source pam_functions.bash || exit 2
 
+# setup
+append_cleanup "initcall $vsftpd_init restart"
+backup "$vsftpd_conf"
+write_config \
+      "$vsftpd_conf" \
+      local_enable=YES
+initcall $vsftpd_init restart
+
 # test
 expect -c '
     spawn ftp localhost

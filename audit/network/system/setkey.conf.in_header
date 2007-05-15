@@ -1,0 +1,15 @@
+#!/sbin/setkey -f
+#
+# This file contains the SPD configuration for the IPsec subsystem
+
+# clear the SAD and SPD
+flush;
+spdflush;
+
+######################################################################
+# LSPP Test Configuration
+######################################################################
+
+# NOTE: please see http://www.nsa.gov/selinux/list-archive/0609/16874.cfm
+#       and the setkey manpage for details on using labeled IPsec
+

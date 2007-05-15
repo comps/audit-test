@@ -24,26 +24,32 @@ source pam_functions.bash || exit 2
 
 # setup
 # allow TEST_USER to write to tmpfile
-chmod 666 $tmp1
+chmod 666 $localtmp
+
+# if in LSPP mode, map the TEST_USER to staff_u
+if [[ $PPROFILE == "lspp" ]]; then
+	semanage login -d $TEST_USER
+	semanage login -a -s staff_u $TEST_USER
+fi
+
 # calling login in this manner leaves an entry in /var/run/utmp
 # use backup (and automatic restore) to work around this
 backup /var/run/utmp
 
 # test
 (
-    export tmp1
+    export localtmp
     expect -c '
         spawn login
         expect -nocase {login: $} {send "$env(TEST_USER)\r"}
-        expect -nocase {password: $} {
-            send "$env(TEST_USER_PASSWD)\r"
-            send "PS1=:\\::\r"
-        }
-        expect {:::$} {send "tty > $env(tmp1)\r"}
+        expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
+        expect -nocase {level} {send "\r"}
+        send "PS1=:\\::\r"
+        expect {:::$} {send "tty > $env(localtmp)\r"}
         expect {:::$} {close; wait}'
 )
 
-pts=$(<$tmp1)
+pts=$(<$localtmp)
 pts=${pts##*/}
 
 msg_1="acct=$TEST_USER : exe=./bin/login.* terminal=pts/$pts res=success.*"

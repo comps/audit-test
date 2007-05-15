@@ -23,10 +23,10 @@
 /* Verify operation result */
 ts_exit verify_opresult(struct audit_data *context, int success)
 {
-    ts_exit rc = TEST_EXPECTED;
+    ts_exit rc = TEST_SUCCESS;
 
     if (success && !context->success) {
-	rc = TEST_UNEXPECTED;
+	rc = TEST_FAIL;
 	fprintf(stderr, 
 		"Expected operation success, got operation failure: [%d] %s\n",
 		context->error, strerror(-context->error));
@@ -34,13 +34,13 @@ ts_exit verify_opresult(struct audit_data *context, int success)
     }
 
     if (!success && context->success) {
-	rc = TEST_UNEXPECTED;
+	rc = TEST_FAIL;
 	fprintf(stderr, "Expected operation failure, got operation success.\n");
 	goto exit;
     }
 
     if (context->experror && context->experror != context->error) {
-	rc = TEST_UNEXPECTED;
+	rc = TEST_FAIL;
 	fprintf(stderr,
 		"Expected operation error [%d], got operation error [%d] %s\n",
 		context->experror, context->error, strerror(-context->error));
@@ -58,7 +58,7 @@ ts_exit verify_logresult(struct audit_data *context)
     int count = 0;
 
     if (context->type & AUDIT_MSG_SYSCALL) {
-	count = snprintf(cmd, sizeof(cmd), "augrok -m1 'type=~SYSCALL' "
+	count = snprintf(cmd, sizeof(cmd), "augrok -m1 type==SYSCALL "
 			 "syscall==%d 'success==%s' " 
 			 "pid==%d auid==%u uid==%u gid==%u " 
 			 "euid==%u suid==%u fsuid==%u " 
@@ -107,40 +107,40 @@ ts_exit verify_logresult(struct audit_data *context)
 	/* note that audit record has a trailing / on directory name */
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH_DIR) {
 	    count += snprintf(&cmd[count], sizeof(cmd)-count,
-			      " name==%s/ name_1==%s",
+			      " name#a==%s/ name#b==%s",
 			      context->u.syscall.fs_tdir,
 			      context->u.syscall.fs_tobj);
 	}
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH_LINK) {
 	    if (strcmp(context->u.syscall.fs_tdir, ""))
 		count += snprintf(&cmd[count], sizeof(cmd)-count, 
-				  " name==%s/ name_1==%s name_2==%s", 
+				  " name#a==%s/ name#b==%s name#c==%s", 
 				  context->u.syscall.fs_tdir,
 				  context->u.syscall.fs_sobj,
 				  context->u.syscall.fs_tobj);
 	    else
 		count += snprintf(&cmd[count], sizeof(cmd)-count, 
-				  " name==%s name_1==%s", 
+				  " name#a==%s name#b==%s", 
 				  context->u.syscall.fs_tobj,
 				  context->u.syscall.fs_sobj);
 	}
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH_SYMLINK) {
 	    if (strcmp(context->u.syscall.fs_tdir, ""))
 		count += snprintf(&cmd[count], sizeof(cmd)-count, 
-				  " name==%s name_1==%s/ name_2==%s", 
+				  " name#a==%s name#b==%s/ name#c==%s", 
 				  context->u.syscall.fs_sobj,
 				  context->u.syscall.fs_tdir,
 				  context->u.syscall.fs_tobj);
 	    else
 		count += snprintf(&cmd[count], sizeof(cmd)-count, 
-				  " name==%s name_1==%s", 
+				  " name#a==%s name#b==%s", 
 				  context->u.syscall.fs_sobj,
 				  context->u.syscall.fs_tobj);
 	}
 	if (count < sizeof(cmd) && context->type & AUDIT_MSG_PATH_RENAME) {
 	    /* audit orders names differently depending on operation success */
 	    count += snprintf(&cmd[count], sizeof(cmd)-count,
-			      " name==%s/ name_1==%s name_2==%s",
+			      " name#a==%s/ name#b==%s name#c==%s",
 			      context->u.syscall.fs_sdir,
 			      context->success ? context->u.syscall.fs_sobj : context->u.syscall.fs_tobj,
 			      context->success ? context->u.syscall.fs_tobj : context->u.syscall.fs_sobj);
@@ -174,7 +174,7 @@ ts_exit verify_logresult(struct audit_data *context)
 			      context->u.syscall.arg[3]);
 	}
     } else if (context->type & AUDIT_MSG_USER) {
-	count = snprintf(cmd, sizeof(cmd), "augrok -m1 'type=~USER' "
+	count = snprintf(cmd, sizeof(cmd), "augrok -m1 type==USER' "
 			 "msg_1=~\"%s\"",
 			 context->comm);
     } else if (context->type & AUDIT_MSG_DAEMON) {
@@ -189,8 +189,8 @@ ts_exit verify_logresult(struct audit_data *context)
     }
 
     fprintf(stderr, "%s\n", cmd);
-    rc = (system(cmd) == 0) ? TEST_EXPECTED : TEST_UNEXPECTED;
-    if (rc == TEST_UNEXPECTED)
+    rc = (system(cmd) == 0) ? TEST_SUCCESS : TEST_FAIL;
+    if (rc == TEST_FAIL)
 	fprintf(stderr, "Expected record not found in log:\n%s\n", cmd);
 
 exit:

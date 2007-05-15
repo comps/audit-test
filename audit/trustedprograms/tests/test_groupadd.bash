@@ -20,7 +20,7 @@
 # PURPOSE:
 # Verify audit of new group creation.
 
-source tp_functions.bash || exit 2
+source tp_auth_functions.bash || exit 2
 
 # test
 setpid groupadd -g $gid $group || exit_error "groupadd failed"

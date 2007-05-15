@@ -1,0 +1,257 @@
+#######
+#
+# LSPP test SELinux policy module
+#
+#
+
+define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
+
+###
+#
+# module information
+#
+
+#
+# In this section include the general SELinux reference policy bits, such as
+# the policy_module() and gen_require() statements.
+#
+
+policy_module(lspp_test,0.5.3)
+
+# we really shouldn't be accessing these policy constructs directly but there
+# isn't always a policy interface available for what we want to do, so just
+# include them in the gen_require() statement and move on
+gen_require(`
+        # roles
+        role sysadm_r, secadm_r, auditadm_r, staff_r;
+        # attributes
+        attribute domain;
+        # domains
+        type auditd_t, inetd_t, passwd_t;
+        # misc file objects
+        type auditd_log_t, sysadm_lpr_t;
+')
+
+###
+#
+# types and attributes
+#
+
+#
+# In this section include any news domains/types used by this policy module
+# as well as any reference policy interface calls used to assign basic
+# qualities, such as type attributes, to these new domains/types.
+#
+
+# all domains
+attribute lspp_domains;
+# all test domains, i.e. lspp_test_*_t
+attribute lspp_test_domains;
+
+# harness (MLS overrides)
+userdom_admin_user_template(lspp_harness)
+typeattribute lspp_harness_t lspp_domains;
+type lspp_harness_exec_t;
+corecmd_executable_file(lspp_harness_exec_t)
+domain_entry_file(lspp_harness_t,lspp_harness_exec_t)
+
+# generic test domain (no MLS overrides)
+userdom_unpriv_user_template(lspp_test_generic)
+typeattribute lspp_test_generic_t lspp_test_domains, lspp_domains;
+type lspp_test_generic_exec_t;
+corecmd_executable_file(lspp_test_generic_exec_t)
+domain_entry_file(lspp_test_generic_t,lspp_test_generic_exec_t)
+
+# netlabel test (no MLS overrides)
+userdom_unpriv_user_template(lspp_test_netlabel)
+typeattribute lspp_test_netlabel_t lspp_test_domains, lspp_domains;
+
+# ipsec test (no MLS overrides)
+userdom_unpriv_user_template(lspp_test_ipsec)
+typeattribute lspp_test_ipsec_t lspp_test_domains, lspp_domains;
+
+# all directories
+attribute lspp_directories;
+
+# directory types
+type lspp_test_harness_dir_t, lspp_directories;
+files_type(lspp_test_harness_dir_t)
+type lspp_test_dir_t, lspp_directories;
+files_type(lspp_test_dir_t)
+type lspp_test_exec_dir_t, lspp_directories;
+files_type(lspp_test_exec_dir_t)
+
+# file types
+type lspp_test_file_t;
+files_type(lspp_test_file_t)
+type lspp_test_conf_t;
+files_type(lspp_test_conf_t)
+type lspp_test_output_t;
+files_type(lspp_test_output_t)
+
+###
+#
+# role policy
+#
+
+#
+# In this section include any new roles used by this policy module as well as
+# any role allow rules to define the transition between these roles and
+# existing roles.
+#
+
+role lspp_test_r types domain;
+dominance {
+	role lspp_test_r {
+		role sysadm_r;
+		role secadm_r;
+		role auditadm_r;
+		role staff_r;
+	}
+}
+
+# add the lspp test types to the generic object role
+role system_r types lspp_domains;
+
+# allow role transitions between the test role and all other roles
+allow lspp_test_r { ROLES_ALL };
+allow { ROLES_ALL } lspp_test_r;
+
+###
+#
+# object policy
+#
+
+#
+# In this section include any allow rules or reference policy interface calls
+# that affect the types/objects defined in this policy module.
+#
+
+# allow every domain to read the test directory
+allow domain lspp_directories:dir r_dir_perms;
+
+# make the log files trusted objects
+mls_trusted_object(lspp_test_output_t)
+
+# make test harness created objects (i.e. std{in,out,err} fds) trusted objects
+mls_trusted_object(lspp_harness_t)
+
+# default file types
+type_transition lspp_domains lspp_test_harness_dir_t:file lspp_harness_exec_t;
+type_transition lspp_domains lspp_test_dir_t:file lspp_test_output_t;
+type_transition lspp_domains lspp_test_exec_dir_t:file lspp_test_generic_exec_t;
+
+###
+#
+# domain policy
+#
+
+#
+# In this section, which spans to the end of the policy module, include any
+# allow rules or reference policy interface calls that affect the domains
+# defined in this policy module.  For example, any allow rule with a subject
+# defined within this policy module should most likely be in this section
+# assuming it doesn't fit within any of the other sections elsewhere in this
+# module.
+#
+
+##
+# regular policy additions
+#
+
+#
+# These are policy changes which only affect the base policy domains/types
+# but are needed for the LSPP test suite.  Additions here should be heavily
+# scrutinized and kept to a bare minimum.
+#
+
+# allow the inetd_t domain to bind to any port, needed for the test daemon
+corenet_tcp_bind_generic_port(inetd_t)
+corenet_udp_bind_generic_port(inetd_t)
+
+# allow the local login domain to search devpts_t
+allow local_login_t devpts_t:dir search;
+
+# allow auditd to use temporary filesystems for logging
+fs_associate_tmpfs(auditd_log_t)
+files_search_tmp(auditd_t)
+
+##
+# harness domain
+#
+
+# transition to the harness domain automatically when running harness apps
+domain_auto_trans(domain,lspp_harness_exec_t,lspp_harness_t)
+
+# allow manual transitions to any other domain on the system
+allow lspp_harness_t domain:process transition;
+
+# give the harness domain mls override privleges
+mls_file_read_up(lspp_harness_t)
+mls_file_write_down(lspp_harness_t)
+mls_file_upgrade(lspp_harness_t)
+mls_file_downgrade(lspp_harness_t)
+mls_fd_use_all_levels(lspp_harness_t)
+mls_fd_share_all_levels(lspp_harness_t)
+mls_socket_read_all_levels(lspp_harness_t);
+mls_socket_write_all_levels(lspp_harness_t);
+mls_net_receive_all_levels(lspp_harness_t);
+mls_sysvipc_read_all_levels(lspp_harness_t)
+mls_sysvipc_write_all_levels(lspp_harness_t)
+mls_rangetrans_source(lspp_harness_t)
+mls_process_read_up(lspp_harness_t)
+mls_process_write_down(lspp_harness_t)
+mls_process_set_level(lspp_harness_t)
+mls_rangetrans_source(lspp_harness_t)
+mls_context_translate_all_levels(lspp_harness_t)
+
+# give the harness domain "unconfined" access
+unconfined_domain_noaudit(lspp_harness_t)
+
+# give the harness domain newrole access
+seutil_run_newrole(lspp_harness_t,lspp_test_r,{ ttynode ptynode })
+authlogin_per_role_template(lspp_harness,lspp_harness_t,lspp_test_r)
+
+# give the harness domain auditctl access
+logging_run_auditctl(lspp_harness_t,lspp_test_r,{ ttynode ptynode })
+
+# give the harness domain access to run_init
+seutil_run_runinit(lspp_harness_t,lspp_test_r,{ ttynode ptynode })
+allow initrc_t lspp_harness_t:fd use;
+
+# give the harness domain access to the local login domain
+locallogin_domtrans(lspp_harness_t)
+allow local_login_t lspp_harness_devpts_t:chr_file { read write ioctl relabelfrom relabelto setattr getattr };
+
+# give the harness domain access to the sysadm lpr domain
+allow sysadm_lpr_t lspp_harness_devpts_t:chr_file { read write };
+
+# give the harness domain access to all the other test domain's associations
+allow lspp_harness_t lspp_domains:association setcontext;
+
+# give the harness domain access to the passwd type
+role lspp_test_r types passwd_t;
+
+##
+# generic test domain
+#
+
+# transition to the generic test domain by default when running tests
+domain_auto_trans(lspp_harness_t,lspp_test_generic_exec_t,lspp_test_generic_t)
+
+# give the test domain "unconfined" access
+unconfined_domain_noaudit(lspp_test_generic_t)
+
+##
+# netlabel test domain
+#
+
+# give the test domain "unconfined" access
+unconfined_domain_noaudit(lspp_test_netlabel_t)
+
+##
+# ipsec test domain
+#
+
+# give the test domain "unconfined" access
+unconfined_domain_noaudit(lspp_test_ipsec_t)

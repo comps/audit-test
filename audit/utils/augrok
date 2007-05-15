@@ -28,25 +28,29 @@ use strict;
 
 (my $zero = $0) =~ s|.*/||;
 (my $version = '$Revision$') =~ s{.*?(\d.*\d).*}
-                                       {augrok version 1.0 (svn $1)\n};
+                                       {augrok version 2.0 (svn $1)\n};
 my $found = 0;
 my %opt = (
     'f' => '/var/log/audit/audit.log',
+    'mode' => $ENV{'MODE'},
 );
 my $usage = <<EOT;
 usage: augrok [options...] condition...
 
-    -c     --count         Only print a count of matching lines
-    -f     --file=logfile  Search a log other than /var/log/audit/audit.log
-    -h     --help          Show this help message
-    -i     --interpret     Convert numbers to names when possible
-    -m     --max-count=NUM stop after NUM matches
-           --nosync        don't wait for auditd to finish flushing
-    -q     --quiet         No output, just set exit status (like grep)
-           --resolve=name  Resolve syscall name/number
-           --seek=offset   Seek to offset before starting search
-           --raw           Show raw lines instead of merged record
-    -V     --version       Show version information
+    -c     --count          Only print a count of matching lines
+    -f     --file=logfile   Search a log other than $opt{f}
+    -h     --help           Show this help message
+           --help-interpret List the fields augrok attempts to interpret
+    -i     --interpret      Convert numbers to names when possible
+    -m     --max-count=NUM  stop after NUM matches
+           --mode=BITS      32 or 64, defaults to \$MODE or native
+           --nosync         don't wait for auditd to finish flushing
+    -q     --quiet          No output, just set exit status (like grep)
+           --resolve=k=v    Attempt to resolve v according to k
+           --resolve=v      Same as --resolve=syscall=v (compat)
+           --seek=offset    Seek to offset before starting search
+           --raw            Show raw lines instead of merged record
+    -V     --version        Show version information
 EOT
 my $ausearch_usage = <<EOT;
 usage: ausearch [options]
@@ -82,7 +86,7 @@ $SIG{'__DIE__'} = sub {
 };
 
 ######################################################################
-# Syscall Table (singleton)
+# SyscallTable (singleton)
 ######################################################################
 
 package SyscallTable;
@@ -96,10 +100,11 @@ sub new {
         $singleton = {};
         bless $singleton, $class;
 
-        open(S, "gcc -E -dM /usr/include/syscall.h |") or die;
+        my $m32 = (defined $opt{'mode'} and $opt{'mode'} == 32) ? '-m32' : '';
+        open(S, "gcc $m32 -E -dM /usr/include/syscall.h |") or die;
         my $line;
         while (defined($line = <S>)) {
-            next unless $line =~ /^#define\s+__NR_(\w+)\s+(\w+)/;
+            next unless $line =~ /^#define\s+__NR_(\w+)\s+(\w+|\(.*?\))/;
             $singleton->{$1} = $2;
         }
         close S;
@@ -110,10 +115,23 @@ sub new {
             $changed = 0;
             for my $k (keys %$singleton) {
                 next unless ($v = $singleton->{$k}) =~ /\D/;
-                if (defined($new_v = $singleton->{$singleton->{$k}})) {
+
+                #define __NR_syscall_max __NR_mq_getsetattr
+                if ($v =~ /^__NR_(\w+)$/ and
+                         defined($new_v = $singleton->{$1})) {
                     $singleton->{$k} = $new_v;
                     $changed = 1;
-                } else {
+                }
+
+                #define __NR_mq_getsetattr (__NR_mq_open+5)
+                elsif ($v =~ /^\(__NR_(\w+)\s*\+\s*(\d+)\)$/ and
+                         defined($new_v = $singleton->{$1})) {
+                    $singleton->{$k} = $new_v + $2;
+                    $changed = 1;
+                }
+
+                # don't know how to handle this, hope it wasn't important
+                else {
                     print STDERR "Removing syscall{$k} = $v\n" if $opt{'debug'};
                     delete $singleton->{$k};
                 }
@@ -142,7 +160,81 @@ sub reverse {
 }
 
 ######################################################################
-# Audit Reader
+# TransTable (singleton)
+######################################################################
+
+package TransTable;
+
+our $singleton;
+
+sub new {
+    my ($class) = @_;
+
+    unless (defined $singleton) {
+        $singleton = {};
+        bless $singleton, $class;
+
+        # Fetch config location from sestatus
+        my $config;
+        open(C, "sestatus|") or goto out;
+        while (<C>) {
+            /^Policy from config file:\s*(\S+)/ || next;
+            $config = "/etc/selinux/$1/setrans.conf";
+            last;
+        }
+        close C;
+
+        # Snarf the mctransd translation pairs
+        open(C, $config) or warn("Can't open $config"), goto out;
+        while (<C>) {
+            /^\s*#/ && next;
+            /(\S+?)=(\S+)/ || next;
+            $singleton->{$1} = $2;
+        }
+        close C;
+
+out:
+        # Invert hash for reverse lookups
+        my %rev;
+        while (my ($k, $v) = each %$singleton) {
+            $rev{$v} = $k;
+        }
+        $singleton->{'_reverse'} = \%rev;
+    }
+
+    return $singleton;
+}
+
+# not intended to be called except by resolve() or reverse()
+sub resolve2 {
+    my ($self, $full_k, $table) = @_;
+
+    # Trim leading portion of $k; only last portion is translated
+    my ($lead, $trans) = ($full_k =~ m/((?:.*?:){3})(.*)/);
+    return undef unless defined($trans);
+
+    # Translate if possible
+    $trans = defined($trans) && $table->{$trans};
+    return undef unless defined($trans);
+
+    # Join parts
+    return "$lead$trans";
+}
+
+sub resolve {
+    my ($self, $k) = @_;
+    # Forward lookup table is stored directly on $self
+    $self->resolve2($k, $self);
+}
+
+sub reverse {
+    my ($self, $k) = @_;
+    # Reverse lookup table is stored under special key on forward table
+    $self->resolve2($k, $self->{'_reverse'});
+}
+
+######################################################################
+# AuditReader
 ######################################################################
 
 package AuditReader;
@@ -182,9 +274,9 @@ sub next_record {
     my $fh = $self->{'fh'};
     my ($line, $record, $msg, $other, $o_msg);
 
-    # populate the array; low-water=30, high-water=60
-    if (@{$self->{'records'}} < 30) {
-        while (@{$self->{'records'}} < 60) {
+    # populate the array; low-water=60, high-water=120
+    if (@{$self->{'records'}} < 60) {
+        while (@{$self->{'records'}} < 120) {
             $line = <$fh>;
             # Make sure we got a line and that it was complete.
             # Incomplete lines can be found when the filesystem is full and
@@ -199,10 +291,10 @@ sub next_record {
     $record = shift @{$self->{'records'}};
 
     # merge following records with duplicate ids
-    if (defined($msg = $record->_get('msg'))) {
+    if (defined($msg = $record->_lget(0, 'msg'))) {
         for (my $i = 0; $i < @{$self->{'records'}}; $i++) {
             $other = $self->{'records'}[$i];
-            next unless defined($o_msg = $other->_get('msg'));
+            next unless defined($o_msg = $other->_lget(0, 'msg'));
             if ($o_msg eq $msg) {
                 $record->merge($other);
                 splice @{$self->{'records'}}, $i, 1;
@@ -216,7 +308,7 @@ sub next_record {
 }
 
 ######################################################################
-# Audit Parser
+# AuditParser
 ######################################################################
 
 package AuditParser;
@@ -284,22 +376,21 @@ sub next_field {
 }
 
 ######################################################################
-# Audit Record
+# AuditRecord
 ######################################################################
 
 package AuditRecord;
+use Carp;
 
 sub new {
     my ($class, $line) = @_;
     my $self = {
         _order => [],
+        _aux => [],
     };
     bless $self, $class;
 
-    if (defined $line) {
-        $self->{'_raw'} = $line if $opt{'raw'} or $opt{'ausearch'};
-        $self->merge($line);
-    }
+    $self->merge($line) if defined($line);
 
     return $self;
 }
@@ -309,13 +400,12 @@ sub merge {
 
     # argument is an AuditRecord reference
     if (ref($other) eq 'AuditRecord') {
-        for my $k ($other->keys) {
-            $self->merge_kv($k, $other->_get($k));
-        }
+        push @{$self->{'_aux'}}, $other;
     }
 
     # argument is (presumably) a string to parse
     else {
+        $self->merge_kv('_raw', $other) if $opt{'raw'} or $opt{'ausearch'};
         my $parser = AuditParser->new($other);
         while (my ($k, $v) = $parser->next_field) {
             if (defined $v) {
@@ -332,16 +422,21 @@ sub merge {
 sub merge_kv {
     my ($self, $k, $v) = @_;
 
-    print STDERR "Merging [$k] = [$v]\n" if $opt{'debug'};
-
-    # concatenate raw lines
-    if ($k eq '_raw') { $self->{$k} .= $v; return; }
-
-    # only merge other special fields once
-    elsif (substr($k, 0, 1) eq '_' and exists $self->{$k}) { return; }
+    #print STDERR "Merging [$k] = [$v]\n" if $opt{'debug'};
 
     # handle duplicate keys
-    elsif (exists $self->{$k}) {
+    if (exists $self->{$k}) {
+        # concatenate raw lines
+        if ($k eq '_raw') {
+            $self->{$k} .= $v; 
+            return; 
+        }
+
+        # only merge other special fields once
+        if (substr($k, 0, 1) eq '_') {
+            return;
+        }
+
         # simply concatenate types
         if ($k eq 'type') {
             $self->{$k} .= ',' . $v;
@@ -378,23 +473,61 @@ sub merge_kv {
     $self->{$k} = $v;
 }
 
-sub _raw {
+sub lines {
     my ($self) = @_;
-    return $self->{'_raw'};
+    return 1 + @{$self->{'_aux'}};
 }
 
-sub raw {
-    my ($self) = @_;
-    my $raw = $self->{'_raw'};
+sub aux {
+    my ($self, $l) = @_;
+    return $l ? $self->{'_aux'}[$l-1] : $self;
+}
 
-    return $raw unless $opt{'i'};
+sub _lget {
+    my ($self, $l, $k) = @_;
+    return $self->aux($l)->{$k};
+}
+
+sub lget {
+    goto &_lget unless $opt{'i'};
+    my ($self, $l, $k) = @_;
+    my $v = $self->_lget($l, $k);
+    return defined($v) ? interp($k, $v) : $v;
+}
+
+sub _get {
+    my ($self, $k) = @_;
+#   return $self->_lget(0, $k);
+    grep { defined and return $_ }
+        map $self->_lget($_, $k), 0..$self->lines-1;
+    return undef;
+}
+
+sub get {
+    goto &_get unless $opt{'i'};
+    my ($self, $k) = @_;
+#   return $self->lget(0, $k);
+    grep { defined and return $_ }
+        map $self->lget($_, $k), 0..$self->lines-1;
+    return undef;
+}
+
+sub _lraw {
+    my ($self, $l) = @_;
+    return $self->aux($l)->{'_raw'};
+}
+
+sub lraw {
+    goto &_lraw unless $opt{'i'};
+    my ($self, $l) = @_;
+    my $raw = $self->_lraw($l);
 
     # since we're interpreting the fields, run the text through the parser
     # again, this time interpreting the values.  Doing this as a second pass
     # ensures that we're not wasting effort interpreting more records than are
     # matched by the expression on the command-line.
     my $parser = AuditParser->new($raw);
-    my $type = $self->{'type'};
+    my $type = $self->_lget($l, 'type');
     $raw = '';
 
     while (my ($k, $v, $ws, $q) = $parser->next_field) {
@@ -415,16 +548,15 @@ sub raw {
     return $raw."\n";
 }
 
-sub _get {
-    my ($self, $k) = @_;
-    return $self->{$k};
+sub _raw {
+    my ($self) = @_;
+    return join '', map $self->_lraw($_), 0..$self->lines-1;
 }
 
-sub get {
-    my ($self, $k) = @_;
-    my $v = $self->{$k};
-
-    return (defined $v and $opt{'i'}) ? interp($k, $v) : $v;
+sub raw {
+    goto &_raw unless $opt{'i'};
+    my ($self) = @_;
+    return join '', map $self->lraw($_), 0..$self->lines-1;
 }
 
 # This list should be fairly static.  It was generated using
@@ -638,6 +770,15 @@ our (%interptab) = (
             $1 . POSIX::strftime('%D %T', localtime($2))/e;
         $v; },
 
+    'obj'         => sub { TransTable->new->resolve($_[0]); },
+    '_obj'        => sub { TransTable->new->reverse($_[0]); },
+    'subj'        => sub { TransTable->new->resolve($_[0]); },
+    '_subj'       => sub { TransTable->new->reverse($_[0]); },
+    'scontext'    => sub { TransTable->new->resolve($_[0]); },
+    '_scontext'   => sub { TransTable->new->reverse($_[0]); },
+    'tcontext'    => sub { TransTable->new->resolve($_[0]); },
+    '_tcontext'   => sub { TransTable->new->reverse($_[0]); },
+
     'syscall'     => sub {
         my $name = SyscallTable->new->reverse($_[0]);
         defined($name) ? $name->[0] : undef; },
@@ -672,9 +813,17 @@ sub rinterp {
     return defined $iv ? $iv : $v;
 }
 
+# NB: only acts on primary fields, consumer handles aux
+sub _keys {
+    my ($self) = @_;
+    return @{$self->{'_order'}};
+}
+
+# NB: only acts on primary fields, consumer handles aux
 sub keys {
-    my ($self, $k) = @_;
-    return CORE::keys %$self;
+    my ($self) = @_;
+    # filter out special keys.  the only one in @_order is probably _raw
+    return grep {substr($_, 0, 1) ne '_'} @{$self->{'_order'}};
 }
 
 # NB: this is not a method
@@ -697,78 +846,167 @@ sub quote {
 
 sub to_s {
     my ($self) = @_;
-    return join(' ',
-        map "$_=".quote($self->get($_)), @{$self->{'_order'}});
+    my $l;
+    return join "\n", map {
+        $l = $_;
+        join ' ', map "$_=".quote($self->lget($l, $_)), $self->aux($l)->keys;
+    } 0..$self->lines-1;
 }
 
+our (@tags, @force_taglines, @taglines_cache);
+
 sub test {
-    my ($self) = @_;
-    my ($prev_was_cond, $negate);
+    # generate dotest if it doesn't already exist
+    AuditRecord::generate_dotest() unless defined *{AuditRecord::dotest}{CODE};
+
+    # if there are no tags in this query, call straight to dotest
+    goto &dotest unless @tags;
+
+    # ok, there are tags, start this function in earnest
+    my $self = shift;
+    my $lines = $self->lines;
+
+    # tags are mutually exclusive, need at least one line per tag
+    return undef if $lines < @tags;
+
+    # do we have a cached entry for this number of lines?  I hope so, because
+    # it's a bear to generate...
+    my $tc = $taglines_cache[$lines];
+    if (not defined $tc) {
+        # generate the list of possibilities for $taglines
+        my @ft = @force_taglines;                  # #a#1 for example
+        for (@ft) { $_ ||= [ (0..($lines-1)) ] }   # fill in the blanks
+        my @tc = ( [] );                           # taglines cache entry
+        for my $ft (@ft) {                         # ( [0..9], [0..9] )
+            my @ntc;
+            for my $l (@$ft) {      # ( 0..9 )
+                # grep keeps taglines out that aren't mutually exclusive
+                push @ntc, map {grep($_==$l, @$_) ? undef : [@$_,$l]} @tc;
+            }
+            @tc = grep defined, @ntc;
+        }
+        $tc = $taglines_cache[$lines] = \@tc;
+        if ($opt{'debug'}) {
+            print STDERR "taglines_cache[$lines] is [\n";
+            for (@$tc) { print(STDERR "\t\t(@$_)\n") }
+            print STDERR "\t]\n";
+        }
+    }
+
+    for my $taglines (@$tc) {
+        $self->dotest($taglines) or next;
+        return 1;
+    }
+    return 0;
+}
+
+sub generate_dotest {
+    my ($prev_was_cond, $negate, $line, $tag, %tagsidx, $ti);
+    my ($k, $v, $op, $qk, $qv);
 
     for my $a (@ARGV) {
         print STDERR "Parsing [$a]\n" if $opt{'debug'};
 
-        if ($a eq 'and' or $a eq 'or' or
-            $a eq '!' or $a eq 'not' or
-            $a =~ /^\(+$/ or $a =~ /^\)+$/)
-        { $prev_was_cond = 0; next; }
+        $a eq 'and'     and do { $prev_was_cond = 0; next };
+        $a eq 'or'      and do { $prev_was_cond = 0; next };
+        $a eq '!'       and do { $a =~ s/^/and / if $prev_was_cond; $prev_was_cond = 0; next };
+        $a eq 'not'     and do { $a =~ s/^/and / if $prev_was_cond; $prev_was_cond = 0; next };
+        $a =~ /^\(+$/   and do { $a =~ s/^/and / if $prev_was_cond; $prev_was_cond = 0; next };
+        ($a =~ /^\)+$/) and do { $prev_was_cond = 1; next };
+
+        # each condition can be lined and/or tagged, or neither
+        $tag = ($a =~ s{^(\w+)#(?!\d)(\w+)}{$1}) ? $2 : undef;
+        $line = ($a =~ s{^(\w+)#(\d+)}{$1}) ? $2 : undef;
+        if (defined $tag) {
+            if (!defined $tagsidx{$tag}) {
+                push @tags, $tag;
+                $tagsidx{$tag} = $#tags;    # remember which array index it occupies
+            }
+            $ti = $tagsidx{$tag};
+            $force_taglines[$ti] = [ $line ] if defined $line;
+        }
 
         # handle equality negations generically
-        $a =~ s{^(\w+)!=(.*)}{$1==$2} and $negate = 1;
+        $a =~ s{^(\w+)!=(.*)}{$1==$2} and $negate = 1 or
+        $a =~ s{^(\w+)!~(.*)}{$1=~$2} and $negate = 1;
 
-        # string comparison, handling surrouding quotes
-        if ($a =~ s{^(\w+)=(?:=|(?!~))(.*)}{}) {
-            my ($k, $v) = ($1, rinterp($1, $2));
+        # string or regex comparison, handling surrouding quotes
+        if ($a =~ s{^(\w+)(=~|~|==?)(.*)}{}s) {
+            ($k, $op, $v) = ($1, $2, $3);
             if ($k eq 'msg_time' or $k eq 'msg_seq') {
                 $a = "$k==$v";      # punt to numeric comparison
             } else {
-                $a = qq(
-                    ((substr(\$self->{'$k'}, 0, 1) =~ /['"]/) ?
-                     (substr(\$self->{'$k'}, 1, -1) eq q{$v}) :
-                     (\$self->{'$k'} eq q{$v}))
-                );
+                $op =~ s/^==?$/eq/;
+                $v = rinterp($k, $v);
+                $qk = '"' . quotemeta($k) . '"';
+                $qv = '"' . quotemeta($v) . '"';
+                if (defined $line) {
+                    $a = qq|
+                        do {
+                            \$v = \$self->_lget($line, $qk);
+                            \$v = substr(\$v, 1, -1) if substr(\$v, 0, 1) =~ /['"]/;
+                            \$v $op $qv;
+                        }
+                    |;
+                } elsif (defined $tag) {
+                    $a = qq|
+                        do {
+                            \$v = \$self->_lget(\$taglines->[$ti], $qk);
+                            \$v = substr(\$v, 1, -1) if substr(\$v, 0, 1) =~ /['"]/;
+                            \$v $op $qv;
+                        }
+                    |;
+                } else {
+                    $a = qq|
+                        do {
+                            for (\$found = 0, \$l = 0; \$l < \$self->lines; \$l++) {
+                                \$v = \$self->_lget(\$l, $qk);
+                                \$v = substr(\$v, 1, -1) if substr(\$v, 0, 1) =~ /['"]/;
+                                \$v $op $qv and \$found = 1, last;
+                            }
+                            \$found;
+                        }
+                    |;
+                }
                 goto end_subs;
             }
         }
 
         # numeric comparison
-        if ($a =~ s{^(\w+)(<=|>=|=(?:=|(?!~))|<|>)(.*)}{}) {
-            my ($k, $op, $v) = ($1, $2, rinterp($1, $3));
-            if ($k eq 'msg_time') {
-                chomp($v = `date +\%s -d '$v'`) if $v =~ /[^\d.]/;
-                $a = qq(
+        if ($a =~ s{^(\w+)(<=|>=|==?|<|>)(.*)}{}s) {
+            ($k, $op, $v) = ($1, $2, rinterp($1, $3));
+            if ($k eq 'msg_time' or $k eq 'msg_seq') {
+                croak "Tagged query ridiculous for $k" if defined $tag or defined $line;
+                chomp($v = `date +\%s -d '$v'`) if $k eq 'msg_time' and $v =~ /[^\d.]/;
+                $k =~ s/^msg_//;
+                $a = qq|
                     do {
-                        my (\$time, \$seq) = (split /[(:)]/, \$self->{'msg'})[1,2];
-                        defined \$seq and \$time $op $v;
+                        (\$time, \$seq) = (split /[(:)]/, \$self->_lget(0, 'msg'))[1,2];
+                        defined \$seq and \$$k $op $v;
                     }
-                );
+                |;
                 goto end_subs;
             } 
-            if ($k eq 'msg_seq') {
-                $a = qq(
+            $qk = '"' . quotemeta($k) . '"';
+            if (defined $line) {
+                $a = qq| \$self->_lget($line, $qk) $op $v |;
+            } elsif (defined $tag) {
+                $a = qq| \$self->_lget(\$taglines->[$ti], $qk) $op $v |;
+            } else {
+                $a = qq|
                     do {
-                        my (\$time, \$seq) = (split /[(:)]/, \$self->{'msg'})[1,2];
-                        defined \$seq and \$seq $op $v;
+                        for (\$found = 0, \$l = 0; \$l < \$self->lines; \$l++) {
+                            \$v = \$self->_lget(\$l, $qk);
+                            \$v $op $v and \$found = 1, last;
+                        }
+                        \$found;
                     }
-                );
-                goto end_subs;
+                |;
             }
-            $a = qq( \$self->{'$k'} $op $v );
             goto end_subs;
         };
 
-        # regex comparions
-        if ($a =~ s{^(\w+)(!~|=~|~)(.*)}{}) {
-            my ($k, $op, $v) = ($1, $2, rinterp($1, $3));
-            $a = qq(
-                ((substr(\$self->{'$k'}, 0, 1) =~ /['"]/) ?
-                 (substr(\$self->{'$k'}, 1, -1) $op m{$v}) :
-                 (\$self->{'$k'} $op m{$v}))
-            );
-            goto end_subs;
-        }
-
-        die "Error evaluating expression: $a";
+        croak "Error evaluating expression: $a";
 
 end_subs:
 
@@ -782,21 +1020,24 @@ end_subs:
 
         print STDERR "Became [$a]\n" if $opt{'debug'};
     }
-    my $test = "@ARGV";
 
     # in theory this should be (significantly) faster than eval'ing
     # repeatedly
-    local $^W = 0;      # we're redefining test; don't complain
-    eval "sub test { my (\$self) = \@_; local \$^W = 0; $test }";
+    eval "sub AuditRecord::dotest {
+        my (\$self, \$taglines) = \@_;
+        my (\$l, \$v, \$found, \$time, \$seq);
+        local \$^W = 0;
+        @ARGV
+    }";
     if ($@) {
         print STDERR "Error in expression: $@" if $@;
         print STDERR "Full test was:\n";
-        print STDERR "$test";
-        die;
+        print STDERR "@ARGV";
+        croak;
     }
 
-    # this only *appears* recursive
-    $self->test(@_);
+    # pad out force_taglines
+    $force_taglines[$#tags] ||= undef if @tags;
 }
 
 ######################################################################
@@ -846,7 +1087,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
 		: push @ARGV, "(", "success==no", "or", "res==0", "or",
 				   "res==failed", "or", "msg_1=~res=failed",
 				   "or", "msg_1=~result=[^=]*[Ff]ail", ")"
-	},
+        },
         'ts'    => sub { push @ARGV, "msg_time>=" },            # see <> below
         'te'    => sub { push @ARGV, "msg_time<=" },            # see <> below
         'tm'    => sub { push @ARGV, ($eq eq '==')
@@ -878,8 +1119,10 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         'debug',
         'f|file=s',
         'h|help',
+        'help-interpret',
         'i|interpret',
         'm|max-count=i',
+        'mode=i',
         'nosync',
         'q|quiet',
         'raw',
@@ -887,21 +1130,30 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
         'seek=i',
         'V|version',
     );
-    if ($opt{'h'}) { print STDERR $usage; exit 0 }
-    if ($opt{'V'}) { print STDERR $version; exit 0 }
+    if ($opt{'h'}) { print $usage; exit 0 }
+    if ($opt{'V'}) { print $version; exit 0 }
+    if ($opt{'help-interpret'}) {
+        print join "\n", sort grep /^[^_]/, keys %AuditRecord::interptab;
+        print "\n"; exit 0;
+    }
+    if (defined $opt{'mode'} and $opt{'mode'} != 32 and $opt{'mode'} != 64) {
+        die "$zero: --mode must be 32 or 64\n$usage";
+    }
     if (defined $opt{'resolve'}) {
-        if ($opt{'resolve'} =~ /\D/) {
-            my $num = SyscallTable->new->resolve($opt{'resolve'});
-            if (defined $num) {
-                print $num, "\n";
-                exit 0;
-            }
+        my ($k, $v) = split('=', $opt{'resolve'}, 2);
+        if (not defined $v) {
+            $k = 'syscall';
+            $v = $opt{'resolve'};
+        }
+        if ($v =~ /\D/) {
+            my $num = AuditRecord::rinterp($k, $v);
+            defined $num and print($num, "\n"), exit 0;
+        } elsif ($k eq 'syscall') {
+            my $name = SyscallTable->new->reverse($v);
+            defined $name and print(join("\n", @$name), "\n"), exit 0;
         } else {
-            my $name = SyscallTable->new->reverse($opt{'resolve'});
-            if (defined $name) {
-                print join("\n", @$name), "\n";
-                exit 0;
-            }
+            my $name = AuditRecord::interp($k, $v);
+            defined $name and print($name, "\n"), exit 0;
         }
         exit 1; # could not resolve
     }
@@ -938,10 +1190,10 @@ while (my $record = $reader->next_record) {
             print $record->raw unless $opt{'q'};
         }
     } elsif ($opt{'ausearch'}) {
-        my ($time, $seq) = (split /[(:)]/, $record->get('msg'))[1,2];
         if ($opt{'i'}) {
             printf "----\n%s", $record->raw;
         } else {
+            my $time = (split /[(:)]/, $record->get('msg'))[1];
             printf "----\ntime->%s%s", 
                 defined($time) ? ctime(int $time) : "(null)\n", $record->raw;
         }
@@ -963,10 +1215,10 @@ augrok - audit.log search tool
 =head1 SYNOPSIS
 
 B<augrok> [I<-chqvV>] 
-[I<--ausearch --count --help --quiet --raw --version>] 
+[I<--ausearch --count --help --interpret --quiet --raw --version>] 
 [I<-f logfile | --file logfile>] [I<--seek offset>] expression...
 
-B<augrok> I<--resolve syscall>
+B<augrok> I<--resolve k=v>
 
 B<augrok> I<--ausearch options...>
 
@@ -998,6 +1250,32 @@ parse the comparison value into the seconds-since-epoch format used by augrok,
 for example, the following will find all messages that occurred during the
 specified half-hour: 'msg_time>=14:00' 'msg_time<14:30'
 
+=head2 TAGGED EXPRESSIONS
+
+As of augrok-2.0, a new syntax is provided to support queries against the
+auxiliary records that make up a complete audit record.  For example, consider
+an AVC record with multiple PATH auxiliary records:
+
+    type=AVC msg=audit(1124137373.408:565): ...
+    type=SYSCALL msg=audit(1124137373.408:565): ...
+    type=PATH msg=audit(1124137373.408:565): subj=foo obj=bar ...
+    type=PATH msg=audit(1124137373.408:565): subj=baz obj=qux ...
+
+In this case, an ordinary augrok query for subj==foo obj==qux would match this
+record, since both these key/value pairs are present.  However the query really
+wants to know if these appear in the same auxiliary record.  To make this query
+work as intended, add a tag after the key to indicate they should be on the same
+line: subj#a==foo obj#a==qux.  This would not be fooled by the above record.
+
+The above query only uses one tag 'a'.  Augrok will accept any number of tags,
+but note that augrok will automatically discard any records for which there are
+fewer lines than tags in the expression.
+
+If a number is given in place of a tag, it's assumed to be referring to that
+particular line, where the lines are numbered starting with 0.  For example the
+above query would match type#1=SYSCALL because of the second line's
+type=SYSCALL.
+
 =head1 OPTIONS
 
 =over
@@ -1021,6 +1299,18 @@ Search a logfile other than /var/log/audit/audit.log
 
 Show usage information
 
+-item B<-i --interpret>
+
+When possible, augrok will interpret values to human-readable.  For example,
+user ids are interpreted to user names, syscall numbers are interpreted to
+syscall names, etc.  Note that this option is not required for the query to be
+interpreted: augrok always tries to interpret query values so that, for example,
+uid=root is always translated to uid=0, and syscall=creat is always translated
+to the appropriate syscall number for the architecture.
+
+The list of fields augrok attempts to interpret can be obtained with
+--help-interpret
+
 =item B<--nosync>
 
 Don't wait for auditd backlog to reach zero, as reported by auditctl -s
@@ -1032,14 +1322,15 @@ status if any match is found, otherwise exit with non-zero status.
 
 =item B<--raw>
 
-Output the raw lines related to the search, rather than merging them into a
-single record.  Note this means that the search expression might contain keys
-not present in the output (such as inode_1)
+Output the raw lines related to the search, rather than the lines processed by
+augrok.  Note this means that the search expression differ from the output that
+appears, since the search expression always operates on the processed format.
 
-=item B<--resolve> I<syscall>
+=item B<--resolve> I<key=value>
 
-Resolve the syscall from name to number for the current architecture.  If
-a number is given, resolve it back to the list of names.
+Resolve the value according to augrok's interpretation rules for key.  If value
+is non-numeric, reverse interpretation is attempted.  If key= is omitted,
+syscall= is assumed for backward compatibility.
 
 =item B<--seek> I<offset>
 
@@ -1053,9 +1344,9 @@ Show version information.
 
 =head1 EXAMPLES
 
-To count the number of records with type=SYSCALL:
+To count the number of records containing an auxiliary record with type=SYSCALL:
 
-    $ augrok -c type=~SYSCALL
+    $ augrok -c type==SYSCALL
     537
 
 To find a specific record:
@@ -1069,6 +1360,11 @@ To find a specific record:
     filterkey= perm=1 inode_dev=08:06 inode_gid=0 inode=573461 inode_uid=0
     inode_rdev=00:00 cwd=/tmp rdev=00:00 ouid=0 dev=08:06 flags=1 mode=0100777
     name=foo/a ogid=0 inode_1=573504
+
+or equally, use just the sequence number:
+
+    $ augrok msg_seq==565
+    (same output as above)
 
 =head1 ENVIRONMENT VARIABLES
 

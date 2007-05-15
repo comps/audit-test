@@ -20,7 +20,7 @@
 # PURPOSE:
 # Verify audit when a user's home directory is moved.
 
-source tp_functions.bash || exit 2
+source tp_auth_functions.bash || exit 2
 
 # setup
 useradd -n -u $uid $user || exit_error "useradd failed"

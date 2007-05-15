@@ -34,8 +34,6 @@ TESTS_OBJ	= test_access.o \
 		  test_creat.o \
 		  test_delete_module.o \
 		  test_execve.o \
-		  test_fchmod.o \
-		  test_fchown.o \
 		  test_fork.o \
 		  test_fremovexattr.o \
 		  test_fsetxattr.o \

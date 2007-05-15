@@ -32,4 +32,14 @@ PATH=$TOPDIR/utils:$PATH
 
 source testcase.bash
 
+######################################################################
+# global variables
+######################################################################
+
+vsftpd_conf=/etc/vsftpd/vsftpd.conf
+vsftpd_init=/etc/init.d/vsftpd
+
+# XXX should determine this from policy
+login_context=staff_u:lspp_test_r:local_login_t:s0-s15:c0.c1023
+
 set -x

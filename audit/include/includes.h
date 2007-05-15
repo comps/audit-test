@@ -29,6 +29,8 @@
 #include <fcntl.h>	  // Needed for file related tests
 #include <limits.h>	  // Needed for most tests
 #include <sys/fsuid.h>    // Needed for file system check tests
+#include <sys/socket.h>   // Needed for network tests
+#include <netdb.h>        // Needed for network tests
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -47,7 +47,7 @@ log_mark=$(stat -c %s $audit_log)
 eval "$gen_audit_event"
 
 # verify audit record
-augrok --seek=$log_mark "type=~SYSCALL" name_1==$name success==yes \
+augrok --seek=$log_mark type==SYSCALL name==$name success==yes \
     || exit_fail "Expected record not found."
 
 exit_pass

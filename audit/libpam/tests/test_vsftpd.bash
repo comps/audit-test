@@ -25,6 +25,12 @@ source pam_functions.bash || exit 2
 # setup
 setsebool -P ftp_home_dir=1
 prepend_cleanup "setsebool -P ftp_home_dir=0"
+append_cleanup "initcall $vsftpd_init restart"
+backup "$vsftpd_conf"
+write_config \
+	"$vsftpd_conf" \
+	local_enable=YES
+initcall $vsftpd_init restart
 
 # test
 expect -c '

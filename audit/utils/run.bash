@@ -29,8 +29,8 @@
 #     - verbose: pass/fail, debug output for failed tests
 #     - debug: pass/fall, debug output for all tests
 #
-# The normal usage of this script is simply "./run.sh" but additional
-# usage information can be retrieved with "./run.sh --help"
+# The normal usage of this script is simply "./run.bash" but additional
+# usage information can be retrieved with "./run.bash --help"
 
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 if [[ -z $TOPDIR ]]; then
@@ -51,17 +51,23 @@ source functions.bash
 # global variables
 #----------------------------------------------------------------------
 
-declare -a TESTS VARIATIONS
-declare -i pass fail error total
-declare logging=false
-declare opt_verbose=false
-declare opt_debug=false
-declare opt_config=run.conf
-declare opt_log=run.log
-declare opt_rollup=rollup.log
-declare opt_timeout=30
+unset logging
+unset opt_verbose opt_debug opt_config opt_list opt_log opt_rollup opt_timeout opt_width
+logging=false
+opt_verbose=false
+opt_debug=false
+opt_quiet=false
+opt_config=run.conf
+opt_list=false
+opt_log=run.log
+opt_rollup=rollup.log
+opt_timeout=30
+opt_width=$(stty size 2>/dev/null | cut -d' ' -f2)
+[[ -n $opt_width ]] || opt_width=80
 
-auditd_orig=$(mktemp $auditd_conf.XXXXXX) || exit 2
+unset TESTS TNUMS
+unset pass fail error total 
+unset auditd_orig
 
 #----------------------------------------------------------------------
 # utility functions
@@ -116,41 +122,25 @@ function llmsg {
 }
 
 function msg {
-    if [[ $1 == -nolog ]]; then
-	shift
-    else
-	llmsg "$@"
-    fi
+    llmsg "$@"
     colorize "$@"
 }
 
 function vmsg {
-    if [[ $1 == -nolog ]]; then
-	shift
-    else
-	lmsg "$@"
-    fi
+    lmsg "$@"
     if $opt_verbose || $opt_debug; then
 	colorize "$@"
     fi
 }
 
 function dmsg {
-    if [[ $1 == -nolog ]]; then
-	shift
-    else
-	lmsg "$@"
-    fi
+    lmsg "$@"
     if $opt_debug; then
 	colorize "$@"
     fi
 }
 
 function prf {
-    if [[ $1 == -nolog ]]; then
-	shift
-	declare logging=false
-    fi
     printf "$(colorize "$1")" "${@:2}"
     $logging || return
     printf "$(monoize "$1")" "${@:2}" | tee -a "$opt_rollup" >>"$opt_log"
@@ -160,82 +150,17 @@ function prf {
 # test list manipulation
 #----------------------------------------------------------------------
 
-# make_variation(char *cmdline, char *variation)
-# This is just the default implementation; it can be overridden in run.conf
-function make_variation {
-    echo "$1 $2"
-}
-
 # run_test(char *cmdline)
 # This is just the default implementation; it can be overridden in run.conf
 function run_test {
-    eval "$1"
+    "./$@"
 }
 
-# +(char *cmdline, char *variations...)
+# +(char *test, char *params)
 # add a test case to the list
 function + {
-    declare t=$1 v tv
-    shift
-
-    # use default VARIATIONS if none specified
-    (( $# > 0 )) || set -- "${VARIATIONS[@]}"
-
-    # add each variation to the list
-    if (( $# > 0 )); then
-        for v in "$@"; do
-            tv=$(make_variation "$t" "$v")
-            dmsg "Adding TESTS[${#TESTS[@]}]: $tv"
-            TESTS[${#TESTS[@]}]=$tv
-        done
-    else
-        dmsg "Adding TESTS[${#TESTS[@]}]: $t"
-        TESTS[${#TESTS[@]}]=$t
-    fi
-}
-
-# -(char *cmdline, char *variations...)
-# remove test case(s) from the list
-function - {
-    declare i t=$1 v tv found=false
-    shift
-
-    if [[ $t == ALL ]]; then
-        TESTS=()
-        return 0
-    fi
-
-    # use default VARIATIONS if none specified
-    (( $# > 0 )) || set -- "${VARIATIONS[@]}"
-
-    # remove each of the variations specified
-    if (( $# > 0 )); then
-        for v in "$@"; do
-            for ((i = 0; i < ${#TESTS[@]}; i++)); do
-                tv=$(make_variation "$t" "$v")
-                if [[ "${TESTS[i]}" == "$tv" ]]; then
-                    dmsg "Removing TESTS[$i]: $tv"
-                    unset TESTS[i]
-                    found=true
-                fi
-            done
-        done
-    else
-        for ((i = 0; i < ${#TESTS[@]}; i++)); do
-            if [[ "${TESTS[i]}" == "$t" ]]; then
-                dmsg "Removing TESTS[$i]: $t"
-                unset TESTS[i]
-                found=true
-            fi
-        done
-    fi
-
-    if $found; then
-        # remove unset tests
-        TESTS=( "${TESTS[@]}" )
-    else
-        warn "couldn't find \"$t\""
-    fi
+    dmsg "Adding TESTS[${#TESTS[@]}]: $*"
+    TESTS+=( "$(printf '%q ' "$@")" )
 }
 
 #----------------------------------------------------------------------
@@ -245,21 +170,30 @@ function - {
 trap 'cleanup &>/dev/null; close_log; exit' 0
 trap 'cleanup; close_log; exit' 1 2 3 15
 
+# early_startup runs before parsing cmdline and run.conf
+function early_startup {
+    # If we're running the mls policy, check that we're in the lspp_test_r role
+    # Also set the protection profile if its not already set
+    if sestatus 2>/dev/null | grep -q mls ; then
+	    read role <<<"$(getcontext role)"
+	    if [[ $role != lspp_test_r ]]; then
+		die "Please run this suite as lspp_test_r"
+            else 
+		if [[ -z $PPROFILE ]] ; then
+	  	    export PPROFILE=lspp
+                fi
+	    fi
+    elif [[ -z $PPROFILE ]]; then
+	export PPROFILE=capp
+    fi
+}
+
 # this can be overridden in run.conf
 function startup_hook {
     true
 }
 
-# this can be overridden in run.conf
-function cleanup_pre_hook {
-    true
-}
-
-# this can be overridden in run.conf
-function cleanup_post_hook {
-    true
-}
-
+# startup runs after parsing run.conf, before running tests
 function startup {
     export TEST_USER=testuser
     export TEST_USER_PASSWD='2manySecre+S'
@@ -274,26 +208,46 @@ function startup {
         die "Please run this suite as root"
     fi
 
+    # Check for password
+    if [[ -z $PASSWD ]]; then
+	    trap 'stty echo; exit' 1 2; 
+	    read -sp "Login user password: " PASSWD; echo; export PASSWD; 
+	    trap - 1 2; 
+    fi
+
     # Initialize audit configuration and make sure auditd is running
-    cp -a "$auditd_conf" "$auditd_orig" || die
-    write_config -r "$auditd_conf" dispatcher DISP_qos
+    auditd_orig=$(mktemp $auditd_conf.XXXXXX) || return 2
+    cp -a "$auditd_conf" "$auditd_orig" || return 2
+    write_config -s "$auditd_conf" \
+	log_format=RAW \
+	flush=SYNC \
+	max_log_file_action=ROTATE \
+	    || return 2
+    # remove the configuration for the audit dispatcher
+    write_config -r "$auditd_conf" dispatcher DISP_qos || return 2
+
+    if [[ $PPROFILE == lspp ]] ; then 
+        chcon system_u:object_r:auditd_etc_t:s15:c0.c1023 $auditd_orig
+        chcon system_u:object_r:auditd_etc_t:s15:c0.c1023 $auditd_conf
+    fi
+
     start_auditd >/dev/null || die
+    killall -HUP auditd	# reload config when auditd was already running
 
     # Add the test user which is used for unprivileged tests
-    userdel -r $TEST_USER &>/dev/null
-    groupdel $TEST_USER &>/dev/null
+    userdel -r "$TEST_USER" &>/dev/null
+    groupdel "$TEST_USER" &>/dev/null
     dmsg "Adding group $TEST_USER"
     groupadd "$TEST_USER" || die
     dmsg "Adding user $TEST_USER"
-    useradd -g "$TEST_USER" -p "$passwd_encrypted" -m "$TEST_USER" || die
+    useradd -g "$TEST_USER" -G wheel -p "$passwd_encrypted" -m "$TEST_USER" || die
 
     startup_hook
 }
 
 function cleanup {
-    cleanup_pre_hook
-
     # Remove the test user
+    # XXX use prepend_cleanup in startup
     if [[ -n $TEST_USER ]]; then
 	# Remove the test user
 	dmsg "Removing user $TEST_USER"
@@ -303,19 +257,27 @@ function cleanup {
     fi
 
     # Restore the original auditd configuration
+    # XXX use prepend_cleanup in startup
     if [[ -s $auditd_orig ]]; then 
         mv "$auditd_orig" "$auditd_conf"
 	killall -HUP auditd
     fi
     rm -f "$auditd_orig"
-
-    cleanup_post_hook
 }
 
-# cleanup function should send output via dmsg
-eval "function cleanup {
-    dmsg \"\$( $(type cleanup | sed '1,3d;$d') )\"
-}"
+function prepend_cleanup {
+    eval "function cleanup {
+	$*
+	$(type cleanup | sed '1,3d;$d')
+    }"
+}
+
+function append_cleanup {
+    eval "function cleanup {
+	$(type cleanup | sed '1,3d;$d')
+	$*
+    }"
+}
 
 function open_log {
     :> "$opt_log" || die "can't init $opt_log"
@@ -343,22 +305,26 @@ Run a set of test cases, reporting pass/fail and tallying results.
     -l --log=FILE     Output to a log other than run.log
     -r --rollup=FILE  Output to a rollup other than rollup.log
     -t --timeout=SEC  Seconds to wait for a test to timeout, default 30
+    -w --width=COLS   Set COLS output width instead of auto-detect
     -h --help         Show this help
 
 Output modes:
     (default)         Pass/fail/error status only
+       --list         List the available tests
     -v --verbose      Copious output on fail or error
     -d --debug        Copious output always
+    -q --quiet        Suppress error/fail message
+       --nocolor      Don't use ANSI color sequences
 
 EOF
 }
 
 function parse_cmdline {
-    declare args conf tcase
+    declare args conf x
 
     # Use /usr/bin/getopt which supports GNU-style long options
-    args=$(getopt -o df:hl:r:v \
-        --long config:,debug,help,header,log:,rollup:,nocolor,verbose \
+    args=$(getopt -o df:hl:qr:vw: \
+        --long config:,debug,help,header,list,log:,quiet,rollup:,nocolor,verbose,width: \
         -n "$0" -- "$@") || die
     eval set -- "$args"
 
@@ -367,12 +333,15 @@ function parse_cmdline {
             -d|--debug) opt_debug=true; opt_verbose=true; shift ;;
             -f|--config) opt_config=$2; shift 2 ;;
             -h|--help) usage; exit 0 ;;
-	    --header) header; exit 0 ;;
+	    --header) show_header; exit 0 ;;
+            --list) opt_list=true; shift ;;
             -l|--log) opt_log=$2; shift 2 ;;
+	    -q|--quiet) opt_quiet=true; shift ;;
             -r|--rollup) opt_rollup=$2; shift 2 ;;
             -t|--timeout) opt_timeout=$2; shift 2 ;;
             --nocolor) colorize() { monoize "$@"; }; shift ;;
             -v|--verbose) opt_verbose=true; shift ;;
+	    -w|--width) opt_width=$2; shift 2 ;;
             --) shift ; break ;;
             *) die "failed to process cmdline args" ;;
         esac
@@ -387,43 +356,107 @@ function parse_cmdline {
           true"
     eval -- "$conf" || die "Error reading config file: $opt_config"
 
-    # Additional cmdline indicates test adds/removes
     if [[ -n $* ]]; then
-        declare remove_all=true
-        dmsg "Loading additional test cases from cmdline"
+	# Additional cmdline indicates tests to run
+        dmsg "Filtering TESTS by cmdline"
         while [[ -n $1 ]]; do
-            if [[ $1 == [+-]* ]]; then
-                # make sure there's a space
-                tcase="${1:0:1} ${1:1}"
-            else
-                # bare tests on the cmdline imply to start from scratch
-                $remove_all && - ALL
-                tcase="+ $1"
-            fi
-            eval -- "$tcase" || die "Error evaluating \"$tcase\""
-            shift
-            remove_all=false
-        done
+	    if [[ $1 == *[!0-9]* ]]; then
+		# add by string
+		for ((x = 0; x < ${#TESTS[@]}; x++)); do
+		    # match on "words", allow globbing within a word
+		    if [[ " ${TESTS[x]} " == *[\ =]$1" "* ]]; then
+			dmsg "  $1 matches [$x] ${TESTS[x]}"
+			TNUMS[x]=$x
+		    fi
+		done
+	    else
+		# add by number
+		dmsg "  [$1] ${TESTS[$1]}"
+		TNUMS[$1]=$1
+	    fi
+	    shift
+	done
+	# drop unset elements from TNUMS array
+	TNUMS=( ${TNUMS[@]} )
+    else
+	# Run all the tests
+	TNUMS=( $(seq 0 $((${#TESTS[@]} - 1))) )
+    fi
+    [[ ${#TNUMS[@]} -gt 0 ]] || die "no matching tests"
+
+    if $opt_list; then
+	declare TESTNUM
+	for TESTNUM in "${TNUMS[@]}"; do
+	    eval "set -- ${TESTS[TESTNUM]}"
+	    nolog show_test "$@"
+	    echo
+	done
+	exit 0
     fi
 }
 
-function header {
-    prf "%12s: %s\n" Started "$(date)"
-    prf "%12s: %s\n" Kernel "$(uname -r)"
-    prf "%12s: %s\n" Architecture "$(uname -m)"
-    prf "%12s: %s\n" Mode "${MODE:-(native)}"
-    prf "%12s: %s\n" Hostname "$(uname -n)"
+function show_header {
+    prf "\n"
+    prf "%-32s %s\n" Started: "$(date)"
+    prf "%-32s %s\n" Kernel: "$(uname -r)"
+    prf "%-32s %s\n" Architecture: "$(uname -m)"
+    prf "%-32s %s\n" Mode: "${MODE:-(native)}"
+    prf "%-32s %s\n" Hostname: "$(uname -n)"
+    prf "%-32s %s\n" Profile: "$PPROFILE"
+    prf "%-32s %s\n" "selinux-policy version:" "$(rpm -q selinux-policy)"
+    if [[ $PPROFILE == lspp ]] ; then
+      prf "%-32s %s\n" "lspp_test policy version:" "$(semodule -l | grep lspp_test | awk '{print $2}')"
+    fi
+    prf "\n%s\n" "$(sestatus)"
+}
+
+function fmt_test {
+    declare i s indent width
+
+    # longest result is " ERROR (255)" == 12 chars
+    width=$((opt_width - 12))
+
+    # Each time through this loop, display as much of the line as fits in $width,
+    # then remove displayed args from positional parameter list.
+    i=$#
+    while (( i > 0 )); do
+	s="$indent${*:1:i}"
+	# if the last arg is still too big, print it anyway
+	if (( ${#s} <= width || i == 1 )); then
+	    prf "%-${width}s " "$s"
+	    # try to be smart about the indent for lines 2..N.
+	    if [[ -z $indent ]]; then
+		indent='        '          # max indent = 8
+		indent=${indent:0:${#1}+1} # min indent = len($1)+1
+	    fi
+	    shift $i
+	    i=$#
+	    # need a newline if we have more args to display
+	    (( i > 0 )) && prf '\n'
+	else
+	    (( i-- ))
+	fi
+    done
+}
+
+function show_test {
+    fmt_test "[$TESTNUM]" "$@"
+}
+
+function nolog {
+    declare logging=false
+    "$@"
 }
 
 function run_tests {
-    declare t output status hee
+    declare TESTNUM output status hee s
     declare begin_output="<blue>--- begin output -----------------------------------------------------------"
     declare end_output="<blue>--- end output -------------------------------------------------------------"
 
-    header
+    show_header
     msg 
-    prf "%-60s %s\n" "Testcase" "Result"
-    prf "%-60s %s\n" "--------" "------"
+    prf "%-$((opt_width-7))s %s\n" "Testcase" "Result"
+    prf "%-$((opt_width-7))s %s\n" "--------" "------"
 
     if $opt_debug; then
 	hee=/dev/stderr
@@ -431,22 +464,25 @@ function run_tests {
 	hee=/dev/null
     fi
 
-    for t in "${TESTS[@]}"; do
+    for TESTNUM in "${TNUMS[@]}"; do
+	eval "set -- ${TESTS[TESTNUM]}"
+
 	if $opt_debug; then
-	    prf -nolog "%-60s " "$t"
-	    msg -nolog "<blue>DEBUG"
-	    msg -nolog "$begin_output"
+	    nolog show_test "$@"
+	    nolog msg "<blue>DEBUG"
+	    nolog msg "$begin_output"
 	else
-	    prf "%-60s " "$t"
+	    show_test "$@"
 	fi
 
 	output=$(
 # note that putting run_test in the background results in no tty for pam tests
-	    ( run_test "$t" 2>&1 | tee $hee; exit ${PIPESTATUS[0]}; ) # &
+	    ( exec > >(tee $hee) 2>&1; run_test "$@"; ) # &
 #	    pid=$!
 # opt_timeout is disabled for now due to a bash bug.  If the timeout is put into
 # the background and $pid exits before wait is called, the wait will fail
-# because bash claims $pid is not a child of this shell.
+# because bash claims $pid is not a child of this shell.  See
+# http://lists.gnu.org/archive/html/bug-bash/2005-12/msg00025.html
 #	    if [[ $opt_timeout > 0 ]]; then
 #		( sleep $opt_timeout; kill $pid; ) &>/dev/null &
 #	    fi
@@ -455,24 +491,36 @@ function run_tests {
 	status=$?
 
 	if $opt_debug; then
-	    msg -nolog "$end_output"
-	    prf "%-60s " "$t"
+	    nolog msg "$end_output"
+	    show_test "$@"
 	fi
 
 	if [[ $status == 0 ]]; then
-	    msg "<green>PASS"
+	    prf "<green>%11s\n" "PASS "
 	    (( pass++ ))
+	    if $opt_verbose; then
+		s=$(sed -n 's/^exit_pass:/       /p' <<<"$output")
+		[[ -n $s ]] && prf "%s\n" "$s"
+	    fi
 	    lmsg "$begin_output"
 	    lmsg "$output"
 	    lmsg "$end_output"
 	    lmsg
 	else
 	    if [[ $status == 1 ]]; then
-		msg "<yellow>FAIL"
+		prf "<yellow>%11s\n" "FAIL "
 		(( fail++ )) 
+		if ! $opt_quiet; then
+		    s=$(sed -n 's/^exit_fail:/       /p' <<<"$output")
+		    [[ -n $s ]] && prf "%s\n" "$s"
+		fi
 	    else
-		msg "<red>ERROR ($status)"
+		prf "<red>%11s\n" "ERROR ($status)"
 		(( error++ ))
+		if ! $opt_quiet; then
+		    s=$(sed -n 's/^exit_error:/       /p' <<<"$output")
+		    [[ -n $s ]] && prf "%s\n" "$s"
+		fi
 	    fi
 	    if $opt_debug; then
 		lmsg "$begin_output"
@@ -499,6 +547,7 @@ function run_tests {
     return 0
 }
 
+early_startup
 parse_cmdline "$@"
 startup || die "startup failed"
 run_tests

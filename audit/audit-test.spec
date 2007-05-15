@@ -1,5 +1,5 @@
 Name:           audit-test
-Version:        1090
+Version:        1304
 Release:        1
 Summary:        Audit testsuite for RHEL4 CAPP evaluation
 Vendor:         Hewlett-Packard

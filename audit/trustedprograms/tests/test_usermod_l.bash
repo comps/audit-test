@@ -20,7 +20,7 @@
 # PURPOSE:
 # Verify audit of changes to a user's login name.
 
-source tp_functions.bash || exit 2
+source tp_auth_functions.bash || exit 2
 
 # setup
 useradd -n -G games -u $uid $user || exit_error "groupadd failed"

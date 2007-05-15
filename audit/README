@@ -6,13 +6,35 @@
 
 Check the TODO file for the current state of the test suite.
 
-sudo make run
+Install
+-------
+Login as eal admin user.
 
-It's not actually necessary to build as root.  If you'd prefer to build as a
-normal user, you can do:
+$ /bin/su -
+# newrole -r sysadm_r
+# mkdir /usr/local/eal4_testing
+# cd /usr/local/eal4_testing
+# scp user@remote:audit-test-NNNN.tar.gz .
+# gunzip -dc audit-test-NNNN.tar.gz | tar xf -
 
-make all
-sudo make run
+Configure
+---------
+# make -C audit-test
+
+Switch to permissive mode.
+
+# make -C audit-test/utils/selinux-policy install relabel verify
+# newrole -r lspp_test_r
+
+Switch to back to enforcing mode.
+
+# export PASSWD=<eal password>
+
+Run Tests
+---------
+In main audit-test directory, or in any test sub-directory:
+
+# make run
 
 Dependencies
 ------------
@@ -39,7 +61,7 @@ Using the latter gives you control over which tests are executed.  For example:
 
 Each test case is expected to be an independent executable that returns an
 exit status.  An executable can be shared between tests by using
-comand-line options to select test variations.  For example, the syscalls
+command-line options to select test variations.  For example, the syscalls
 directory uses a single executable "syscalls" which takes options to
 indicate which syscall should be tested.  You should choose whichever
 method works best for your set of tests.
@@ -52,14 +74,18 @@ The exit status is interpreted by the test harness (run.bash) as follows:
             being performed, such as a setup step which did not complete
             correctly, or a failed memory allocation, etc.
 
+When writing bash tests using functions.bash (see below), the exit_pass, 
+exit_fail and exit_error functions generate the appropriate exit status.
+
 The test case is expected to generate debugging information to either stdout or
 stderr.  The debugging information is captured by the harness and displayed only
 when requested by --verbose, --debug, or investigation of run.log
 
 Bash tests
 ----------
-Tests written in bash can make use of common functions in utils/functions.bash.
-The library should be loaded with this snippet at the top of the test case:
+Tests written in bash can make use of common functions in utils/testcase.bash
+and utils/functions.bash.  The library should be loaded with this snippet at the
+top of the test case:
 
     export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
     if [[ -z $TOPDIR ]]; then
@@ -74,12 +100,16 @@ The library should be loaded with this snippet at the top of the test case:
     fi
     PATH=$TOPDIR/utils:$PATH
 
-    source functions.bash
+    source testcase.bash
 
 This snippet additionally puts the utils directory in the PATH, which is helpful
 for running augrok and other shared utility programs.
 
-If you augment functions.bash, beware that it is expected to behave a litle
+Testcase.bash includes functions meant to be used in any of the various
+testcases.  In turn it sources functions.bash, which contains functions that are
+used in run.bash and can also be used in the testcases.
+
+If you augment functions.bash, beware that it is expected to behave a little
 differently from the test cases.  Zero status is success, non-zero is error
 (there is no distinction between fail/error in the utility functions).
 More importantly, debugging output goes to stdout, error output goes to stderr.
@@ -94,73 +124,23 @@ This configuration file is a bash script that sourced by run.bash.  It
 primarily consists of a list of tests to run, but can also contain
 some variable and function settings.
 
-The list of tests is built using two functions (+ and -) provided by
+The list of tests is built using the function "+" provided by
 run.bash.  To add a test to the list:
 
-  + testname
-
-Generally it's unnecessary in this file to remove tests from the list,
-but you can do so with:
-
-  - testname
-
-Variables
----------
-VARIATIONS (array)
-
-    - by default, VARIATIONS=().  When + is called, the specified
-      test simply added to the list verbatim.
-
-    - When VARIATIONS is defined, tests are added to the list
-      through a more complex process: for each variation in the
-      list, the make_variation function is called with "testname"
-      "variation", and it is expected to echo back a string which
-      fully describes the resulting test.  The default
-      make_variation function simply joins them with a separating
-      space.
-
-    - The + function (as well as -) will add all variations by
-      default, but can accept a list of variations instead, for
-      example:
-
-      VARIATIONS=( empty_input good_input bad_input huge_input )
-
-      # huge_input doesn't apply to test1
-      + test1
-      - test1 huge_input
-
-      # test2 doesn't take any input
-      + test2 empty_input
+  + testname [optional arguments]
 
 Functions
 ---------
-make_variation(testcase, variation)
-
-    - default is: echo "$1 $2" (see run.bash)
-
 run_test(testcase)
 
-    - default is: eval "$1" (see run.bash)
+    - default is: "./$@" (see run.bash)
 
-    - run_test is called with only one argument, which is the result
-      of make_variation when the test list was built
+show_test()
 
-    - if you override run_test, make sure to use eval in case $1
-      contains any quoted arguments
+    - default is: prf "%-75s " "$*"
 
-    - an example, following the VARIATIONS example above:
-
-      function run_test {
-        declare input=${1##* }      # remove up to last space
-        set -- "${1% *}"            # remove last space and following
-        case $input in
-          empty_input) eval "tests/$1 </dev/null"; return $? ;;
-          good_input)  eval "tests/$1 <input/good"; return $? ;;
-          bad_input)   eval "tests/$1 <input/bad"; return $? ;;
-          huge_input)  eval "tests/$1 <input/huge"; return $? ;;
-          *) echo "Error: unknown variation"; return 2 ;;
-        esac
-      }
+    - see syscalls2/run.conf for an example how this can be changed to customize
+      the output
 
 startup_hook()
     
@@ -171,14 +151,114 @@ startup_hook()
       not prior to each test.  If you need special setup prior to
       running each test, put it in run_test
 
-cleanup_pre_hook()
+cleanup()
 
-    - default is: true (see run.bash)
+    - runs after looping through all the tests, manipulated by prepend_cleanup()
+      and append_cleanup().  See README.cleanup
 
-    - runs after looping through all the tests, before default cleanup
+| Writing mls syscall tests
++--------------------------
 
-cleanup_post_hook()
+This section describes how to add new mls syscall tests to the test harness.
 
-    - default is: true (see run.bash)
+An mls testcase is configured using a "+" line in the run.conf file.  The "+"
+line contains all the information the harness needs to run that particular
+testcase.  At a minimum, this is the syscall name, permission to test, mls op
+and expected operation result.  For example:
 
-    - runs after looping through all the tests, after default cleanup
++ unlink perm=file_unlink expres=success mlsop=eq
+
+Additionally, you may need to specify one or more of the following named
+parameters:
+
+    err:   The name of the expected error.  This param is required for all
+           failure tests.
+
+    flag:  Provides additional information to the test utility program about how
+           to attempt to access the test object.  The syntax is determined by
+           the test utility program.
+
+    op:    For multiplexed syscalls, determines which function to invoke.  The
+           syntax is determined by the test utility program.
+
+The named parameters don't have to be in any particular order, but it would be
+nice to maintain consistency in the test run output.
+
+The function run_test() is the main driver for all mls syscall testcases.  Here
+are the important things it does:
+
+    - builds the full subject/object security contexts based on the specified
+      mls op
+
+      The values for $mlsop match the selinux mls policy keywords (eq, dom,
+      domby, incomp). The compute_contexts() function builds a default subject
+      and object context based on the supplied keyword.
+
+      The subject context is built from a combination of the label specified
+      with 'subj' and the result of calling utils/test_context for the syscall's
+      helper utility.
+
+      Typically the object context is built from a combination of the label
+      specified with 'obj' and the user/role/type of the current process.  This
+      context is then used with runcon to create the test object.  Some test
+      objects, however, are created with a different type than the type of the
+      process that created them (e.g. lspp_harness_tmp_t).  In this case, the
+      object context must be updated after creating the object.
+
+    - creates the test object and registers its cleanup
+
+      Special functions for creating test objects are named create_<test object>.
+      If a special creation function doesn't yet exist for your test object, you
+      will need to create one.
+
+      The first parameter to a create function is the name of a variable to set
+      with the name or identifier for the new object.  An optional context
+      parameter causes the create function to create the object with the
+      specified context.
+
+      Additional test setup, such as creating additional objects or setting up
+      variables for augrok, is handled in the main create functions for a group
+      of test objects, e.g. create_fs_objects().
+
+    - invokes the test operation
+
+      The default syntax for the test operation is:
+
+        runcon $subj do_$syscall [$op] [$dirname] [$source] $target [$flag]
+
+      where $op, $dirname, $source and $flag are only used if they have been
+      set.  This syntax should suffice for most testcases.  If it does not work
+      for your testcase, you can create your own function for invoking your test
+      operation and set its name in $testfunc.
+
+      The utilities do_$syscall live in the utils/bin directory.  If a utility
+      does not already exist for the syscall you want to test, you will have to
+      add one.  The utility's arguments should follow the default test operation
+      syntax if possible, and they should have readable names.  For example, the
+      argument "create" is a better choice than something like -c or 100.  This
+      will make our run.conf and run.log more readable.  All utilities must
+      print the following space-separated list before exiting:
+
+            test result (0 | 1 for success or failure)
+            exit value (syscall return code | errno for success or failure)
+            pid for the current process
+
+    - checks the result
+
+      The function check_result() determines if the test operation's result was
+      the expected one.  The values $testres (test result) and $exitval (exit
+      value), which were output by the test utility, are compared with the
+      values for $success and $err, which were specified for the testcase in
+      run.conf.  In the expected success case, $exitval is ignored by
+      check_result().
+
+      Note: If the testcase result is not the expected result, it is considered
+      a test ERROR.  If the audit record is not found, it is considered a test
+      FAILURE.
+
+    - verifies the audit record with augrok
+
+      Special functions for verifying audit records are prefixed with augrok_.
+      They call augrok with different arguments depending on variables set in
+      the test object creation functions.  The default augrok function for mls
+      syscall tests is augrok_mls().

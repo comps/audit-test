@@ -1,0 +1,58 @@
+#################################
+#
+# Policy for testing selinux policy utilities, modeled after
+# some of the LTP selinux tests
+#
+# This version of the policy module defines the types/domains
+# that the test uses and grants read to the test_open_t
+# domain but not to the test_noopen_t domain.
+#
+# This version also adds a neverallow rule to be used in another
+# tool test.
+#
+#################################
+
+
+policy_module(policy_tools_test, 1.1)
+gen_require(`
+	role user_r, lspp_test_r;
+	attribute lspp_test_domains, lspp_domains;
+	type bin_t, lspp_harness_t;
+')
+
+## Type for test file.
+type test_open_file_t;
+files_type(test_open_file_t);
+
+## Domain for process that can open the test file for reading and writing.
+userdom_unpriv_user_template(test_open);
+allow test_open_t test_open_file_t:file { getattr read };
+
+# We want to see this to verify that reads are granted
+auditallow test_open_t test_open_file_t:file read;
+
+# This will prevent a conflicting policy module to be loaded.
+neverallow test_open_t test_open_file_t:file write;
+
+## Domain for process that cannot open the test file for reading or writing.
+userdom_unpriv_user_template(test_noopen);
+
+allow test_noopen_t test_open_file_t:file { getattr };
+
+#  Policy needed to hook it into the test harness
+role lspp_test_r types test_open_t;
+allow test_open_t lspp_harness_t:fd use;
+allow test_open_t lspp_harness_t:process sigchld;
+allow test_open_t lspp_harness_t:fifo_file write;
+
+role lspp_test_r types test_noopen_t;
+allow test_noopen_t lspp_harness_t:fd use;
+allow test_noopen_t lspp_harness_t:process sigchld;
+allow test_noopen_t lspp_harness_t:fifo_file write;
+
+seutil_run_newrole(test_open_t,lspp_test_r,{ ttynode ptynode })
+seutil_run_newrole(test_noopen_t,lspp_test_r,{ ttynode ptynode })
+term_use_all_terms(test_open_t)
+term_use_all_terms(test_noopen_t)
+allow unlabeled_t lspp_harness_t:process sigchld;
+

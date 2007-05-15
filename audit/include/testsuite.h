@@ -28,9 +28,9 @@
 
 /* Testsuite exit codes */
 typedef enum {
-    TEST_EXPECTED = 0,  /* test completed as expected */
-    TEST_UNEXPECTED,    /* test completed with unexpected result */
-    TEST_ERROR,         /* test did not complete due to error */
+    TEST_SUCCESS = 0,  /* test succeeded */
+    TEST_FAIL = 1,     /* test failed */
+    TEST_ERROR = 2,    /* test did not complete due to error */
 } ts_exit;
 
 #endif	/* _TESTSUITE_H */

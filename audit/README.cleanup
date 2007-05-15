@@ -1,0 +1,94 @@
+(c) Copyright Hewlett-Packard Development Company, L.P., 2007
+
+cleanup function
+----------------
+
+run.bash has a cleanup function defined in run.bash.  This function tries to
+restore the system to the state prior to run.bash execution.  By default the
+function contains the list of commands to revert the effects of the commands in
+the startup function, which runs before the tests:
+
+    parse_cmdline "$@"
+    startup || die "startup failed"
+    run_tests
+    exit $?
+
+The cleanup function runs automatically when run.bash terminates, either
+normally or abnormally, by way of a trap:
+
+    trap 'cleanup &>/dev/null; close_log; exit' 0
+    trap 'cleanup; close_log; exit' 1 2 3 15
+    
+On a normal exit, not caused by a signal such as ctrl-c, run.bash hides the
+output of cleanup.  The output is only displayed if run.bash exits by way of
+ctrl-c, so that you can see it is working.  (Actually, it doesn't produce any
+output presently, so it's the same either way...)
+
+There are two helper functions for augmenting the cleanup function:
+append_cleanup and prepend_cleanup.  The arguments to this function will be
+evaluated in the context of the cleanup function when it runs, for example:
+
+    prepend_cleanup "rm -f $mytempfile"
+
+Most of the time prepend_cleanup should be used, since operations should be
+popped off the stack in the same order they were pushed.
+
+test_cleanup function
+---------------------
+
+The cleanup function defined in run.bash only runs when run.bash quits, not at
+the end of each testcase.  For the latter, testcase.bash defines another
+function: test_cleanup.  By default this function removes the temporary files
+which testcase.bash creates: $localtmp, $tmp1 and $tmp2.
+
+The test_cleanup function runs when the testcase finishes, either normally or by
+a signal such as ctrl-c.  This is accomplished by running the testcase in
+a subshell and defining the traps in the context of that subshell.  The call
+tree looks like this (pseudocode)
+
+run.bash
+    cleanup() { ... }
+    append_cleanup() { append to cleanup }
+    prepend_cleanup() { prepend to cleanup }
+    trap 'cleanup; close_log; exit' 0 1 2 15
+
+    source run.conf     # note that prepend_cleanup and append_cleanup called
+                        # directly from run.conf affect the global cleanup,
+                        # which only runs when run.bash terminates
+
+    subshell
+        run_test runs   # defined in run.conf
+            source testcase.bash
+                test_cleanup() { ... }
+                append_cleanup() { append to test_cleanup }
+                prepend_cleanup() { prepend to test_cleanup }
+                trap 'test_cleanup; exit' 0 1 2 15
+
+            test runs   # note that prepend_cleanup and append_cleanup called
+                        # within the same shell as run_test will affect
+                        # test_cleanup
+
+        subshell terminates
+            test_cleanup runs
+
+    run.bash terminates
+        cleanup runs
+
+NOTE: If the testcase runs as an external script instead of inline in run_test,
+the middle of the call tree will look more like this:
+
+    subshell
+        run_test runs   # defined in run.conf
+            test script runs
+                source testcase.bash
+                    test_cleanup() { ... }
+                    append_cleanup() { append to test_cleanup }
+                    prepend_cleanup() { prepend to test_cleanup }
+                    trap 'test_cleanup; exit' 0 1 2 15
+
+                test script terminates
+                    test_cleanup runs
+
+        subshell terminates
+            no cleanup since traps were set in the external script
+

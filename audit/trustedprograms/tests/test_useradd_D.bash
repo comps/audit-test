@@ -20,7 +20,7 @@
 # PURPOSE:
 # Verify audit of changes to the default information for new users.
 
-source tp_functions.bash || exit 2
+source tp_auth_functions.bash || exit 2
 
 # setup
 # save off the current copy, will be restored automatically

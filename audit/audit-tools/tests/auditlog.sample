@@ -1,5 +1,5 @@
-type=DAEMON_START msg=audit(1133817257.143:186) auditd start, ver=1.0.3, format=raw, auid=10208, auditd pid=25495
 type=DAEMON_CONFIG msg=audit(1168028796.315:7533) config changed, auid=500 pid=15465 res=success
+type=DAEMON_START msg=audit(1179353927.452:6179) auditd start, ver=1.3.1, format=raw, auid=501 pid=11282 res=success, auditd pid=11282
 type=CONFIG_CHANGE msg=audit(1133817257.142:49946): audit_enabled=1 old=1 by auid=10208
 type=CONFIG_CHANGE msg=audit(1133817257.346:49947): audit_backlog_limit=256 old=256 by auid=10208
 type=CONFIG_CHANGE msg=audit(1168030931.528:451): auid=500 op=add rule key=(null) list=4 res=1

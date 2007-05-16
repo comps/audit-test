@@ -160,7 +160,7 @@ function compute_contexts {
 
     case $acc in
         eq)
-            if [[ $syscall == mq_* ]]; then
+            if [[ $syscall == mq_* || $perm == *defcontext ]]; then
 		subj_def_label=SystemHigh
 		obj_def_label=SystemHigh
 	    else

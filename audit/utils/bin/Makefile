@@ -73,6 +73,7 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_lsetxattr \
 		  do_mkdirat \
 		  do_mknodat \
+		  do_mount \
 		  do_openat \
 		  do_ptrace \
 		  do_readlink \

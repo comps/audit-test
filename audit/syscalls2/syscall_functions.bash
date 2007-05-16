@@ -110,20 +110,20 @@ function augrok_inode {
     augrok_default inode=$inode
 }
 
-function augrok_mls {
+function augrok_mls_label {
     augrok_default subj=$subj obj=$obj
 }
 
-function augrok_mls_name {
+function augrok_mls_name_label {
     augrok_default subj=$subj obj#a=$obj name#a=$name
 }
 
-function augrok_mls_inode {
+function augrok_mls_inode_label {
     augrok_default subj=$subj obj#a=$obj inode#a=$inode
 }
 
 # if the object is not created, no object label is collected
-function augrok_mls_create_fail {
+function augrok_mls_name {
     augrok_default subj=$subj name=$name
 }
 
@@ -131,7 +131,7 @@ function augrok_mls_search_fail {
     augrok_default subj=$subj
 }
 
-function augrok_mls_opid {
+function augrok_mls_opid_label {
     declare aupids
 
     # XXX REVISIT

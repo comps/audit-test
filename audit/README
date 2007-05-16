@@ -260,5 +260,4 @@ are the important things it does:
 
       Special functions for verifying audit records are prefixed with augrok_.
       They call augrok with different arguments depending on variables set in
-      the test object creation functions.  The default augrok function for mls
-      syscall tests is augrok_mls().
+      the test object creation functions.

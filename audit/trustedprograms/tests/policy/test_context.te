@@ -1,0 +1,13 @@
+#################################
+#
+# Policy for testing selinux context utilities.
+# It is mostly a test of file contexts.
+#
+#################################
+
+policy_module(test_context, 1.0)
+gen_require(`
+	role lspp_test_r;
+	type lspp_harness_t;
+')
+

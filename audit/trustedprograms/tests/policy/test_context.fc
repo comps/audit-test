@@ -1,0 +1,14 @@
+#
+# If any of these change, the test_context_tools.bash will need
+# to change accordingly.
+
+# base directory
+/tmp/eal4_testing/(.*)?        system_u:object_r:lspp_test_file_t:s0
+
+# specific files
+/tmp/eal4_testing/s0_testfile	system_u:object_r:lspp_test_file_t:s0
+/tmp/eal4_testing/s2_testfile	system_u:object_r:lspp_test_file_t:s2
+/tmp/eal4_testing/s15_testfile	system_u:object_r:lspp_test_file_t:s15:c0.c1023
+/tmp/eal4_testing/s0_testdir	system_u:object_r:lspp_test_file_t:s0
+/tmp/eal4_testing/s2_testdir	system_u:object_r:lspp_test_file_t:s2
+/tmp/eal4_testing/s15_testdir	system_u:object_r:lspp_test_file_t:s15:c0.c1023

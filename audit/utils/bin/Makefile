@@ -46,6 +46,8 @@ NET_EXE		= do_accept \
 		  do_sendmsg \
 		  do_sendto
 
+ONLY32_EXE	= do_fchown32
+
 ALL_EXE		= $(CREATE_EXE) \
 		  $(IPC_EXE) \
 		  $(MQ_EXE) \
@@ -57,7 +59,6 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_fchmod \
 		  do_fchmodat \
 		  do_fchown \
-		  do_fchown32 \
 		  do_fchownat \
 		  do_fremovexattr \
 		  do_fsetxattr \
@@ -89,6 +90,10 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_unlink \
 		  do_unlinkat \
 		  do_uselib
+
+ifeq ($(MODE), 32)
+ALL_EXE		+= $(ONLY32_EXE)
+endif
 
 include $(TOPDIR)/rules.mk
 

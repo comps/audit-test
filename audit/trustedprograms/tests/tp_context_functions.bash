@@ -44,16 +44,14 @@ obj_nolevel=system_u:object_r:lspp_test_file_t
 ######################################################################
 
 function cleanup_context_policy {
-	semodule -l | grep -q test_context
-	if [[ $? == 0 ]] 
-	then
-		semodule -r test_context
-		[[ $? != 0 ]] && 
-			exit_error "unable to unload policy prior to test"
+	if semodule -l | grep -q test_context; then
+		semodule -r test_context \
+			|| exit_error "unable to unload policy prior to test"
 	fi
 }
 
 function init_files {
+	declare i
 	rm -rf $testbase
 	mkdir $testbase
 	[[ $? != 0 ]] && exit_error "unable to create $testbase directory"
@@ -68,6 +66,7 @@ function init_files {
 }
 
 function load_test_policy {
+	declare log_mark
 	log_mark=$(stat -c %s $audit_log)
 	semodule -i $1 
 	[[ $? != 0 ]] && exit_error "unable to load test policy $1"
@@ -78,6 +77,7 @@ function load_test_policy {
 
 # called as "verify_chcon_level oldlevel newlevel file"
 function verify_chcon_level {
+	declare log_mark
 	log_mark=$(stat -c %s $audit_log)
 	auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S setxattr 
 	auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S getxattr 
@@ -100,6 +100,7 @@ function verify_chcon_level {
 
 # called as "verify_fail_chcon_level oldlevel newlevel file"
 function verify_fail_chcon_level {
+	declare log_mark
 	log_mark=$(stat -c %s $audit_log)
 	auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S setxattr 
 	auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S getxattr 

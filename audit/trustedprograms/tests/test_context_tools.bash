@@ -52,6 +52,10 @@
 #   - Use 'restorecon' to fix the contexts.
 #   - Use 'restorecon' to verify that there are no discrepancies.
 # 
+#  Note:  There are no tests for setfiles and restorecon run from
+#  an unprivileged user because those commands will happily attempt
+#  to run, spewing failures from the underlying operations which
+#  fail as expected.
 
 source tp_context_functions.bash
 
@@ -77,25 +81,25 @@ init_files
 
 # Use sefiles to check the contexts on the newly created files and directories
 # There should be discrepancies written to $tmp1.
-setfiles -o $tmp1 -n policy/test_context.fc $testbase
-[[ $? != 0 ]] && exit_error "setfiles failed during setup"
-read lines therest <<< "$(wc -l $tmp1)"
+setfiles -o $tmp1 -n policy/test_context.fc $testbase \
+	|| exit_error "setfiles failed during setup"
+lines=$(wc -l < $tmp1)
 if [[ $lines != $items ]]; then
 	exit_error "setfiles setup failed"
 fi
 
 # Use setfiles to set the contexts on the newly created files and directories
 # according to the policy.  
-setfiles policy/test_context.fc $testbase
-[[ $? != 0 ]] && exit_error "setfiles failed"
+setfiles policy/test_context.fc $testbase \
+	|| exit_error "setfiles failed"
 
 # Use setfiles to check the contexts on the files and directories
 # There should be no discrepancies written to $tmp1.
-setfiles -o $tmp1 -n policy/test_context.fc $testbase
-[[ $? != 0 ]] && exit_error "setfiles failed"
-read lines therest <<< "$(wc -l $tmp1)"
+setfiles -o $tmp1 -n policy/test_context.fc $testbase \
+	|| exit_error "setfiles failed"
+lines=$(wc -l < $tmp1)
 if [[ $lines != 0 ]]; then
-	exit_fail "setfiles found descrepancies"
+	exit_fail "setfiles found discrepancies"
 fi
 
 # Verify that a privileged domain (the test harness) can change
@@ -117,24 +121,24 @@ verify_fail_chcon_level s2:c0 s2:c1 $testbase/s2_testdir
 
 # Check the contexts on the test files...should be alot of differences now
 # so there should be discrepancies written to $tmp1.
-restorecon -n -R -o $tmp1 $testbase
-[[ $? != 0 ]] && exit_error "restorecon failed unexpectedly"
-read lines therest <<< "$(wc -l $tmp1)"
+restorecon -n -R -o $tmp1 $testbase \
+	|| exit_error "restorecon failed unexpectedly"
+lines=$(wc -l < $tmp1)
 if [[ $lines != $items ]]; then
-	exit_error "restorecon didn't find right number of descrepancies"
+	exit_error "restorecon didn't find right number of discrepancies"
 fi
 
 # restore the contexts of the test files
-restorecon -R $testbase
-[[ $? != 0 ]] && exit_error "restorecon failed unexpectedly"
+restorecon -R $testbase \
+	|| exit_error "restorecon failed unexpectedly"
 
 # Check the contexts on the files and directories
 # There should be no discrepancies written to $tmp1.
-restorecon -n -R -o $tmp1 $testbase
-[[ $? != 0 ]] && exit_error "restorecon failed"
-read lines therest <<< "$(wc -l $tmp1)"
+restorecon -n -R -o $tmp1 $testbase \
+	|| exit_error "restorecon failed"
+lines=$(wc -l < $tmp1)
 if [[ $lines != 0 ]]; then
-	exit_fail "restorecon found descrepancies"
+	exit_fail "restorecon found discrepancies"
 fi
 
 exit_pass

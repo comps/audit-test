@@ -34,7 +34,7 @@ write_config -s "$auditd_conf" \
 :> ${audit_log}	# so the metadata for this exists in the tmpfs
 fill_disk ${audit_log%/*} $((1024 + 5)) || exit 2
 
-start_auditd || exit 2
+restart_auditd || exit 2
 
 # each record is at least 80 bytes (based on empirical evidence), so writing
 # 200 records should always take us over (200 * 80 =~ 15k)
@@ -45,6 +45,8 @@ case $action in
 	check_$action "Subject: Audit Admin Space Alert" ;;
     syslog)
         check_$action "Audit daemon is low on disk space for logging" ;;
+    suspend)
+        check_$action "Audit daemon is suspending logging due to low disk space" ;;
     *)
         check_$action ;;
 esac

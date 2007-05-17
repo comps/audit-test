@@ -26,15 +26,15 @@
 source auditd_common.bash
 
 write_config -s "$auditd_conf" \
-    space_left=1 \
+    space_left=2 \
     space_left_action=$action \
-    admin_space_left=0 || exit 2
+    admin_space_left=1 || exit 2
 
-# Fill the filesystem hosting audit.log, leaving 1MB + 5KB available
+# Fill the filesystem hosting audit.log, leaving 2MB + 5KB available
 :> ${audit_log}	# so the metadata for this exists in the tmpfs
-fill_disk ${audit_log%/*} $((1024 + 5)) || exit 2
+fill_disk ${audit_log%/*} $((2048 + 5)) || exit 2
 
-start_auditd || exit 2
+restart_auditd || exit 2
 
 # each record is at least 80 bytes (based on empirical evidence), so writing
 # 200 records should always take us over (200 * 80 =~ 15k)
@@ -45,6 +45,8 @@ case $action in
 	check_$action "Subject: Audit Disk Space Alert" ;;
     syslog)
         check_$action "Audit daemon is low on disk space for logging" ;;
+    suspend)
+        check_$action "Audit daemon is suspending logging due to low disk space" ;;
     *)
         check_$action ;;
 esac

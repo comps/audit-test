@@ -35,7 +35,7 @@ write_config -s "$auditd_conf" \
 # Prepopulate log with max_log_file minus 5k
 write_file "$audit_log" $((max_log_file * 1024 - 5)) || exit 2
 
-start_auditd || exit 2
+restart_auditd || exit 2
 
 # each record is at least 80 bytes (based on empirical evidence), so writing
 # 200 records should always take us over (200 * 80 =~ 15k)
@@ -46,6 +46,8 @@ case $action in
 	check_$action "Subject: FIXME" ;;
     syslog)
         check_$action "Audit daemon log file is larger than max size" ;;
+    suspend)
+        check_$action "Audit daemon is suspending logging due to logfile size" ;;
     *)
         check_$action ;;
 esac

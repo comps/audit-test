@@ -161,7 +161,7 @@ fi
 
 function start_auditd {
     declare i s="starting auditd $$: can you hear me now?"
-    if ! killall -0 auditd &>/dev/null; then
+    if ! pidof auditd &>/dev/null; then
 	service auditd start || return 2
     fi
 
@@ -190,11 +190,11 @@ function stop_auditd {
 
     auditctl -D &>/dev/null
     service auditd stop || killall auditd
-    killall -0 auditd &>/dev/null || return 0
+    pidof auditd &>/dev/null || return 0
 
     echo -n "stop_auditd: Waiting for auditd to stop"
     for ((i = 0; i < 100; i++)); do
-	if ! killall -0 auditd &>/dev/null; then
+	if ! pidof auditd &>/dev/null; then
 	    echo
 	    return 0
 	fi
@@ -208,6 +208,14 @@ function stop_auditd {
     return 2
 }
 
+function restart_auditd {
+    # ignore the return status and messages from stop_auditd() as the
+    # audit daemon may not be started yet but we don't consider that a
+    # failure
+    stop_auditd >& /dev/null
+    start_auditd
+}
+
 function rotate_audit_logs {
     declare tmp num_logs
 
@@ -218,7 +226,7 @@ function rotate_audit_logs {
 
 	# Attempt to rotate using mechanism available in 1.0.10+
 	echo "rotate_audit_logs: Attempting to rotate using USR1"
-	if killall -0 auditd &>/dev/null; then
+	if pidof auditd &>/dev/null; then
 	    killall -USR1 auditd &>/dev/null
 	    sleep 0.1
 	fi
@@ -242,7 +250,7 @@ function rotate_audit_logs {
         popd >/dev/null
     fi
 
-    killall -0 auditd &>/dev/null || start_auditd
+    pidof auditd &>/dev/null || start_auditd
 }
 
 ######################################################################

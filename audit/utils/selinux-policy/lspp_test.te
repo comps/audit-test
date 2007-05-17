@@ -27,7 +27,7 @@ gen_require(`
         # attributes
         attribute domain;
         # domains
-        type auditd_t, inetd_t, passwd_t;
+        type auditd_t, inetd_t, initrc_t, passwd_t;
         # misc file objects
         type auditd_log_t, sysadm_lpr_t;
 ')

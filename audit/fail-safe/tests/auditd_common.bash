@@ -1,7 +1,8 @@
 #!/bin/bash
 # =============================================================================
-# (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+# (c) Copyright Hewlett-Packard Development Company, L.P., 2005,2007
 # Written by Aron Griffis <aron@hp.com>
+# Modified to work with SELinux in strict-mls by Paul Moore <paul.moore@hp.com>
 #
 #   This program is free software;  you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -43,7 +44,9 @@ ralias=$(sed -n 's/^root:[ \t]*\([^,]*\).*/\1/p' /etc/aliases)
 eal_mail=/var/mail/$ralias
 unset ralias
 
-messages=/var/log/messages
+syslog_file=/var/log/messages
+syslog_mark=0
+
 action=$1
 total_written=0
 
@@ -51,6 +54,7 @@ total_written=0
 # common functions
 ######################################################################
 
+# write_records(num): writes num records to the audit log
 function write_records {
     declare max=$1 i
     echo "Writing records to audit log ($max)"
@@ -108,6 +112,47 @@ function fill_disk {
     printf "%s\n%s\n%s\n%s\n\n" "$header" "$before" "$during" "$after"
 }
 
+# mark_syslog(msg): marks syslog, with an optional msg for later searching
+function mark_syslog {
+    syslog_mark=$(wc -l <$syslog_file)
+    logger "auditd_testing: $$ $msg"
+}
+
+# search_syslog(msg): searches syslog, starting at $syslog_mark, looking for
+# "msg"
+function search_syslog {
+    declare syslog syslog_filtered syslog_output
+
+    sleep 0.1	# let syslog catch up
+
+    # sift through the syslog messages
+    syslog=$(sed "1,${syslog_mark}d" "$syslog_file")
+    syslog_filtered=$(grep -F "$1" <<<"$syslog")
+    if [[ -n $syslog_filtered ]]; then
+	syslog_output="$syslog_filtered"
+    else
+	syslog_output="$syslog"
+    fi
+
+    # output a syslog snapshot
+    echo
+    echo "Syslog snippet"
+    echo "--- start messages ---------------------------------------------------------"
+    echo "$syslog_output"
+    echo "--- end messages -----------------------------------------------------------"
+
+    # return the correct error code and output error messages if required
+    if [[ -n $syslog_filtered ]]; then
+	return 0
+    elif grep -Fq " auditd[$(pidof auditd)]: " <<<"$syslog"; then
+	echo "search_syslog: couldn't find auditd message in syslog"
+	return 1
+    else
+	echo "search_syslog: either auditd or syslog is broken"
+	return 2
+    fi
+}
+
 function check_rotate {
     if [[ ! -s "$audit_log.1" ]]; then
 	echo "check_rotate: log did not rotate"
@@ -122,31 +167,11 @@ function check_rotate {
 }
 
 function pre_syslog {
-    messages_lines=$(wc -l </var/log/messages)
-    logger "making sure syslog works $$"
+    mark_syslog
 }
 
 function check_syslog {
-    declare syslog auditd_pid=$(pidof auditd | cut -f1 -d\ )
-
-    sleep 0.1	# let syslog catch up
-    syslog=$(sed "1,${messages_lines}d" "$messages")
-
-    if grep -Fq " auditd[$auditd_pid]: $1" <<<"$syslog"; then
-	return 0
-    fi
-
-    echo "--- start messages ---------------------------------------------------------"
-    echo "$syslog"
-    echo "--- end messages -----------------------------------------------------------"
-
-    if grep -Fq "making sure syslog works $$" <<<"$syslog"; then
-	echo "check_syslog: couldn't find auditd syslog record"
-	return 1
-    else
-	echo "check_syslog: syslog appears to be broken"
-	return 2
-    fi
+    search_syslog " auditd[$(pidof auditd)]: $1"
 }
 
 function check_ignore {
@@ -169,7 +194,7 @@ function check_ignore {
     # see all of the writes
     for ((seconds = 60; seconds > 0; seconds--)); do
 	# detect if policy killed our strace
-	if ! kill -0 $strace_pid; then
+	if ! pidof $strace_pid; then
 	    # can't search with augrok because the log is full...
 	    exit_error "AVC blocked strace auditd"
 	fi
@@ -187,14 +212,12 @@ function check_ignore {
     return 1
 }
 
+function pre_suspend {
+    mark_syslog
+}
+
 function check_suspend {
-    declare status=0
-    check_ignore || status=$?
-    case $status in
-	0) echo "check_suspend: audit.log is still growing, this is bad"; return 1 ;;
-	1) echo "check_suspend: audit.log is suspended, this is good"; return 0 ;;
-	*) echo "check_suspend: check_ignore returned error status"; return $status ;;
-    esac
+    search_syslog " auditd[$(pidof auditd)]: $1"
 }
 
 function pre_keep_logs {
@@ -220,41 +243,33 @@ function check_keep_logs {
 function pre_halt {
     declare mask_runlevel=${1:-0}
 
-    append_cleanup '
-    if [[ -s /sbin/init.agriffis ]]; then
-	mv /sbin/init.agriffis /sbin/init
-    fi'
+    mark_syslog
 
     # replace /sbin/init with our own version
-    if [[ ! -s /sbin/init.agriffis ]]; then
-	mv /sbin/init /sbin/init.agriffis
+    append_cleanup '
+    if [[ -s /sbin/init.auditd_testing ]]; then
+	mv /sbin/init.auditd_testing /sbin/init
+        restorecon /sbin/init
+    fi'
+    if [[ ! -s /sbin/init.auditd_testing ]]; then
+	mv /sbin/init /sbin/init.auditd_testing
     fi
-
     cat >/sbin/init <<EOF
 #!/bin/bash -x
 if [[ \$1 == $mask_runlevel ]]; then
-    echo \$1 > "$tmp1"
+    logger "auditd_testing: $$ runlevel=\$1"
 else
-    exec /sbin/init "\$@"
+    exec /sbin/init.auditd_testing "\$@"
 fi
 EOF
+
+    # make sure the new version has the right security attributes
+    restorecon /sbin/init
     chmod +x /sbin/init
 }
 
 function check_halt {
-    declare want_runlevel=${1:-0}
-    sleep 0.1	# make sure auditd had a chance to call /sbin/init
-
-    if [[ $(<$tmp1) == $want_runlevel ]]; then
-	echo "Great, the runlevel changed to $want_runlevel"
-	return 0
-    else
-	if augrok -q type=AVC extra_text='avc: denied { write } for' comm=init 'name=~tmp'; then
-	    exit_error "AVC blocked /sbin/init writing $tmp1"
-	fi
-	echo "Failed to change runlevels"
-	return 1
-    fi
+    search_syslog " logger: auditd_testing: $$ runlevel=${1:-0}"
 }
 
 function pre_single {
@@ -302,9 +317,6 @@ if [[ -z $action ]]; then
     exit 2
 fi
 
-# clean slate
-stop_auditd
-
 # use 8MB tmpfs for audit logs
 if mount | grep /var/log/audit; then exit 2; fi
 mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit
@@ -314,12 +326,9 @@ chmod 750 /var/log/audit
 chcon system_u:object_r:auditd_log_t /var/log/audit
 
 prepend_cleanup '
-    umount /var/log/audit
-    service auditd start'
+    umount -l /var/log/audit
+    service auditd restart'
 backup "$auditd_conf"	# restore done via prepend_cleanup
-prepend_cleanup '
-    service auditd stop
-    killall auditd'
 
 # default config ignores all problems
 write_config -s "$auditd_conf" \

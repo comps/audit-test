@@ -28,7 +28,8 @@ UTILS_OBJ	= arch.o			\
 		  identifiers.o			\
 		  tempfile.o			\
 		  verify.o
-UTILS_EXE	= test_context
+UTILS_EXE	= test_context \
+		  test_setcon
 
 ALL_OBJ		= $(UTILS_OBJ)
 ALL_AR		= $(UTILS_AR)

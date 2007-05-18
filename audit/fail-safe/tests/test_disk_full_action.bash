@@ -31,7 +31,6 @@ write_config -s "$auditd_conf" \
 restart_auditd || exit 2
 
 # Fill the filesystem hosting audit.log, leaving 5k available
-:> ${audit_log}	# so the metadata for this exists in the tmpfs
 fill_disk ${audit_log%/*} 5 || exit 2
 
 # each record is at least 80 bytes (based on empirical evidence), so writing

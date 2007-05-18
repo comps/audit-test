@@ -30,11 +30,10 @@ write_config -s "$auditd_conf" \
     space_left_action=$action \
     admin_space_left=1 || exit 2
 
-# Fill the filesystem hosting audit.log, leaving 2MB + 5KB available
-:> ${audit_log}	# so the metadata for this exists in the tmpfs
-fill_disk ${audit_log%/*} $((2048 + 5)) || exit 2
-
 restart_auditd || exit 2
+
+# Fill the filesystem hosting audit.log, leaving 2MB + 5KB available
+fill_disk ${audit_log%/*} $((2048 + 5)) || exit 2
 
 # each record is at least 80 bytes (based on empirical evidence), so writing
 # 200 records should always take us over (200 * 80 =~ 15k)

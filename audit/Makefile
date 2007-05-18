@@ -21,7 +21,8 @@ TOPDIR		= .
 
 include $(TOPDIR)/rules.mk
 
-RUN_DIRS	= syscalls
+RUN_DIRS	= syscalls \
+		  syscalls2
 
 ifeq ($(MODE), $(NATIVE))
 RUN_DIRS       += fail-safe \

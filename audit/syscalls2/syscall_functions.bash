@@ -661,6 +661,8 @@ function create_fs_objects_mac {
 	    source=none
 	    flag=tmpfs
 	    name=$target
+
+	    prepend_cleanup "umount $target"
             ;;
 
         *) exit_error "unknown perm to test: $p" ;;

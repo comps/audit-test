@@ -435,3 +435,319 @@ function create_pgrp {
     append_cleanup "killall -SIGKILL do_dummy_group"
     eval "$var=\$mypgid"
 }
+
+######################################################################
+# DAC functions for creating test objects
+######################################################################
+
+function create_fs_objects_dac {
+    declare p=$1 base all="a+rwx"
+
+    case $p in
+
+        # changes to files/dirs (tested object is always the target)
+        file_read)
+            create_file target mode="${owner:0:1}+r"
+            name=$target;;
+        file_write)
+            create_file target mode="${owner:0:1}+rw"
+            name=$target;;
+        file_exec)
+            create_exec target mode="${owner:0:1}+rx"
+            name=$target;;
+        symlink_read)
+            create_symlink target mode="${owner:0:1}+r"
+            name=$target ;;
+	priv_modify)
+	    create_file target mode=$all
+	    name=$target ;;
+
+        # changes to directory entries
+        dir_add_name)
+            create_dir base mode="${owner:0:1}+rwx"
+            target="$base/new"
+
+            name="$base/" # audit adds a trailing /
+	    [[ $tag == *fail* ]]  && augrokfunc=augrok_default
+
+	    if [[ -n $which ]]; then
+		create_dir base mode=$all
+		create_file source basedir=$base mode=$all
+	    fi ;;
+        dir_remove_name)
+            create_dir base mode="${owner:0:1}+rwx"
+            case $entry in
+		dir)  create_dir target basedir=$base mode=$all ;;
+		file) create_file target basedir=$base mode=$all ;;
+            esac
+
+	    # see above comment regarding directory write tests
+            name="$base/" # audit adds a trailing /
+	    /bin/su - $TEST_USER -c "ls $base >/dev/null" || \
+		augrokfunc=augrok_default
+
+            # for syscalls that operate on more than one pathname
+            # determine which is the actual test object
+            case $which in
+                old)
+		    source=$target
+		    create_dir base mode=$all
+		    create_file target basedir=$base mode=$all ;;
+                new)
+		    create_dir base mode=$all
+		    create_file source basedir=$base mode=$all ;;
+            esac
+            ;;
+
+        *) exit_error "unknown perm to test: $p" ;;
+    esac
+
+    # special handling for *at syscalls
+    if [[ -n $at ]]; then
+	dirname=$target
+	while [[ $dirname == /*/* ]]; do dirname=${dirname%/*}; done
+	[[ -n $source ]] && source=${source#/*/}
+	target=${target#/*/}
+	name=${name#/*/}
+    fi
+
+    # augrok setup
+    [[ -z $augrokfunc ]] && augrokfunc=augrok_name
+    [[ $syscall == f* ]] && augrokfunc=augrok_default
+}
+
+######################################################################
+# MAC functions for creating test objects
+######################################################################
+
+# - may use these named parameters:
+#   subj: the context in which the test operation will run 
+#   obj: desired context for test object
+#
+# - may set these test operation parameters:
+#   flag: test operation flag
+#   dirname: for *at syscalls
+#   source: for link,symlink,rename syscalls
+#   target: test operation target object (required)
+#
+# - may set these augrok parameters:
+#   name: file or mq name
+#   opid: test object pid(s)
+#   obj: may re-determine for audit record
+function create_fs_objects_mac {
+    declare p=$1 base
+    
+    # When creating filesystem objects, all objects other than the actual target
+    # object (the one we're testing) should be created with $subj context to
+    # avoid early failures on other permission checks.
+    case $p in
+
+        # changes to files/dirs (tested object is always the source)
+        dir_reparent)
+	    create_dir base context=$subj
+	    create_dir source basedir=$base context=$obj
+            target="$base/new"
+            name=$source ;;
+        file_link)
+	    create_dir base context=$subj
+	    create_file source basedir=$base context=$obj
+            target="$base/new"
+            name=$source ;;
+        file_rename)
+	    create_dir base context=$subj
+	    create_file source basedir=$base context=$obj
+            target="$base/new"
+            name=$source ;;
+
+        # changes to files/dirs (tested object is always the target)
+        dir_rmdir)
+	    create_dir base context=$subj
+	    [[ -n $which ]] && create_dir source basedir=$base context=$subj
+	    create_dir target basedir=$base context=$obj
+            name=$target ;;
+        file_unlink)
+	    create_dir base context=$subj
+	    [[ -n $which ]] && create_file source basedir=$base context=$subj
+	    create_file target basedir=$base context=$obj
+            name=$target ;;
+        file_read|file_write)
+            create_file target context=$obj
+            name=$target;;
+        file_exec)
+            create_exec target context=$obj
+            name=$target;;
+	file_create)
+            create_dir target context=$subj
+
+	    # determine the fscreate context, see comment for
+	    # set_fscreate_context() for an explanation
+	    setcontext=$(set_fscreate_context $subj $obj /tmp)
+
+	    # setup other test utility args
+            [[ -n $which ]] && source=$tmp1 # if new file is a symlink
+            target="$target/new"
+
+	    # setup augrok parameters
+	    [[ $expres == fail ]] && augrokfunc=augrok_mls_name
+	    name=$target
+	    obj=$setcontext ;;
+        symlink_read)
+            create_symlink target context=$obj
+            name=$target ;;
+
+        # changes to directory entries
+        dir_add_name)
+            create_dir base context=$obj
+            target="$base/new"
+
+            name="$base/" # audit adds a trailing /
+	    inode=$(runcon $subj -- stat -c '%i' $base)
+	    if [[ -n $inode ]]; then
+		# If the kernel fails to create the object, audit does not
+		# update the value for the "name" field, so the inode number is
+		# the reliable way to identify a directory.
+		augrokfunc=augrok_mls_inode_label
+	    else
+		# These tests verify mls permission checks for directory writes.
+		# In some scenarios, this means that we can't *read* the
+		# directory either and the kernel will stop path resolution
+		# before even attempting the operation. Note that this
+		# implementation detail means we cannot truly verify a directory
+		# write permission failure for some subj/obj combinations, but
+		# we can prove that the operation won't succeed.
+		augrokfunc=augrok_mls_search_fail
+	    fi
+
+	    if [[ -n $which ]]; then
+		create_dir base context=$subj
+		create_file source basedir=$base context=$subj
+	    fi ;;
+        dir_remove_name)
+            create_dir base context=$obj
+            case $entry in
+		dir)  create_dir target basedir=$base context=$subj ;;
+		file) create_file target basedir=$base context=$subj ;;
+            esac
+
+	    # see above comment regarding directory write tests
+            name="$base/" # audit adds a trailing /
+	    runcon $subj -- ls $base >/dev/null || \
+		augrokfunc=augrok_mls_search_fail
+
+            # for syscalls that operate on more than one pathname
+            # determine which is the actual test object
+            case $which in
+                old)
+                    source=$target
+		    create_dir base context=$subj
+		    create_file target basedir=$base context=$subj ;;
+                new)
+		    create_dir base context=$subj
+		    create_file source basedir=$base context=$subj ;;
+            esac
+            ;;
+        mount_dir)
+	    create_dir target context=$obj
+	    source=none
+	    flag=tmpfs
+	    name=$target
+            ;;
+
+        *) exit_error "unknown perm to test: $p" ;;
+    esac
+
+    # ensure filesystem object has correct type
+    # must be done _before_ handling for *at calls
+    # must not be done if the file doesn't exist yet
+    [[ $p == file_create ]] || obj=$(get_fsobj_context $name)
+
+    # special handling for *at syscalls
+    if [[ -n $at ]]; then
+	dirname=$target
+	while [[ $dirname == /*/* ]]; do dirname=${dirname%/*}; done
+	[[ -n $source ]] && source=${source#/*/}
+	target=${target#/*/}
+	name=${name#/*/}
+    fi
+
+    # augrok setup
+    [[ -z $augrokfunc ]] && augrokfunc=augrok_mls_name_label
+}
+
+function create_ipc_objects_mac {
+    declare p=$1 type=${1%_*}
+    declare msg_type=1
+
+    create_${type} target context=$obj
+    flag=${1##*_} # set operation flag
+
+    # special setup for sending/recving messages
+    case $p in
+	*_send)
+	    flag=$msg_type ;;
+	*_recv)
+	    declare result
+
+	    flag=$msg_type
+	    # always use do_msgsnd regardless of whether the syscall is ipc() or
+	    # msgrcv() -- it's using a library call, so it works. we have a
+	    # do_ipc utility purely because the harness wants to find a
+	    # do_$syscall binary.
+	    read result foo bar \
+		<<<"$(runcon $obj -- do_msgsnd $target $flag 'test message')"
+	    [[ $result == 0 ]] || exit_error "could not send initial message" ;;
+    esac
+
+    augrokfunc=augrok_mls_label
+}
+
+function create_mq_objects_mac {
+    declare p=$1 mq_dir=/dev/mqueue
+
+    if [[ $p == mq_create ]]; then
+	create_mq_name target context=$obj
+
+	mkdir $mq_dir ; mount -t mqueue mqueue $mq_dir
+	    # determine the fscreate context, see comment for
+	    # set_fscreate_context() for an explanation
+	    setcontext=$(set_fscreate_context $subj $obj $mq_dir)
+	umount $mq_dir ; rmdir $mq_dir
+
+	[[ $expres == fail ]] && augrokfunc=augrok_mls_name
+	obj=$setcontext
+    else
+	create_mq target context=$obj
+	# get the real object type
+	mkdir $mq_dir ; mount -t mqueue mqueue $mq_dir
+	obj=$(get_fsobj_context "$mq_dir/$target")
+	runcon $subj -- ls "$mq_dir/$target" || \
+	    augrokfunc=augrok_mls_search_fail
+	umount $mq_dir ; rmdir $mq_dir
+    fi
+
+    # set augrok params first, before we change $target
+    [[ -z $augrokfunc ]] && augrokfunc=augrok_mls_name_label
+    name=$target
+
+    # set operation params
+    target="/$target"
+}
+
+function create_process_objects_mac {
+    declare p=$1
+
+    case $p in
+        process_*)
+            create_process target context=$obj
+            opid=$target ;;
+        pgrp_*)
+            create_pgrp target context=$obj
+            opid+=( $(ps --no-headers -C do_dummy_group -o pid | sort -n) ) ;;
+        *) exit_error "unknown perm to test: $p" ;;
+    esac
+
+    # set test operation flag
+    flag=${p##*_}
+
+    augrokfunc=augrok_mls_opid_label
+}

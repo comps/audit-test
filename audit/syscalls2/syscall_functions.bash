@@ -145,6 +145,16 @@ function augrok_mls_opid_label {
     return 0
 }
 
+# used for 32-bit shmat() success testcases:
+# don't check the exit value because the arch code gives 0 to the audit hook
+function augrok_mls_label_no_exit {
+    augrok --seek=$log_mark -m1 type==SYSCALL \
+        syscall=$syscall success=$success pid=$pid auid=$(</proc/self/loginuid) \
+        uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
+        gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid \
+	subj=$subj obj=$obj
+}
+
 ######################################################################
 # MAC test functions for context transformations
 ######################################################################
@@ -698,7 +708,8 @@ function create_ipc_objects_mac {
 	    [[ $result == 0 ]] || exit_error "could not send initial message" ;;
     esac
 
-    augrokfunc=augrok_mls_label
+    # augrok setup
+    [[ -z $augrokfunc ]] && augrokfunc=augrok_mls_label
 }
 
 function create_mq_objects_mac {

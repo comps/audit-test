@@ -18,20 +18,20 @@
 ###############################################################################
 # 
 # PURPOSE:
-# Verify that mount -o context=foo can overide the context on ext2
+# Verify that mount -o context=foo can overide the context on ext3
 
 source tp_mount_functions.bash || exit 2
 
-# create a loopback ext2 filesystem.
+# create a loopback ext3 filesystem.
 # separate losetup from mount so that context= only applies to the mount.
 dd if=/dev/zero of=$tmp1 count=0 bs=1 seek=100M || exit_error "dd failed"
-mke2fs -F $tmp1 || exit_error "mke2fs failed"
+mkfs.ext3 -F $tmp1 || exit_error "mke2fs failed"
 unset loop
 prepend_cleanup 'losetup -d $loop'
 loop=$(losetup -f) || exit_error "losetup -f failed"
 losetup $loop $tmp1
 
-# mount ext2fs on a temporary directory location.
+# mount ext3fs on a temporary directory location.
 # collect the context of the root inode of this filesystem.
 prepend_cleanup 'umount -l $mnt'
 mount $loop $mnt || exit_error "mount $loop failed"

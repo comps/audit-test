@@ -30,15 +30,20 @@
 source testcase.bash
 
 action=$1
+auditd_active=$(pidof auditd)
 
 # setup
 # make sure pam_loginuid is configured with require_auditd
-backup /etc/pam.d/sshd  # restored automatically
-sed -i '/pam_loginuid\.so/s/$/ require_auditd/' /etc/pam.d/sshd || exit_error
-# make sure auditd is running after test
-prepend_cleanup 'killall -0 auditd &>/dev/null || service auditd start'
+if grep "pam_loginuid.so" /etc/pam.d/sshd | grep -qv "require_auditd"; then
+    backup /etc/pam.d/sshd  # restored automatically
+    sed -i '/pam_loginuid\.so/s/$/ require_auditd/' /etc/pam.d/sshd || \
+	exit_error
 
-if [[ $action == "fail" ]]; then
+fi
+# make sure auditd is running after test
+prepend_cleanup 'pidof auditd &>/dev/null || service auditd start'
+
+if [[ $action == "fail" && -n $auditd_active ]]; then
     service auditd stop || exit_error
 fi
 
@@ -62,3 +67,7 @@ case $?:$action in
     *)
         exit_error ;;
 esac
+
+if [[ $action == "fail" && -n $auditd_active ]]; then
+    service auditd start
+fi

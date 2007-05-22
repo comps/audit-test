@@ -49,10 +49,8 @@ runcon $LPR2CON -- lpr -P $printer -T staff-secret /etc/passwd
 # use backup (and automatic restore) to work around this
 backup /var/run/utmp
 
-semanage login -d $TEST_USER
 semanage login -a -s staff_u -r SystemLow-SystemHigh $TEST_USER || \
   exit_error "unable to set $TEST_USER to staff_u"
-
 
 # test
 prepend_cleanup rm -f $CON1OUT $CON2OUT
@@ -66,10 +64,17 @@ runcon $LPQ1CON -- lpq -P $printer > $CON1OUT
     expect -nocase {login: $} {send "$env(TEST_USER)\r"}
     expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
     expect -nocase {level} {send "N\r"}
-    send "PS1=:::$\r"; sleep 1;
-    expect {:::$} {send "lpq -P $env(printer)\r"}
-    expect {:::$} {sleep 1; close; wait}'
+    send "PS1=\"::\\#$ \"\r";
+    expect {
+      ::2 { send "lpq -P $env(printer)\r"; exp_continue; }
+      ::3 { exit 0; }
+    }
+    exit 1; '
 )
+
+if [ $? -ne 0 ]; then
+  exit_error "sysadm lpq expect did not finish properly"
+fi
 
 if [ \! -f $CON2OUT ]; then
   exit_error "sysadm lpq output was not generated"

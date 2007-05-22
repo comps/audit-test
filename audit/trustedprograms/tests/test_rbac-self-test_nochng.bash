@@ -34,12 +34,13 @@ expect -c '
   expect {
     ::2 { send "/usr/sbin/rbac-self-test -s -v\r"; exp_continue }
     ::3 { send "/usr/sbin/rbac-self-test -v\r"; exp_continue }
-    ::4 { send "exit\r"; exit; }
-  } '
+    ::4 { send "exit\r"; exit 0; }
+  }
+  exit 1;'
 
 # verify
 if [ $? -ne 0 ]; then
-  exit_fail "the rbac-self-test did not complete its check run correctly"
+  exit_error "the rbac-self-test timed out"
 fi
 
 msg1="The RBAC self test succeeded.*"

@@ -36,12 +36,13 @@ expect -c '
     ::2 { send "/usr/sbin/rbac-self-test -s -v\r"; exp_continue }
     ::3 { send "touch /etc/passwd\r"; exp_continue }
     ::4 { send "/usr/sbin/rbac-self-test -v\r"; exp_continue }
-    ::5 { send "exit\r"; exit; }
-  } '
+    ::5 { send "exit\r"; exit 0; }
+  }
+  exit 1; '
 
 # verify
 if [ $? -ne 0 ]; then
-  exit_fail "the rbac-self-test did not complete its check run correctly"
+  exit_error "the rbac-self-test timed out"
 fi
 
 msg1="added=0 removed=0 changed=1: .* res=failed."

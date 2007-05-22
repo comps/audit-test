@@ -25,7 +25,7 @@ source tp_mount_functions.bash || exit 2
 # create a loopback ext3 filesystem.
 # separate losetup from mount so that context= only applies to the mount.
 dd if=/dev/zero of=$tmp1 count=0 bs=1 seek=100M || exit_error "dd failed"
-mkfs.ext3 -F $tmp1 || exit_error "mke2fs failed"
+mkfs.ext3 -F $tmp1 || exit_error "mkfs.ext3 failed"
 unset loop
 prepend_cleanup 'losetup -d $loop'
 loop=$(losetup -f) || exit_error "losetup -f failed"

@@ -37,7 +37,8 @@ CON2OUT=sysadm_lpq.out
 
 printer=tests$$
 
-append_cleanup delete_printer $printer
+prepend_cleanup delete_printer $printer
+prepend_cleanup semanage login -d $TEST_USER
 create_socket_printer $printer
 cupsdisable $printer
 
@@ -54,7 +55,7 @@ semanage login -a -s staff_u -r SystemLow-SystemHigh $TEST_USER || \
 
 
 # test
-append_cleanup rm -f $CON1OUT $CON2OUT
+prepend_cleanup rm -f $CON1OUT $CON2OUT
 runcon $LPQ1CON -- lpq -P $printer > $CON1OUT
 (
   export printer

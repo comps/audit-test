@@ -27,8 +27,17 @@
 #
 
 function get_ipv6_prefix {
-    echo $LBLNET_SVR_IPV6 | \
-	awk 'BEGIN { FS = ":" } { print $1":"$2":"$3":"$4 }'
+    if [[ -n $LBLNET_SVR_IPV6 ]]; then
+	echo $LBLNET_SVR_IPV6 | \
+	    awk 'BEGIN { FS = ":" } { print $1":"$2":"$3":"$4":" }'
+    elif [[ -n $LBLNET_PREFIX_IPV6 ]]; then
+	echo $LBLNET_PREFIX_IPV6 | sed 's/:\/[0-9]*//;s/:0*/:/g;'
+    else
+	ip -o -f inet6 addr show scope global | \
+	    awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }' | \
+	    awk 'BEGIN { FS = ":" } { print $1":"$2":"$3":"$4":" }' | \
+	    head -n 1
+    fi
 }
 
 function get_ipv6_iface {

@@ -22,7 +22,8 @@ TOPDIR		= .
 include $(TOPDIR)/rules.mk
 
 RUN_DIRS	= syscalls \
-		  syscalls2
+		  syscalls2 \
+		  network
 
 ifeq ($(MODE), $(NATIVE))
 RUN_DIRS       += fail-safe \
@@ -30,8 +31,7 @@ RUN_DIRS       += fail-safe \
 		  audit-trail-protection \
 		  audit-tools \
 		  libpam \
-		  trustedprograms \
-		  network
+		  trustedprograms
 endif
 
 SUB_DIRS	= $(RUN_DIRS) \

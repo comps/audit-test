@@ -31,7 +31,7 @@ include $(TOPDIR)/rules.mk
 install: install_client
 
 # helper target to get local addresses
-getaddress:
+getaddress: install_check
 	@echo "Local IPv4 address -> %LOCAL_IPV4%" | ../addr_filter.bash
 	@echo "Local IPv6 address -> %LOCAL_IPV6_RAW%" | ../addr_filter.bash
 

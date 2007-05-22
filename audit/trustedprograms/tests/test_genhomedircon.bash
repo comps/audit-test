@@ -64,6 +64,8 @@ function verify_homecontext {
 # main
 ######################################################################
 
+[[ -n $TEST_USER ]] || exit_error "TEST_USER is not set"
+
 # configure to cleanup at test exit 
 append_cleanup semanage login -d $TEST_USER
 

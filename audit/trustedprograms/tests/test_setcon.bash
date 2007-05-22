@@ -83,20 +83,20 @@ log_mark=$(stat -c %s $audit_log)
 
 # Now update the context using the helper program
 runcon -t $runcon_type -- $TOPDIR/utils/test_setcon $new_context 
-if [[ $? == 0 ]] ; then 
-	# Was it supposed to work?
-	if [[ $op == "success" ]] ; then
-		# Ok, then look for the audit record that the lspp_policy 
-		# causes
-		augrok -q --seek=$log_mark type==SYSCALL syscall=write \
-				subj=$current_con auid=$auid success=yes \
-			|| exit_fail "syscall audit record missing "
-	fi
-	exit_pass
-fi
-# If it failed, was it supposed to?
-if [[ $op == "success" ]] ; then
-	exit_fail "setcon failed"
-fi
-	
-exit_pass
+
+case $op:$? in
+    success:0)
+	augrok -q --seek=$log_mark type==SYSCALL syscall=write \
+	    subj=$current_con auid=$auid success=yes \
+	    || exit_fail "syscall audit record missing"
+	exit_pass ;;
+    success:*)
+	exit_fail "runcon returned non-zero status" ;;
+    fail_self:0)
+	exit_fail "runcon returned zero status" ;;
+    fail_self:*)
+	exit_pass ;;
+esac
+
+# should never be here
+exit_error "bueller? bueller?"

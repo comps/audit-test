@@ -38,6 +38,9 @@
 # log files
 /usr/local/eal4_testing/(.*)?\.log	--	gen_context(system_u:object_r:lspp_test_output_t,s0)
 
+# base pipes
+/usr/local/eal4_testing/(.*)?	-p	gen_context(system_u:object_r:lspp_test_file_t,s0)
+
 ###
 #
 # specific files

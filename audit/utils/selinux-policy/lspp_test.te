@@ -16,7 +16,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,0.5.3)
+policy_module(lspp_test,0.5.4)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -140,6 +140,7 @@ mls_trusted_object(lspp_harness_t)
 type_transition lspp_domains lspp_test_harness_dir_t:file lspp_harness_exec_t;
 type_transition lspp_domains lspp_test_dir_t:file lspp_test_output_t;
 type_transition lspp_domains lspp_test_exec_dir_t:file lspp_test_generic_exec_t;
+type_transition lspp_domains lspp_test_dir_t:fifo_file lspp_test_file_t;
 
 ###
 #

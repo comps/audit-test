@@ -47,21 +47,7 @@ run:
 	$(check_set_LBLNET_SVR_IPV6); \
 	$(MAKE) all && \
 	for x in $(RUN_DIRS); do make -C $$x run; done
-	@# tty output has color, generated logs don't, so collect them
-	@# instead of redirecting output of the above loop.
-	@for l in run rollup; do \
-	  ( utils/run.bash --header; echo ) &> audit.$$l.log; \
-	  for x in $(RUN_DIRS); do \
-	    echo; \
-	    echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
-	    printf "::: %-52s :::\n" "$$x"; \
-	    echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
-	    echo; \
-	    cat $$x/$$l.log; \
-	  done &> audit.$$l.log; \
-	done
-	utils/tally-results.awk < audit.rollup.log \
-	    | tee -a audit.run.log | tee -a audit.rollup.log
+	$(MAKE) report
 
 .PHONY: dist
 dist:
@@ -81,6 +67,24 @@ dist:
 	rm -rf "$$tmpdir" && \
 	echo && \
 	ls -l audit-test-$$rev.tar.gz
+
+.PHONY: report
+report:
+	@# tty output has color, generated logs don't, so collect them
+	@# instead of redirecting output of the above loop.
+	@for l in run rollup; do \
+	  ( utils/run.bash --header; echo ) &> audit.$$l.log; \
+	  for x in $(RUN_DIRS); do \
+	    echo; \
+	    echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
+	    printf "::: %-52s :::\n" "$$x"; \
+	    echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
+	    echo; \
+	    cat $$x/$$l.log; \
+	  done &> audit.$$l.log; \
+	done
+	utils/tally-results.awk < audit.rollup.log \
+	    | tee -a audit.run.log | tee -a audit.rollup.log
 
 .PHONY: rpm
 rpm: dist

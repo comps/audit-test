@@ -1,0 +1,57 @@
+(c) Copyright Hewlett-Packard Development Company, L.P., 2005
+
+
+| Quickstart
++-----------
+
+Check the TODO file for the current state of the test suite.
+
+Install
+-------
+Login as eal admin user.
+
+$ /bin/su -
+# newrole -r sysadm_r
+# mkdir /usr/local/eal4_testing
+# cd /usr/local/eal4_testing
+# scp user@remote:audit-test-NNNN.tar.gz .
+# gunzip -dc audit-test-NNNN.tar.gz | tar xf -
+
+Configure
+---------
+# make -C audit-test
+
+Switch to permissive mode.
+
+# make -C audit-test/utils/selinux-policy install relabel verify
+# newrole -r lspp_test_r
+
+Switch to back to enforcing mode.
+
+# export PASSWD=<eal password>
+
+Run Tests
+---------
+In main audit-test directory, or in any test sub-directory:
+
+# make run
+
+Dependencies
+------------
+
+audit-test requires the following packages in order to run:
+
+expect
+audit-libs-devel
+
+| Using run.bash
++---------------
+
+From the top level, you just want to use "make run".  The "run" target will
+execute run.bash in each subdirectory then tally the results.
+
+To run an individual set of tests, you can use "make run" or call run.bash.
+Using the latter gives you control over which tests are executed.  For example:
+
+    cd syscalls
+    sudo ./run.bash chown

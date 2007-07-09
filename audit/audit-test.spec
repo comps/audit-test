@@ -1,7 +1,7 @@
 Name:           audit-test
-Version:        1304
+Version:        1938
 Release:        1
-Summary:        Audit testsuite for RHEL4 CAPP evaluation
+Summary:        Audit testsuite for RHEL5 CAPP/LSPP evaluation
 Vendor:         Hewlett-Packard
 Packager:       Aron Griffis <aron@hp.com>
 Source0:        %{name}-%{version}.tar.gz
@@ -9,13 +9,12 @@ License:        GPL v2
 Group:          Development/Tests
 BuildArch:      noarch
 Requires:       audit-libs-devel binutils cpp expect flex gcc gcc-c++ glibc-devel libattr-devel libstdc++-devel make
-Prefix:         /usr/local/eal3_testing
+Prefix:         /usr/local/eal4_testing
 BuildRoot:      %{_tmppath}/%{name}-root
 
 %description
-This is a test suite intended to aid CAPP certification of HP systems running
-RHEL4 U2.  It was originally written by IBM engineers for certification of SLES
-systems, then it was torn apart and mostly rewritten by HP engineers.
+This is a test suite intended to aid CAPP/LSPP certification of HP systems
+running RHEL5.
 
 %prep
 %setup -q -n %{name}

@@ -1,22 +1,19 @@
-This test suite is known to work with RHEL4 Update 2 when
-configured according to the HP Evaluated Configuration Guide.
-It was tested with the x86, x86_64 and ia64 architectures.
-Code exists for other architectures but no other architectures
-have been tested with this version of the test suite.  
+This test suite is known to work with RHEL5 when configured
+according to the HP Evaluated Configuration Guide.  It was tested
+with the x86, x86_64 and ia64 architectures.  Code exists for
+other architectures but no other architectures have been tested
+with this version of the test suite.  
 
 Current TODO items:
 
-- Fix failsafe tests
+- fix all tests to use prepend_cleanup/append_cleanup correctly
 - Add more filesystem audit unit tests: watch persistence, open existing
   file/symlink
-- syscalls tests use bash infrastructure
-- Update tests for LSPP coverage 
-- Introduce stackable test execution modes: capp, lspp, etc. (mostly done)
+- add tests for syscall classes
+- re-write syscalls tests use bash infrastructure in syscalls2
 
 Improvement items:
 
-- Move exit_pass, exit_fail and exit_error to testcase.bash; they aren't
-  intended to be used outside of a testcase
 - Extract audit-specific stuff from run.bash.  The script is mostly generic and
   could be used in any test suite, but presently it has a few audit things in
   it.

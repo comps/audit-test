@@ -80,7 +80,7 @@ Or to build the 32-bit tests on an x86_64 box do:
 # make MODE=32
 
 Relabel test files.
-# make -C audit-test/utils/selinux-policy relabel verify
+# make -C utils/selinux-policy relabel verify
 
 Configure the Labeled Networking Tests
 --------------------------------------

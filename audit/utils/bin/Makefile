@@ -49,13 +49,18 @@ NET_EXE		= do_accept \
 		  do_sendmsg \
 		  do_sendto
 
-ONLY32_EXE	= do_fchown32
+ONLY32_EXE	= do_chown32 \
+		  do_fchown32 \
+		  do_lchown32
 
 ALL_EXE		= $(CREATE_EXE) \
 		  $(IPC_EXE) \
 		  $(MQ_EXE) \
 		  $(NET_EXE) \
 		  do_access \
+		  do_chdir \
+		  do_chmod \
+		  do_chown \
 		  do_dummy \
 		  do_dummy_group \
 		  do_execve \
@@ -67,6 +72,7 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_fsetxattr \
 		  do_getxattr \
 		  do_kill \
+		  do_lchown \
 		  do_lgetxattr \
 		  do_link \
 		  do_linkat \
@@ -88,6 +94,7 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_renameat \
 		  do_rmdir \
 		  do_setxattr \
+		  do_swapon \
 		  do_symlinkat \
 		  do_tgkill \
 		  do_tkill \
@@ -95,7 +102,9 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_truncate64 \
 		  do_unlink \
 		  do_unlinkat \
-		  do_uselib
+		  do_uselib \
+		  do_utime \
+		  do_utimes
 
 ifeq ($(MODE), 32)
 ALL_EXE		+= $(ONLY32_EXE)

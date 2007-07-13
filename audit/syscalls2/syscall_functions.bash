@@ -474,6 +474,17 @@ function create_fs_objects_dac {
         file_exec)
             create_exec target mode="${owner:0:1}+rx"
             name=$target;;
+	file_swap)
+	    create_file target mode="${owner:0:1}+rwx"
+	    name=$target
+
+	    /bin/dd if=/dev/zero of=$target bs=1024 count=1024
+	    /sbin/mkswap $target
+	    prepend_cleanup "swapoff $target"
+
+	    [[ $tag == *fail* ]]  && augrokfunc=augrok_default
+	    ;;
+
         symlink_read)
             create_symlink target mode="${owner:0:1}+r"
             name=$target ;;
@@ -516,6 +527,18 @@ function create_fs_objects_dac {
 		    create_dir base mode=$all
 		    create_file source basedir=$base mode=$all ;;
             esac
+            ;;
+        mount_dir)
+	    create_dir target mode="${owner:0:1}+r"
+	    source=none
+	    flag=tmpfs
+	    name=$target
+
+	    prepend_cleanup "umount $target"
+            ;;
+        dir_exec)
+	    create_dir target mode="${owner:0:1}+rx"
+	    name=$target
             ;;
 
         *) exit_error "unknown perm to test: $p" ;;

@@ -22,18 +22,12 @@ TESTDIR		= ..
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= syscall_test.a
-TESTS_OBJ	= test_access.o \
-		  test_adjtimex.o \
+TESTS_OBJ	= test_adjtimex.o \
 		  test_bind.o \
 		  test_capset.o \
-		  test_chdir.o \
-		  test_chmod.o \
-		  test_chown.o \
 		  test_clock_settime.o \
 		  test_clone.o \
-		  test_creat.o \
 		  test_delete_module.o \
-		  test_execve.o \
 		  test_fork.o \
 		  test_fremovexattr.o \
 		  test_fsetxattr.o \
@@ -41,18 +35,10 @@ TESTS_OBJ	= test_access.o \
 		  test_ioctl.o \
 		  test_ioperm.o \
 		  test_iopl.o \
-		  test_lchown.o \
-		  test_link.o \
 		  test_lremovexattr.o \
 		  test_lsetxattr.o \
-		  test_mkdir.o \
-		  test_mknod.o \
-		  test_mount.o \
-		  test_open.o \
 		  test_ptrace.o \
 		  test_removexattr.o \
-		  test_rename.o \
-		  test_rmdir.o \
 		  test_setfsgid.o \
 		  test_setfsuid.o \
 		  test_setgid.o \
@@ -65,12 +51,7 @@ TESTS_OBJ	= test_access.o \
 		  test_setuid.o \
 		  test_setxattr.o \
 		  test_stime.o \
-		  test_swapon.o \
-		  test_symlink.o \
-		  test_truncate.o \
-		  test_umask.o \
-		  test_unlink.o \
-		  test_utime.o
+		  test_umask.o
 
 ALL_OBJ		= $(TESTS_OBJ)
 ALL_AR		= $(TESTS_AR)

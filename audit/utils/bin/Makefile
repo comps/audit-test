@@ -26,13 +26,16 @@ CREATE_EXE	= do_creat\
 		  do_symlink
 
 IPC_EXE		= do_ipc \
+		  do_msgctl \
 		  do_msgget \
 		  do_msgrcv \
 		  do_msgsnd \
+		  do_semctl \
 		  do_semget \
 		  do_semop \
 		  do_semtimedop \
 		  do_shmat \
+		  do_shmctl \
 		  do_shmget
 
 MQ_EXE		= do_mq_open \

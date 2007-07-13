@@ -24,8 +24,9 @@
 
 int check_ipc_usage(char *call, int nargs)
 {
-    if (!strcmp(call, "msgget") || !strcmp(call, "semget") ||
-	!strcmp(call, "shmget")) {
+    if (!strcmp(call, "msgctl") || !strcmp(call, "msgget") ||
+	!strcmp(call, "semctl") || !strcmp(call, "semget") ||
+	!strcmp(call, "shmctl") | !strcmp(call, "shmget")) {
 	if (nargs != 3) {
 	    fprintf(stderr, "%s <ipc_key> <flag>\n", call);
 	    return 1;
@@ -69,8 +70,12 @@ int translate_ipc_flags(char *string, int *flags)
 	*flags |= S_IWUSR;
     else if (!strcmp(string, "rdwr"))
 	*flags |= S_IRUSR|S_IWUSR;
+    else if (!strcmp(string, "remove"))
+	*flags |= IPC_RMID;
+    else if (!strcmp(string, "set"))
+	*flags |= IPC_SET;
     else {
-	fprintf(stderr, "ipc flag must be one of <create|read|write|rdwr>\n");
+	fprintf(stderr, "ipc flag must be one of <create|read|write|rdwr|remove|set>\n");
 	return 1;
     }
 
@@ -107,18 +112,24 @@ int translate_shm_flags(char *string, int *flags)
 
 int translate_ipc_op(char *string, int *op)
 {
-    if (!strcmp(string, "msgget"))
+    if (!strcmp(string, "msgctl"))
+	*op = MSGCTL;
+    else if (!strcmp(string, "msgget"))
 	*op = MSGGET;
     else if (!strcmp(string, "msgrcv"))
 	*op = MSGRCV;
     else if (!strcmp(string, "msgsnd"))
 	*op = MSGSND;
+    else if (!strcmp(string, "semctl"))
+	*op = SEMCTL;
     else if (!strcmp(string, "semget"))
 	*op = SEMGET;
     else if (!strcmp(string, "semop"))
 	*op = SEMOP;
     else if (!strcmp(string, "semtimedop"))
 	*op = SEMTIMEDOP;
+    else if (!strcmp(string, "shmctl"))
+	*op = SHMCTL;
     else if (!strcmp(string, "shmget"))
 	*op = SHMGET;
     else if (!strcmp(string, "shmat"))
@@ -129,6 +140,24 @@ int translate_ipc_op(char *string, int *op)
     }
 
     return 0;
+}
+
+int do_msgctl(int msqid, int cmd)
+{
+    struct msqid_ds buf;
+    int ret = -1;
+
+    switch (cmd) {
+    case IPC_RMID:
+	ret = msgctl(msqid, cmd, NULL);
+	break;
+    case IPC_SET:
+	memset(&buf, 0, sizeof(buf));
+	buf.msg_perm.uid = 0; /* use root's uid */
+	ret = msgctl(msqid, cmd, &buf);
+	break;
+    }
+    return ret;
 }
 
 int do_msgget(key_t key, int flags)
@@ -175,6 +204,24 @@ int do_msgsnd(int msqid, long msgtype, char *msg)
     return exitval;
 }
 
+int do_semctl(int semid, int cmd)
+{
+    struct semid_ds buf;
+    int ret = -1;
+
+    switch (cmd) {
+    case IPC_RMID:
+	ret = semctl(semid, 1, cmd, NULL);
+	break;
+    case IPC_SET:
+	memset(&buf, 0, sizeof(buf));
+	buf.sem_perm.uid = 0; /* use root's uid */
+	ret = semctl(semid, 1, cmd, &buf);
+	break;
+    }
+    return ret;
+}
+
 int do_semget(key_t key, int flags)
 {
     /* number of semaphores = 1 */
@@ -204,6 +251,24 @@ int do_semtimedop(int semid, int op)
 
     /* number of semaphores = 1 */
     return semtimedop(semid, &sops, 1, &timeout);
+}
+
+int do_shmctl(int shmid, int cmd)
+{
+    struct shmid_ds buf;
+    int ret = -1;
+
+    switch (cmd) {
+    case IPC_RMID:
+	ret = shmctl(shmid, cmd, NULL);
+	break;
+    case IPC_SET:
+	memset(&buf, 0, sizeof(buf));
+	buf.shm_perm.uid = 0; /* use root's uid */
+	ret = shmctl(shmid, cmd, &buf);
+	break;
+    }
+    return ret;
 }
 
 int do_shmget(key_t key, int flags)

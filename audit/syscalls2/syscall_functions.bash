@@ -102,6 +102,15 @@ function augrok_default {
         "$@"
 }
 
+# used for 32-bit shmat() success testcases:
+# don't check the exit value because the arch code gives 0 to the audit hook
+function augrok_no_exit {
+    augrok --seek=$log_mark -m1 type==SYSCALL \
+        syscall=$syscall success=$success pid=$pid auid=$(</proc/self/loginuid) \
+        uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
+        gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid
+}
+
 function augrok_name {
     augrok_default name=$name
 }
@@ -524,6 +533,34 @@ function create_fs_objects_dac {
     # augrok setup
     [[ -z $augrokfunc ]] && augrokfunc=augrok_name
     [[ $syscall == f* ]] && augrokfunc=augrok_default
+}
+
+function create_ipc_objects_dac {
+    declare p=$1 type=${1%_*}
+    declare msg_type=1
+
+    create_${type} target
+    flag=${1##*_} # set operation flag
+
+    # special setup for sending/recving messages
+    case $p in
+	*_send)
+	    flag=$msg_type ;;
+	*_recv)
+	    declare result
+
+	    flag=$msg_type
+	    # always use do_msgsnd regardless of whether the syscall is ipc() or
+	    # msgrcv() -- it's using a library call, so it works. we have a
+	    # do_ipc utility purely because the harness wants to find a
+	    # do_$syscall binary.
+	    read result foo bar \
+		<<<"$(do_msgsnd $target $flag 'test message')"
+	    [[ $result == 0 ]] || exit_error "could not send initial message" ;;
+    esac
+
+    # augrok setup
+    [[ -z $augrokfunc ]] && augrokfunc=augrok_default
 }
 
 ######################################################################

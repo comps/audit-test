@@ -38,8 +38,11 @@ int main(int argc, char **argv)
 	return 1;
 
     switch (op) {
+    case MSGCTL:
     case MSGGET:
+    case SEMCTL:
     case SEMGET:
+    case SHMCTL:
     case SHMGET:
 	if (translate_ipc_flags(argv[3], &flags))
 	    return 1;
@@ -57,6 +60,9 @@ int main(int argc, char **argv)
 
     errno = 0;
     switch (op) {
+    case MSGCTL:
+	exitval = do_msgctl(atoi(argv[2]), flags);
+	break;
     case MSGGET:
 	exitval = do_msgget(atoi(argv[2]), flags);
 	break;
@@ -66,6 +72,9 @@ int main(int argc, char **argv)
     case MSGSND:
 	exitval = do_msgsnd(atoi(argv[2]), atoi(argv[3]), argv[4]);
 	break;
+    case SEMCTL:
+	exitval = do_semctl(atoi(argv[2]), flags);
+	break;
     case SEMGET:
 	exitval = do_semget(atoi(argv[2]), flags);
 	break;
@@ -74,6 +83,9 @@ int main(int argc, char **argv)
 	break;
     case SEMTIMEDOP:
 	exitval = do_semtimedop(atoi(argv[2]), flags);
+	break;
+    case SHMCTL:
+	exitval = do_shmctl(atoi(argv[2]), flags);
 	break;
     case SHMGET:
 	exitval = do_shmget(atoi(argv[2]), flags);

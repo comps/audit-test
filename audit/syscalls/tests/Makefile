@@ -48,18 +48,11 @@ TESTS_OBJ	= test_access.o \
 		  test_mkdir.o \
 		  test_mknod.o \
 		  test_mount.o \
-		  test_msgctl.o \
-		  test_msgget.o \
-		  test_msgsnd.o \
-		  test_msgrcv.o \
 		  test_open.o \
 		  test_ptrace.o \
 		  test_removexattr.o \
 		  test_rename.o \
 		  test_rmdir.o \
-		  test_semctl.o \
-		  test_semget.o \
-		  test_semops.o \
 		  test_setfsgid.o \
 		  test_setfsuid.o \
 		  test_setgid.o \
@@ -71,9 +64,6 @@ TESTS_OBJ	= test_access.o \
 		  test_settimeofday.o \
 		  test_setuid.o \
 		  test_setxattr.o \
-		  test_shmat.o \
-		  test_shmctl.o \
-		  test_shmget.o \
 		  test_stime.o \
 		  test_swapon.o \
 		  test_symlink.o \

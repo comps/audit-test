@@ -34,7 +34,7 @@ source tp_selinux_functions.bash
 cleanup_policy
 
 # configure to cleanup at test exit 
-append_cleanup cleanup_policy
+prepend_cleanup cleanup_policy
 
 log_mark=$(stat -c %s $audit_log)
 

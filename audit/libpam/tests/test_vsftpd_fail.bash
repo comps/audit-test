@@ -23,7 +23,7 @@
 source pam_functions.bash || exit 2
 
 # setup
-append_cleanup "initcall $vsftpd_init restart"
+prepend_cleanup "initcall $vsftpd_init restart"
 backup "$vsftpd_conf"
 write_config \
       "$vsftpd_conf" \

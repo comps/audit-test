@@ -285,7 +285,7 @@ function create_dir {
     eval "$(parse_named "$@")" || exit_error
 
     tmpd=$(mktemp -d ${basedir:+-p $basedir}) || exit_error
-    append_cleanup "rm -rf $tmpd"
+    prepend_cleanup "rm -rf $tmpd"
     [[ -n $mode ]] && { chmod 600 $tmpd ; chmod $mode $tmpd; }
     [[ -n $context ]] && set_fsobj_label $tmpd $(get_context_label $context)
     eval "$var=\$tmpd" || exit_error
@@ -298,7 +298,7 @@ function create_exec {
     eval "$(parse_named "$@")" || exit_error
 
     tmpf=$(mktemp ${basedir:+-p $basedir}) || exit_error
-    append_cleanup "rm -f $tmpf"
+    prepend_cleanup "rm -f $tmpf"
     cp /bin/true $tmpf || exit_error
     chmod ${mode:-"u+x"} $tmpf
     [[ -n $context ]] && set_fsobj_label $tmpf $(get_context_label $context)
@@ -312,7 +312,7 @@ function create_file {
     eval "$(parse_named "$@")" || exit_error
 
     tmpf=$(mktemp ${basedir:+-p $basedir}) || exit_error
-    append_cleanup "rm -f $tmpf"
+    prepend_cleanup "rm -f $tmpf"
     [[ -n $mode ]] && { chmod 600 $tmpf ; chmod $mode $tmpf; }
     [[ -n $context ]] && set_fsobj_label $tmpf $(get_context_label $context)
     eval "$var=\$tmpf" || exit_error
@@ -325,7 +325,7 @@ function create_symlink {
     eval "$(parse_named "$@")" || exit_error
 
     tmpd=$(mktemp -d ${basedir:+-p $basedir}) || exit_error
-    append_cleanup "rm -rf $tmpd"
+    prepend_cleanup "rm -rf $tmpd"
 
     symlink="$tmpd/symlink"
     ln -s $tmp1 $symlink
@@ -339,7 +339,7 @@ function create_msg_key {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
-    append_cleanup "ipcrm -Q $ipc_key"
+    prepend_cleanup "ipcrm -Q $ipc_key"
     ${context:+runcon $context} $(which do_msgget) $ipc_key create || exit_error
     eval "$var=\$ipc_key"
 }
@@ -350,7 +350,7 @@ function create_msg_id {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
-    append_cleanup "ipcrm -Q $ipc_key"
+    prepend_cleanup "ipcrm -Q $ipc_key"
     read result id foo <<<"$(${context:+runcon $context} $(which do_msgget) $ipc_key create)"
     [[ $result == 0 ]] || exit_error "could not create message queue"
 
@@ -363,7 +363,7 @@ function create_sem_key {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
-    append_cleanup "ipcrm -S $ipc_key"
+    prepend_cleanup "ipcrm -S $ipc_key"
     ${context:+runcon $context} $(which do_semget) $ipc_key create || exit_error
     eval "$var=\$ipc_key"
 }
@@ -374,7 +374,7 @@ function create_sem_id {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
-    append_cleanup "ipcrm -S $ipc_key"
+    prepend_cleanup "ipcrm -S $ipc_key"
     read result id foo <<<"$(${context:+runcon $context} $(which do_semget) $ipc_key create)"
     [[ $result == 0 ]] || exit_error "could not create semaphore set"
 
@@ -388,7 +388,7 @@ function create_shm_key {
     eval "$(parse_named "$@")" || exit_error
 
     ${context:+runcon $context} $(which do_shmget) $ipc_key create || exit_error
-    append_cleanup "ipcrm -M $ipc_key"
+    prepend_cleanup "ipcrm -M $ipc_key"
     eval "$var=\$ipc_key"
 }
 
@@ -398,7 +398,7 @@ function create_shm_id {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
-    append_cleanup "ipcrm -M $ipc_key"
+    prepend_cleanup "ipcrm -M $ipc_key"
     read result id foo <<<"$(${context:+runcon $context} $(which do_shmget) $ipc_key create)"
     [[ $result == 0 ]] || exit_error "could not create shared memory segment"
 
@@ -414,7 +414,7 @@ function create_mq {
     ${context:+runcon $context} $(which do_mq_open) "/$mq_name" create \
         || exit_error
 
-    append_cleanup "${context:+runcon $context} $(which do_mq_unlink) "/$mq_name""
+    prepend_cleanup "${context:+runcon $context} $(which do_mq_unlink) "/$mq_name""
     eval "$var=\$mq_name"
 }
 
@@ -424,7 +424,7 @@ function create_mq_name {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
-    append_cleanup "${context:+runcon $context} $(which do_mq_unlink) "/$mq_name""
+    prepend_cleanup "${context:+runcon $context} $(which do_mq_unlink) "/$mq_name""
     eval "$var=\$mq_name"
 }
 
@@ -437,7 +437,7 @@ function create_process {
     ${context:+runcon $context} $(which do_dummy) &
     mypid=$!
 
-    append_cleanup "kill -SIGKILL $mypid"
+    prepend_cleanup "kill -SIGKILL $mypid"
     eval "$var=\$mypid"
 }
 
@@ -451,7 +451,7 @@ function create_pgrp {
     sleep 1 # let do_dummy_group get started
     mypgid=$(ps --no-headers -C do_dummy_group -o pgid | head -n1)
 
-    append_cleanup "killall -SIGKILL do_dummy_group"
+    prepend_cleanup "killall -SIGKILL do_dummy_group"
     eval "$var=\$mypgid"
 }
 

@@ -93,12 +93,12 @@ function ipsec_add {
     # add a SPD entry
     setkey -c <<< $spd_add_cmd &> /dev/null
     [[ $? != 0 ]] && exit_error "unable to perform the spdadd operation"
-    append_cleanup "echo '$spd_del_cmd' | setkey -c &> /dev/null"
+    prepend_cleanup "echo '$spd_del_cmd' | setkey -c &> /dev/null"
 
     # add a SAD entry
     setkey -c <<< $sad_add_cmd &> /dev/null
     [[ $? != 0 ]] && exit_error "unable to perform the add operation"
-    append_cleanup "echo '$sad_del_cmd' | setkey -c &> /dev/null"
+    prepend_cleanup "echo '$sad_del_cmd' | setkey -c &> /dev/null"
 }
 
 #

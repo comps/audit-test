@@ -44,7 +44,7 @@ source tp_selinux_functions.bash
 cleanup_policy
 
 # configure to cleanup at test exit 
-append_cleanup cleanup_policy
+prepend_cleanup cleanup_policy
 
 set -x
 # load the policy module that gives no access

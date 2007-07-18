@@ -68,7 +68,7 @@ rm -rf $tmpinstdir/*_$TEST_USER
 
 # Force the audit log to rotate; add our rule.
 rotate_audit_logs || exit_error "log rotate failed"
-append_cleanup "auditctl -D"
+prepend_cleanup "auditctl -D"
 auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S open -F uid=$auid || \
 	exit_error "audit rule failed"
 

@@ -43,7 +43,7 @@ function setup_bool {
 
     orig=$(getsebool $bool | awk '{print $3}')
     orig=$(resolve_bool $orig)
-    append_cleanup "setsebool $bool $orig"
+    prepend_cleanup "setsebool $bool $orig"
 
     # the starting value for the boolean must be the opposite of what
     # we're testing, otherwise there will be no audit record

@@ -66,12 +66,12 @@ unset log_mark
 # DESCRIPTION
 # This function saves the state of the NetLabel unlabeled allow flag so that
 # the current setting can be restored later after the test has been run.  It
-# also registes a restore command with the append_cleanup() function so that
+# also registes a restore command with the prepend_cleanup() function so that
 # the state is restored automatically when this test exits.
 #
 function netlabel_save {
     nlbl_unlbl_allow=$(netlabelctl unlbl list)
-    append_cleanup "netlabelctl unlbl accept $nlbl_unlbl_allow"
+    prepend_cleanup "netlabelctl unlbl accept $nlbl_unlbl_allow"
 }
 
 #
@@ -95,7 +95,7 @@ function netlabel_add {
     [[ $? != 0 ]] && exit_error "unable to perform the add operation"
     # note: this will remove the LSM mapping below if it exists because once
     #       the DOI definition is removed it no longer has any meaning
-    append_cleanup "netlabelctl cipsov4 del doi:6000 &> /dev/null"
+    prepend_cleanup "netlabelctl cipsov4 del doi:6000 &> /dev/null"
 
     # add a LSM/SELinux domain mapping
     netlabelctl map add domain:"foo_t" protocol:cipsov4,6000 &> /dev/null

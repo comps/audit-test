@@ -67,9 +67,9 @@ source tp_context_functions.bash
 cleanup_context_policy
 
 # configure to cleanup at test exit 
-append_cleanup cleanup_context_policy
-append_cleanup rm -rf $testbase
-append_cleanup auditctl -D
+prepend_cleanup auditctl -D
+prepend_cleanup rm -rf $testbase
+prepend_cleanup cleanup_context_policy
 
 set -x
 

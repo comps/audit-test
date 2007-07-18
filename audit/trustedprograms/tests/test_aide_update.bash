@@ -28,7 +28,7 @@
 source testcase.bash || exit 2
 
 # setup
-append_cleanup rm -f aide-local.conf aide.db.new.gz aide.db.gz aide.log
+prepend_cleanup rm -f aide-local.conf aide.db.new.gz aide.db.gz aide.log
 cat > aide-local.conf << EOF
 # Sample aide.conf for audit testing
 
@@ -50,7 +50,7 @@ LSPP = R+sha256
 EOF
 
 modified=../aide-testfile
-append_cleanup rm $modified
+prepend_cleanup rm $modified
 touch $modified
 
 runcon -l SystemHigh -- aide -c ./aide-local.conf -i

@@ -102,7 +102,7 @@ set -x
 
 # setup audit
 auditctl -a entry,always -S execve
-append_cleanup "auditctl -d entry,always -S execve"
+prepend_cleanup "auditctl -d entry,always -S execve"
 
 # run the test with various labels
 for iter in "s3" "s4" "s5" "s5:c1" "s5:c1.c5"; do

@@ -25930,8 +25930,8 @@ setup_cupsd
 create_socket_printer $PRINTER
 
 chcon $FILECON $INFILE
-append_cleanup rm $INFILE $OUTFILE $LABELED
-append_cleanup delete_printer $PRINTER
+prepend_cleanup delete_printer $PRINTER
+prepend_cleanup rm $INFILE $OUTFILE $LABELED
 
 # test
 runcon $EXECCON -- /usr/bin/lpr -P $PRINTER -o job-id=$JOBNO $INFILE

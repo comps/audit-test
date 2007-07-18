@@ -32,10 +32,10 @@ EXECCON=staff_u:lspp_test_r:lspp_test_generic_t:SystemLow-Unclassified
 PRINTERCON=Secret
 SAVEDCON=`ls -lZ $PRINTERDEV | awk '{print $4}'`
 
-append_cleanup delete_printer $PRINTER
+prepend_cleanup delete_printer $PRINTER
 create_parallel_printer $PRINTER $PRINTERDEV
 
-append_cleanup chcon $SAVEDCON $PRINTERDEV
+prepend_cleanup chcon $SAVEDCON $PRINTERDEV
 chcon -l $PRINTERCON $PRINTERDEV
 
 # test

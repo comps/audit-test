@@ -488,9 +488,30 @@ function create_fs_objects_dac {
         symlink_read)
             create_symlink target mode="${owner:0:1}+r"
             name=$target ;;
+
 	priv_modify)
 	    create_file target mode=$all
 	    name=$target ;;
+
+        xattr_*)
+	    declare action=${perm##*_}
+
+            create_file target mode="${owner:0:1}+rw"
+	    chmod a+r $target
+            name=$target
+
+	    case $flag in
+		*mime_type)
+		    flag=user.mime_type
+		    value="text/plain"
+		    if [[ $action == remove ]]; then
+			read result foo bar \
+			    <<<"$(do_setxattr $target $flag "$value")"
+			[[ $result == 0 ]] || exit_error "could not initialize xattr"
+		    fi
+		    ;;
+	    esac
+	    ;;
 
         # changes to directory entries
         dir_add_name)
@@ -665,6 +686,21 @@ function create_fs_objects_mac {
             create_symlink target context=$obj
             name=$target ;;
 
+        xattr_*)
+	    declare action=${perm##*_}
+
+            create_file target mode="${owner:0:1}+rw"
+	    chmod a+r $target
+            name=$target
+
+	    case $flag in
+		*selinux)
+		    flag=security.selinux
+		    value=$(cat /proc/self/attr/current)
+		    ;;
+	    esac
+	    ;;
+
         # changes to directory entries
         dir_add_name)
             create_dir base context=$obj
@@ -744,6 +780,7 @@ function create_fs_objects_mac {
 
     # augrok setup
     [[ -z $augrokfunc ]] && augrokfunc=augrok_mls_name_label
+    [[ $syscall == f* ]] && augrokfunc=augrok_default
 }
 
 function create_ipc_objects_mac {

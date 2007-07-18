@@ -29,16 +29,11 @@ TESTS_OBJ	= test_adjtimex.o \
 		  test_clone.o \
 		  test_delete_module.o \
 		  test_fork.o \
-		  test_fremovexattr.o \
-		  test_fsetxattr.o \
 		  test_init_module.o \
 		  test_ioctl.o \
 		  test_ioperm.o \
 		  test_iopl.o \
-		  test_lremovexattr.o \
-		  test_lsetxattr.o \
 		  test_ptrace.o \
-		  test_removexattr.o \
 		  test_setfsgid.o \
 		  test_setfsuid.o \
 		  test_setgid.o \
@@ -49,7 +44,6 @@ TESTS_OBJ	= test_adjtimex.o \
 		  test_setreuid.o \
 		  test_settimeofday.o \
 		  test_setuid.o \
-		  test_setxattr.o \
 		  test_stime.o \
 		  test_umask.o
 

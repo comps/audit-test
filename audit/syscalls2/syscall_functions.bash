@@ -93,7 +93,7 @@ function setpid {
 ######################################################################
 # custom test functions
 ######################################################################
-function test_cap_default {
+function test_su_default {
     # use $tag instead of $expres to work around the cases
     # where a success is an expected failure.
     if [[ $tag == *success* ]]; then
@@ -108,38 +108,7 @@ function test_cap_default {
     fi
 }
 
-function test_cap_setxattr {
-    # use $tag instead of $expres to work around the cases
-    # where a success is an expected failure.
-    if [[ $tag == *success* ]]; then
-	read testres exitval pid \
-	    <<<"$(do_$syscall $op $target $flag "$msg")"
-    else
-	# use single quotes so $$ doesn't expand early
-	read uid euid suid fsuid gid egid sgid fsgid \
-	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
-	read testres exitval pid \
-	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $target $flag $value")"
-    fi
-}
-
-
-function test_dac_default {
-    # use $tag instead of $expres to work around the cases
-    # where a success is an expected failure.
-    if [[ $tag == *success* ]]; then
-	read testres exitval pid \
-	    <<<"$(do_$syscall $op $dirname $source $target $flag)"
-    else
-	# use single quotes so $$ doesn't expand early
-	read uid euid suid fsuid gid egid sgid fsgid \
-	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
-	read testres exitval pid \
-	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $op $dirname $source $target $flag")"
-    fi
-}
-
-function test_dac_msg_send {
+function test_su_msg_send {
     # use $tag instead of $expres to work around the cases
     # where a success is an expected failure.
     if [[ $tag == *success* ]]; then
@@ -154,7 +123,7 @@ function test_dac_msg_send {
     fi
 }
 
-function test_dac_setxattr {
+function test_su_setxattr {
     # use $tag instead of $expres to work around the cases
     # where a success is an expected failure.
     if [[ $tag == *success* ]]; then
@@ -169,25 +138,17 @@ function test_dac_setxattr {
     fi
 }
 
-function test_mac_default {
+function test_runcon_default {
     read testres exitval pid \
 	<<<"$(runcon $subj -- do_$syscall $op $dirname $source $target $flag $setcontext)"
 }
 
-function test_mac_kill_pgrp {
+function test_runcon_kill_pgrp {
     read testres exitval pid <<<"$(runcon $subj -- do_$syscall $target $flag group)"
 }
 
-function test_mac_msg_send {
+function test_runcon_msg_send {
     read testres exitval pid <<<"$(runcon $subj -- do_$syscall $op $target $flag "$msg")"
-}
-
-function test_mac_setxattr {
-    # use single quotes so $$ doesn't expand early
-    read uid euid suid fsuid gid egid sgid fsgid \
-	<<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
-    read testres exitval pid \
-	<<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $target $flag $value")"
 }
 
 ######################################################################

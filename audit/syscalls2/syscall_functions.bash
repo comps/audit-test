@@ -42,7 +42,7 @@ set -x
 #       run_test(), so declare them with "declare"
 
 # test utility args
-declare op dirname source target flag setcontext
+declare op dirname source target flag setcontext msg value
 
 # audit record fields
 declare log_mark syscall success pid auid exitval name
@@ -128,7 +128,7 @@ function test_su_setxattr {
     # where a success is an expected failure.
     if [[ $tag == *success* ]]; then
 	read testres exitval pid \
-	    <<<"$(do_$syscall $op $target $flag "$msg")"
+	    <<<"$(do_$syscall $target $flag $value)"
     else
 	# use single quotes so $$ doesn't expand early
 	read uid euid suid fsuid gid egid sgid fsgid \

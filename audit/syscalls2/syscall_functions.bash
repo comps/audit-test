@@ -91,6 +91,106 @@ function setpid {
 }
 
 ######################################################################
+# custom test functions
+######################################################################
+function test_cap_default {
+    # use $tag instead of $expres to work around the cases
+    # where a success is an expected failure.
+    if [[ $tag == *success* ]]; then
+	read testres exitval pid \
+	    <<<"$(do_$syscall $op $dirname $source $target $flag)"
+    else
+	# use single quotes so $$ doesn't expand early
+	read uid euid suid fsuid gid egid sgid fsgid \
+	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
+	read testres exitval pid \
+	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $op $dirname $source $target $flag")"
+    fi
+}
+
+function test_cap_setxattr {
+    # use $tag instead of $expres to work around the cases
+    # where a success is an expected failure.
+    if [[ $tag == *success* ]]; then
+	read testres exitval pid \
+	    <<<"$(do_$syscall $op $target $flag "$msg")"
+    else
+	# use single quotes so $$ doesn't expand early
+	read uid euid suid fsuid gid egid sgid fsgid \
+	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
+	read testres exitval pid \
+	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $target $flag $value")"
+    fi
+}
+
+
+function test_dac_default {
+    # use $tag instead of $expres to work around the cases
+    # where a success is an expected failure.
+    if [[ $tag == *success* ]]; then
+	read testres exitval pid \
+	    <<<"$(do_$syscall $op $dirname $source $target $flag)"
+    else
+	# use single quotes so $$ doesn't expand early
+	read uid euid suid fsuid gid egid sgid fsgid \
+	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
+	read testres exitval pid \
+	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $op $dirname $source $target $flag")"
+    fi
+}
+
+function test_dac_msg_send {
+    # use $tag instead of $expres to work around the cases
+    # where a success is an expected failure.
+    if [[ $tag == *success* ]]; then
+	read testres exitval pid \
+	    <<<"$(do_$syscall $op $target $flag "$msg")"
+    else
+	# use single quotes so $$ doesn't expand early
+	read uid euid suid fsuid gid egid sgid fsgid \
+	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
+	read testres exitval pid \
+	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $op $target $flag "$msg"")"
+    fi
+}
+
+function test_dac_setxattr {
+    # use $tag instead of $expres to work around the cases
+    # where a success is an expected failure.
+    if [[ $tag == *success* ]]; then
+	read testres exitval pid \
+	    <<<"$(do_$syscall $op $target $flag "$msg")"
+    else
+	# use single quotes so $$ doesn't expand early
+	read uid euid suid fsuid gid egid sgid fsgid \
+	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
+	read testres exitval pid \
+	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $target $flag $value")"
+    fi
+}
+
+function test_mac_default {
+    read testres exitval pid \
+	<<<"$(runcon $subj -- do_$syscall $op $dirname $source $target $flag $setcontext)"
+}
+
+function test_mac_kill_pgrp {
+    read testres exitval pid <<<"$(runcon $subj -- do_$syscall $target $flag group)"
+}
+
+function test_mac_msg_send {
+    read testres exitval pid <<<"$(runcon $subj -- do_$syscall $op $target $flag "$msg")"
+}
+
+function test_mac_setxattr {
+    # use single quotes so $$ doesn't expand early
+    read uid euid suid fsuid gid egid sgid fsgid \
+	<<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
+    read testres exitval pid \
+	<<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $target $flag $value")"
+}
+
+######################################################################
 # common augrok functions
 ######################################################################
 
@@ -456,24 +556,26 @@ function create_pgrp {
 }
 
 ######################################################################
-# DAC functions for creating test objects
+# CAP functions for creating test objects
 ######################################################################
 
-function create_fs_objects_dac {
+function create_fs_objects_cap {
     declare p=$1 base all="a+rwx"
 
     case $p in
+        dir_mount)
+	    create_dir target mode="${owner:0:1}+r"
+	    source=none
+	    flag=tmpfs
+	    name=$target
 
-        # changes to files/dirs (tested object is always the target)
-        file_read)
-            create_file target mode="${owner:0:1}+r"
-            name=$target;;
-        file_write)
-            create_file target mode="${owner:0:1}+rw"
-            name=$target;;
-        file_exec)
-            create_exec target mode="${owner:0:1}+rx"
-            name=$target;;
+	    prepend_cleanup "umount $target"
+            ;;
+
+	file_priv)
+	    create_file target mode=$all
+	    name=$target ;;
+
 	file_swap)
 	    create_file target mode="${owner:0:1}+rwx"
 	    name=$target
@@ -485,13 +587,88 @@ function create_fs_objects_dac {
 	    [[ $tag == *fail* ]]  && augrokfunc=augrok_default
 	    ;;
 
+	secattr_*)
+	    declare action=${perm##*_}
+
+            create_file target mode="${owner:0:1}+rw"
+            name=$target
+	    chmod a+r $target
+
+	    flag=security.selinux
+	    [[ $action == set ]] && value=$(cat /proc/self/attr/current)
+	    ;;
+
+        *) exit_error "unknown perm to test: $p" ;;
+    esac
+
+    # special handling for *at syscalls
+    if [[ -n $at ]]; then
+	dirname=$target
+	while [[ $dirname == /*/* ]]; do dirname=${dirname%/*}; done
+	[[ -n $source ]] && source=${source#/*/}
+	target=${target#/*/}
+	name=${name#/*/}
+    fi
+
+    # augrok setup
+    [[ -z $augrokfunc ]] && augrokfunc=augrok_name
+    [[ $syscall == f* ]] && augrokfunc=augrok_default
+}
+
+function create_ipc_objects_cap {
+    declare p=$1 type=${1%_*}
+    declare msg_type=1
+
+    create_${type} target
+    flag=${1##*_} # set operation flag
+
+    # augrok setup
+    [[ -z $augrokfunc ]] && augrokfunc=augrok_default
+}
+
+function create_process_objects_cap {
+    declare p=$1
+
+    case $p in
+        process_attach)
+            create_process target context=$obj
+            opid=$target ;;
+        *) exit_error "unknown perm to test: $p" ;;
+    esac
+
+    # set test operation flag
+    flag=${p##*_}
+
+    augrokfunc=augrok_mls_opid_label
+}
+
+######################################################################
+# DAC functions for creating test objects
+######################################################################
+
+function create_fs_objects_dac {
+    declare p=$1 base all="a+rwx"
+
+    case $p in
+
+        # changes to files/dirs (tested object is always the target)
+        dir_exec)
+	    create_dir target mode="${owner:0:1}+rx"
+	    name=$target ;;
+
+        file_read)
+            create_file target mode="${owner:0:1}+r"
+            name=$target;;
+        file_write)
+            create_file target mode="${owner:0:1}+rw"
+            name=$target;;
+        file_exec)
+            create_exec target mode="${owner:0:1}+rx"
+            name=$target;;
+
         symlink_read)
             create_symlink target mode="${owner:0:1}+r"
             name=$target ;;
-
-	priv_modify)
-	    create_file target mode=$all
-	    name=$target ;;
 
         xattr_*)
 	    declare action=${perm##*_}
@@ -548,18 +725,6 @@ function create_fs_objects_dac {
 		    create_dir base mode=$all
 		    create_file source basedir=$base mode=$all ;;
             esac
-            ;;
-        mount_dir)
-	    create_dir target mode="${owner:0:1}+r"
-	    source=none
-	    flag=tmpfs
-	    name=$target
-
-	    prepend_cleanup "umount $target"
-            ;;
-        dir_exec)
-	    create_dir target mode="${owner:0:1}+rx"
-	    name=$target
             ;;
 
         *) exit_error "unknown perm to test: $p" ;;
@@ -651,11 +816,19 @@ function create_fs_objects_mac {
             name=$source ;;
 
         # changes to files/dirs (tested object is always the target)
+        dir_mount)
+	    create_dir target context=$obj
+	    source=none
+	    flag=tmpfs
+	    name=$target
+
+	    prepend_cleanup "umount $target" ;;
         dir_rmdir)
 	    create_dir base context=$subj
 	    [[ -n $which ]] && create_dir source basedir=$base context=$subj
 	    create_dir target basedir=$base context=$obj
             name=$target ;;
+
         file_unlink)
 	    create_dir base context=$subj
 	    [[ -n $which ]] && create_file source basedir=$base context=$subj
@@ -685,21 +858,6 @@ function create_fs_objects_mac {
         symlink_read)
             create_symlink target context=$obj
             name=$target ;;
-
-        xattr_*)
-	    declare action=${perm##*_}
-
-            create_file target mode="${owner:0:1}+rw"
-	    chmod a+r $target
-            name=$target
-
-	    case $flag in
-		*selinux)
-		    flag=security.selinux
-		    value=$(cat /proc/self/attr/current)
-		    ;;
-	    esac
-	    ;;
 
         # changes to directory entries
         dir_add_name)
@@ -751,14 +909,6 @@ function create_fs_objects_mac {
 		    create_dir base context=$subj
 		    create_file source basedir=$base context=$subj ;;
             esac
-            ;;
-        mount_dir)
-	    create_dir target context=$obj
-	    source=none
-	    flag=tmpfs
-	    name=$target
-
-	    prepend_cleanup "umount $target"
             ;;
 
         *) exit_error "unknown perm to test: $p" ;;

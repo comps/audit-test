@@ -21,9 +21,13 @@ CPPFLAGS	+= -I$(TOPDIR)/include
 
 CREATE_EXE	= do_creat\
 		  do_mkdir \
+		  do_mkdirat \
 		  do_mknod \
+		  do_mknodat \
 		  do_open \
-		  do_symlink
+		  do_openat \
+		  do_symlink \
+		  do_symlinkat
 
 IPC_EXE		= do_ipc \
 		  do_msgctl \
@@ -82,10 +86,7 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_loop_clear \
 		  do_lremovexattr \
 		  do_lsetxattr \
-		  do_mkdirat \
-		  do_mknodat \
 		  do_mount \
-		  do_openat \
 		  do_ptrace \
 		  do_readlink \
 		  do_readlinkat \
@@ -95,7 +96,6 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_rmdir \
 		  do_setxattr \
 		  do_swapon \
-		  do_symlinkat \
 		  do_tgkill \
 		  do_tkill \
 		  do_truncate \
@@ -113,8 +113,7 @@ endif
 include $(TOPDIR)/rules.mk
 
 $(CREATE_EXE): LDLIBS += -lselinux
-$(MQ_EXE): LDLIBS += -lrt
-$(ALL_EXE): LDLIBS += -lselinux
+$(MQ_EXE): LDLIBS += -lrt -lselinux
 
 all: $(ALL_EXE)
 

@@ -22,10 +22,8 @@ TESTDIR		= ..
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= syscall_test.a
-TESTS_OBJ	= test_adjtimex.o \
-		  test_bind.o \
+TESTS_OBJ       = test_bind.o \
 		  test_capset.o \
-		  test_clock_settime.o \
 		  test_clone.o \
 		  test_delete_module.o \
 		  test_fork.o \
@@ -42,9 +40,7 @@ TESTS_OBJ	= test_adjtimex.o \
 		  test_setresgid.o \
 		  test_setresuid.o \
 		  test_setreuid.o \
-		  test_settimeofday.o \
 		  test_setuid.o \
-		  test_stime.o \
 		  test_umask.o
 
 ALL_OBJ		= $(TESTS_OBJ)

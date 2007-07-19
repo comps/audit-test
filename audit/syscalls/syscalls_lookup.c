@@ -36,10 +36,8 @@ struct syscall_variations {
 };
 
 static struct syscall_tests syscall_table[] = {
-    { "adjtimex", &test_adjtimex }, 
     { "bind", &test_bind }, 
     { "capset", &test_capset }, 
-    { "clock_settime", &test_clock_settime }, 
     { "clone2", &test_clone2 }, 
     { "clone", &test_clone }, 
     { "delete_module", &test_delete_module }, 
@@ -65,11 +63,9 @@ static struct syscall_tests syscall_table[] = {
     { "setresuid", &test_setresuid }, 
     { "setreuid32", &test_setreuid32 }, 
     { "setreuid", &test_setreuid }, 
-    { "settimeofday", &test_settimeofday }, 
     { "setuid32", &test_setuid32 }, 
     { "setuid", &test_setuid }, 
     { "socketcall-bind", &test_bind }, 
-    { "stime", &test_stime }, 
     { "umask", &test_umask }, 
     { "vfork", &test_vfork }, 
 };

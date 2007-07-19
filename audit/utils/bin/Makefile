@@ -62,9 +62,11 @@ ALL_EXE		= $(CREATE_EXE) \
 		  $(MQ_EXE) \
 		  $(NET_EXE) \
 		  do_access \
+		  do_adjtimex \
 		  do_chdir \
 		  do_chmod \
 		  do_chown \
+		  do_clock_settime \
 		  do_dummy \
 		  do_dummy_group \
 		  do_execve \
@@ -74,6 +76,8 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_fchownat \
 		  do_fremovexattr \
 		  do_fsetxattr \
+		  do_getseconds \
+		  do_gettimezone \
 		  do_getxattr \
 		  do_kill \
 		  do_lchown \
@@ -94,7 +98,9 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_rename \
 		  do_renameat \
 		  do_rmdir \
+		  do_settimeofday \
 		  do_setxattr \
+		  do_stime \
 		  do_swapon \
 		  do_tgkill \
 		  do_tkill \

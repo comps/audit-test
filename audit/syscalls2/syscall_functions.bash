@@ -42,7 +42,7 @@ set -x
 #       run_test(), so declare them with "declare"
 
 # test utility args
-declare op dirname source target flag setcontext msg value
+declare op dirname source target flag setcontext zone dst msg value
 
 # audit record fields
 declare log_mark syscall success pid auid exitval name
@@ -135,6 +135,21 @@ function test_su_setxattr {
 	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
 	read testres exitval pid \
 	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $target $flag $value")"
+    fi
+}
+
+function test_su_time_zone {
+    # use $tag instead of $expres to work around the cases
+    # where a success is an expected failure.
+    if [[ $tag == *success* ]]; then
+	read testres exitval pid \
+	    <<<"$(do_$syscall $flag $zone $dst)"
+    else
+	# use single quotes so $$ doesn't expand early
+	read uid euid suid fsuid gid egid sgid fsgid \
+	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
+	read testres exitval pid \
+	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $flag $zone $dst")"
     fi
 }
 
@@ -517,7 +532,7 @@ function create_pgrp {
 }
 
 ######################################################################
-# CAP functions for creating test objects
+# CAP functions for creating test objects or other test setup
 ######################################################################
 
 function create_fs_objects_cap {
@@ -601,6 +616,20 @@ function create_process_objects_cap {
     flag=${p##*_}
 
     augrokfunc=augrok_mls_opid_label
+}
+
+function setup_time {
+    declare p=$1
+
+    case $p in
+	time_set)
+	    flag=$(do_getseconds) ;;
+	time_zone_set)
+	    flag=$(do_getseconds)
+	    read zone dst <<<"$(do_gettimezone)" ;;
+    esac
+
+    augrokfunc=augrok_default
 }
 
 ######################################################################

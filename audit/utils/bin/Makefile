@@ -62,6 +62,7 @@ ALL_EXE		= $(CREATE_EXE) \
 		  $(MQ_EXE) \
 		  $(NET_EXE) \
 		  do_access \
+		  do_acct \
 		  do_adjtimex \
 		  do_chdir \
 		  do_chmod \

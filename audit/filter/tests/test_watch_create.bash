@@ -41,6 +41,8 @@ case $op in
              filter_fields="name==$name" ;;
     open)    gen_audit_event="touch $name"
              filter_fields="name==$name" ;;
+    rename)  gen_audit_event="mv $tmp1 $name"
+             filter_fields="name#a==$tmp1 name#b==$name" ;;
     symlink) gen_audit_event="ln -s $tmp1 $name"
              filter_fields="name#a==$tmp1 name#b==$name" ;;
     *) exit_fail "unknown test operation" ;;
@@ -52,7 +54,7 @@ log_mark=$(stat -c %s $audit_log)
 eval "$gen_audit_event"
 
 # verify audit record
-augrok --seek=$log_mark type==SYSCALL $filter_fields success==yes \
+augrok --seek=$log_mark type==SYSCALL syscall==$op $filter_fields success==yes \
     || exit_fail "Expected record not found."
 
 exit_pass

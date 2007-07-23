@@ -32,6 +32,8 @@ case $op in
             gen_audit_event="rm $name" ;;
     rmdir)  mkdir $name
             gen_audit_event="rmdir $name" ;;
+    rename) touch $name
+            gen_audit_event="mv $tmp1 $name" ;;
     *) exit_fail "unknown test operation" ;;
 esac
 
@@ -47,7 +49,7 @@ log_mark=$(stat -c %s $audit_log)
 eval "$gen_audit_event"
 
 # verify audit record
-augrok --seek=$log_mark type==SYSCALL name==$name success==yes \
+augrok --seek=$log_mark type==SYSCALL syscall==$op name==$name success==yes \
     || exit_fail "Expected record not found."
 
 exit_pass

@@ -618,6 +618,18 @@ function create_process_objects_cap {
     augrokfunc=augrok_mls_opid_label
 }
 
+function create_io_objects_cap {
+    declare p=$1
+
+    case $p in
+	port_bind)
+	    target=24 	# site-dependent mail handling, unused
+	    flag=0	# INADDR_ANY
+	;;
+	*) exit_error "unknown io perm to test: $p" ;;
+    esac
+}
+
 function setup_time {
     declare p=$1
 

@@ -64,6 +64,7 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_access \
 		  do_acct \
 		  do_adjtimex \
+		  do_bind \
 		  do_chdir \
 		  do_chmod \
 		  do_chown \
@@ -101,6 +102,7 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_rmdir \
 		  do_settimeofday \
 		  do_setxattr \
+		  do_socketcall \
 		  do_stime \
 		  do_swapon \
 		  do_tgkill \

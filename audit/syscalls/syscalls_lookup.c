@@ -36,7 +36,6 @@ struct syscall_variations {
 };
 
 static struct syscall_tests syscall_table[] = {
-    { "bind", &test_bind }, 
     { "capset", &test_capset }, 
     { "clone2", &test_clone2 }, 
     { "clone", &test_clone }, 
@@ -65,7 +64,6 @@ static struct syscall_tests syscall_table[] = {
     { "setreuid", &test_setreuid }, 
     { "setuid32", &test_setuid32 }, 
     { "setuid", &test_setuid }, 
-    { "socketcall-bind", &test_bind }, 
     { "umask", &test_umask }, 
     { "vfork", &test_vfork }, 
 };

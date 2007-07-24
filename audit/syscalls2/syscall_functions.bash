@@ -622,10 +622,17 @@ function create_io_objects_cap {
     declare p=$1
 
     case $p in
+	io_perm)
+	    target=642	# port address
+	    flag=1 ;;	# number of bytes
+	io_priv)
+	    flag=1 ;;	# process io privilege level
 	port_bind)
 	    target=24 	# site-dependent mail handling, unused
-	    flag=0	# INADDR_ANY
-	;;
+	    flag=0 ;;	# INADDR_ANY
+	tty_setlock)
+	    target="/dev/tty"
+	    flag=TIOCSLCKTRMIOS ;;
 	*) exit_error "unknown io perm to test: $p" ;;
     esac
 }

@@ -55,6 +55,8 @@ NET_EXE		= do_accept \
 
 ONLY32_EXE	= do_chown32 \
 		  do_fchown32 \
+		  do_ioperm \
+		  do_iopl \
 		  do_lchown32
 
 ALL_EXE		= $(CREATE_EXE) \
@@ -81,6 +83,7 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_getseconds \
 		  do_gettimezone \
 		  do_getxattr \
+		  do_ioctl \
 		  do_kill \
 		  do_lchown \
 		  do_lgetxattr \

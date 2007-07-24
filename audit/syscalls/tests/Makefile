@@ -27,9 +27,6 @@ TESTS_OBJ       = test_capset.o \
 		  test_delete_module.o \
 		  test_fork.o \
 		  test_init_module.o \
-		  test_ioctl.o \
-		  test_ioperm.o \
-		  test_iopl.o \
 		  test_ptrace.o \
 		  test_setfsgid.o \
 		  test_setfsuid.o \

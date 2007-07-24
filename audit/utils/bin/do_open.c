@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     int flags = 0;
 
     if (argc < 3) {
-	fprintf(stderr, "Usage:\n%s <path> <create|read|write|rdwr> [context]\n",
+	fprintf(stderr, "Usage:\n%s <path> <create|read|write|rdwr|rdcr> [context]\n",
 		argv[0]);
 	return 1;
     }
@@ -38,6 +38,8 @@ int main(int argc, char **argv)
 	flags |= O_WRONLY;
     } else if (!strcmp(argv[2], "rdwr")) {
 	flags |= O_RDWR;
+    } else if (!strcmp(argv[2], "rdcr")) {
+	flags |= O_CREAT|O_RDONLY;
     } else {
 	fprintf(stderr, "Usage:\n%s <path> <create|read|write|rdwr> [context]\n",
 		argv[0]);

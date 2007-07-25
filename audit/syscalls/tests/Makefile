@@ -30,8 +30,7 @@ TESTS_OBJ       = test_capset.o \
 		  test_ptrace.o \
 		  test_setfsgid.o \
 		  test_setfsuid.o \
-		  test_setgroups.o \
-		  test_umask.o
+		  test_setgroups.o
 
 ALL_OBJ		= $(TESTS_OBJ)
 ALL_AR		= $(TESTS_AR)

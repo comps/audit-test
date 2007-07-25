@@ -49,7 +49,6 @@ static struct syscall_tests syscall_table[] = {
     { "setfsuid", &test_setfsuid }, 
     { "setgroups32", &test_setgroups32 }, 
     { "setgroups", &test_setgroups }, 
-    { "umask", &test_umask }, 
     { "vfork", &test_vfork }, 
 };
 

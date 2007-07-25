@@ -124,6 +124,7 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_tkill \
 		  do_truncate \
 		  do_truncate64 \
+		  do_umask \
 		  do_unlink \
 		  do_unlinkat \
 		  do_uselib \

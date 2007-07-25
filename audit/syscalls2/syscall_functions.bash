@@ -574,6 +574,11 @@ function create_fs_objects_cap {
 	    [[ $action == set ]] && value=$(cat /proc/self/attr/current)
 	    ;;
 
+	umask_set)
+	    flag=022
+	    augrokfunc=augrok_default
+	    ;;
+
         *) exit_error "unknown perm to test: $p" ;;
     esac
 

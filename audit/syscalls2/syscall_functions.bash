@@ -651,6 +651,19 @@ function setup_time {
     augrokfunc=augrok_default
 }
 
+function setup_ids {
+    declare p=$1
+
+    case $p in
+	gid_*)
+	    flag=0 ;;  # use root's gid ??
+	uid_*)
+	    flag=0 ;;  # use root's uid ??
+    esac
+
+    augrokfunc=augrok_default
+}
+
 ######################################################################
 # DAC functions for creating test objects
 ######################################################################

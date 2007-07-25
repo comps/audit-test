@@ -57,7 +57,13 @@ ONLY32_EXE	= do_chown32 \
 		  do_fchown32 \
 		  do_ioperm \
 		  do_iopl \
-		  do_lchown32
+		  do_lchown32 \
+		  do_setgid32 \
+		  do_setregid32 \
+		  do_setresgid32 \
+		  do_setresuid32 \
+		  do_setreuid32 \
+		  do_setuid32
 
 ALL_EXE		= $(CREATE_EXE) \
 		  $(IPC_EXE) \
@@ -103,6 +109,12 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_rename \
 		  do_renameat \
 		  do_rmdir \
+		  do_setgid \
+		  do_setregid \
+		  do_setresgid \
+		  do_setresuid \
+		  do_setreuid \
+		  do_setuid \
 		  do_settimeofday \
 		  do_setxattr \
 		  do_socketcall \

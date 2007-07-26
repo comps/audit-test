@@ -20,6 +20,8 @@ TOPDIR		= ../..
 include $(TOPDIR)/rules.mk
 CPPFLAGS	+= -I$(TOPDIR)/include
 
+CAPS_EXE	= do_capset
+
 CREATE_EXE	= do_creat\
 		  do_mkdir \
 		  do_mkdirat \
@@ -60,6 +62,7 @@ ONLY32_EXE	= do_chown32 \
 		  do_iopl \
 		  do_lchown32 \
 		  do_setgid32 \
+		  do_setgroups32 \
 		  do_setregid32 \
 		  do_setresgid32 \
 		  do_setresuid32 \
@@ -71,7 +74,8 @@ ONLYIA64_EXE	= do_clone2
 ONLY86_EXE	= do_fork \
 		  do_vfork
 
-ALL_EXE		= $(CREATE_EXE) \
+ALL_EXE		= $(CAPS_EXE) \
+		  $(CREATE_EXE) \
 		  $(IPC_EXE) \
 		  $(MQ_EXE) \
 		  $(NET_EXE) \
@@ -117,12 +121,13 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_renameat \
 		  do_rmdir \
 		  do_setgid \
+		  do_setgroups \
 		  do_setregid \
 		  do_setresgid \
 		  do_setresuid \
 		  do_setreuid \
-		  do_setuid \
 		  do_settimeofday \
+		  do_setuid \
 		  do_setxattr \
 		  do_socketcall \
 		  do_stime \
@@ -150,6 +155,7 @@ endif
 
 $(CREATE_EXE): LDLIBS += -lselinux
 $(MQ_EXE): LDLIBS += -lrt -lselinux
+$(CAPS_EXE): LDLIBS += -lcap
 
 all: $(ALL_EXE)
 

@@ -22,12 +22,10 @@ TESTDIR		= ..
 CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= syscall_test.a
-TESTS_OBJ       = test_capset.o \
-		  test_delete_module.o \
+TESTS_OBJ       = test_delete_module.o \
 		  test_init_module.o \
 		  test_setfsgid.o \
-		  test_setfsuid.o \
-		  test_setgroups.o
+		  test_setfsuid.o
 
 ALL_OBJ		= $(TESTS_OBJ)
 ALL_AR		= $(TESTS_AR)

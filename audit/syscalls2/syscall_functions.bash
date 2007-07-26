@@ -559,7 +559,7 @@ function create_fs_objects_cap {
 
     case $p in
         dir_mount)
-	    create_dir target mode="${owner:0:1}+r"
+	    create_dir target mode="u+r"
 	    source=none
 	    flag=tmpfs
 	    name=$target
@@ -572,7 +572,7 @@ function create_fs_objects_cap {
 	    name=$target ;;
 
 	file_swap)
-	    create_file target mode="${owner:0:1}+rwx"
+	    create_file target mode="u+rwx"
 	    name=$target
 
 	    /bin/dd if=/dev/zero of=$target bs=1024 count=1024
@@ -585,7 +585,7 @@ function create_fs_objects_cap {
 	secattr_*)
 	    declare action=${perm##*_}
 
-            create_file target mode="${owner:0:1}+rw"
+            create_file target mode="u+rw"
             name=$target
 	    chmod a+r $target
 

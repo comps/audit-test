@@ -56,6 +56,8 @@ NET_EXE		= do_accept \
 		  do_sendmsg \
 		  do_sendto
 
+RT_EXE		= do_clock_settime
+
 ONLY32_EXE	= do_chown32 \
 		  do_fchown32 \
 		  do_ioperm \
@@ -79,6 +81,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  $(IPC_EXE) \
 		  $(MQ_EXE) \
 		  $(NET_EXE) \
+		  $(RT_EXE) \
 		  do_access \
 		  do_acct \
 		  do_adjtimex \
@@ -86,7 +89,6 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_chdir \
 		  do_chmod \
 		  do_chown \
-		  do_clock_settime \
 		  do_clone \
 		  do_dummy \
 		  do_dummy_group \
@@ -153,9 +155,10 @@ else
 ALL_EXE		+= $(ONLY86_EXE)
 endif
 
+$(CAPS_EXE): LDLIBS += -lcap
 $(CREATE_EXE): LDLIBS += -lselinux
 $(MQ_EXE): LDLIBS += -lrt -lselinux
-$(CAPS_EXE): LDLIBS += -lcap
+$(RT_EXE): LDLIBS += -lrt
 
 all: $(ALL_EXE)
 

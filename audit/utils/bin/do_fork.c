@@ -29,12 +29,11 @@ int main(int argc, char **argv)
     struct rlimit slimit;
 
     getrlimit(RLIMIT_NPROC, &slimit);
-    fprintf(stderr, "rlim_cur = %d  rlim_max = %d\n", (int)slimit.rlim_cur, (int)slimit.rlim_max);
+    fprintf(stderr, "rlim_cur = %d  rlim_max = %d\n",
+	    (int)slimit.rlim_cur, (int)slimit.rlim_max);
 
-
-
-    /* Must use syscall(), as the fork() library routine doesn't call
-     * the fork system call on x86_64. */
+    /* use syscall() to force fork, as the fork() library routine
+     * doesn't call sys_fork on x86_64. */
     errno = 0;
     pid = syscall(__NR_fork);
 

@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 	return TEST_ERROR;
     }
 
-    /* use syscall() to specify clone or clone2 */
+    /* use syscall() to force clone2 over clone */
     errno = 0;
     pid = syscall(__NR_clone2, flags, cstack);
 

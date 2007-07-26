@@ -40,6 +40,7 @@ int main(int argc, char **argv)
 	return 1;
     }
 
+    /* use syscall() as no library routine for sys_tkill */
     errno = 0;
     exitval = syscall(__NR_tkill, pid, signum);
     result = exitval < 0;

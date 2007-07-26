@@ -42,6 +42,7 @@ int main(int argc, char **argv)
 
     errno = 0;
     /* we only test the simple non-threaded case, so tgid == pid */
+    /* use syscall() as no library routine for sys_tgkill */
     exitval = syscall(__NR_tgkill, pid, pid, signum);
     result = exitval < 0;
 

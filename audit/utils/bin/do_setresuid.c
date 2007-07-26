@@ -28,6 +28,7 @@ int main(int argc, char **argv)
     }
     uid = atoi(argv[1]);
 
+    /* use syscall() to force setresuid over setresuid32 */
     errno = 0;
     exitval = syscall(__NR_setresuid, uid, uid, uid);
     result = exitval < 0;

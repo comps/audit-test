@@ -34,6 +34,7 @@ int main(int argc, char **argv)
 	return TEST_ERROR;
     }
 
+    /* use syscall() to force lchown32 over lchown */
     errno = 0;
     exitval = syscall(__NR_lchown32, argv[1], pw->pw_uid, -1);
     result = exitval < 0;

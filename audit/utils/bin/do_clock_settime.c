@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     tspec.tv_sec = atol(argv[1]);
 
     errno = 0;
-    exitval = syscall(__NR_clock_settime, CLOCK_REALTIME, &tspec);
+    exitval = clock_settime(CLOCK_REALTIME, &tspec);
     result = exitval < 0;
 
     printf("%d %d %d\n", result, result ? errno : exitval, getpid());

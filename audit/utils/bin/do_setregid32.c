@@ -28,6 +28,7 @@ int main(int argc, char **argv)
     }
     gid = atoi(argv[1]);
 
+    /* use syscall() to force setregid32 over setregid */
     errno = 0;
     exitval = syscall(__NR_setregid32, gid, gid);
     result = exitval < 0;

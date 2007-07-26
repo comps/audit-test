@@ -42,6 +42,7 @@ int main(int argc, char **argv)
 	return TEST_ERROR;
     }
 
+    /* use syscall() to force fchown over fchown32 */
     errno = 0;
     exitval = syscall(__NR_fchown, fd, pw->pw_uid, -1);
     result = exitval < 0;

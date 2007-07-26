@@ -26,6 +26,7 @@ int main(int argc, char **argv)
 	return TEST_ERROR;
     }
 
+    /* use syscall() to force setgid32 over setgid */
     errno = 0;
     exitval = syscall(__NR_setgid32, atoi(argv[1]));
     result = exitval < 0;

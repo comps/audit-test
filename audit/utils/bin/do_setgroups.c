@@ -48,6 +48,7 @@ int main(int argc, char **argv)
 	nr_groups++;
     }
 
+    /* use syscall() to force setgroups over setgroups32 */
     errno = 0;
     exitval = syscall(__NR_setgroups, nr_groups, &grouplist);
     result = exitval < 0;

@@ -23,11 +23,8 @@ CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 TESTS_AR	= syscall_test.a
 TESTS_OBJ       = test_capset.o \
-		  test_clone.o \
 		  test_delete_module.o \
-		  test_fork.o \
 		  test_init_module.o \
-		  test_ptrace.o \
 		  test_setfsgid.o \
 		  test_setfsuid.o \
 		  test_setgroups.o

@@ -37,19 +37,14 @@ struct syscall_variations {
 
 static struct syscall_tests syscall_table[] = {
     { "capset", &test_capset }, 
-    { "clone2", &test_clone2 }, 
-    { "clone", &test_clone }, 
     { "delete_module", &test_delete_module }, 
-    { "fork", &test_fork }, 
     { "init_module", &test_init_module }, 
-    { "ptrace", &test_ptrace }, 
     { "setfsgid32", &test_setfsgid32 }, 
     { "setfsgid", &test_setfsgid }, 
     { "setfsuid32", &test_setfsuid32 }, 
     { "setfsuid", &test_setfsuid }, 
     { "setgroups32", &test_setgroups32 }, 
     { "setgroups", &test_setgroups }, 
-    { "vfork", &test_vfork }, 
 };
 
 static struct syscall_variations syscall_vtable[] = {

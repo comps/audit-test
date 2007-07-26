@@ -108,6 +108,25 @@ function test_su_default {
     fi
 }
 
+function test_su_fork {
+    # use $tag instead of $expres to work around the cases
+    # where a success is an expected failure.
+    # limit caller's max processes before executing test.
+    if [[ $tag == *success* ]]; then
+	saved=$(ulimit -u)
+	prepend_cleanup "ulimit -u $saved"
+	ulimit -u 2
+	read testres exitval pid \
+	    <<<"$(do_$syscall $op $dirname $source $target $flag)"
+    else
+	# use single quotes so $$ doesn't expand early
+	read uid euid suid fsuid gid egid sgid fsgid \
+	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
+	read testres exitval pid \
+	    <<<"$(/bin/su - $TEST_USER -c "ulimit -u 2 ; $(which do_$syscall) $op $dirname $source $target $flag")"
+    fi
+}
+
 function test_su_msg_send {
     # use $tag instead of $expres to work around the cases
     # where a success is an expected failure.
@@ -614,13 +633,12 @@ function create_process_objects_cap {
         process_attach)
             create_process target context=$obj
             opid=$target ;;
-        *) exit_error "unknown perm to test: $p" ;;
+        process_newns)
+	    flag=newns ;;
     esac
 
     # set test operation flag
     flag=${p##*_}
-
-    augrokfunc=augrok_mls_opid_label
 }
 
 function create_io_objects_cap {

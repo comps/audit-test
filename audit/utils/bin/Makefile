@@ -17,6 +17,7 @@
 ###############################################################################
 
 TOPDIR		= ../..
+include $(TOPDIR)/rules.mk
 CPPFLAGS	+= -I$(TOPDIR)/include
 
 CREATE_EXE	= do_creat\
@@ -65,6 +66,11 @@ ONLY32_EXE	= do_chown32 \
 		  do_setreuid32 \
 		  do_setuid32
 
+ONLYIA64_EXE	= do_clone2
+
+ONLY86_EXE	= do_fork \
+		  do_vfork
+
 ALL_EXE		= $(CREATE_EXE) \
 		  $(IPC_EXE) \
 		  $(MQ_EXE) \
@@ -77,6 +83,7 @@ ALL_EXE		= $(CREATE_EXE) \
 		  do_chmod \
 		  do_chown \
 		  do_clock_settime \
+		  do_clone \
 		  do_dummy \
 		  do_dummy_group \
 		  do_execve \
@@ -135,7 +142,11 @@ ifeq ($(MODE), 32)
 ALL_EXE		+= $(ONLY32_EXE)
 endif
 
-include $(TOPDIR)/rules.mk
+ifeq ($(MACHINE), ia64)
+ALL_EXE		+= $(ONLYIA64_EXE)
+else
+ALL_EXE		+= $(ONLY86_EXE)
+endif
 
 $(CREATE_EXE): LDLIBS += -lselinux
 $(MQ_EXE): LDLIBS += -lrt -lselinux

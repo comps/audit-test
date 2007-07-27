@@ -619,7 +619,10 @@ function create_ipc_objects_cap {
     declare p=$1 type=${1%_*}
     declare msg_type=1
 
+    [[ $(type -t create_$type) == function ]] || \
+	exit_error "create_$type function does not exist"
     create_${type} target
+
     flag=${1##*_} # set operation flag
 
     # augrok setup
@@ -780,7 +783,10 @@ function create_ipc_objects_dac {
     declare p=$1 type=${1%_*}
     declare msg_type=1
 
+    [[ $(type -t create_$type) == function ]] || \
+	exit_error "create_$type function does not exist"
     create_${type} target
+
     flag=${1##*_} # set operation flag
 
     # special setup for sending/recving messages
@@ -969,7 +975,10 @@ function create_ipc_objects_mac {
     declare p=$1 type=${1%_*}
     declare msg_type=1
 
+    [[ $(type -t create_$type) == function ]] || \
+	exit_error "create_$type function does not exist"
     create_${type} target context=$obj
+
     flag=${1##*_} # set operation flag
 
     # special setup for sending/recving messages

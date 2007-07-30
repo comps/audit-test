@@ -84,6 +84,16 @@ function get_error_code {
     gcc -E -dM /usr/include/asm-generic/errno-base.h | grep $1 | awk '{print $3}'
 }
 
+# usage: get_ipc_op <e.g. msgctl>
+function get_ipc_op {
+    gcc -E -dM /usr/include/asm-generic/ipc.h | grep -i $1 | awk '{print $3}'
+}
+
+# usage: get_socketcall_op <e.g. bind>
+function get_socketcall_op {
+    gcc -E -dM /usr/include/linux/net.h | grep -i SYS_$1 | awk '{print $3}'
+}
+
 function setpid {
     "$@" &
     pid=$!
@@ -183,21 +193,38 @@ function augrok_default {
         "$@"
 }
 
-# used for 32-bit shmat() success testcases:
-# don't check the exit value because the arch code gives 0 to the audit hook
-function augrok_no_exit {
-    augrok --seek=$log_mark -m1 type==SYSCALL \
-        syscall=$syscall success=$success pid=$pid auid=$(</proc/self/loginuid) \
-        uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
-        gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid
-}
-
 function augrok_name {
     augrok_default name=$name
 }
 
 function augrok_inode {
     augrok_default inode=$inode
+}
+
+function augrok_op {
+    declare a0
+
+    [[ $(type -t get_${syscall}_op) == function ]] || \
+	exit_error "get_${syscall}_op function does not exist"
+    a0=$(printf "%x" $(get_${syscall}_op $op))
+
+    augrok_default a0=$a0
+}
+
+# used for 32-bit shmat() success testcases:
+# don't check the exit value because the arch code gives 0 to the audit hook
+function augrok_op_no_exit {
+    declare a0
+
+    [[ $(type -t get_${syscall}_op) == function ]] || \
+	exit_error "get_${syscall}_op function does not exist"
+    a0=$(printf "%x" $(get_${syscall}_op $op))
+
+    augrok --seek=$log_mark -m1 type==SYSCALL \
+        syscall=$syscall success=$success pid=$pid auid=$(</proc/self/loginuid) \
+        uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
+        gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid \
+	a0=$a0
 }
 
 function augrok_mls_label {
@@ -210,6 +237,33 @@ function augrok_mls_name_label {
 
 function augrok_mls_inode_label {
     augrok_default subj=$subj obj#a=$obj inode#a=$inode
+}
+
+function augrok_mls_op_label {
+    declare a0
+
+    [[ $(type -t get_${syscall}_op) == function ]] || \
+	exit_error "get_${syscall}_op function does not exist"
+    a0=$(printf "%x" $(get_${syscall}_op $op))
+    
+    augrok_default a0=$a0 subj=$subj obj=$obj
+}
+
+# used for 32-bit shmat() success testcases:
+# don't check the exit value because the arch code gives 0 to the audit hook
+function augrok_mls_op_label_no_exit {
+    declare a0
+
+    [[ $(type -t get_${syscall}_op) == function ]] || \
+	exit_error "get_${syscall}_op function does not exist"
+    a0=$(printf "%x" $(get_${syscall}_op $op))
+
+    augrok --seek=$log_mark -m1 type==SYSCALL \
+        syscall=$syscall success=$success pid=$pid auid=$(</proc/self/loginuid) \
+        uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
+        gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid \
+	subj=$subj obj=$obj \
+	a0=$a0
 }
 
 # if the object is not created, no object label is collected
@@ -233,16 +287,6 @@ function augrok_mls_opid_label {
     [[ "${opid[*]}" == "$aupids" ]] || return 1
 
     return 0
-}
-
-# used for 32-bit shmat() success testcases:
-# don't check the exit value because the arch code gives 0 to the audit hook
-function augrok_mls_label_no_exit {
-    augrok --seek=$log_mark -m1 type==SYSCALL \
-        syscall=$syscall success=$success pid=$pid auid=$(</proc/self/loginuid) \
-        uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
-        gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid \
-	subj=$subj obj=$obj
 }
 
 ######################################################################
@@ -612,7 +656,7 @@ function create_ipc_objects_cap {
     flag=${1##*_} # set operation flag
 
     # augrok setup
-    [[ -z $augrokfunc ]] && augrokfunc=augrok_default
+    [[ -z $augrokfunc ]] && augrokfunc=augrok_op
 }
 
 function create_process_objects_cap {
@@ -793,7 +837,7 @@ function create_ipc_objects_dac {
     esac
 
     # augrok setup
-    [[ -z $augrokfunc ]] && augrokfunc=augrok_default
+    [[ -z $augrokfunc ]] && augrokfunc=augrok_op
 }
 
 ######################################################################
@@ -985,7 +1029,7 @@ function create_ipc_objects_mac {
     esac
 
     # augrok setup
-    [[ -z $augrokfunc ]] && augrokfunc=augrok_mls_label
+    [[ -z $augrokfunc ]] && augrokfunc=augrok_mls_op_label
 }
 
 function create_mq_objects_mac {

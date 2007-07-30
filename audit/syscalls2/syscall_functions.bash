@@ -683,7 +683,7 @@ function create_io_objects_cap {
 	    flag=1 ;;	# number of bytes
 	io_priv)
 	    flag=1 ;;	# process io privilege level
-	port_bind_priv)
+	port_priv)
 	    target=24 	# site-dependent mail handling, unused
 	    flag=0 ;;	# INADDR_ANY
 	tty_setlock)

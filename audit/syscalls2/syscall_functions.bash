@@ -94,82 +94,68 @@ function setpid {
 # custom test functions
 ######################################################################
 function test_su_default {
-    # use $tag instead of $expres to work around the cases
-    # where a success is an expected failure.
-    if [[ $tag == *success* ]]; then
-	read testres exitval pid \
-	    <<<"$(do_$syscall $op $dirname $source $target $flag)"
+    declare testargs testuser
+
+    # setup args for test operation
+    if [[ $# == 0 ]]; then
+	# don't quote so empty args disappear
+	set -- $op $dirname $source $target $flag
+    fi
+
+    # do the test
+    [[ -z $user ]] && exit_error "test \$user undefined"
+    if [[ $user == super ]]; then
+	read testres exitval pid <<<"$(do_$syscall "$@")"
     else
+	if [[ $user == "test" ]]; then
+	    testuser=$TEST_USER
+	else
+	    testuser=$user
+	fi
+	testargs=$(printf '%q ' "$@")
+
 	# use single quotes so $$ doesn't expand early
 	read uid euid suid fsuid gid egid sgid fsgid \
-	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
+	    <<<"$(/bin/su - $testuser -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
 	read testres exitval pid \
-	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $op $dirname $source $target $flag")"
+	    <<<"$(/bin/su - $testuser -c "$(which do_$syscall) $testargs")"
     fi
 }
 
 function test_su_fork {
-    # use $tag instead of $expres to work around the cases
-    # where a success is an expected failure.
-    # limit caller's max processes before executing test.
-    if [[ $tag == *success* ]]; then
+    declare testuser
+
+    [[ -z $user ]] && exit_error "test \$user undefined"
+    if [[ $user == super ]]; then
 	saved=$(ulimit -u)
 	prepend_cleanup "ulimit -u $saved"
 	ulimit -u 2
-	read testres exitval pid \
-	    <<<"$(do_$syscall $op $dirname $source $target $flag)"
+	read testres exitval pid <<<"$(do_$syscall)"
     else
+	if [[ $user == "test" ]]; then
+	    testuser=$TEST_USER
+	else
+	    testuser=$user
+	fi
+
 	# use single quotes so $$ doesn't expand early
 	read uid euid suid fsuid gid egid sgid fsgid \
-	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
+	    <<<"$(/bin/su - $testuser -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
 	read testres exitval pid \
-	    <<<"$(/bin/su - $TEST_USER -c "ulimit -u 2 ; $(which do_$syscall) $op $dirname $source $target $flag")"
+	    <<<"$(/bin/su - $testuser -c "ulimit -u 2 ; $(which do_$syscall)")"
     fi
 }
 
 function test_su_msg_send {
-    # use $tag instead of $expres to work around the cases
-    # where a success is an expected failure.
-    if [[ $tag == *success* ]]; then
-	read testres exitval pid \
-	    <<<"$(do_$syscall $op $target $flag "$msg")"
-    else
-	# use single quotes so $$ doesn't expand early
-	read uid euid suid fsuid gid egid sgid fsgid \
-	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
-	read testres exitval pid \
-	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $op $target $flag "$msg"")"
-    fi
+    test_su_default $op $target $flag "$msg"
 }
 
 function test_su_setxattr {
-    # use $tag instead of $expres to work around the cases
-    # where a success is an expected failure.
-    if [[ $tag == *success* ]]; then
-	read testres exitval pid \
-	    <<<"$(do_$syscall $target $flag $value)"
-    else
-	# use single quotes so $$ doesn't expand early
-	read uid euid suid fsuid gid egid sgid fsgid \
-	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
-	read testres exitval pid \
-	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $target $flag $value")"
-    fi
+    test_su_default $target $flag $value
 }
 
 function test_su_time_zone {
-    # use $tag instead of $expres to work around the cases
-    # where a success is an expected failure.
-    if [[ $tag == *success* ]]; then
-	read testres exitval pid \
-	    <<<"$(do_$syscall $flag $zone $dst)"
-    else
-	# use single quotes so $$ doesn't expand early
-	read uid euid suid fsuid gid egid sgid fsgid \
-	    <<<"$(/bin/su - $TEST_USER -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
-	read testres exitval pid \
-	    <<<"$(/bin/su - $TEST_USER -c "$(which do_$syscall) $flag $zone $dst")"
-    fi
+    test_su_default $flag $zone $dst
 }
 
 function test_runcon_default {

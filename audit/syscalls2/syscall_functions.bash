@@ -631,6 +631,12 @@ function create_fs_objects_cap {
         *) exit_error "unknown perm to test: $p" ;;
     esac
 
+    # special handling for fd syscalls, must do before *at handling
+    if [[ $syscall == f* ]]; then
+	inode=$(stat -c '%i' $target)
+	augrokfunc=augrok_inode
+    fi
+
     # special handling for *at syscalls
     if [[ -n $at ]]; then
 	dirname=$target
@@ -642,7 +648,6 @@ function create_fs_objects_cap {
 
     # augrok setup
     [[ -z $augrokfunc ]] && augrokfunc=augrok_name
-    [[ $syscall == f* ]] && augrokfunc=augrok_default
 }
 
 function create_ipc_objects_cap {
@@ -795,6 +800,12 @@ function create_fs_objects_dac {
         *) exit_error "unknown perm to test: $p" ;;
     esac
 
+    # special handling for fd syscalls, must do before *at handling
+    if [[ $syscall == f* ]]; then
+	inode=$(stat -c '%i' $target)
+	augrokfunc=augrok_inode
+    fi
+
     # special handling for *at syscalls
     if [[ -n $at ]]; then
 	dirname=$target
@@ -806,7 +817,6 @@ function create_fs_objects_dac {
 
     # augrok setup
     [[ -z $augrokfunc ]] && augrokfunc=augrok_name
-    [[ $syscall == f* ]] && augrokfunc=augrok_default
 }
 
 function create_ipc_objects_dac {

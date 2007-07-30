@@ -90,6 +90,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_chmod \
 		  do_chown \
 		  do_clone \
+		  do_delete_module \
 		  do_dummy \
 		  do_dummy_group \
 		  do_execve \
@@ -102,6 +103,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_getseconds \
 		  do_gettimezone \
 		  do_getxattr \
+		  do_init_module \
 		  do_ioctl \
 		  do_kill \
 		  do_lchown \

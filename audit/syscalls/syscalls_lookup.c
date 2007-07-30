@@ -36,8 +36,6 @@ struct syscall_variations {
 };
 
 static struct syscall_tests syscall_table[] = {
-    { "delete_module", &test_delete_module }, 
-    { "init_module", &test_init_module }, 
     { "setfsgid32", &test_setfsgid32 }, 
     { "setfsgid", &test_setfsgid }, 
     { "setfsuid32", &test_setfsuid32 }, 

@@ -53,10 +53,6 @@ declare gid=0 egid=0 sgid=0 fsgid=0
 declare subj obj
 declare -a opid
 
-# for tests/test_init_module.c and tests/test_delete_module.c
-export AUDIT_KMOD_DIR=/lib/modules/$(uname -r)/kernel/drivers/net
-export AUDIT_KMOD_NAME=dummy
-
 ######################################################################
 # common functions
 ######################################################################
@@ -610,6 +606,16 @@ function create_fs_objects_cap {
 	    prepend_cleanup "swapoff $target"
 
 	    [[ $tag == *fail* ]]  && augrokfunc=augrok_default
+	    ;;
+
+	module_load)
+	    target=/lib/modules/$(uname -r)/kernel/drivers/net/dummy.ko
+	    augrokfunc=augrok_default
+	    ;;
+
+	module_unload)
+	    target=dummy
+	    augrokfunc=augrok_default
 	    ;;
 
 	secattr_*)

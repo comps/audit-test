@@ -18,21 +18,5 @@
 ###############################################################################
 
 TOPDIR		= ..
-TESTDIR		= .
-CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
-
-SYSCALLS_OBJ	= syscalls.o syscalls_lookup.o
-SYSCALLS_EXE	= syscalls
-
-UTILS_AR	= $(TOPDIR)/utils/testutils.a
-
-ALL_OBJ		= $(SYSCALLS_OBJ)
-ALL_EXE		= $(SYSCALLS_EXE)
-
-SUB_DIRS	= tests
 
 include $(TOPDIR)/rules.mk
-
-$(SYSCALLS_EXE): LDLIBS += -laudit
-$(SYSCALLS_EXE): $(ALL_OBJ) $(UTILS_AR)
-	$(LINK_EXE)

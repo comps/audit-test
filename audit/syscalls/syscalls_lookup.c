@@ -36,10 +36,6 @@ struct syscall_variations {
 };
 
 static struct syscall_tests syscall_table[] = {
-    { "setfsgid32", &test_setfsgid32 }, 
-    { "setfsgid", &test_setfsgid }, 
-    { "setfsuid32", &test_setfsuid32 }, 
-    { "setfsuid", &test_setfsuid }, 
 };
 
 static struct syscall_variations syscall_vtable[] = {

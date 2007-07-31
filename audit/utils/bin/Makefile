@@ -63,6 +63,8 @@ ONLY32_EXE	= do_chown32 \
 		  do_ioperm \
 		  do_iopl \
 		  do_lchown32 \
+		  do_setfsgid32 \
+		  do_setfsuid32 \
 		  do_setgid32 \
 		  do_setgroups32 \
 		  do_setregid32 \
@@ -124,6 +126,8 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_rename \
 		  do_renameat \
 		  do_rmdir \
+		  do_setfsgid \
+		  do_setfsuid \
 		  do_setgid \
 		  do_setgroups \
 		  do_setregid \

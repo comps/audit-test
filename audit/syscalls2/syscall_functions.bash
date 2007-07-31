@@ -152,6 +152,18 @@ function test_su_fork {
     fi
 }
 
+function test_su_fsgid_set {
+    test_su_default $flag
+    # audit record reflects fsgid _after_ syscall
+    fsgid=$flag
+}
+
+function test_su_fsuid_set {
+    test_su_default $flag
+    # audit record reflects fsuid _after_ syscall
+    fsuid=$flag
+}
+
 function test_su_msg_send {
     test_su_default $op $target $flag "$msg"
 }

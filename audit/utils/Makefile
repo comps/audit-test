@@ -22,25 +22,14 @@ UTILSDIR	= .
 CPPFLAGS 	+= -I$(TOPDIR)/include -I$(UTILSDIR)/include
 LDLIBS		+= -lselinux
 
-UTILS_AR	= testutils.a
-UTILS_OBJ	= arch.o			\
-		  context.o			\
-		  identifiers.o			\
-		  tempfile.o			\
-		  verify.o
 UTILS_EXE	= test_context \
 		  test_setcon
 
-ALL_OBJ		= $(UTILS_OBJ)
-ALL_AR		= $(UTILS_AR)
 ALL_EXE		= $(UTILS_EXE)
 
 SUB_DIRS	= bin network-server
 
 include $(TOPDIR)/rules.mk
-
-$(UTILS_AR): $(UTILS_OBJ)
-	$(LINK_AR)
 
 all: README.augrok chmod_utils
 

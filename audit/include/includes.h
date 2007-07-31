@@ -37,7 +37,5 @@
 #include <asm/types.h>
 
 #include "testsuite.h"
-#include "context.h"
-#include "utils.h"
 
 #endif

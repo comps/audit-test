@@ -20,12 +20,6 @@
 #ifndef _TESTSUITE_H
 #define _TESTSUITE_H
 
-#define TEST_USER "testuser"
-#define TEST_TMP_TEMPLATE "/tmp/audit_testXXXXXX"
-
-#define MAX_TESTCASE_NAME 25
-#define MAX_VARIATION_NAME 25
-
 /* Testsuite exit codes */
 typedef enum {
     TEST_SUCCESS = 0,  /* test succeeded */

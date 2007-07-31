@@ -1024,7 +1024,6 @@ function create_fs_objects_mac {
 
     # augrok setup
     [[ -z $augrokfunc ]] && augrokfunc=augrok_mls_name_label
-    [[ $syscall == f* ]] && augrokfunc=augrok_default
 }
 
 function create_ipc_objects_mac {

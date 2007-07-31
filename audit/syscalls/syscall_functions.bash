@@ -284,17 +284,15 @@ function augrok_mls_search_fail {
 }
 
 function augrok_mls_opid_label {
-    declare aupids
+    declare -a aupids
+    declare i a
 
-    # XXX REVISIT
-    # grep is a workaround, should pass pid list to augrok
-    # augrok collapses multiple obj's with same value
-    aupids=$(augrok_default subj=$subj obj=$obj | \
-        grep -o 'opid\(_[0-9]*\)\?=[0-9]*' | sed 's/.*=//' | sort -n | xargs)
-        
-    [[ "${opid[*]}" == "$aupids" ]] || return 1
+    a=( {a..z} )
+    for ((i=0; i<${#opid[*]}; i++)); do
+	aupids+=( "opid#${a[i]}=${opid[i]}" "obj#${a[i]}=$obj" )
+    done
 
-    return 0
+    augrok_default --debug subj=$subj "${aupids[@]}"
 }
 
 ######################################################################
@@ -580,7 +578,7 @@ function create_pgrp {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
-    ${context:+runcon $context} $(which do_dummy_group) 30 &
+    ${context:+runcon $context} $(which do_dummy_group) 20 &
     sleep 1 # let do_dummy_group get started
     mypgid=$(ps --no-headers -C do_dummy_group -o pgid | head -n1)
 

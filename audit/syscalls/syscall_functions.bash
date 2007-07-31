@@ -741,27 +741,27 @@ function create_fs_objects_dac {
 
         # changes to files/dirs (tested object is always the target)
         dir_exec)
-	    create_dir target mode="${owner:0:1}+rx"
+	    create_dir target mode="${dacugo:0:1}+rx"
 	    name=$target ;;
 
         file_read)
-            create_file target mode="${owner:0:1}+r"
+            create_file target mode="${dacugo:0:1}+r"
             name=$target;;
         file_write)
-            create_file target mode="${owner:0:1}+rw"
+            create_file target mode="${dacugo:0:1}+rw"
             name=$target;;
         file_exec)
-            create_exec target mode="${owner:0:1}+rx"
+            create_exec target mode="${dacugo:0:1}+rx"
             name=$target;;
 
         symlink_read)
-            create_symlink target mode="${owner:0:1}+r"
+            create_symlink target mode="${dacugo:0:1}+r"
             name=$target ;;
 
         xattr_*)
 	    declare action=${perm##*_}
 
-            create_file target mode="${owner:0:1}+rw"
+            create_file target mode="${dacugo:0:1}+rw"
 	    chmod a+r $target
             name=$target
 
@@ -780,7 +780,7 @@ function create_fs_objects_dac {
 
         # changes to directory entries
         dir_add_name)
-            create_dir base mode="${owner:0:1}+rwx"
+            create_dir base mode="${dacugo:0:1}+rwx"
             target="$base/new"
 
             name="$base/" # audit adds a trailing /
@@ -791,7 +791,7 @@ function create_fs_objects_dac {
 		create_file source basedir=$base mode=$all
 	    fi ;;
         dir_remove_name)
-            create_dir base mode="${owner:0:1}+rwx"
+            create_dir base mode="${dacugo:0:1}+rwx"
             case $entry in
 		dir)  create_dir target basedir=$base mode=$all ;;
 		file) create_file target basedir=$base mode=$all ;;

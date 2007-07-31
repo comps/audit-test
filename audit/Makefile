@@ -22,7 +22,6 @@ TOPDIR		= .
 include $(TOPDIR)/rules.mk
 
 RUN_DIRS	= syscalls \
-		  syscalls2 \
 		  network
 
 ifeq ($(MODE), $(NATIVE))

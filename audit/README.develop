@@ -84,7 +84,7 @@ show_test()
 
     - default is: prf "%-75s " "$*"
 
-    - see syscalls2/run.conf for an example how this can be changed to customize
+    - see syscalls/run.conf for an example how this can be changed to customize
       the output
 
 startup_hook()

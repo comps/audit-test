@@ -56,6 +56,7 @@ If running on a LSPP system, change your role to "sysadm_r".
 Make the following directory for the tests.  You must use this directory name
 and location.
 # mkdir /usr/local/eal4_testing
+# chmod 755 /usr/local/eal4_testing
 # cd /usr/local/eal4_testing
 
 Download a test case tarball from http://downloads.sourceforge.net/audit-test.

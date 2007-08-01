@@ -61,6 +61,7 @@ dist:
 	rsync -a --exclude=.svn . "$$tmpdir/audit-test" && \
 	$(MAKE) distclean -C "$$tmpdir/audit-test" && \
 	cd "$$tmpdir" && \
+	chmod -R a+rX audit-test && \
 	tar czf "$$into/audit-test-$$rev.tar.gz" audit-test && \
 	cd "$$into" && \
 	rm -rf "$$tmpdir" && \

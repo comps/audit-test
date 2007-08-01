@@ -7,8 +7,10 @@ Dependencies
 ------------
 audit-test requires the following packages in order to run:
 
-expect
 audit-libs-devel
+expect
+libselinux-devel
+selinux-policy-devel
 
 Configure System
 ----------------

@@ -26,7 +26,10 @@
  *    11/05 Updated for RHEL audit subsystem
  */
 
-#include "includes.h"
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 int testFilePermissions( char* filename ) {
   struct stat buf;

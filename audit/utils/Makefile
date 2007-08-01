@@ -19,7 +19,7 @@
 
 TOPDIR		= ..
 UTILSDIR	= .
-CPPFLAGS 	+= -I$(TOPDIR)/include -I$(UTILSDIR)/include
+CPPFLAGS 	+= -I$(UTILSDIR)/include
 LDLIBS		+= -lselinux
 
 UTILS_EXE	= test_context \

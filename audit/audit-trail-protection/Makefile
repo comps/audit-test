@@ -18,7 +18,6 @@
 ###############################################################################
 
 TOPDIR		= ..
-CPPFLAGS 	+= -I$(TOPDIR)/include
 
 AUDIT_TRAIL_EXE	= audit_trail_protection
 AUDIT_TRAIL_OBJ	= audit_trail_protection.o

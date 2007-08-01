@@ -17,7 +17,8 @@
 ###############################################################################
 
 TOPDIR		= ../..
-CPPFLAGS	+= -I$(TOPDIR)/include
+UTILSDIR	= ..
+CPPFLAGS	+= -I$(UTILSDIR)/include
 
 SRVR_EXE        = lblnet_tst_server
 

@@ -19,7 +19,6 @@
 
 TOPDIR		= ../..
 TESTDIR		= ..
-CPPFLAGS	+= -I$(TOPDIR)/include -I$(TESTDIR)/include
 
 FPRINTF_OBJ	= fprintf.o
 FPRINTF_SO	= fprintf.so

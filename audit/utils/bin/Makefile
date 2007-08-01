@@ -17,8 +17,9 @@
 ###############################################################################
 
 TOPDIR		= ../..
+UTILSDIR	= ..
+CPPFLAGS	+= -I$(UTILSDIR)/include
 include $(TOPDIR)/rules.mk
-CPPFLAGS	+= -I$(TOPDIR)/include
 
 CAPS_EXE	= do_capset
 

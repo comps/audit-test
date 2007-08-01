@@ -707,6 +707,9 @@ function create_io_objects_cap {
 	port_priv)
 	    target=24 	# site-dependent mail handling, unused
 	    flag=0 ;;	# INADDR_ANY
+	fio_fibmap)
+	    create_file target mode="a+rwx"
+	    flag=FIBMAP ;;
 	tty_setlock)
 	    target="/dev/tty"
 	    flag=TIOCSLCKTRMIOS ;;

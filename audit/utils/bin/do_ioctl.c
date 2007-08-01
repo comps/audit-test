@@ -16,6 +16,7 @@
  */
 
 #include "includes.h"
+#include <linux/fs.h>
 #include <termio.h>
 #include <sys/ioctl.h>
 
@@ -24,14 +25,20 @@ int main(int argc, char **argv)
     int exitval, result;
     int fd = -1, request;
     struct termios tios = { 0 };
+    int map;
+    void *arg;
 
     if (argc != 3) {
-	fprintf(stderr, "Usage:\n%s <device file> <ioctl op>\n", argv[0]);
+	fprintf(stderr, "Usage:\n%s <path> <ioctl op>\n", argv[0]);
 	return TEST_ERROR;
     }
 
     if (!strcmp(argv[2], "TIOCSLCKTRMIOS")) {
 	request = TIOCSLCKTRMIOS;
+	arg = &tios;
+    } else if (!strcmp(argv[2], "FIBMAP")) {
+	request = FIBMAP;
+	arg = &map;
     } else {
 	fprintf(stderr, "%s: unknown request: %s\n", argv[0], argv[2]);
 	return TEST_ERROR;
@@ -44,7 +51,7 @@ int main(int argc, char **argv)
     }
 
     errno = 0;
-    exitval = ioctl(fd, request, &tios);
+    exitval = ioctl(fd, request, arg);
     result = exitval < 0;
 
     printf("%d %d %d\n", result, result ? errno : exitval, getpid());

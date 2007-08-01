@@ -6,11 +6,10 @@ with this version of the test suite.
 
 Current TODO items:
 
-- fix all tests to use prepend_cleanup/append_cleanup correctly
-- Add more filesystem audit unit tests: watch persistence, open existing
-  file/symlink
-- add tests for syscall classes
-- re-write syscalls tests use bash infrastructure in syscalls2
+- Conditionalize tests on the various versions of audit records (esp. libpam and
+  trustedprograms tests).
+- Conditionalize tests based on audit package releases.
+- Update test coverage reports.
 
 Improvement items:
 

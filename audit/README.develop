@@ -96,7 +96,7 @@ startup_hook()
 cleanup()
 
     - runs after looping through all the tests, manipulated by prepend_cleanup()
-      and append_cleanup().  See README.cleanup
+      and append_cleanup().  See section Test Cleanup.
 
 | Writing mls syscall tests
 +--------------------------

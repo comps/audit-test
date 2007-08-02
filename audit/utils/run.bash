@@ -41,9 +41,9 @@ if [[ -z $TOPDIR ]]; then
     ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 1; }
     export TOPDIR
 fi
-PATH=$TOPDIR/utils:$PATH
+PATH=$TOPDIR/utils:$TOPDIR/utils/bin:$PATH
 
-source functions.bash
+source functions.bash || exit 2
 
 #----------------------------------------------------------------------
 # global variables

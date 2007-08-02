@@ -55,7 +55,7 @@
 #  to run, spewing failures from the underlying operations which
 #  fail as expected.
 
-source tp_context_functions.bash
+source tp_context_functions.bash || exit 2
 
 ######################################################################
 # main

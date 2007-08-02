@@ -32,9 +32,6 @@ event_obj=$(get_event_obj $1)
 auditctl -a exit,always -S open -F key=$watch -F path=$watch
 prepend_cleanup "auditctl -d exit,always -S open -F key=$watch -F path=$watch"
 
-# use syscall utilities
-PATH=$TOPDIR/utils:$TOPDIR/utils/bin:$PATH
-
 # test open with O_CREAT|O_RDONLY; verify audit record
 log_mark=$(stat -c %s $audit_log)
 do_open $event_obj rdcr

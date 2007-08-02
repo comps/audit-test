@@ -21,7 +21,7 @@
 # In this case "regular" means a non-root linux login that maps to 
 # the user_u selinux user, which has no admin privileges.
 
-source tp_selinux_functions.bash
+source tp_selinux_functions.bash || exit 2
 
 ######################################################################
 # main

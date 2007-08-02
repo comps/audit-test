@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # =============================================================================
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2007
 #
@@ -15,12 +14,12 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
-
+#
 # It is important to note that prior to running the tests below the
 # system must be configured using the configuration templates in the
 # "network/system" directory as directed by the test plan.  Failure to
 # configure the system correctly will result in test failures.
-
+#
 ## PROGRAM:     racoon
 ## PURPOSE:
 ## Verify that the racoon daemon correctly negotiates IPsec SAs with remote
@@ -40,7 +39,7 @@
 ## TESTCASE:    negotiate a SA with racoon
 ## TESTCASE:    remove the SAs
 
-source testcase.bash
+source testcase.bash || exit 2
 
 ######################################################################
 # global variables

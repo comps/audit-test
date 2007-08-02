@@ -15,7 +15,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-source $TOPDIR/utils/testcase.bash
+source testcase.bash || exit 2
 
 ######################################################################
 # global variables

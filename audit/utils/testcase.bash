@@ -20,7 +20,7 @@
 # NB: these should simply echo/printf, not msg/vmsg/dmsg/prf because
 #     run_test output is already going to the log.
 
-source functions.bash
+source functions.bash || exit 2
 
 ######################################################################
 # global vars

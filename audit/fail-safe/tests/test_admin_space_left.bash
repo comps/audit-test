@@ -21,7 +21,7 @@
 # are effective.  Test all possible values of admin_space_left_action: ignore,
 # syslog, email, suspend, single, halt
 
-source auditd_common.bash
+source auditd_common.bash || exit 2
 
 write_config -s "$auditd_conf" \
     admin_space_left=1 \

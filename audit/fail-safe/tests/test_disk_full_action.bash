@@ -21,7 +21,7 @@
 # Test all possible values of disk_full_action: ignore,
 # syslog, suspend, single, halt
 
-source auditd_common.bash
+source auditd_common.bash || exit 2
 
 write_config -s "$auditd_conf" \
     disk_full_action=$action || exit 2

@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # =============================================================================
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2007
 #
@@ -15,12 +14,12 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
-
+# 
 # It is important to note that prior to running the tests below the
 # system must be configured using the configuration templates in the
 # "network/system" directory as directed by the test plan.  Failure to
 # configure the system correctly will result in test failures.
-
+#
 ## PROGRAM:     xinetd
 ## PURPOSE:
 ## Verify that the xinetd daemon correctly runs child servers at the same
@@ -38,7 +37,7 @@
 ## TESTCASE:    connect to a xinetd controlled server at "s5:c1"
 ## TESTCASE:    connect to a xinetd controlled server at "s5:c1.c5"
 
-source testcase.bash
+source testcase.bash || exit 2
 
 ######################################################################
 # global variables

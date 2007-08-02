@@ -21,7 +21,7 @@
 # effective.  Test all possible values of max_log_file_action: ignore, syslog,
 # suspend, rotate, keep_logs
 
-source auditd_common.bash
+source auditd_common.bash || exit 2
 
 max_log_file=1	# 1 megabyte, that is
 

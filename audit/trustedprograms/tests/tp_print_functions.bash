@@ -15,20 +15,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-if [[ -z $TOPDIR ]]; then
-    TOPDIR=$(
-    while [[ ! $PWD -ef / ]]; do
-        [[ -f rules.mk ]] && { echo $PWD; exit 0; }
-        cd ..
-    done
-    exit 1
-    ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 2; }
-    export TOPDIR
-fi
-PATH=$TOPDIR/utils:$PATH
-
-source testcase.bash
+source testcase.bash || exit 2
 
 # Optional args
 # $1 name for the print queue

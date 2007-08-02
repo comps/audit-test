@@ -25,7 +25,7 @@
 #  11/05 Mods to use global TEST_USER by Aron Griffis <aron@hp.com>
 #
 
-source testcase.bash
+source testcase.bash || exit 2
 
 action=$1
 auditd_active=$(pidof auditd)

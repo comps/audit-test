@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # =============================================================================
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2007
 #
@@ -15,7 +14,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
-
+#
 ## PROGRAM:     netlabelctl
 ## PURPOSE:
 ## Verify that the netlabelctl command correctly configures the kernel's
@@ -39,7 +38,7 @@
 ## TESTCASE:    remove a LSM/SELinux domain mapping
 ## TESTCASE:    turn on the unlabeled packet allow flag
 
-source testcase.bash
+source testcase.bash || exit 2
 
 ######################################################################
 # global variables

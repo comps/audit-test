@@ -23,7 +23,7 @@
 # conflicting allow rule.  semodule should prevent loading the
 # second module.
 
-source tp_selinux_functions.bash
+source tp_selinux_functions.bash || exit 2
 
 ######################################################################
 # main

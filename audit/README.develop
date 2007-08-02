@@ -26,26 +26,10 @@ when requested by --verbose, --debug, or investigation of run.log
 Bash tests
 ----------
 Tests written in bash can make use of common functions in utils/testcase.bash
-and utils/functions.bash.  The library should be loaded with this snippet at the
-top of the test case:
-
-    export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-    if [[ -z $TOPDIR ]]; then
-        TOPDIR=$(
-            while [[ ! $PWD -ef / ]]; do
-                [[ -f rules.mk ]] && { echo $PWD; exit 0; }
-                cd ..
-            done
-            exit 1
-        ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 2; }
-        export TOPDIR
-    fi
-    PATH=$TOPDIR/utils:$PATH
+and utils/functions.bash.  These are automatically in $PATH by way of run.bash,
+so they can be loaded simply as:
 
     source testcase.bash
-
-This snippet additionally puts the utils directory in the PATH, which is helpful
-for running augrok and other shared utility programs.
 
 Testcase.bash includes functions meant to be used in any of the various
 testcases.  In turn it sources functions.bash, which contains functions that are
@@ -58,6 +42,13 @@ More importantly, debugging output goes to stdout, error output goes to stderr.
 The reason for this is that the common functions are also used by the test
 harness, which wants to be able to /dev/null the debug info without losing the
 error messages.
+
+The best way to run individual test cases is by specifying them on the run.bash
+command-line.  However it may be possible to run individual scripts outside of
+the harness.  In that case, you'll need to augment PATH in your shell
+environment:
+
+    PATH=/path/to/utils:/path/to/utils/bin:$PATH
 
 | Writing run.conf
 +-----------------

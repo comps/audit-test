@@ -32,7 +32,7 @@
 # - Attempt to read a file labeled with the test type from both
 #   test domains.  One should pass, one should fail.
 
-source tp_selinux_functions.bash
+source tp_selinux_functions.bash || exit 2
 
 ######################################################################
 # main

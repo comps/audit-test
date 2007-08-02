@@ -21,7 +21,7 @@
 # effective.  Test all possible values of space_left_action: ignore, syslog,
 # email, suspend, single, halt
 
-source auditd_common.bash
+source auditd_common.bash || exit 2
 
 write_config -s "$auditd_conf" \
     space_left=2 \

@@ -22,7 +22,7 @@
 # that is mapped to staff_u selinux user, which the test harness is.  
 # It also requires running as root.
 
-source tp_selinux_functions.bash
+source tp_selinux_functions.bash || exit 2
 
 ######################################################################
 # main

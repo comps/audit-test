@@ -37,7 +37,7 @@
 # However, having the audit records in the log is really handing for debugging if something
 # goes wrong.
 
-source tp_selinux_functions.bash
+source tp_selinux_functions.bash || exit 2
 
 #local variables
 declare homedirs=/etc/selinux/mls/contexts/files/file_contexts.homedirs

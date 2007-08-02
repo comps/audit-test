@@ -1,5 +1,4 @@
 #!/bin/bash
-#
 # =============================================================================
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2007
 #
@@ -15,9 +14,8 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
-#
 
-source testcase.bash
+source testcase.bash || exit 2
 
 ######################################################################
 # global variables

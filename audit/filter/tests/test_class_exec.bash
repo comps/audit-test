@@ -23,9 +23,6 @@ source filter_functions.bash || exit 2
 
 # setup
 
-# use syscall utilities
-PATH=$TOPDIR/utils:$TOPDIR/utils/bin:$PATH
-
 watch=$tmp1
 
 auditctl -a exit,always -w $watch -p x

@@ -18,7 +18,7 @@
 # PURPOSE:
 # Verify audit of setting selinux booleans.
 
-source testcase.bash
+source testcase.bash || exit 2
 
 unset orig control
 unset bool value

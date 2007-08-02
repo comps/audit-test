@@ -31,9 +31,6 @@ prepend_cleanup "
     auditctl -d exit,always -w $name
     rm -rf $tmpd"
 
-# use syscall utilities
-PATH=$TOPDIR/utils:$TOPDIR/utils/bin:$PATH
-
 # initially create the file; verify audit record
 log_mark=$(stat -c %s $audit_log)
 do_open $name create

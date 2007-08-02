@@ -44,6 +44,7 @@ used for testing.  An example variable value is "fd7b:826d:00f2::/64".
 6. Generate and install the system's labeled network configuration as shown 
 below:
 
+      # newrole -r lspp_test_r
       # cd /usr/local/eal4_testing/audit-test/network/system
       # make install_server
 

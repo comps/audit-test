@@ -64,6 +64,8 @@ Download a test case tarball from http://downloads.sourceforge.net/audit-test.
 Extract the downloaded tarball into /usr/local/eal4_testing.
 # gunzip -dc audit-test-NNNN.tar.gz | tar xf -
 
+# chown -R root:root /usr/local/eal4_testing
+
 Build
 -----
 # cd /usr/local/eal4_testing/audit-test 
@@ -84,6 +86,19 @@ Relabel test files.
 
 Configure the Labeled Networking Tests
 --------------------------------------
+On the test machine:
+
+From the /usr/local/eal4_testing/audit-test directory, perform the following 
+commands to setup the required configuration for the labeled networking tests:
+
+    # export RHOST="localhost"
+    # export RHOST6="::1"
+    # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
+    # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
+    # export PATH="$PATH:."
+    
+    # make netconfig
+
 On the network test server:
 
 Confirm that the 
@@ -91,20 +106,10 @@ Confirm that the
 the network test server contains both the IPv4 and IPv6 addresses of the test 
 machine.  
 
-NOTE: If you need to determine the test machine’s IP addresses to add to the 
+NOTE: If you need to determine the test machine's IP addresses to add to the
 client_list.txt file, run the following commands on the test machine:
 
-    cd /usr/local/eal4_testing/audit-test/network/system
-    .  ../../../local.sh
-    make getaddress
-
-
-On the test machine:
-
-From the /usr/local/eal4_testing/audit-test directory, perform the following 
-command to setup the required configuration for the labeled networking tests:
-
-    # .  ../local.sh && make netconfig
+    # make -C network/system getaddress
 
 Reboot the test machine.
 
@@ -125,14 +130,14 @@ If running on a LSPP system, change your role to "lspp_test_r".
 # export PASSWD=<root/admin user password>
 
 Make sure that the labeled networking tests have been configured according to
-the instructions in the previous section.
+the instructions in the previous section. Set the following environment
+variables:
 
-Set the LBLNET_SVR_IPV4 and LBLNET_SVR_IPV6 environment variables to the IPv4 
-and IPv6 addresses of the network test server.  The IP addresses can be found 
-by logging into the network test server and running the following commands:
-
-    cd /usr/local/eal4_testing/audit-test/network/system
-    make getaddress
+# export RHOST="localhost"
+# export RHOST6="::1"
+# export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
+# export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
+# export PATH="$PATH:."
 
 In the top level audit-test directory, or in any test sub-directory:
 
@@ -148,10 +153,8 @@ failures.
 Run Individual Tests
 --------------------
 You can use run.bash to run a set of tests or a single test case. This must be
-done in a test sub-directory.
-
-Make sure the symlink to run.bash exists.
-# make run.bash
+done in a test sub-directory.  Before running individual tests please do
+a 'make' in the top-level directory.
 
 To run all variations of a given testcase, e.g. to run all the ptrace() tests:
 # ./run.bash ptrace
@@ -178,19 +181,23 @@ workaround if you experience these failures.
    # export PASSWD=<password>
    # export PPROFILE=lspp
    # export MODE=<whatever you want (64|32), but set it to something>
-7. Run '. /usr/local/eal4_testing/local.sh'
-8. Change to the '/usr/local/eal4_testing/audit-test/network' directory
-9. Type './run.bash host=remote*type=ipsec'. There may be a few failures;
+   # export RHOST="localhost"
+   # export RHOST6="::1"
+   # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
+   # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
+   # export PATH="$PATH:."
+7. Change to the '/usr/local/eal4_testing/audit-test/network' directory
+8. Type './run.bash host=remote*type=ipsec'. There may be a few failures;
 rerun the command until all of the tests pass. At most, this should be two 
 passes.
-10. Logoff the system
+9. Logoff the system
 
 Re-login into the system and re-run the audit testsuite (or just networking
 tests) as following the directions in previous sections of this README.  
 
 Each time you reboot the system and run the network tests, you 
 must follow the steps above.  It is also possible, although unlikely, that if 
-you wait an excessive period of time between step #9 above and running the 
+you wait an excessive period of time between step #8 above and running the 
 test suite, the network tests may fail. For that reason, it is recommended that
 you do these steps only when you are ready to re-run the test suite.
 

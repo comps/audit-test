@@ -1043,7 +1043,8 @@ function create_ipc_objects_mac {
     esac
 
     # augrok setup
-    [[ -z $augrokfunc ]] && augrokfunc=augrok_mls_op_label
+    [[ -n $op && -z $augrokfunc ]] && augrokfunc=augrok_mls_op_label
+    [[ -z $augrokfunc ]] && augrokfunc=augrok_mls_label
 }
 
 function create_mq_objects_mac {

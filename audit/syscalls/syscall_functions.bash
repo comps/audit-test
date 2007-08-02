@@ -662,7 +662,7 @@ function create_ipc_objects_cap {
     flag=${1##*_} # set operation flag
 
     # augrok setup
-    [[ -z $augrokfunc ]] && augrokfunc=augrok_op
+    [[ -n $op && -z $augrokfunc ]] && augrokfunc=augrok_op
 }
 
 function create_process_objects_cap {
@@ -691,7 +691,8 @@ function create_io_objects_cap {
 	    flag=1 ;;	# process io privilege level
 	port_priv)
 	    target=24 	# site-dependent mail handling, unused
-	    flag=0 ;;	# INADDR_ANY
+	    flag=0	# INADDR_ANY
+	    [[ -n $op ]] && augrokfunc=augrok_op ;;
 	fio_fibmap)
 	    create_file target mode="a+rwx"
 	    flag=FIBMAP ;;
@@ -851,7 +852,7 @@ function create_ipc_objects_dac {
     esac
 
     # augrok setup
-    [[ -z $augrokfunc ]] && augrokfunc=augrok_op
+    [[ -n $op && -z $augrokfunc ]] && augrokfunc=augrok_op
 }
 
 ######################################################################

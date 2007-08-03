@@ -200,3 +200,12 @@ test suite, the network tests may fail. For that reason, it is recommended that
 you do these steps only when you are ready to re-run the test suite.
 
 
+Other Known Failures
+--------------------
+In the fail-safe tests, the 'admin_space_left email' and 'space_left email'
+tests may fail in CAPP mode if SELInux is enabled and in enforcing mode.  These
+tests are not run in LSPP mode.
+
+In the trustedprograms tests, the 'aide_update' test may fail in LSPP mode.  The
+aide program reports the changed file in the aide.log, but the return code does
+not reflect that there was a change.  This test is not run in CAPP mode.

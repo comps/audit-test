@@ -22,12 +22,12 @@
 # levels
 
 source testcase.bash || exit 2
+set -x
 
 # setup
 tty_type=$(ls -lZ $(tty) | awk -F: '{print $3}')
-if [ \! -z grep $tty_type /etc/selinux/mls/contexts/securetty_types ]; then
-  exit_fail "$tty_type appears in /etc/selinux/mls/contexts/securetty_types"
-fi
+grep -q $tty_type /etc/selinux/mls/contexts/securetty_types \
+	&& exit_fail "$tty_type appears in /etc/selinux/mls/contexts/securetty_types"
 
 # test
 expect -c "

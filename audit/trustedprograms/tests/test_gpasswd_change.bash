@@ -36,7 +36,7 @@ expect -c "
 pid=$(<$tmp1)
 
 for msg_1 in \
-    "op=changing password acct=$group exe=./usr/bin/gpasswd.*res=success.*"
+    "op=changing password acct=\"*$group\"* exe=./usr/bin/gpasswd.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

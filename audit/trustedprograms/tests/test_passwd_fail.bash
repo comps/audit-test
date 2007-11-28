@@ -35,7 +35,7 @@ su $TEST_USER -c "
 pid=$(<$tmp1)
 
 for msg_1 in \
-    "PAM: chauthtok acct=$TEST_USER : exe=./usr/bin/passwd.*res=failed.*"
+    "PAM: chauthtok acct=\"*$TEST_USER\"* : exe=./usr/bin/passwd.*res=failed.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

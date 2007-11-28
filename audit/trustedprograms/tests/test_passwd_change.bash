@@ -36,7 +36,7 @@ expect -c "
 pid=$(<$tmp1)
 
 for msg_1 in \
-    "PAM: chauthtok acct=$user : exe=./usr/bin/passwd.*res=success.*"
+    "PAM: chauthtok acct=\"*$user\"* : exe=./usr/bin/passwd.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

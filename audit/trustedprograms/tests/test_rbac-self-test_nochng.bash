@@ -25,7 +25,7 @@ source testcase.bash || exit 2
 
 # test
 expect -c '
-  set timeout 90
+  set timeout 120 
   spawn newrole -r sysadm_r
   expect -nocase {password: $} {send "$env(PASSWD)\r"}
   send "PS1=\"::\\#$ \"\r";

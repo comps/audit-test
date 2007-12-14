@@ -25,7 +25,6 @@ source testcase.bash || exit 2
 
 # test
 expect -c '
-  set timeout 120 
   spawn newrole -r sysadm_r
   expect -nocase {password: $} {send "$env(PASSWD)\r"}
   send "PS1=\"::\\#$ \"\r";
@@ -38,7 +37,7 @@ expect -c '
 
 # verify
 if [ $? -ne 0 ]; then
-  exit_error "the rbac-self-test timed out"
+  exit_error "the rbac-self-test failed"
 fi
 
 msg1="The RBAC self test succeeded.*"

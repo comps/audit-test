@@ -16,13 +16,10 @@
 #include "includes.h"
 #include <sched.h>
 
-#define CHILD_STACK_MEM 65536
-
 int main(int argc, char **argv)
 {
     int exitval, result;
     int flags = CLONE_VFORK;
-    char *cstack;
     pid_t pid;
 
     if (argc != 2) {
@@ -37,22 +34,15 @@ int main(int argc, char **argv)
 	return TEST_ERROR;
     }
 
-    cstack = malloc(CHILD_STACK_MEM); 
-    if (!cstack) {
-	perror("do_clone: malloc");
-	return TEST_ERROR;
-    }
-
     /* use syscall() to force clone over clone2 */
     errno = 0;
-    pid = syscall(__NR_clone, flags, cstack);
+    pid = syscall(__NR_clone, flags, 0);
 
     /* child */
     if (pid == 0)
 	_exit(0);
 
     /* parent */
-    free(cstack);
     exitval = pid;
     result = exitval < 0;
 

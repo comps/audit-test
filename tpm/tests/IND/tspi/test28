@@ -1,0 +1,25 @@
+Test28 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test28 - Tspi_GetAttribUint3201"
+		return 0
+	}
+
+	echo
+	echo -n "T28: Get 32bit attribute of MigData object..."
+	$TESTPATH/tspi/Tspi_GetAttribUint3201 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

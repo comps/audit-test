@@ -1,0 +1,25 @@
+Test30 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test30 - Tspi_ChangeAuth01"
+		return 0
+	}
+
+	echo
+	echo -n "T30: Change authorization data..."
+	$TESTPATH/tspi/Tspi_ChangeAuth01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

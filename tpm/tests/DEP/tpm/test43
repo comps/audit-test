@@ -1,0 +1,25 @@
+Test43 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test43 - Tspi_TPM_GetStatus01"
+		return 0
+	}
+
+	echo
+	echo -n "T43: Tspi_TPM_GetStatus01..."
+	$TESTPATH/tpm/Tspi_TPM_GetStatus01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

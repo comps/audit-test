@@ -1,0 +1,22 @@
+Test7 ()
+{
+	[ "$IDFLAG" ] && {
+		echo "Test7 - Tspi_TPM_AuthorizeMigrationTicket01"
+		return 0
+	}
+
+	echo
+	echo -n "T7: Checking Migration Key..."
+	$TESTPATH/tpm/Tspi_TPM_AuthorizeMigrationTicket01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

@@ -1,0 +1,25 @@
+Test24 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test24 - Tspi_TPM_ReadCurrentTicks01"
+		return 0
+	}
+
+	echo
+	echo -n "T24: Read Current Ticks..."
+	$TESTPATH/tpm/Tspi_TPM_ReadCurrentTicks01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

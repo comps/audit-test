@@ -1,0 +1,25 @@
+Test29 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test29 - Tspi_SetAttribUint3201"
+		return 0
+	}
+
+	echo
+	echo -n "T29: Set a 32-bit attribute of a data object..."
+	$TESTPATH/tspi/Tspi_SetAttribUint3201 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

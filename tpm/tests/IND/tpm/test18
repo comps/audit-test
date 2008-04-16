@@ -1,0 +1,25 @@
+Test18 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test18 - Tspi_TPM_GetRandom01"
+		return 0
+	}
+
+	echo
+	echo -n "T18: Get Random Number from TPM..."
+	$TESTPATH/tpm/Tspi_TPM_GetRandom01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

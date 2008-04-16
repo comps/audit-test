@@ -1,0 +1,25 @@
+Test12 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test12 - Tspi_TPM_Delegate_InvalidateFamily"
+		return 0
+	}
+
+	echo
+	echo -n "T12: Invalidate family delegation..."
+	$TESTPATH/tpm/Tspi_TPM_Delegate_InvalidateFamily01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

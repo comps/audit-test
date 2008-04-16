@@ -1,0 +1,25 @@
+Test32 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test32 - Tspi_DecodeBER_TssBlob01"
+		return 0
+	}
+
+	echo
+	echo -n "T32: Tspi_DecodeBER_TssBlob01..."
+	$TESTPATH/tspi/Tspi_DecodeBER_TssBlob01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

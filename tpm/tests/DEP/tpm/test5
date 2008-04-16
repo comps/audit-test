@@ -1,0 +1,31 @@
+Test5 ()
+{
+	[ "$IDFLAG" ] && {
+		echo "Test5 - Tspi_TPM_ClearOwner01"
+		return 0
+	}
+
+	#
+	# If CTFLAG is set, do not clear the TPM
+	#
+	[ "$CTFLAG" ] && return 0
+
+	echo
+	echo -n "T5: Clearing the TPM ..."
+	$TESTPATH/highlevel/tpm/Tspi_TPM_ClearOwner01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		echo
+		echo "The TPM has been cleared and disabled.  To run this"
+		echo "test again, you must first reboot and enable the TPM"
+		echo "via the BIOS setup software."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

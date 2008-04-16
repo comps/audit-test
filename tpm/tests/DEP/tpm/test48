@@ -1,0 +1,25 @@
+Test48 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test48 - Tspi_TPM_ReadCounter01"
+		return 0
+	}
+
+	echo
+	echo -n "T48: Tspi_TPM_ReadCounter01..."
+	$TESTPATH/tpm/Tspi_TPM_ReadCounter01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

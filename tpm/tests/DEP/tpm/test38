@@ -1,0 +1,25 @@
+Test38 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test38 - Tspi_TPM_CreateMaintenanceArchive01"
+		return 0
+	}
+
+	echo
+	echo -n "T38: Tspi_TPM_CreateMaintenanceArchive01..."
+	$TESTPATH/tpm/Tspi_TPM_CreateMaintenanceArchive01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

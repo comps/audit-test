@@ -1,0 +1,25 @@
+Test21 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test21 - Tspi_TPM_PcrExtend01"
+		return 0
+	}
+
+	echo
+	echo -n "T21: Test PCR extension..."
+	$TESTPATH/tpm/Tspi_TPM_PcrExtend01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

@@ -1,0 +1,25 @@
+Test34 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test34 - Tspi_TPM_AuthorizeMigrationTicket01"
+		return 0
+	}
+
+	echo
+	echo -n "T34: Tspi_TPM_AuthorizeMigrationTicket01..."
+	$TESTPATH/tpm/Tspi_TPM_AuthorizeMigrationTicket01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

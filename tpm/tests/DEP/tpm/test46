@@ -1,0 +1,25 @@
+Test46 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test46 - Tspi_TPM_LoadMaintenancePubKey01"
+		return 0
+	}
+
+	echo
+	echo -n "T46: Tspi_TPM_LoadMaintenancePubKey01..."
+	$TESTPATH/tpm/Tspi_TPM_LoadMaintenancePubKey01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

@@ -1,0 +1,25 @@
+Test25 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test25 - Tspi_TPM_StirRandom01"
+		return 0
+	}
+
+	echo
+	echo -n "T25: Add entropy to RNG..."
+	$TESTPATH/tpm/Tspi_TPM_StirRandom01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

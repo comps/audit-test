@@ -1,0 +1,30 @@
+#
+# This command loads a delegate table row blob into a non-volatile
+# delegate table in the TPM. Tspi_TPM_Delegate_CacheOwnerDelegation
+# can be used during manufacturing or on first boot (when no Owner
+# is installed), or after an Owner is installed. If an Owner is
+# installed, Tspi_TPM_Delegate_CacheOwnerDelegation requires Owner
+# authorization.
+#
+Test9 ()
+{
+	[ "$IDFLAG" ] && {
+		echo "Test9 - Tspi_TPM_Delegate_CacheOwnerDelegation01"
+		return 0
+	}
+
+	echo
+	echo -n "T9: Test loading delegate table row..."
+	$TESTPATH/tpm/Tspi_TPM_Delegate_CacheOwnerDelegation01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

@@ -1,0 +1,25 @@
+Test36 ()
+{
+	#
+	# ID this function with -id argument
+	#
+	[ "$IDFLAG" ] && {
+		echo "Test36 - Tspi_TPM_CollateIdentityRequest01"
+		return 0
+	}
+
+	echo
+	echo -n "T36: Tspi_TPM_CollateIdentityRequest01..."
+	$TESTPATH/tpm/Tspi_TPM_CollateIdentityRequest01 $VERSION 2>>eout >>sout
+	case "$?" in
+	0 )
+		echo "successful."
+		;;
+	* )
+		echo "Failed($ESTAT)."
+		echo "-> Check `pwd`/eout for details"
+		;;
+	esac
+
+	return 0
+}

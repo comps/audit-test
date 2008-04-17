@@ -26,11 +26,15 @@ InitEnv ()
 	# Default dependent tests
 	DEPTESTS="2 3 4 7 8 9 10 11 12 13 19 30 32 33 34 35 36"
 	DEPTESTS="$DEPTESTS 37 38 43 44 45 46 47 48"
-	# Clear the TPM (test5).  This is only required when running
-	# dependent tests and is always last.
-	DEPTESTS="$DEPTESTS 5"
 
-	TESTSUITE_OWNER_SECRET=${TESTSUITE_OWNER_SECRET:="abc123"}
+	if [ -z $TESTSUITE_OWNER_SECRET ]; then
+		TESTSUITE_OWNER_SECRET="abc123"
+
+		# Clear the TPM (test5).  This is only done as part of
+		# dependent testing and only when the user did not provide
+		# an ownership password.
+		DEPTESTS="$DEPTESTS 5"
+	fi
 	TESTSUITE_SRK_SECRET=${TESTSUITE_SRK_SECRET:="abc123"}
 	> eout
 	> sout

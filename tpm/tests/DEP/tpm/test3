@@ -11,6 +11,7 @@ Test3 ()
 	case "$?" in
 	0 )
 		echo "successful."
+		return 0
 		;;
 	* )
 		echo "Failed($ESTAT)."
@@ -18,5 +19,5 @@ Test3 ()
 		;;
 	esac
 
-	return 0
+	return 1
 }

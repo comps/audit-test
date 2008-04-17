@@ -11,6 +11,7 @@ Test2 ()
 	case "$?" in
 	0 )
 		echo "successful."
+		return 0
 		;;
 	7 )
 		#
@@ -31,5 +32,5 @@ Test2 ()
 		;;
 	esac
 
-	return 0
+	return 1
 }

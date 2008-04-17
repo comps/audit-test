@@ -20,6 +20,7 @@ Test5 ()
 		echo "The TPM has been cleared and disabled.  To run this"
 		echo "test again, you must first reboot and enable the TPM"
 		echo "via the BIOS setup software."
+		return 0
 		;;
 	* )
 		echo "Failed($ESTAT)."
@@ -27,5 +28,5 @@ Test5 ()
 		;;
 	esac
 
-	return 0
+	return 1
 }

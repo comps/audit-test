@@ -19,6 +19,7 @@ Test9 ()
 	case "$?" in
 	0 )
 		echo "successful."
+		return 0
 		;;
 	* )
 		echo "Failed($ESTAT)."
@@ -26,5 +27,5 @@ Test9 ()
 		;;
 	esac
 
-	return 0
+	return 1
 }

@@ -118,10 +118,26 @@ GetCmdOpts ()
 
 RunTests ()
 {
+	SUCCESS_COUNT=0;
+	FAIL_COUNT=0;
+	RUN_COUNT=0;
+
 	for K in $TESTORDER
 	do
 		Test$K
+		if [ $? -eq 0 ]; then
+			((SUCCESS_COUNT++))
+		else
+			((FAIL_COUNT++))
+		fi
+		((RUN_COUNT++))
 	done
+
+	[ ! "$IDFLAG" ] && {
+		echo ""
+		echo "Completed $RUN_COUNT tests, $SUCCESS_COUNT Successful, $FAIL_COUNT Failures."
+		echo ""
+	}
 }
 
 

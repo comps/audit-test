@@ -18,7 +18,7 @@ DEPDIR=tests/DEP
 INDDIR=tests/IND
 SUBDIRS=tcg
 DISTFILES=tpmts.sh Makefile COPYRIGHT LICENSE
-OUTFILES=eout sout
+OUTFILES=eout sout x1
 
 all:	
 	@set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i ; done

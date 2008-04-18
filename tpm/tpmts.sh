@@ -1,6 +1,6 @@
 #!/bin/sh
 ###############################################################################
-# (c) Copyright Hewlett-Packard Development Company, L.P., 2006
+# (c) Copyright Hewlett-Packard Development Company, L.P., 2008
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
@@ -98,7 +98,7 @@ GetCmdOpts ()
 			;;
 		-o )
 			# Determine if the TPM has installed an owner.
-			Test6 12
+			Test06 12
 			exit 0
 			;;
 		-p )

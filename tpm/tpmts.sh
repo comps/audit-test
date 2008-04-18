@@ -18,13 +18,11 @@
 
 CheckVars ()
 {
-	if [ "$TESTPATH" ]
+	if [ -z "$TESTPATH" ];
 	then
-		export TESTPATH
-	else
-		echo "You must enter a valid path to the testsuite."
-		exit 255
+		export TESTPATH=./tcg
 	fi
+		
 
 	# Add "-v " to VERSION variable.  This is required for the
 	# individual test functions.
@@ -43,7 +41,8 @@ InitEnv ()
 	DEPTESTS="2 3 4 7 8 9 10 11 12 13 19 30 32 33 34 35 36"
 	DEPTESTS="$DEPTESTS 37 38 43 44 45 46 47 48"
 
-	if [ -z $TESTSUITE_OWNER_SECRET ]; then
+	if [ -z $TESTSUITE_OWNER_SECRET ];
+	then
 		TESTSUITE_OWNER_SECRET="abc123"
 
 		# Clear the TPM (test5).  This is only done as part of
@@ -62,7 +61,7 @@ InitEnv ()
 	#
 	# Source into this script, all the test scripts
 	#
-	for K in `ls -1 testlib/test*`
+	for K in `find tests -type f -name "test??"`
 	do
 		. $K
 	done

@@ -16,16 +16,16 @@
 
 DEPDIR=tests/DEP
 INDDIR=tests/IND
-TESTLIB=testlib
+SUBDIRS=tcg
+FILES=tpmts.sh Makefile COPYRIGHT LICENSE
 
-all:	library
+all:	
+	@set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i ; done
 
-library:
-	mkdir -p ${TESTLIB}
-	cp -p ${DEPDIR}/tpm/test* ${TESTLIB}
-	cp -p ${DEPDIR}/tspi/test* ${TESTLIB}
-	cp -p ${INDDIR}/tpm/test* ${TESTLIB}
-	cp -p ${INDDIR}/tspi/test* ${TESTLIB}
+clean:
+	@set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i clean ; done
 
-tarball:
-	tar -cpf ../tpmts-pkg.tar testlib tpmts.sh
+tarball: clean
+	tar -cpf ../tpmts-pkg.tar --exclude .svn \
+		$(SUBDIRS) $(DEPDIR) $(INDDIR) $(FILES)
+

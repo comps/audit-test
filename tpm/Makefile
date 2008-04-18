@@ -17,15 +17,17 @@
 DEPDIR=tests/DEP
 INDDIR=tests/IND
 SUBDIRS=tcg
-FILES=tpmts.sh Makefile COPYRIGHT LICENSE
+DISTFILES=tpmts.sh Makefile COPYRIGHT LICENSE
+OUTFILES=eout sout
 
 all:	
 	@set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i ; done
 
 clean:
 	@set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i clean ; done
+	$(RM) $(OUTFILES)
 
 tarball: clean
 	tar -cpf ../tpmts-pkg.tar --exclude .svn \
-		$(SUBDIRS) $(DEPDIR) $(INDDIR) $(FILES)
+		$(SUBDIRS) $(DEPDIR) $(INDDIR) $(DISTFILES)
 

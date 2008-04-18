@@ -18,7 +18,8 @@
 #
 ##
 
-SUBDIRS = common tpm tspi highlevel/tpm 
+SUBDIRS = common
+SUBDIRS += `ls */Makefile | sed "s/Makefile//g" | sed "s/common\///g"`
 
 all:
 	@set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i ; done

@@ -36,7 +36,7 @@ CFLAGS += -g -I../../include
 all: $(ALL)
 
 install:
-	@set -e; for i in $(ALL); do mv $$i ../../../bin/$$i ; done
+	@set -e; for i in $(ALL); do mv $$i ../../bin/$$i ; done
 
 clean:
 	rm -f *.o ../../bin/$(ALL) *~ $(ALL) *.bbg *.bb *.da

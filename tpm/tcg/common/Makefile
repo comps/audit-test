@@ -31,4 +31,4 @@ all: common.o
 install:
 
 clean:
-	$(RM) *.o
+	rm -f *.o

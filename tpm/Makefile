@@ -17,7 +17,7 @@
 DEPDIR=tests/DEP
 INDDIR=tests/IND
 SUBDIRS=tcg
-DISTFILES=tpmts.sh Makefile COPYRIGHT LICENSE
+DISTFILES=tpmts.sh Makefile
 OUTFILES=eout sout x1
 
 all:	

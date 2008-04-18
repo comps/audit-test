@@ -98,7 +98,7 @@ GetCmdOpts ()
 			;;
 		-o )
 			# Determine if the TPM has installed an owner.
-			Test06 12
+			Test6 12
 			exit 0
 			;;
 		-p )

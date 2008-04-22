@@ -2,7 +2,7 @@
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2008
 ###############################################################################
 
-TPMTSVER:=$$(awk '/^Version/{print $$2}' tpmts.spec)
+TPMTSVER:=$(shell awk '/^Version/{print $$2}' tpmts.spec)
 DEPDIR=tests/DEP
 INDDIR=tests/IND
 SUBDIRS=tcg

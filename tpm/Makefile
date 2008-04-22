@@ -5,7 +5,7 @@
 DEPDIR=tests/DEP
 INDDIR=tests/IND
 SUBDIRS=tcg
-DISTFILES=tpmts.sh Makefile
+DISTFILES=Makefile tpmts.sh tpmts.man
 OUTFILES=eout sout x1
 
 all:	

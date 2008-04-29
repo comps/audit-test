@@ -105,7 +105,7 @@ GetCmdOpts ()
 			TESTORDER=`echo $2 | sed 's/,/ /g'`
 			shift
 			;;
-		-u | -h )
+		-u | -h | --help )
 			Usage
 			exit 0
 			;;
@@ -162,7 +162,11 @@ Usage ()
 	-u: Usage.
 	-v: Define the TSS version to test.  The default is 1.2
 	    Example: -v 1.2
-	"
+
+Environment variables include:
+	CTFLAG TESTORDER TESTSUITE_OWNER_SECRET TESTSUITE_SRK_SECRET
+
+See tpmts.man for more information."
 }
 
 

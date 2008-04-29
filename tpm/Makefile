@@ -7,7 +7,7 @@ DEPDIR=tests/DEP
 INDDIR=tests/IND
 SUBDIRS=tcg
 DISTFILES=Makefile tpmts.sh tpmts.man tpmts.spec
-OUTFILES=eout sout x1 tpmts-$(TPMTSVER).tar.gz
+TARFILE=tpmts-$(TPMTSVER).tar.gz
 DESTDIR?=/usr/local/tpmts/
 
 all:	
@@ -15,7 +15,6 @@ all:
 
 clean:
 	@set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i clean ; done
-	$(RM) $(OUTFILES)
 
 install: all
 	mkdir -p $(DESTDIR)
@@ -37,7 +36,7 @@ uninstall:
 	@if [ $(DESTDIR) != "/" ]; then rm -rf $(DESTDIR); fi
 
 tarball: clean
-	tar -cpf ../tpmts-pkg.tar --exclude .svn \
+	tar -cpf ../$(TARFILE) --exclude .svn \
 		$(SUBDIRS) $(DEPDIR) $(INDDIR) $(DISTFILES)
 
 dist: tarball

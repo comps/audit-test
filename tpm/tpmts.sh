@@ -4,20 +4,6 @@
 ###############################################################################
 
 
-CheckVars ()
-{
-	if [ -z "$TESTPATH" ];
-	then
-		export TESTPATH=./tcg
-	fi
-		
-
-	# Add "-v " to VERSION variable.  This is required for the
-	# individual test functions.
-	VERSION="-v $VERSION"
-}
-
-
 InitEnv ()
 {
 	VERSION=${VERSION:="1.2"}
@@ -53,6 +39,16 @@ InitEnv ()
 	do
 		. $K
 	done
+
+	if [ -z "$TESTPATH" ];
+	then
+		export TESTPATH=./tcg
+	fi
+		
+
+	# Add "-v " to VERSION variable.  This is required for the
+	# individual test functions.
+	VERSION="-v $VERSION"
 }
 
 
@@ -206,7 +202,6 @@ See tpmts.man for more information."
 
 InitEnv
 GetCmdOpts "$@"
-CheckVars
 RunTests
 
 

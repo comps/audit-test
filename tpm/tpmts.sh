@@ -3,6 +3,31 @@
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2008
 ###############################################################################
 
+Usage ()
+{
+	echo "$0 -p <path-to-tcg-dir> [-co][-ct][-D][-id][-I][-m][-o][-t <n,n,n>][-v <version>]
+	-p: Path to tcg directory, usually /trousers/testsuite/tcg
+	    Example: -p /trousers/testsuite/tcg
+	-co: Clear the TPM, only.  No other tests performed.
+	-ct: Do not clear the TPM after tests have run.
+	-D: Run only tests that require TPM ownership and SRK
+	-id: Do not run tests, but show which tests would be run
+	-I: Run only tests that do not require TPM ownership or SRK
+	-m: Show the manufacturer of the TPM
+	-o: Show status of TPM ownership
+	-t: Run specific tests instead of default tests. Supply test numbers
+	    separated by commas.
+	    Example: -t 4,8,9,30 would run test4, test8, test9 and test30
+	-u: Usage.
+	-v: Define the TSS version to test.  The default is 1.2
+	    Example: -v 1.2
+
+Environment variables include:
+	CTFLAG TESTORDER TESTSUITE_OWNER_SECRET TESTSUITE_SRK_SECRET
+
+See tpmts.man for more information."
+}
+
 
 InitEnv ()
 {
@@ -120,61 +145,6 @@ GetCmdOpts ()
 }
 
 
-RunTests ()
-{
-	SUCCESS_COUNT=0;
-	FAIL_COUNT=0;
-	RUN_COUNT=0;
-
-	for K in $TESTORDER
-	do
-		Test$K
-		if [ $? -eq 0 ]; then
-			((SUCCESS_COUNT++))
-		else
-			((FAIL_COUNT++))
-		fi
-		((RUN_COUNT++))
-	done
-
-	[ ! "$IDFLAG" ] && {
-		echo ""
-		echo "Completed $RUN_COUNT tests, $SUCCESS_COUNT Successful, $FAIL_COUNT Failures."
-		echo ""
-		if [ $FAIL_COUNT -gt 0 ]; then
-			return 1;
-		fi
-	}
-
-	return 0;
-}
-
-
-Usage ()
-{
-	echo "$0 -p <path-to-tcg-dir> [-co][-ct][-D][-id][-I][-m][-o][-t <n,n,n>][-v <version>]
-	-p: Path to tcg directory, usually /trousers/testsuite/tcg
-	    Example: -p /trousers/testsuite/tcg
-	-co: Clear the TPM, only.  No other tests performed.
-	-ct: Do not clear the TPM after tests have run.
-	-D: Run only tests that require TPM ownership and SRK
-	-id: Do not run tests, but show which tests would be run
-	-I: Run only tests that do not require TPM ownership or SRK
-	-m: Show the manufacturer of the TPM
-	-o: Show status of TPM ownership
-	-t: Run specific tests instead of default tests. Supply test numbers
-	    separated by commas.
-	    Example: -t 4,8,9,30 would run test4, test8, test9 and test30
-	-u: Usage.
-	-v: Define the TSS version to test.  The default is 1.2
-	    Example: -v 1.2
-
-Environment variables include:
-	CTFLAG TESTORDER TESTSUITE_OWNER_SECRET TESTSUITE_SRK_SECRET
-
-See tpmts.man for more information."
-}
-
 CheckTPM ()
 {
 	# Check for tcsd
@@ -207,6 +177,37 @@ CheckTPM ()
 		exit 1
 	fi
 }
+
+
+RunTests ()
+{
+	SUCCESS_COUNT=0;
+	FAIL_COUNT=0;
+	RUN_COUNT=0;
+
+	for K in $TESTORDER
+	do
+		Test$K
+		if [ $? -eq 0 ]; then
+			((SUCCESS_COUNT++))
+		else
+			((FAIL_COUNT++))
+		fi
+		((RUN_COUNT++))
+	done
+
+	[ ! "$IDFLAG" ] && {
+		echo ""
+		echo "Completed $RUN_COUNT tests, $SUCCESS_COUNT Successful, $FAIL_COUNT Failures."
+		echo ""
+		if [ $FAIL_COUNT -gt 0 ]; then
+			return 1;
+		fi
+	}
+
+	return 0;
+}
+
 
 #
 # General Notes

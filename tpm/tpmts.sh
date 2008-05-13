@@ -12,12 +12,17 @@ InitEnv ()
 	INDTESTS="1 20 6 14 15 16 17 18 21 22 23 24 25 26 27 28 29"
 
 	# Default dependent tests
-	DEPTESTS="2 3 4 7 8 9 10 11 12 13 19 30 32 33 34 35 36"
+	DEPTESTS="3 4 7 8 9 10 11 12 13 19 30 32 33 34 35 36"
 	DEPTESTS="$DEPTESTS 37 38 43 44 45 46 47 48"
 
 	if [ -z $TESTSUITE_OWNER_SECRET ];
 	then
 		TESTSUITE_OWNER_SECRET="abc123"
+
+		# Getting the Public Endorsement Key (test2) is not allowed
+		# when Ownership has already been taken.  Since it has not been
+		# taken, run test2
+		DEPTESTS="2 $DEPTESTS"
 
 		# Clear the TPM (test5).  This is only done as part of
 		# dependent testing and only when the user did not provide

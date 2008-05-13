@@ -94,7 +94,7 @@ GetCmdOpts ()
 				echo "$2: Invalid path specified."
 				echo -n "Could not located sub-directories"
 				echo " [ tpm, transport, tspi, etc ]"
-				exit
+				exit 1
 			fi
 			;;
 		-t )
@@ -136,7 +136,12 @@ RunTests ()
 		echo ""
 		echo "Completed $RUN_COUNT tests, $SUCCESS_COUNT Successful, $FAIL_COUNT Failures."
 		echo ""
+		if [ $FAIL_COUNT -gt 0 ]; then
+			return 1;
+		fi
 	}
+
+	return 0;
 }
 
 
@@ -203,5 +208,4 @@ See tpmts.man for more information."
 InitEnv
 GetCmdOpts "$@"
 RunTests
-
-
+exit $?

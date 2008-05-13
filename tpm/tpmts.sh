@@ -175,6 +175,38 @@ Environment variables include:
 See tpmts.man for more information."
 }
 
+CheckTPM ()
+{
+	# Check for tcsd
+	ps ax | grep [t]csd > /dev/null
+	if [ $? = 1 ]; then
+		echo "The trousers service (tcsd) does not appear to be running"
+		echo "Please start it (as root: \`service tcsd start\` )"
+		exit 1
+	fi
+
+	# Check that tpm is accessible
+	/usr/sbin/tpm_selftest > /dev/null
+	if [ $? -ne 0 ]; then
+		echo "Trousers is unable to communicate with the TPM."
+		echo "Please be sure it is properly enabled in the BIOS."
+		exit 1
+	fi
+
+	# Check the version that trousers thinks is available
+	TPMVER=$(/usr/sbin/tpm_version | awk '/Chip/{print $3}' | awk -F . '{print $1"."$2}')
+	if [ "-v $TPMVER" != "$VERSION" ]; then
+		echo "There seems to be a version mismatch, this may affect the test results"
+	fi
+
+	# Check if the password is correct
+	$TESTPATH/tpm/Tspi_TPM_OwnerGetSRKPubKey01 $VERSION > /dev/null 2> /dev/null
+	if [ $? = 1 ]; then
+		echo "The TPM owner password is not correct, check that"
+		echo "TESTSUITE_OWNER_SECRET set correctly in your environment?"
+		exit 1
+	fi
+}
 
 #
 # General Notes
@@ -212,5 +244,6 @@ See tpmts.man for more information."
 
 InitEnv
 GetCmdOpts "$@"
+CheckTPM
 RunTests
 exit $?

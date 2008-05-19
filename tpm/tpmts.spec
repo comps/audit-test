@@ -1,5 +1,5 @@
 Name:      tpmts
-Version:   0.2
+Version:   0.3
 Release:   1
 Summary:   Hardware enablement tests of the TPM
 Packager:  Matt Anderson <mra@hp.com>

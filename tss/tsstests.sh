@@ -47,6 +47,8 @@ LOGGING=0
 INIT=0
 QUIET=0
 export ERR_SUMMARY=../../err.summary
+export FAILLOG=../../faillog
+export SEGLOG=../../seglog
 SPECIFIC_TEST_DIR=
 
 TEST_RUN=
@@ -135,6 +137,9 @@ case "$OUTPUT_FORMAT" in
 	*wiki*)
 		echo "Using output format: $OUTPUT_FORMAT"
 		;;
+	*hpedia*)
+		echo "Using output format: $OUTPUT_FORMAT"
+		;;
 	*)
 		echo "Unknown format: $OUTPUT_FORMAT"
 		usage
@@ -171,6 +176,19 @@ print_totals()
 		echo "      $4 |"  >> $ERR_SUMMARY
 		echo "        $5"  >> $ERR_SUMMARY
 		;;
+	*hpedia*)
+		echo " | $1"
+		echo " | $2"
+		if test -f $FAILLOG; then
+			cat $FAILLOG;
+		fi
+		echo " | $4"
+		echo " | $3"
+		echo " | $5"
+		if test -f $SEGLOG; then
+			cat $SEGLOG;
+		fi
+		;;
 	*)
 		echo "Unknown output format!"
 		exit -1
@@ -203,6 +221,16 @@ print_error()
 		fi
 		echo "        ." >> $ERR_SUMMARY
 		;;
+	*hpedia*)
+		if test $3 -gt 126; then
+                        echo "(rc=$3): $1" >> $SEGLOG
+                elif test $3 -lt 126; then
+                        echo $2 | awk '{print $1 " " $7 " " $NF }' >> $FAILLOG
+                fi
+		echo "$1 (rc=$3)" >> $ERR_SUMMARY
+		echo "$2\n" >> $ERR_SUMMARY
+                ;;
+
 	*)
 		echo "Unknown output format!"
 		exit -1
@@ -226,6 +254,8 @@ print_init()
 			echo "    Test Return Code |" >> $ERR_SUMMARY
 			echo "      . |" >> $ERR_SUMMARY
 			echo "        ." >> $ERR_SUMMARY
+			;;
+		*hpedia*)
 			;;
 		*)
 			echo "Unknown output format!"

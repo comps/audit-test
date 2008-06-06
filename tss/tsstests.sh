@@ -47,8 +47,8 @@ LOGGING=0
 INIT=0
 QUIET=0
 export ERR_SUMMARY=../../err.summary
-export FAILLOG=../../faillog
-export SEGLOG=../../seglog
+export FAILLOG=$LOGDIR/faillog
+export SEGLOG=$LOGDIR/seglog
 SPECIFIC_TEST_DIR=
 
 TEST_RUN=
@@ -256,6 +256,22 @@ print_init()
 			echo "        ." >> $ERR_SUMMARY
 			;;
 		*hpedia*)
+			if test -e $FAILLOG; then
+				echo "Removing stale $FAILLOG"
+				rm -f $FAILLOG
+				if test $? -ne 0; then
+					echo "Error removing $FAILLOG"
+					exit 1
+				fi
+			fi
+			if test -e $SEGLOG; then
+				echo "Removing stale $SEGLOG"
+				rm -f $SEGLOG
+				if test $? -ne 0; then
+					echo "Error removing $SEGLOG"
+					exit 1
+				fi
+			fi
 			;;
 		*)
 			echo "Unknown output format!"

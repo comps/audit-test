@@ -1,0 +1,23 @@
+/Makefile/1.6/Thu Nov 16 18:49:15 2006//
+/Tspi_ChangeSRKAuthAndReregister.c/1.2/Thu Apr 12 16:45:39 2007//
+/Tspi_Key_WrapKey01.c/1.4/Thu Apr 12 16:45:39 2007//
+/Tspi_PolicyChecking01.c/1.5/Thu Apr 12 16:45:39 2007//
+/Tspi_PolicyChecking02.c/1.4/Thu Apr 12 16:45:39 2007//
+/Tspi_TPM_StatusTest01.c/1.5/Thu Apr 12 16:45:39 2007//
+/Tspi_TPM_StatusTest02.c/1.5/Thu Apr 12 16:45:39 2007//
+/dump_event_log.c/1.5/Thu Apr 12 16:45:39 2007//
+/gui_prompt_for_owner_auth.c/1.1/Wed Nov 21 19:51:00 2007//
+/gui_prompt_for_srk_auth.c/1.1/Wed Nov 21 19:51:00 2007//
+/key_auth_chain01.c/1.6/Thu Apr 12 16:45:39 2007//
+/key_auth_chain02.c/1.7/Tue Oct 16 18:39:55 2007//
+/key_auth_check01.c/1.6/Thu Apr 12 16:45:39 2007//
+/key_auth_check02.c/1.6/Thu Apr 12 16:45:39 2007//
+/key_conflict01.c/1.6/Thu Apr 12 16:45:39 2007//
+/key_loading.c/1.5/Thu Nov 16 18:49:15 2006//
+/key_loading_auth.c/1.5/Thu Nov 16 18:49:15 2006//
+/ps_stress.c/1.6/Tue Oct 16 18:39:55 2007//
+/run_functional_tests.sh/1.11/Tue Jul 10 20:12:25 2007//
+/tpm_rng_test.c/1.4/Tue Oct 16 18:39:55 2007//
+/tthread.c/1.3/Thu Apr 26 19:22:24 2007//
+/unicode.c/1.3/Thu Nov 16 18:49:16 2006//
+D

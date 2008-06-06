@@ -1,0 +1,26 @@
+/Makefile/1.5/Thu Nov 16 18:50:56 2006//
+/Tspi_Key_CertifyKey01.c/1.9/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_CertifyKey02.c/1.9/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_CertifyKey03.c/1.9/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_CheckAttribs01.c/1.3/Fri Nov  2 20:40:21 2007//
+/Tspi_Key_ConvertMigrationBlob01.c/1.11/Tue Aug 28 20:34:24 2007//
+/Tspi_Key_CreateKey01.c/1.8/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_CreateKey02.c/1.9/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_CreateKey03.c/1.9/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_CreateMigrationBlob01.c/1.10/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_CreateMigrationBlob02.c/1.9/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_CreateMigrationBlob03.c/1.8/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_CreateMigrationBlob04.c/1.9/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_CreateMigrationBlob05.c/1.9/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_GetPubKey01.c/1.8/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_GetPubKey02.c/1.6/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_GetPubKey03.c/1.8/Thu Apr 12 16:46:57 2007//
+/Tspi_Key_LoadKey01.c/1.9/Fri Apr 13 20:24:03 2007//
+/Tspi_Key_LoadKey03.c/1.8/Thu Apr 12 16:46:58 2007//
+/Tspi_Key_LoadKey04.c/1.8/Thu Apr 12 16:46:58 2007//
+/Tspi_Key_UnloadKey01.c/1.7/Thu Apr 12 16:46:58 2007//
+/Tspi_Key_UnloadKey02.c/1.8/Thu Apr 12 16:46:58 2007//
+/Tspi_Key_WrapKey01.c/1.11/Tue Oct  9 21:25:41 2007//
+/Tspi_Key_WrapKey02.c/1.9/Tue Oct  9 21:25:41 2007//
+/Tspi_Key_WrapKey03.c/1.8/Thu Apr 12 16:46:58 2007//
+D

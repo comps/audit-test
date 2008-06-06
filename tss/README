@@ -1,0 +1,58 @@
+These are the testcases that exercise the TSS stack. They can be run
+either through the the LTP framework or standalone.  The testcases have been
+tested against the 20040304 version of LTP.
+
+Please do not execute these testcases on a machine where you are actively
+using the TPM.
+
+These testcases must be run on a machine with a TPM and a TSS. Boot the
+machine and take ownership of your TPM.  If you have the tpm-tools package,
+you can run tpm_takeownership to take ownership of your TPM and set the owner
+and SRK passwords.  If you don't have tpm-tools, run the following test case
+to set the owner and SRK passwords (after building the testsuite):
+
+$ testsuite/tcg/init/Tspi_TPM_TakeOwnership01 -v 1.1
+
+This test will set the owner and SRK passwords to the value of the environment
+variables TESTSUITE_OWNER_SECRET and TESTSUITE_SRK_SECRET, respectively. During
+the testsuite run, you will need to either set these environment variables to
+their correct values, or change their values explicitly in tcg/include/common.h
+and rebuild the testsuite.
+
+To build and run the testsuite:
+
+Standalone:
+	1) cd tcg
+	2) make
+	3) cd ..
+	4) ./tsstests.sh
+
+Integrated with the LTP:
+	1) Download and expand LTP
+	2) Obtain testcases from CVS (or other package).
+	3) Copy the tcg directory into <ltp>/testcases
+	4) Apply the Makefile patch
+	5) make
+	6) make install
+	7) ./runalltests.sh -f </full/path/to/ltp>/runtest/tcg -l ./logfile -p
+
+On platforms where the TSS lib is compiled 64bit (ppc64, x86_64, s390x), add
+the following CFLAGS to make:
+$ CFLAGS=-m64 make
+
+
+By default, the 1.1 version of each testcase will be run. To run the testsuite
+against another version of the spec, run ./tsstests.sh -v <version>. Also,
+individual sets of tests can be run by passing the directory name of the tests
+to tsstests.sh, for example:
+
+To run the key tests only (version 1.1 tests will be run by default):
+./tsstests.sh key
+
+To run the tests in the tpm directory against TSS version 1.2:
+./tsstests.sh -v 1.2 -d tpm
+
+To run all tests against a TSS version 1.2:
+./tsstests.sh -v 1.2
+
+Run tsstests.sh -h to see all available options.

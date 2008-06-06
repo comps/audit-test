@@ -79,7 +79,7 @@ usage()
 }
 
 # Parse the options
-while getopts v:l:f:hqd: arg
+while getopts v:l:f:hqd:e: arg
 do
 	case $arg in
 		v)
@@ -299,11 +299,9 @@ main()
 			echo $DIRECTORY
 			cd ${LTPTSSROOT}/${TESTCASEDIR}/$DIRECTORY
 			TESTS_TO_RUN=`ls *.c | sed "s/\.c//g"`
-			cd ../../bin
 		else
 			cd ${LTPTSSROOT}/${TESTCASEDIR}/$DIRECTORY &> /dev/null
 			TESTS_TO_RUN=`ls *.c | sed "s/\.c//g"`
-			cd ../../bin &> /dev/null
 		fi
 
 		print_init

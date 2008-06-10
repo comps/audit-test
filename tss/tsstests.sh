@@ -349,10 +349,10 @@ main()
 
 		if test $QUIET -eq 0; then
 			echo $DIRECTORY
-			cd ${LTPTSSROOT}/${TESTCASEDIR}/$DIRECTORY
+			cd ${TESTCASEDIR}/$DIRECTORY
 			TESTS_TO_RUN=`ls *.c | sed "s/\.c//g"`
 		else
-			cd ${LTPTSSROOT}/${TESTCASEDIR}/$DIRECTORY &> /dev/null
+			cd ${TESTCASEDIR}/$DIRECTORY &> /dev/null
 			TESTS_TO_RUN=`ls *.c | sed "s/\.c//g"`
 		fi
 
@@ -360,6 +360,7 @@ main()
 
 		for TEST in $TESTS_TO_RUN
 		do
+			echo -en "$TEST                                      \r"
 			execute_test ./$TEST
 
 			# Printing totals here is a special case: if you're watching the output
@@ -373,6 +374,15 @@ main()
 		done
 	done
 
+	if test $START -ne 0; then
+		FINISH=`date +%s`
+		if test $OUTPUT_FORMAT != "hpedia"; then
+			echo Testing completed in $((( $FINISH - $START ) / 60 )) minutes
+		else
+			echo "| $((( $FINISH - $START ) / 60 ))"
+		fi
+	fi
+
 	if test $QUIET -eq 0; then
 		print_totals $PASSED $FAILED $NOTIMPL $NA $SEGFAULTED
 		echo "<<< Test suite run completed >>>"
@@ -380,11 +390,6 @@ main()
 }
 
 main $SPECIFIC_TEST_DIR
-
-if test START -ne 0; then
-	FINISH=`date +%s`
-	echo Testing completed in $((( $FINISH - $START ) / 60 )) minutes
-fi
 
 exit 0
 

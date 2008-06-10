@@ -46,6 +46,7 @@ export LOGFILE=$LOGDIR/tsstests.log
 LOGGING=0
 INIT=0
 QUIET=0
+START=0
 export ERR_SUMMARY=../../err.summary
 export FAILLOG=$LOGDIR/faillog
 export SEGLOG=$LOGDIR/seglog
@@ -56,7 +57,8 @@ TEST_OUTPUT=
 OUTPUT_FORMAT="standard"
 
 # this variable needs to be changed to testcases/tcg/ for ltp compatibility
-TESTCASEDIR=testsuite/tcg/
+#TESTCASEDIR=testests/tcg/
+TESTCASEDIR=$PWD/tcg/
 
 cd ..
 
@@ -76,12 +78,13 @@ usage()
 		-q	 run quietly - display only total number of tests passed/failed
 		-e	 file name to log errors to
 		-d <dir> a specific directory to run tests from (to run a subset of all tests)
+		-t	 time the testrun
 	END
 	exit -1
 }
 
 # Parse the options
-while getopts v:l:f:hqd:e: arg
+while getopts v:l:f:hqd:e:t arg
 do
 	case $arg in
 		v)
@@ -120,6 +123,9 @@ do
 				echo "Unknown option: $OPTARG."
 				usage
 			fi
+			;;
+		t)
+			START=`date +%s`
 			;;
 		?)
 			usage
@@ -374,6 +380,11 @@ main()
 }
 
 main $SPECIFIC_TEST_DIR
+
+if test START -ne 0; then
+	FINISH=`date +%s`
+	echo Testing completed in $((( $FINISH - $START ) / 60 )) minutes
+fi
 
 exit 0
 

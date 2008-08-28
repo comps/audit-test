@@ -19,7 +19,7 @@ Verify that each ext3 filesystem in /etc/fstab has the “user_xattr” option.
 If you do not have an administrative eal user other than the root user, add 
 one with the following commands:
 
-# useradd -c "EAL Test User"-g wheel eal
+# useradd -c "EAL Test User" -g wheel eal
 
 The administrative user’s password must be the same as the root user’s password.
 # passwd <root’s password>

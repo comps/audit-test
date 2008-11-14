@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,0.5.4)
+policy_module(lspp_test,0.5.5)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -44,8 +44,8 @@ gen_require(`
         attribute domain;
         # domains
         type auditd_t, inetd_t, initrc_t, passwd_t;
-        # misc file objects
-        type auditd_log_t, sysadm_lpr_t;
+        # objects
+        type auditd_log_t, sysadm_lpr_t, ipsec_spd_t;
 ')
 
 ###
@@ -272,3 +272,6 @@ unconfined_domain_noaudit(lspp_test_netlabel_t)
 
 # give the test domain "unconfined" access
 unconfined_domain_noaudit(lspp_test_ipsec_t)
+
+# give the test domain the ability to match against the SPD entries
+allow lspp_test_ipsec_t ipsec_spd_t:association polmatch;

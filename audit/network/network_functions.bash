@@ -57,7 +57,11 @@ function check_result {
              [[ $ext != $err ]] && exit_error "unexpected test error"
              # audit represents errors as negative numbers so fixup the global
              # field value
-             exitval=-$(get_error_code_raw $err_name)
+             if [[ $RH_BZ_234426 == 0 ]]; then
+                 exitval=-$(get_error_code $err_name)
+             else
+                 exitval=-$(get_error_code_raw $err_name)
+             fi
 	     ;;
     esac
 }

@@ -31,7 +31,7 @@ prepend_cleanup "grep -q '^$group2:' /etc/group && groupdel '$group2'"
 setpid usermod -g $gid2 $user || exit_error "usermod failed"
 
 for msg_1 in \
-    "op=changing primary group acct=$user exe=./usr/sbin/usermod.*res=success.*"
+    "op=changing primary group acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

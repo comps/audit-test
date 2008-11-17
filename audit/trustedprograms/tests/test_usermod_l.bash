@@ -31,10 +31,10 @@ setpid usermod -l $user2 $user || exit_error "usermod failed"
 # these messages are very inconsistent, sometimes reporting the new user,
 # sometimes reporting the old.
 for msg_1 in \
-    "op=changing name acct=$user2 exe=./usr/sbin/usermod.*res=success.*" \
-    "op=changing group member acct=$user2 exe=./usr/sbin/usermod.*res=success.*" \
-    "op=changing member in shadow group acct=$user exe=./usr/sbin/usermod.*res=success.*" \
-    "op=changing mail file name acct=$user2 exe=./usr/sbin/usermod.*res=success.*"
+    "op=changing name acct=\"*$user2\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*" \
+    "op=changing group member acct=\"*$user2\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*" \
+    "op=changing member in shadow group acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*" \
+    "op=changing mail file name acct=\"*$user2\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

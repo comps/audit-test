@@ -27,7 +27,7 @@ groupadd -g $gid $group || exit_error "groupadd failed"
 setpid gpasswd -r $group || exit_error "gpasswd failed"
 
 for msg_1 in \
-    "op=deleting group password acct=$group exe=./usr/bin/gpasswd.*res=success.*"
+    "op=deleting group password acct=\"*$group\"* exe=\"*\.*/usr/bin/gpasswd*\".*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

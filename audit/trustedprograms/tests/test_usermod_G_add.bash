@@ -27,8 +27,8 @@ useradd -n -G users -u $uid $user || exit_error "useradd failed"
 setpid usermod -G users,games $user || exit_error "usermod failed"
 
 for msg_1 in \
-    "op=adding user to group acct=$user exe=./usr/sbin/usermod.*res=success.*" \
-    "op=adding user to shadow group acct=$user exe=./usr/sbin/usermod.*res=success.*"
+    "op=adding user to group acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*" \
+    "op=adding user to shadow group acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

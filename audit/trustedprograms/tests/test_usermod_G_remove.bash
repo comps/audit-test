@@ -27,8 +27,8 @@ useradd -n -G users,games -u $uid $user || exit_error "useradd failed"
 setpid usermod -G users $user || exit_error "usermod failed"
 
 for msg_1 in \
-    "op=removing group member acct=$user exe=./usr/sbin/usermod.*res=success.*" \
-    "op=removing user from shadow group acct=$user exe=./usr/sbin/usermod.*res=success.*"
+    "op=removing group member acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*" \
+    "op=removing user from shadow group acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

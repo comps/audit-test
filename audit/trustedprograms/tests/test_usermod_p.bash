@@ -28,7 +28,7 @@ password=$(perl -le 'print crypt "drowssap", "42"') || exit_error "perl failed"
 setpid usermod -p "$password" $user || exit_error "usermod failed"
 
 for msg_1 in \
-    "op=changing password acct=$user exe=./usr/sbin/usermod.*res=success.*"
+    "op=changing password acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

@@ -27,7 +27,7 @@ useradd -n -u $uid $user || exit_error "useradd failed"
 setpid usermod -e 20 $user || exit_error "usermod failed"
 
 for msg_1 in \
-    "op=changing expiration date acct=$user exe=./usr/sbin/usermod.*res=success.*"
+    "op=changing expiration date acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

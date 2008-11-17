@@ -38,7 +38,7 @@ su $TEST_USER -c "
 pid=$(<$tmp1)
 
 for msg_1 in \
-    "op=modify group acct=$group exe=./usr/bin/gpasswd.*res=failed.*"
+    "op=modify group acct=\"*$group\"* exe=\"*\.*/usr/bin/gpasswd\"*.*res=failed.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

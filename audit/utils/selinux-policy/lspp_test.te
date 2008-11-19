@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,0.5.5)
+policy_module(lspp_test,0.5.6)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -244,7 +244,7 @@ allow local_login_t lspp_harness_devpts_t:chr_file { read write ioctl relabelfro
 allow sysadm_lpr_t lspp_harness_devpts_t:chr_file { read write };
 
 # give the harness domain access to all the other test domain's associations
-allow lspp_harness_t lspp_domains:association setcontext;
+allow lspp_harness_t lspp_domains:association { setcontext recvfrom };
 
 # give the harness domain access to the passwd type
 role lspp_test_r types passwd_t;

@@ -158,17 +158,21 @@ fi
 ######################################################################
 
 function start_auditd {
-    declare i s="starting auditd $$: can you hear me now?"
+    declare i
     if ! pidof auditd &>/dev/null; then
-	service auditd start || return 2
+	if [ $DISTRO -eq "SUSE" ]; then
+	    rcauditd start || return 2
+	    auditctl -e 1 || return 2
+	else
+	    service auditd start || return 2
+	fi
     fi
 
     # auditd daemonizes before it is ready to receive records from the kernel.
     # make sure it's receiving before continuing.
     echo -n "start_auditd: Waiting for auditd to start"
     for ((i = 0; i < 100; i++)); do
-	auditctl -r 0 >/dev/null # XXX auditctl -m "$s"
-	# XXX if tail -n10 /var/log/audit/audit.log | grep -Fq "$s"; then
+	auditctl -r 0 >/dev/null
 	if tail -n10 /var/log/audit/audit.log | grep -Fq audit_rate_limit=0; then
 	    echo
 	    return 0
@@ -187,7 +191,11 @@ function stop_auditd {
     declare i
 
     auditctl -D &>/dev/null
-    service auditd stop || killall auditd
+    if [ $DISTRO -eq "SUSE" ]; then
+	rcauditd stop || killall auditd
+    else
+	service auditd stop || killall auditd
+    fi
     pidof auditd &>/dev/null || return 0
 
     echo -n "stop_auditd: Waiting for auditd to stop"

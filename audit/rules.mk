@@ -71,6 +71,16 @@ ifneq ($(MODE), $(NATIVE))
 	    endif
     endif
 endif
+export DISTRO 	= $( \
+	if [[ -f /etc/SuSE-release ]; then \
+            DISTRO=SUSE; \
+        elif [[ -f /etc/fedora-release ]; then \
+            DISTRO=FEDORA; \
+        elif [[ -f /etc/redhat-release ]; then \
+            DISTRO=REDHAT; \
+        else \
+            DISTRO=unknown; \
+        fi )
 
 ##########################################################################
 # Common rules
@@ -86,7 +96,9 @@ run:
 
 # Re-used in toplevel Makefile
 check_set_PPROFILE = \
-	if [[ $$PPROFILE != capp && $$PPROFILE != lspp ]]; then \
+	if [[ ! -x /usr/sbin/getenforce ]]; then \
+	  export PPROFILE=capp ; \
+        elif [[ $$PPROFILE != capp && $$PPROFILE != lspp ]]; then \
 	  export PPROFILE=capp ; \
 	  if [[ "$$(getenforce)" == "Enforcing" ]] &&  \
 	        (/usr/sbin/sestatus | grep -q mls); then \

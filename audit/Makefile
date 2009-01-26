@@ -19,8 +19,11 @@ TOPDIR		= .
 
 include $(TOPDIR)/rules.mk
 
-RUN_DIRS	= syscalls \
-		  network
+RUN_DIRS	= syscalls
+
+ifneq ($$(DISTRO), "SUSE")
+RUN_DIRS	+= network
+endif
 
 ifeq ($(MODE), $(NATIVE))
 RUN_DIRS       += fail-safe \

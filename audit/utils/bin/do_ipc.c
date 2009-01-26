@@ -14,8 +14,6 @@
  */
 
 #include "includes.h"
-#include <sys/ipc.h>
-#include <asm-generic/ipc.h>
 
 #include "ipc_common.c"
 

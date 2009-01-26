@@ -14,8 +14,7 @@
  */
 
 #include "includes.h"
-#include <sys/ipc.h>
-#include <asm-generic/ipc.h>
+#include <linux/ipc.h>
 #include <sys/msg.h>
 #include <sys/sem.h>
 #include <sys/shm.h>

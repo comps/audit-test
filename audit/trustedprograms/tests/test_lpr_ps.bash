@@ -25943,6 +25943,20 @@ augrok -q type=USER_LABELED_EXPORT msg_1=~"$msg_1" || exit_fail "missing: \"$msg
 if [ \! -f $OUTFILE ]; then
     exit_fail "File not found: $OUTFILE"
 else
+    sed -i \
+	-e s/%%CreationDate.*$// \
+	-e s/%%Creator.*$// \
+	-e s/%%For.*$// \
+	-e s/%%Title.*$// \
+	$OUTFILE
+
+    sed -i \
+	-e s/%%CreationDate.*$// \
+	-e s/%%Creator.*$// \
+	-e s/%%For.*$// \
+	-e s/%%Title.*$// \
+	$LABELED
+
     diff $OUTFILE $LABELED || exit_fail "Labeled output does not match"
 fi
 

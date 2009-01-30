@@ -37339,8 +37339,20 @@ if [ \! -f $OUTFILE ]; then
     exit_fail "File not found: $OUTFILE"
 else
     # the imagetops filter includes a timestamp comment, so remove it
-    sed -i -e s/%%CreationDate.*$// $OUTFILE
-    sed -i -e s/%%CreationDate.*$// $LABELED
+    sed -i \
+	-e s/%%CreationDate.*$// \
+	-e s/%%Creator.*$// \
+	-e s/%%For.*$// \
+	-e s/%%Title.*$// \
+	$OUTFILE
+
+    sed -i \
+	-e s/%%CreationDate.*$// \
+	-e s/%%Creator.*$// \
+	-e s/%%For.*$// \
+	-e s/%%Title.*$// \
+	$LABELED
+
     diff $OUTFILE $LABELED || exit_fail "Labeled output does not match"
 fi
 

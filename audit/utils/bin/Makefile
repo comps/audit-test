@@ -19,6 +19,10 @@ UTILSDIR	= ..
 CPPFLAGS	+= -I$(UTILSDIR)/include
 include $(TOPDIR)/rules.mk
 
+ifeq ($(DISTRO), "SUSE")
+CPPFLAGS	+= -DSUSE
+endif
+
 CAPS_EXE	= do_capset
 
 CREATE_EXE	= do_creat\

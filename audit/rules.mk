@@ -134,6 +134,21 @@ check_set_LBLNET_SVR_IPV6 = \
 	    trap - 1 2; \
 	done
 
+check_TTY = \
+	tty=`/usr/bin/tty`; \
+	tty_type=`ls -lZ $$tty | awk -F: '{print $$3}'`; \
+	grep -q $$tty_type /etc/selinux/mls/contexts/securetty_types && { \
+	    echo -n "You are connected to the test machine through "; \
+	    echo "a device ($$tty) that"; \
+	    echo -n "will prevent one or more tests from functioning "; \
+	    echo "as intended.  Connect to"; \
+	    echo -n "the machine remotely through a pty device, such "; \
+	    echo "as logging in as the "; \
+	    echo "test-user directly using ssh."; \
+	    echo ; \
+	    exit 1; \
+	}
+
 ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard run.conf)),)
 all: run.bash
 

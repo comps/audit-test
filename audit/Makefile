@@ -45,6 +45,7 @@ run:
 	$(check_set_PASSWD); \
 	$(check_set_LBLNET_SVR_IPV4); \
 	$(check_set_LBLNET_SVR_IPV6); \
+	$(check_set_TTY); \
 	$(MAKE) all && \
 	for x in $(RUN_DIRS); do make -C $$x run; done
 	$(MAKE) report

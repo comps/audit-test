@@ -71,16 +71,15 @@ ifneq ($(MODE), $(NATIVE))
 	    endif
     endif
 endif
-export DISTRO 	= $( \
-	if [[ -f /etc/SuSE-release ]; then \
-            DISTRO=SUSE; \
-        elif [[ -f /etc/fedora-release ]; then \
-            DISTRO=FEDORA; \
-        elif [[ -f /etc/redhat-release ]; then \
-            DISTRO=REDHAT; \
-        else \
-            DISTRO=unknown; \
-        fi )
+RELEASE = $(wildcard /etc/*-release)
+ifeq (,$(findstring $(RELEASE), "/etc/SuSE-release")) 
+CFLAGS +=-DSUSE
+endif
+ifeq (,$(findstring $(RELEASE), "/etc/fedora-release"))
+CFLAGS +=-DFEDORA
+else ifeq (,$(findstring $(RELEASE), "/etc/redhat-release"))
+CFLAGS +=-DRHEL
+endif
 
 ##########################################################################
 # Common rules

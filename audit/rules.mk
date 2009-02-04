@@ -74,11 +74,14 @@ endif
 RELEASE = $(wildcard /etc/*-release)
 ifeq (,$(findstring $(RELEASE), "/etc/SuSE-release")) 
 CFLAGS +=-DSUSE
+export DISTRO=SUSE
 endif
 ifeq (,$(findstring $(RELEASE), "/etc/fedora-release"))
 CFLAGS +=-DFEDORA
+export DISTRO=FEDORA
 else ifeq (,$(findstring $(RELEASE), "/etc/redhat-release"))
 CFLAGS +=-DRHEL
+export DISTRO=RHEL
 endif
 
 ##########################################################################

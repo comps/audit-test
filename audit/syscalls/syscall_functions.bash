@@ -184,6 +184,17 @@ function augrok_default {
         uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
         gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid exit=$exitval \
         "$@"
+
+    if [ $? != 0 ]; then
+	echo "lets give it a few seconds and try again"
+        sleep 3;
+        augrok --seek=$log_mark -m1 type==SYSCALL \
+            syscall=$syscall success=$success pid=$pid \
+            auid=$(</proc/self/loginuid) \
+            uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
+            gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid exit=$exitval \
+            "$@"
+    fi
 }
 
 function augrok_name {

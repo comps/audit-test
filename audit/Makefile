@@ -21,7 +21,7 @@ include $(TOPDIR)/rules.mk
 
 RUN_DIRS	= syscalls
 
-ifneq ($$(DISTRO), "SUSE")
+ifneq ($(DISTRO), SUSE)
 RUN_DIRS	+= network
 endif
 
@@ -30,8 +30,10 @@ RUN_DIRS       += fail-safe \
 		  filter \
 		  audit-trail-protection \
 		  audit-tools \
-		  libpam \
-		  trustedprograms
+		  libpam
+ifneq ($(DISTRO), SUSE)
+RUN_DIRS       += trustedprograms
+endif
 endif
 
 SUB_DIRS	= $(RUN_DIRS) \
@@ -45,7 +47,7 @@ run:
 	$(check_set_PASSWD); \
 	$(check_set_LBLNET_SVR_IPV4); \
 	$(check_set_LBLNET_SVR_IPV6); \
-	$(check_set_TTY); \
+	$(check_TTY); \
 	$(MAKE) all && \
 	for x in $(RUN_DIRS); do make -C $$x run; done
 	$(MAKE) report

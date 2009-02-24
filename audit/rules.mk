@@ -72,14 +72,14 @@ ifneq ($(MODE), $(NATIVE))
     endif
 endif
 RELEASE = $(wildcard /etc/*-release)
-ifeq (,$(findstring $(RELEASE), "/etc/SuSE-release")) 
+ifeq (SuSE, $(findstring SuSE, $(RELEASE)))
 CFLAGS +=-DSUSE
 export DISTRO=SUSE
 endif
-ifeq (,$(findstring $(RELEASE), "/etc/fedora-release"))
+ifeq (fedora, $(findstring fedora, $(RELEASE)))
 CFLAGS +=-DFEDORA
 export DISTRO=FEDORA
-else ifeq (,$(findstring $(RELEASE), "/etc/redhat-release"))
+else ifeq (redhat, $(findstring redhat, $(RELEASE)))
 CFLAGS +=-DRHEL
 export DISTRO=RHEL
 endif
@@ -120,6 +120,9 @@ check_set_PASSWD = \
 	    trap - 1 2; \
 	done 
 
+ifeq (, $(findstring network, $(RUN_DIRS)))
+check_set_LBLNET_SVR_IPV4 = true
+else
 check_set_LBLNET_SVR_IPV4 = \
 	while [[ -z $$LBLNET_SVR_IPV4 ]]; do \
 	    trap 'stty echo; exit' 1 2; \
@@ -127,7 +130,11 @@ check_set_LBLNET_SVR_IPV4 = \
 		echo; export LBLNET_SVR_IPV4; \
 	    trap - 1 2; \
 	done
+endif
 
+ifeq (, $(findstring network, $(RUN_DIRS)))
+check_set_LBLNET_SVR_IPV6 = true
+else
 check_set_LBLNET_SVR_IPV6 = \
 	while [[ -z $$LBLNET_SVR_IPV6 ]]; do \
 	    trap 'stty echo; exit' 1 2; \
@@ -135,11 +142,12 @@ check_set_LBLNET_SVR_IPV6 = \
 		echo; export LBLNET_SVR_IPV6; \
 	    trap - 1 2; \
 	done
+endif
 
 check_TTY = \
 	tty=`/usr/bin/tty`; \
 	tty_type=`ls -lZ $$tty | awk -F: '{print $$3}'`; \
-	grep -q $$tty_type /etc/selinux/mls/contexts/securetty_types && { \
+	grep -q $$tty_type /etc/selinux/mls/contexts/securetty_types /dev/null && { \
 	    echo -n "You are connected to the test machine through "; \
 	    echo "a device ($$tty) that"; \
 	    echo -n "will prevent one or more tests from functioning "; \

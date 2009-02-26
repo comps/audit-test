@@ -327,34 +327,38 @@ function rolecall {
 # initcall <init-script-or-command> [args...]
 function initcall {
     [[ $# == 0 ]] && exit 2
-    declare status
 
-    (   # use a subshell to contain exported variables
-        declare RUNINIT_ARGS
+    if [ $PPROFILE == "lspp" ]; then
+        declare status
+        (   # use a subshell to contain exported variables
+            declare RUNINIT_ARGS
 
-        while [[ $# -gt 0 ]]; do
-            # this is interpreted by tcl, so use tcl quoting.
-            # XXX this will break if an argument includes braces,
-            # so bomb out until we have a better solution.
-            if [[ $1 == *[{}]* ]]; then
-                echo "braces not allowed in arguments to initcall" >&2
-                exit 111        # exit from subshell
-            fi
-            RUNINIT_ARGS="$RUNINIT_ARGS {$1}"
-            shift
-        done
-        export RUNINIT_ARGS
+            while [[ $# -gt 0 ]]; do
+                # this is interpreted by tcl, so use tcl quoting.
+                # XXX this will break if an argument includes braces,
+                # so bomb out until we have a better solution.
+                if [[ $1 == *[{}]* ]]; then
+                    echo "braces not allowed in arguments to initcall" >&2
+                    exit 111        # exit from subshell
+                fi
+                RUNINIT_ARGS="$RUNINIT_ARGS {$1}"
+                shift
+            done
+            export RUNINIT_ARGS
 
-        expect -c '
-            eval spawn run_init $env(RUNINIT_ARGS)
-            expect -nocase {password:} {
-                send "$env(PASSWD)\r"
-            }
-	    expect eof
-	    set status [wait]
-	    exit [lindex $status 3]
-	    ' </dev/null &>/dev/null 2>&1
-    )
+            expect -c '
+                eval spawn run_init $env(RUNINIT_ARGS)
+                expect -nocase {password:} {
+                    send "$env(PASSWD)\r"
+                }
+	        expect eof
+	        set status [wait]
+	        exit [lindex $status 3]
+	        ' </dev/null &>/dev/null 2>&1
+        )
+    else
+        $@
+    fi
 
     # exit status from subshell
     return $?

@@ -37,9 +37,9 @@ if [[ $EUID == 0 ]]; then
     pts=$(<$tmp1)
     pts=${pts##*/}
 
-    msg_1="acct=\"*$TEST_USER\"* : exe=./bin/su.*terminal=pts/$pts res=success.*"
-    augrok -q type=USER_AUTH msg_1=~"PAM: authentication $msg_1" || exit_fail
-    augrok -q type=USER_ACCT msg_1=~"PAM: accounting $msg_1" || exit_fail
+    msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./bin/su.*terminal=pts/$pts res=success.*"
+    augrok -q type=USER_AUTH msg_1=~"PAM: *authentication $msg_1" || exit_fail
+    augrok -q type=USER_ACCT msg_1=~"PAM: *accounting $msg_1" || exit_fail
 
     exit_pass
 fi

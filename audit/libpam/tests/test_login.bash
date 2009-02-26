@@ -50,9 +50,9 @@ backup /var/run/utmp
 pts=$(<$localtmp)
 pts=${pts##*/}
 
-msg_1="acct=\"*$TEST_USER\"* : exe=.*/bin/login.* terminal=pts/$pts res=success.*"
-augrok -q type=USER_AUTH msg_1=~"PAM: authentication $msg_1" || exit_fail
-augrok -q type=USER_ACCT msg_1=~"PAM: accounting $msg_1" || exit_fail
-augrok -q type=USER_START msg_1=~"PAM: session open $msg_1" || exit_fail
+msg_1="acct=\"*$TEST_USER\"*[ :]* exe=.*/bin/login.* terminal=.*pts/$pts res=success.*"
+augrok -q type=USER_AUTH msg_1=~"PAM: *authentication $msg_1" || exit_fail
+augrok -q type=USER_ACCT msg_1=~"PAM: *accounting $msg_1" || exit_fail
+augrok -q type=USER_START msg_1=~"PAM: *session[_ ]open $msg_1" || exit_fail
 
 exit_pass

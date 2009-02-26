@@ -27,6 +27,6 @@ expect -c '
     expect -nocase {password: $} {send "badpassword\r"}
     expect -nocase {login incorrect} {close; wait}'
 
-augrok -q type=USER_AUTH msg_1=~"PAM: authentication acct=\"*$TEST_USER\"* : exe=./bin/login.* terminal=pts/.*res=failed.*" || exit_fail
+augrok -q type=USER_AUTH msg_1=~"PAM: *authentication acct=\"*$TEST_USER\"*[ :]* exe=./bin/login.* terminal=.*pts/.*res=failed.*" || exit_fail
 
 exit_pass

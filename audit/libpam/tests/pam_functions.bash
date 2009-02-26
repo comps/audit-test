@@ -21,7 +21,14 @@ source testcase.bash || exit 2
 # global variables
 ######################################################################
 
-vsftpd_conf=/etc/vsftpd/vsftpd.conf
+if [ -f /etc/vsftpd/vsftpd.conf ]; then
+    vsftpd_conf=/etc/vsftpd/vsftpd.conf
+elif [ -f /etc/vsftpd.conf ]; then
+    vsftpd_conf=/etc/vsftpd.conf
+else
+    exit_error "Unable to find vsftpd.conf"
+fi
+
 vsftpd_init=/etc/init.d/vsftpd
 
 # XXX should determine this from policy

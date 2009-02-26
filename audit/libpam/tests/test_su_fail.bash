@@ -26,8 +26,8 @@ if [[ $EUID == 0 ]]; then
     TEST_EUID=$(id -u "$TEST_USER") tmp1=$tmp1 zero=$0 \
     perl -MPOSIX -e 'setuid $ENV{TEST_EUID}; system $ENV{zero}'
 
-    msg_1="acct=\"*$TEST_USER\"* : exe=./bin/su.*res=failed.*"
-    augrok -q type=USER_AUTH msg_1=~"PAM: authentication $msg_1" || exit_fail
+    msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./bin/su.*res=failed.*"
+    augrok -q type=USER_AUTH msg_1=~"PAM: *authentication $msg_1" || exit_fail
 
     exit_pass
 fi

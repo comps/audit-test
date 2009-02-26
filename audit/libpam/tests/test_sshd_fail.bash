@@ -27,7 +27,7 @@ expect -c '
     expect -nocase {password: $} {send "badpassword\r"}
     expect -nocase {permission denied} {close; wait}'
 
-msg_1="acct=\"*$TEST_USER\"* : exe=./usr/sbin/sshd.*terminal=ssh res=failed.*"
-augrok -q type=USER_AUTH msg_1=~"PAM: authentication $msg_1" || exit_fail
+msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./usr/sbin/sshd.*terminal=ssh res=failed.*"
+augrok -q type=USER_AUTH msg_1=~"PAM: *authentication $msg_1" || exit_fail
 
 exit_pass

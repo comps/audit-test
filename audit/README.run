@@ -12,6 +12,11 @@ expect
 libselinux-devel
 selinux-policy-devel
 
+On SuSE systems the follow packages are also required:
+
+libcap-devel
+pwdutils-plugin-audit
+
 Configure System
 ----------------
 Verify that each ext3 filesystem in /etc/fstab has the “user_xattr” option.
@@ -37,6 +42,9 @@ On a CAPP machine:
 On a LSPP machine:
 # chkconfig vsftpd on
 # run_init /etc/init.d/vsftpd start
+
+On a SuSE system:
+# echo audit >> /etc/pwdutils/logging
 
 Configure the Network Test Server
 ---------------------------------

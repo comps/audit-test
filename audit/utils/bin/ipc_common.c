@@ -14,12 +14,7 @@
  */
 
 #include "includes.h"
-#ifndef SUSE
-#include <sys/ipc.h>
-#include <asm-generic/ipc.h>
-#else
-#include <linux/ipc.h>
-#endif
+#include "ipc_hack.h"
 #include <sys/msg.h>
 #include <sys/sem.h>
 #include <sys/shm.h>

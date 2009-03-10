@@ -14,8 +14,20 @@ selinux-policy-devel
 
 On SuSE systems the follow packages are also required:
 
+audit-libs-python
+checkpolicy
+libcap
 libcap-devel
+libselinux
+libselinux-devel
+libsemanage1
+libsepol
+libsepol-devel
+mcstrans
+policycoreutils
 pwdutils-plugin-audit
+python-selinux
+vsftpd
 
 Configure System
 ----------------

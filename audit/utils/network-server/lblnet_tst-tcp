@@ -17,7 +17,7 @@ service lblnet_tst
 	protocol        = tcp
 	port            = 5000
 
-        server = /usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server
+        server		= /usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server
 	server_args     = -i -t 10
 }
 
@@ -36,6 +36,6 @@ service lblnet_tst_labeled
 	protocol        = tcp
 	port            = 5001
 
-        server = /usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server
+        server		= /usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server
 	server_args     = -i -t 10
 }

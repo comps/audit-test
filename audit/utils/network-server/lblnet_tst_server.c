@@ -3,12 +3,12 @@
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of version 2 the GNU General Public License as
  *  published by the Free Software Foundation.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -123,7 +123,7 @@ int net_hlp_timeout_rcv(int sock)
 
   timeout.tv_sec = net_timeout_sec;
   timeout.tv_usec = 0;
-	
+
   FD_ZERO(&sock_fdset);
   FD_SET(sock, &sock_fdset);
 
@@ -462,7 +462,7 @@ void ctl_recv(int sock, char *param)
   struct sockaddr_in *data_sockaddr4 = (struct sockaddr_in *)&data_sockaddr;
   struct sockaddr_in6 *data_sockaddr6 = (struct sockaddr_in6 *)&data_sockaddr;
   char *recv_buf = NULL;
-  size_t recv_buf_len = 0;
+  size_t recv_buf_len;
   size_t bytes_recv = 0;
   int bool_true = 1;
 
@@ -504,6 +504,12 @@ void ctl_recv(int sock, char *param)
   }
   port = atoi(port_str);
   bytes = atoi(bytes_str);
+  if (bytes < 0) {
+    SMSG(SMSG_ERR,
+         fprintf(stderr, "error(recv): message size must be non-negative\n"));
+    rc = EINVAL;
+    goto recv_return;
+  }
 
   /* create and bind the socket */
   data_sock = socket(inet_family, data_sock_type, data_sock_proto);
@@ -583,11 +589,12 @@ void ctl_recv(int sock, char *param)
   }
 
   /* get the data from the network */
-  rc = 1;
-  while ((rc > 0) && (bytes_recv < bytes)) {
+  do {
+    recv_buf_len = 0;
     do {
-      recv_buf_len += bytes;
-      recv_buf = realloc(recv_buf, bytes + 1);
+      /* add 16 bytes of extra buffer space */
+      recv_buf_len += bytes + 16;
+      recv_buf = realloc(recv_buf, recv_buf_len + 1);
       if (recv_buf == NULL) {
 	SMSG(SMSG_ERR,
 	     fprintf(stderr, "error(recv): out of memory (%zu)\n",
@@ -614,8 +621,7 @@ void ctl_recv(int sock, char *param)
     rc = recv(data_sock, recv_buf, recv_buf_len, 0);
     if (rc > 0)
       bytes_recv += rc;
-    recv_buf_len = 0;
-  }
+  } while ((rc > 0) && (bytes_recv < bytes));
 
   rc = 0;
 
@@ -918,6 +924,7 @@ int main(int argc, char *argv[])
     /* get a new message */
     if ((msg_buf == NULL) || (strchr(msg_buf, ';') == NULL)) {
       /* get more data from the network */
+      recv_buf_len = 0;
       do {
 	recv_buf_len += CTL_SOCK_BUF_SIZE - 1;
 	recv_buf = realloc(recv_buf, recv_buf_len + 1);
@@ -936,7 +943,10 @@ int main(int argc, char *argv[])
 	} else if (rc == 0) {
 	  SMSG(SMSG_NOTICE,
 	       fprintf(stderr, "notice: timeout while waiting for data\n"));
-	  return 0;
+	  if (!inetd_flag)
+	    continue;
+	  else
+	    return 0;
 	}
 	rc = recv(rem_sock, recv_buf, recv_buf_len, MSG_PEEK);
       } while (rc == recv_buf_len);
@@ -956,7 +966,6 @@ int main(int argc, char *argv[])
 	     fprintf(stderr,
 		     "warning: failed to read the control message (%d)\n",
 		     errno));
-	recv_buf_len = 0;
 	continue;
       }
 
@@ -983,7 +992,6 @@ int main(int argc, char *argv[])
 	msg_buf = recv_buf;
 	recv_buf = NULL;
       }
-      recv_buf_len = 0;
     }
 
     /* parse/handle the message buffer */

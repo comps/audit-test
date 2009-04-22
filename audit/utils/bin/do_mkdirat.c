@@ -14,7 +14,9 @@
  */
 
 #include "includes.h"
+#ifndef SUSE
 #include <selinux/selinux.h>
+#endif
 
 int main(int argc, char **argv)
 {
@@ -26,10 +28,12 @@ int main(int argc, char **argv)
 	return TEST_ERROR;
     }
 
+#ifndef SUSE
     if ((argc > 3) && (setfscreatecon(argv[3]) < 0)) {
 	perror("do_mkdirat: setfscreatecon");
 	return TEST_ERROR;
     }
+#endif
 
     dir_fd = open(argv[1], O_DIRECTORY);
     if (dir_fd < 0)

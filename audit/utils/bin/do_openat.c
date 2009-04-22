@@ -14,7 +14,9 @@
  */
 
 #include "includes.h"
+#ifndef SUSE
 #include <selinux/selinux.h>
+#endif
 
 int main(int argc, char **argv)
 {
@@ -51,10 +53,12 @@ int main(int argc, char **argv)
 	perror("do_openat: open dirfd");
 	return TEST_ERROR;
     }
+#ifndef SUSE
     if (argc == 5 && setfscreatecon(argv[4]) < 0) {
 	perror("do_openat: setfscreatecon");
 	return TEST_ERROR;
     }
+#endif
 
     errno = 0;
     exitval = openat(dirfd, argv[2], flags);

@@ -161,8 +161,12 @@ ALL_EXE		+= $(ONLY86_EXE)
 endif
 
 $(CAPS_EXE): LDLIBS += -lcap
+ifneq ($(DISTRO), SUSE)
 $(CREATE_EXE): LDLIBS += -lselinux
 $(MQ_EXE): LDLIBS += -lrt -lselinux
+else
+$(MQ_EXE): LDLIBS += -lrt
+endif
 $(RT_EXE): LDLIBS += -lrt
 
 headerhack: 

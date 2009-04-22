@@ -14,7 +14,9 @@
  */
 
 #include "includes.h"
+#ifndef SUSE
 #include <selinux/selinux.h>
+#endif
 
 int main(int argc, char **argv)
 {
@@ -44,10 +46,12 @@ int main(int argc, char **argv)
 	return 1;
     }
 
+#ifndef SUSE
     if ((argc > 3) && (setfscreatecon(argv[3]) < 0)) {
 	perror("do_open: setfscreatecon");
 	return 1;
     }
+#endif
 
     errno = 0;
     exitval = open(argv[1], flags, S_IRWXU);

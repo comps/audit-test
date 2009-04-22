@@ -101,18 +101,27 @@ function ipsec_add {
     declare setup_str="recv:ipv4,tcp,5300,0;"
     declare msg_str="Hi Mom!"
 
+    # determine the netcat variant
+    if which nc6 >& /dev/null; then
+        cmd_nc="nc6 ----idle-timeout=1 -w 1 "
+    elif which nc >& /dev/null; then
+        cmd_nc="nc -w 1 "
+    else
+        die "error: netcat not installed"
+    fi
+
     # do the setup
     runcon -t lspp_test_netlabel_t -l SystemLow -- \
-	nc -w 1 $ip_dst 5001 <<< $setup_str
+	$cmd_nc $ip_dst 5001 <<< $setup_str
     [[ $? != 0 ]] && exit_error "unable to configure the remote system"
 
     # configure the remote system (try twice to allow for IKE negotiation)
     runcon -t lspp_test_ipsec_t -l SystemLow -- \
-	nc -w 1 $ip_dst 5300 <<< $msg_str
+	$cmd_nc $ip_dst 5300 <<< $msg_str
     [[ $? == 0 ]] && return
     sleep 2
     runcon -t lspp_test_ipsec_t -l SystemLow -- \
-	nc -w 1 $ip_dst 5300 <<< $msg_str
+	$cmd_nc $ip_dst 5300 <<< $msg_str
     [[ $? != 0 ]] && exit_error "unable to establish a SA"
 }
 

@@ -73,12 +73,21 @@ function xinetd_test {
     declare subj=$1 rem_subj
     declare cmd_str="getcon:mls;"
 
+    # determine the netcat variant
+    if which nc6 >& /dev/null; then
+        cmd_nc="nc6 ----idle-timeout=1 -w 1 "
+    elif which nc >& /dev/null; then
+        cmd_nc="nc -w 1 "
+    else
+        die "error: netcat not installed"
+    fi
+
     # mark the log for augrok later
     log_mark=$(stat -c %s $audit_log)
 
     # connect through xinetd
     rem_subj="$(runcon -t lspp_test_netlabel_t -l $subj -- \
-	        nc -w 1 127.0.0.1 5001 <<< $cmd_str)"
+	        $cmd_nc 127.0.0.1 5001 <<< $cmd_str)"
     [[ $? != 0 ]] && exit_error "unable to connect to localhost"
 
     # verify label

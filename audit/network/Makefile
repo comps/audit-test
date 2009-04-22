@@ -23,5 +23,10 @@ SUB_DIRS	= system
 .PHONY:	unlock
 
 unlock:
+ifneq ($(DISTRO), SUSE)
 	[[ -n $$LBLNET_SVR_IPV6 ]] && \
 		(echo "lock:release;" | nc -w 1 $$LBLNET_SVR_IPV6 5000)
+else
+	[[ -n $$LBLNET_SVR_IPV6 ]] && \
+		(echo "lock:release;" | nc6 -t 1 -w 1 $$LBLNET_SVR_IPV6 5000)
+endif

@@ -26,8 +26,7 @@
 
 function get_ipv6_prefix {
     if [[ -n $LBLNET_SVR_IPV6 ]]; then
-	echo $LBLNET_SVR_IPV6 | \
-	    awk 'BEGIN { FS = ":" } { print $1":"$2":"$3":"$4":" }'
+    	ip -f inet6 route show to match $LBLNET_SVR_IPV6 | cut -d'/' -f 1
     elif [[ -n $LBLNET_PREFIX_IPV6 ]]; then
 	echo $LBLNET_PREFIX_IPV6 | sed 's/:\/[0-9]*//;s/:0*/:/g;'
     else

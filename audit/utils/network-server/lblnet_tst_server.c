@@ -359,6 +359,7 @@ void ctl_sendrand(int sock, struct sockaddr_storage *peer_addr, char *param)
 	char *host_str, *proto_str, *port_str, *bytes_str;
 	struct addrinfo *host = NULL;
 	struct addrinfo addr_hints;
+	struct timeval timeout;
 	unsigned int bytes;
 	int data_sock = -1;
 
@@ -427,6 +428,12 @@ void ctl_sendrand(int sock, struct sockaddr_storage *peer_addr, char *param)
 			     errno));
 		rc = errno;
 		goto sendrand_return;
+	}
+	if (net_timeout_sec != 0) {
+		timeout.tv_sec = net_timeout_sec;
+		timeout.tv_usec = 0;
+		setsockopt(data_sock, SOL_SOCKET, SO_SNDTIMEO,
+			   &timeout, sizeof(timeout));
 	}
 	rc = connect(data_sock, host->ai_addr, host->ai_addrlen);
 	if (rc < 0) {

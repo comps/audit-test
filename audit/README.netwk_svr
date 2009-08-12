@@ -10,7 +10,7 @@ configuration steps are described below:
 
 2. A new test user should be added to the system using the commands below:
 
-      # useradd –m eal_test
+      # useradd -m eal_test
       # passwd eal_test
 
 3. After the standard test installation and setup is complete, build and 
@@ -54,6 +54,7 @@ below:
 NOTE: This step, as well as step 8, should be repeated whenever the client 
 address file changes.
 
-8. Reboot the network test server or run the following command:
-	
-      run_init /etc/rc.local
+8. Reboot the network test server or run the following commands:
+
+      # run_init /etc/init.d/xinetd restart
+      # run_init /etc/rc.local

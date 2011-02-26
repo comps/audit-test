@@ -145,19 +145,21 @@ check_set_LBLNET_SVR_IPV6 = \
 endif
 
 check_TTY = \
-	tty=`/usr/bin/tty`; \
-	tty_type=`ls -lZ $$tty | awk -F: '{print $$3}'`; \
-	grep -q $$tty_type /etc/selinux/mls/contexts/securetty_types /dev/null && { \
-	    echo -n "You are connected to the test machine through "; \
-	    echo "a device ($$tty) that"; \
-	    echo -n "will prevent one or more tests from functioning "; \
-	    echo "as intended.  Connect to"; \
-	    echo -n "the machine remotely through a pty device, such "; \
-	    echo "as logging in as the "; \
-	    echo "test-user directly using ssh."; \
-	    echo ; \
-	    exit 1; \
-	}
+	if [[ -f /etc/selinux/mls/contexts/securetty_types ]]; then \
+	    tty=`/usr/bin/tty`; \
+	    tty_type=`ls -lZ $$tty | awk -F: '{print $$3}' | awk '{print $$1}'`; \
+	    grep -q $$tty_type /etc/selinux/mls/contexts/securetty_types /dev/null && { \
+	        echo -n "You are connected to the test machine through "; \
+	        echo "a device ($$tty) that"; \
+	        echo -n "will prevent one or more tests from functioning "; \
+	        echo "as intended.  Connect to"; \
+	        echo -n "the machine remotely through a pty device, such "; \
+	        echo "as logging in as the "; \
+	        echo "test-user directly using ssh."; \
+	        echo ; \
+	        exit 1; \
+	    } \
+	fi
 
 ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard run.conf)),)
 all: run.bash

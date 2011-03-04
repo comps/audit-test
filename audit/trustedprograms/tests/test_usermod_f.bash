@@ -27,7 +27,7 @@ useradd -n -u $uid $user || exit_error "useradd failed"
 setpid usermod -f 10 $user || exit_error "usermod failed"
 
 for msg_1 in \
-    "op=changing inactive days acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
+    "op=changing inactive days id=$uid exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

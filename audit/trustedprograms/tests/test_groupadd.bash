@@ -27,7 +27,7 @@ if ! augrok -q type=USER_CHAUTHTOK \
         user_pid=$pid \
         uid=$EUID \
         auid=$(</proc/self/loginuid) \
-        msg_1=~"op=adding group acct=\"*$group\"* exe=\"*\.*/usr/sbin/groupadd\"*.*res=success.*"; then
+        msg_1=~"op=adding group id=$gid exe=\"*\.*/usr/sbin/groupadd\"*.*res=success.*"; then
     exit_fail "failed to find audit.log entry"
 fi
 

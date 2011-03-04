@@ -28,8 +28,8 @@ read user2 uid2 <<<"$(generate_unique_user)"
 setpid usermod -d /home/$user2 -m $user || exit_error "usermod failed"
 
 for msg_1 in \
-    "op=changing home directory acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*" \
-    "op=moving home directory acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
+    "op=changing home directory id=$uid exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*" \
+    "op=moving home directory id=$uid exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

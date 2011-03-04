@@ -27,7 +27,7 @@ groupadd -g $gid $group || exit_error "groupadd failed"
 setpid groupdel $group || exit_error "groupdel failed"
 
 for msg_1 in \
-    "op=deleting group acct=\"*$group\"* exe=\"*\.*/usr/sbin/groupdel\"*.*res=success.*"
+    "op=deleting group id=$gid exe=\"*\.*/usr/sbin/groupdel\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

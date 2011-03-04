@@ -27,7 +27,7 @@ useradd -n -u $uid $user || exit_error "useradd failed"
 setpid usermod -s /bin/true $user || exit_error "usermod failed"
 
 for msg_1 in \
-    "op=changing user shell acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
+    "op=changing user shell id=$uid exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

@@ -28,9 +28,9 @@ useradd -n -m -u $uid $user || exit_error "useradd failed"
 setpid userdel -r $user || exit_error "userdel failed"
 
 for msg_1 in \
-    "op=deleting user entries acct=\"*$user\"* exe=\"*\.*/usr/sbin/userdel\"*.*res=success.*" \
-    "op=deleting mail file acct=\"*$user\"* exe=\"*\.*/usr/sbin/userdel\"*.*res=success.*" \
-    "op=deleting home directory acct=\"*$user\"* exe=\"*\.*/usr/sbin/userdel\"*.*res=success.*"
+    "op=deleting user entries id=$uid exe=\"*\.*/usr/sbin/userdel\"*.*res=success.*" \
+    "op=deleting mail file id=$uid exe=\"*\.*/usr/sbin/userdel\"*.*res=success.*" \
+    "op=deleting home directory id=$uid exe=\"*\.*/usr/sbin/userdel\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \

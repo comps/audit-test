@@ -25,10 +25,10 @@ source filter_functions.bash || exit 2
 tmpd=$(mktemp -d) || exit_fail "create tempdir failed"
 name="$tmpd/foo"
 
-auditctl -a exit,always -w $name
+auditctl -a exit,always -F path=$name -F perm=rwa
 
 prepend_cleanup "
-    auditctl -d exit,always -w $name
+    auditctl -d exit,always -F path=$name -F perm=rwa
     rm -rf $tmpd"
 
 # initially create the file; verify audit record

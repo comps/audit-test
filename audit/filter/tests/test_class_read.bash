@@ -25,8 +25,8 @@ source filter_functions.bash || exit 2
 
 watch=$tmp1
 
-auditctl -a exit,always -w $watch -p r
-prepend_cleanup "auditctl -d exit,always -w $watch -p r"
+auditctl -a exit,always -F path=$watch -F perm=r
+prepend_cleanup "auditctl -d exit,always -F path=$watch -F perm=r"
 
 log_mark=$(stat -c %s $audit_log)
 

@@ -237,12 +237,8 @@ logging_run_auditctl(lspp_harness_t,lspp_test_r,{ ttynode ptynode })
 seutil_run_runinit(lspp_harness_t,lspp_test_r,{ ttynode ptynode })
 allow initrc_t lspp_harness_t:fd use;
 
-# give the harness domain access to the local login domain
-locallogin_domtrans(lspp_harness_t)
-allow local_login_t lspp_harness_devpts_t:chr_file { read write ioctl relabelfrom relabelto setattr getattr };
-
 # give the harness domain access to the sysadm lpr domain
-allow sysadm_lpr_t lspp_harness_devpts_t:chr_file { read write };
+allow sysadm_lpr_t user_devpts_t:chr_file { read write };
 
 # give the harness domain access to all the other test domain's associations
 allow lspp_harness_t lspp_domains:association { setcontext recvfrom };

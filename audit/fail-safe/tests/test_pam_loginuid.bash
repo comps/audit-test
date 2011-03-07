@@ -39,10 +39,10 @@ if grep "pam_loginuid.so" /etc/pam.d/sshd | grep -qv "require_auditd"; then
 
 fi
 # make sure auditd is running after test
-prepend_cleanup 'pidof auditd &>/dev/null || service auditd start'
+prepend_cleanup 'start_auditd'
 
 if [[ $action == "fail" && -n $auditd_active ]]; then
-    service auditd stop || exit_error
+    stop_auditd || exit_error
 fi
 
 # TEST_USER and TEST_USER_PASSWD are exported in run.bash startup()
@@ -67,5 +67,5 @@ case $?:$action in
 esac
 
 if [[ $action == "fail" && -n $auditd_active ]]; then
-    service auditd start
+    start_auditd
 fi

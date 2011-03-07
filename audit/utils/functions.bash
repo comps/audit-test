@@ -164,7 +164,7 @@ function start_auditd {
 	    rcauditd start || return 2
 	    auditctl -e 1 || return 2
 	else
-	    service auditd start || return 2
+	    service auditd start 63>/dev/null || return 2
 	fi
     fi
 

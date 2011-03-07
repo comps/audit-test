@@ -254,7 +254,7 @@ EOF
 }
 
 function check_halt {
-    search_syslog " logger: auditd_testing: $$ runlevel=${1:-0}"
+    search_syslog " auditd_testing: $$ runlevel=${1:-0}"
 }
 
 function pre_single {
@@ -312,7 +312,7 @@ chcon system_u:object_r:auditd_log_t /var/log/audit
 
 prepend_cleanup '
     umount -l /var/log/audit
-    service auditd restart'
+    restart_auditd'
 backup "$auditd_conf"	# restore done via prepend_cleanup
 
 # default config ignores all problems

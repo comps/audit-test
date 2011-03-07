@@ -117,14 +117,6 @@ files_type(lspp_test_output_t)
 #
 
 role lspp_test_r types domain;
-dominance {
-	role lspp_test_r {
-		role sysadm_r;
-		role secadm_r;
-		role auditadm_r;
-		role staff_r;
-	}
-}
 
 # add the lspp test types to the generic object role
 role system_r types lspp_domains;

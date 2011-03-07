@@ -205,8 +205,8 @@ domain_auto_trans(domain,lspp_harness_exec_t,lspp_harness_t)
 allow lspp_harness_t domain:process transition;
 
 # give the harness domain mls override privleges
-mls_file_read_up(lspp_harness_t)
-mls_file_write_down(lspp_harness_t)
+mls_file_read_all_levels(lspp_harness_t)
+mls_file_write_all_levels(lspp_harness_t)
 mls_file_upgrade(lspp_harness_t)
 mls_file_downgrade(lspp_harness_t)
 mls_fd_use_all_levels(lspp_harness_t)

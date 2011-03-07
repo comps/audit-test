@@ -21,12 +21,12 @@
 source pam_functions.bash || exit 2
 
 # setup
-prepend_cleanup "initcall $vsftpd_init restart"
+prepend_cleanup "initcall $vsftpd_init restart 63>/dev/null"
 backup "$vsftpd_conf"
 write_config \
       "$vsftpd_conf" \
       local_enable=YES
-initcall $vsftpd_init restart
+initcall $vsftpd_init restart 63>/dev/null
 
 # test
 expect -c '
@@ -34,8 +34,7 @@ expect -c '
     expect -nocase {name} {send "$env(TEST_USER)\r"}
     expect -nocase {password:$} {send "badpassword\r"}
     expect {ftp> $} {send "quit\r"}'
-
-msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./usr/sbin/vsftp.*hostname=(127.0.0.1|localhost.*), addr=127.0.0.1, terminal=ftp res=failed.*"
-augrok -q type=USER_AUTH msg_1=~"PAM: *authentication $msg_1" || exit_fail
+msg_1="acct=\"$TEST_USER\" exe=./usr/sbin/vsftp.*hostname=(127.0.0.1|localhost.*) addr=(::1|127.0.0.1) terminal=ftp res=failed.*"
+augrok -q type=USER_AUTH msg_1=~"PAM:*authentication $msg_1" || exit_fail
 
 exit_pass

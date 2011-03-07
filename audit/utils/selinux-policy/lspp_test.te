@@ -228,7 +228,7 @@ unconfined_domain_noaudit(lspp_harness_t)
 
 # give the harness domain newrole access
 seutil_run_newrole(lspp_harness_t,lspp_test_r,{ ttynode ptynode })
-authlogin_per_role_template(lspp_harness,lspp_harness_t,lspp_test_r)
+auth_use_pam(lspp_harness_t)
 
 # give the harness domain auditctl access
 logging_run_auditctl(lspp_harness_t,lspp_test_r,{ ttynode ptynode })

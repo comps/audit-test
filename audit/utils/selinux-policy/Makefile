@@ -22,7 +22,7 @@
 
 SELINUX_POLICY_TYPE := mls
 SELINUX_POLICY_RPM := selinux-policy-$(SELINUX_POLICY_TYPE)
-SELINUX_DEV_RPM := selinux-policy-devel
+SELINUX_DEV_RPM := selinux-policy
 
 SELINUX_POLICY_DEFTYPEFILE := /etc/selinux/$(SELINUX_POLICY_TYPE)/contexts/default_type
 SELINUX_DEV_BASEDIR := /usr/share/selinux/devel

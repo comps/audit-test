@@ -144,7 +144,7 @@ allow { ROLES_ALL } lspp_test_r;
 #
 
 # allow every domain to read the test directory
-allow domain lspp_directories:dir r_dir_perms;
+allow domain lspp_directories:dir list_dir_perms;
 
 # make the log files trusted objects
 mls_trusted_object(lspp_test_output_t)

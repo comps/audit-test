@@ -16,9 +16,9 @@
 ###############################################################################
 
 TOPDIR		= ../..
+ifneq ($(DISTRO), SUSE)
+	SUB_DIRS	= policy
+endif
 
 include $(TOPDIR)/rules.mk
 
-ifneq ($$(DISTRO), "SUSE")
-	SUBDIR	= policy
-endif

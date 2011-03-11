@@ -47,8 +47,8 @@ expect -c '
     }
     expect {:::$} {close; wait}'
 
-msg_2="acct=\"$TEST_USER\" exe=./usr/sbin/sshd.*terminal=ssh res=success.*"
-augrok -q type=CRED_ACQ msg_1=~"PAM:setcred $msg_2" || exit_fail
-augrok -q type=USER_ACCT msg_1=~"PAM:accounting $msg_2" || exit_fail
+msg_2="acct=\"*$TEST_USER\"* : exe=./usr/sbin/sshd.*terminal=ssh res=success.*"
+augrok -q type=CRED_REFR msg_1=~"PAM: setcred $msg_2" || exit_fail
+augrok -q type=USER_ACCT msg_1=~"PAM: accounting $msg_2" || exit_fail
 
 exit_pass

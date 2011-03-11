@@ -160,10 +160,11 @@ fi
 function start_auditd {
     declare i
     if ! pidof auditd &>/dev/null; then
-	if [ $DISTRO -eq "SUSE" ]; then
+	if [ $DISTRO = "SUSE" ]; then
 	    rcauditd start || return 2
 	    auditctl -e 1 || return 2
 	else
+	    # XXX: fd 63 is left open by something, causing the tests to hang
 	    service auditd start 63>/dev/null || return 2
 	fi
     fi
@@ -191,7 +192,7 @@ function stop_auditd {
     declare i
 
     auditctl -D &>/dev/null
-    if [ $DISTRO -eq "SUSE" ]; then
+    if [ $DISTRO = "SUSE" ]; then
 	rcauditd stop || killall auditd
     else
 	service auditd stop || killall auditd

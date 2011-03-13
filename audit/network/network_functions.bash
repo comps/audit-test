@@ -57,41 +57,14 @@ function check_result {
              [[ $ext != $err ]] && exit_error "unexpected test error"
              # audit represents errors as negative numbers so fixup the global
              # field value
-             if [[ $RH_BZ_234426 == 0 ]]; then
-                 exitval=-$(get_error_code $err_name)
-             else
-                 exitval=-$(get_error_code_raw $err_name)
-             fi
-	     ;;
-    esac
-}
-
-# usage: get_error_code_raw <error_name, e.g. EPERM>
-#  this is a private function and should not be called outside the scope of
-#  this file
-function get_error_code_raw {
-    case $1 in
-	ERESTARTSYS)
-             # XXX - this is to workaround a kernel audit ?bug?
-             echo "512"
-	     ;;
-	*)
-             gcc -E -dM /usr/include/asm-generic/errno.h | grep $1 | awk '{print $3}'
+             exitval=-$(get_error_code $err_name)
 	     ;;
     esac
 }
 
 # usage: get_error_code <error_name, e.g. EPERM>
 function get_error_code {
-    case $1 in
-	ERESTARTSYS)
-             # XXX - this is to workaround a kernel audit ?bug?
-             get_error_code_raw EINTR
-	     ;;
-	*)
-             get_error_code_raw $1
-	     ;;
-    esac
+    gcc -E -dM /usr/include/asm-generic/errno.h | grep $1 | awk '{print $3}'
 }
 
 # usage: get_sockcall_num <syscall, e.g. connect>

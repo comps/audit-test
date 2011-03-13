@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 #
 # Address replacement filter for the configuration files
 #
@@ -24,25 +25,9 @@
 # helper functions
 #
 
-function get_ipv6_prefix {
-    if [[ -n $LBLNET_SVR_IPV6 ]]; then
-    	ip -f inet6 route show to match $LBLNET_SVR_IPV6 | \
-	    grep -v default | cut -d'/' -f 1
-    elif [[ -n $LBLNET_PREFIX_IPV6 ]]; then
-	echo $LBLNET_PREFIX_IPV6 | sed 's/:\/[0-9]*//;s/:0*/:/g;'
-    else
-	ip -o -f inet6 addr show scope global | \
-	    awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }' | \
-	    awk 'BEGIN { FS = ":" } { print $1":"$2":"$3":"$4":" }' | \
-	    head -n 1
-    fi
-}
-
 function get_ipv6_iface {
-    declare prefix=$(get_ipv6_prefix)
-    ip -o -f inet6 addr show scope global | \
-	awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $2 }' | \
-	grep $prefix | head -n 1
+    ip -o -f inet6 addr show scope global to $LBLNET_PREFIX_IPV6 | \
+    head -n 1 | awk '{ print $2 }'
 }
 
 function get_ipv4_addr {
@@ -51,10 +36,8 @@ function get_ipv4_addr {
 }
 
 function get_ipv6_addr {
-    declare prefix=$(get_ipv6_prefix)
-    ip -o -f inet6 addr show scope global | \
-	awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }' | \
-	grep $prefix | head -n 1
+    ip -o -f inet6 addr show scope global to $LBLNET_PREFIX_IPV6 | \
+    head -n 1 | awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }'
 }
 
 ####

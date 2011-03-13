@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,0.5.7)
+policy_module(lspp_test,0.5.8)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -149,10 +149,9 @@ allow domain lspp_directories:dir r_dir_perms;
 # make the log files trusted objects
 mls_trusted_object(lspp_test_output_t)
 
-# make test harness created objects (i.e. std{in,out,err} fds, temp files, etc)
+# make test harness created objects (i.e. std{in,out,err} fds, etc)
 # trusted objects
 mls_trusted_object(lspp_harness_t)
-mls_trusted_object(lspp_harness_tmp_t)
 
 # default file types
 type_transition lspp_domains lspp_test_harness_dir_t:file lspp_harness_exec_t;
@@ -268,18 +267,12 @@ unconfined_domain_noaudit(lspp_test_generic_t)
 # give the test domain "unconfined" access
 unconfined_domain_noaudit(lspp_test_netlabel_t)
 
-# allow mls overrides for file "write" access
-mls_file_write_down(lspp_test_netlabel_t)
-
 ##
 # ipsec test domain
 #
 
 # give the test domain "unconfined" access
 unconfined_domain_noaudit(lspp_test_ipsec_t)
-
-# allow mls overrides for file "write" access
-mls_file_write_down(lspp_test_ipsec_t)
 
 # give the test domain the ability to match against the SPD entries
 allow lspp_test_ipsec_t ipsec_spd_t:association polmatch;

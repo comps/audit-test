@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,0.6.0)
+policy_module(lspp_test,0.6.1)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -178,9 +178,6 @@ type_transition lspp_domains lspp_test_dir_t:fifo_file lspp_test_file_t;
 # allow the inetd_t domain to bind to any port, needed for the test daemon
 corenet_tcp_bind_generic_port(inetd_t)
 corenet_udp_bind_generic_port(inetd_t)
-
-# allow the local login domain to search devpts_t
-allow local_login_t devpts_t:dir search;
 
 # allow auditd to use temporary filesystems for logging
 fs_associate_tmpfs(auditd_log_t)

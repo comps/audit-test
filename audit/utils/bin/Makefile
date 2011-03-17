@@ -174,11 +174,7 @@ headerhack:
 	"it is generated from /usr/include/linux/ipc.h\n" \
 	"  which cannot be included due to an obsolete definition of" \
 	"struct ipc_perm */\n\n" > ipc_hack.h && \
-	if [ $(DISTRO) != RHEL ]; then \
-	    gcc -E -dM /usr/include/linux/ipc.h | egrep "SEM|MSG|SHM" >> ipc_hack.h; \
-	else \
-	   gcc -E -dM /usr/include/asm-generic/ipc.h | egrep "SEM|MSG|SHM" >> ipc_hack.h; \
-	fi;
+	gcc -E -dM /usr/include/linux/ipc.h | egrep "SEM|MSG|SHM" >> ipc_hack.h;
 
 
 all: headerhack $(ALL_EXE)

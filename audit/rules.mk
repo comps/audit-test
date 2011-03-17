@@ -39,7 +39,7 @@ Z64		= s390x
 X86_64		= x86_64
 IA		= ia64
 SYSTEMINFO      = systeminfo.run.log
-CFLAGS          += -g -O2 -Wall -Werror -D_GNU_SOURCE
+CFLAGS          += -g -O2 -Wall -Werror -D_GNU_SOURCE -fno-strict-aliasing
 LDFLAGS         +=
 
 LINK_AR		= $(AR) rc $@ $^
@@ -212,6 +212,7 @@ RPMS		= binutils \
                   glibc-devel \
                   libattr-devel \
                   libstdc++-devel \
+                  libcap-devel \
                   make \
 		  audit-libs-devel
 ifneq ($(findstring $(MACHINE),$(IP)),)

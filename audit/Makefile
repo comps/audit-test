@@ -51,15 +51,15 @@ run:
 
 .PHONY: dist
 dist:
-	deps=$$($(MAKE) --no-print-directory showrpms | xargs) && \
-	rev=$$(svn info | awk '/^Revision:/{print $$2}' | grep .) && \
+	deps="audit libcap-devel" && \
+	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \
 	tmpdir=$$(mktemp -d) && \
 	into=$${PWD%/*} && \
 	sed -i "/^Version:/s/[0-9].*/$$rev/; \
-	        s/^\(Requires:[ 	]*\).*/\1$$deps/" \
+		s/^\(Requires:[         ]*\).*/\1$$deps/" \
 		    audit-test.spec && \
 	mkdir "$$tmpdir/audit-test" && \
-	rsync -a --exclude=.svn . "$$tmpdir/audit-test" && \
+	rsync -a --exclude=.git . "$$tmpdir/audit-test" && \
 	$(MAKE) distclean -C "$$tmpdir/audit-test" && \
 	cd "$$tmpdir" && \
 	chmod -R a+rX audit-test && \
@@ -89,11 +89,11 @@ report:
 
 .PHONY: rpm
 rpm: dist
-	rev=$$(svn info | awk '/^Revision:/{print $$2}' | grep .) && \
+	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \
 	cd .. && \
 	rpmbuild -ta audit-test-$$rev.tar.gz && \
-	mv /usr/src/redhat/RPMS/noarch/audit-test-$$rev-1.* . && \
-	mv /usr/src/redhat/SRPMS/audit-test-$$rev-1.* . && \
+	mv ~/rpmbuild/RPMS/noarch/audit-test-$$rev-1.* . && \
+	mv ~/rpmbuild/SRPMS/audit-test-$$rev-1.* . && \
 	echo && \
 	ls -l audit-test-$$rev-1.*
 

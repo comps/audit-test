@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,0.6.1)
+policy_module(lspp_test,0.6.2)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -117,6 +117,14 @@ files_type(lspp_test_output_t)
 #
 
 role lspp_test_r types domain;
+dominance {
+       role lspp_test_r {
+               role sysadm_r;
+               role secadm_r;
+               role auditadm_r;
+               role staff_r;
+       }
+}
 
 # add the lspp test types to the generic object role
 role system_r types lspp_domains;

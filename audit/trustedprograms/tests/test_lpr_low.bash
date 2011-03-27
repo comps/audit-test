@@ -37,7 +37,7 @@ prepend_cleanup chcon $SAVEDCON $PRINTERDEV
 chcon -l $PRINTERCON $PRINTERDEV
 
 # test
-runcon $EXECCON -- /usr/bin/lpr -P $PRINTER /etc/passwd
+runcon $EXECCON /usr/bin/lpr -P $PRINTER /etc/passwd
 
 msg_1="job=.* auid=$(</proc/self/loginuid) acct= obj=$EXECCON refused unable to access printer=$PRINTER.*failed."
 augrok -q type=USER_LABELED_EXPORT msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""

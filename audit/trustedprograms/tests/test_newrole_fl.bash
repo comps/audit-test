@@ -30,7 +30,7 @@ tty_type=$(ls -lZ $(tty) | awk -F: '{print $3}')
 echo $tty_type >> /etc/selinux/mls/contexts/securetty_types
 
 # test
-runcon -l SystemLow-Secret -- expect -c "
+runcon -l SystemLow-Secret expect -c "
   spawn  newrole -l SystemHigh-SystemHigh
   expect {
     -nocase Authenticating {exp_continue}

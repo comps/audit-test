@@ -102,7 +102,7 @@ function verify_fail_chcon_level {
 	log_mark=$(stat -c %s $audit_log)
 	auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S setxattr 
 	auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S getxattr 
-	runcon -t lspp_test_generic_t -- chcon -l $2 $3
+	runcon -t lspp_test_generic_t chcon -l $2 $3
 	[[ $? == 0 ]] && exit_fail "chcon successed unexpectedly"
 	# chcon causes a setxattr and only shows the old context
 	augrok -q --seek=$log_mark type==SYSCALL \

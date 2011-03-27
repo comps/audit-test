@@ -40,8 +40,8 @@ prepend_cleanup semanage login -d $TEST_USER
 create_socket_printer $printer
 cupsdisable $printer
 
-runcon $LPR1CON -- lpr -P $printer -T staff-syslow /etc/passwd
-runcon $LPR2CON -- lpr -P $printer -T staff-secret /etc/passwd
+runcon $LPR1CON lpr -P $printer -T staff-syslow /etc/passwd
+runcon $LPR2CON lpr -P $printer -T staff-secret /etc/passwd
 
 # calling login in this manner leaves an entry in /var/run/utmp
 # use backup (and automatic restore) to work around this
@@ -52,7 +52,7 @@ semanage login -a -s staff_u -r SystemLow-SystemHigh $TEST_USER || \
 
 # test
 prepend_cleanup rm -f $CON1OUT $CON2OUT
-runcon $LPQ1CON -- lpq -P $printer > $CON1OUT
+runcon $LPQ1CON lpq -P $printer > $CON1OUT
 (
   export printer
   export CON2OUT

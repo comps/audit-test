@@ -25932,7 +25932,7 @@ prepend_cleanup delete_printer $PRINTER
 prepend_cleanup rm $INFILE $OUTFILE $LABELED
 
 # test
-runcon $EXECCON -- /usr/bin/lpr -P $PRINTER -o job-id=$JOBNO $INFILE
+runcon $EXECCON /usr/bin/lpr -P $PRINTER -o job-id=$JOBNO $INFILE
 create_socket_listener $OUTFILE
 
 # verify

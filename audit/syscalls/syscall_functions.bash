@@ -167,15 +167,15 @@ function test_su_time_zone {
 
 function test_runcon_default {
     read testres exitval pid \
-	<<<"$(runcon $subj -- do_$syscall $op $dirname $source $target $flag $setcontext)"
+	<<<"$(runcon $subj do_$syscall $op $dirname $source $target $flag $setcontext)"
 }
 
 function test_runcon_kill_pgrp {
-    read testres exitval pid <<<"$(runcon $subj -- do_$syscall $target $flag group)"
+    read testres exitval pid <<<"$(runcon $subj do_$syscall $target $flag group)"
 }
 
 function test_runcon_msg_send {
-    read testres exitval pid <<<"$(runcon $subj -- do_$syscall $op $target $flag "$msg")"
+    read testres exitval pid <<<"$(runcon $subj do_$syscall $op $target $flag "$msg")"
 }
 
 ######################################################################
@@ -963,7 +963,7 @@ function create_fs_objects_mac {
             target="$base/new"
 
             name="$base/" # audit adds a trailing /
-	    inode=$(runcon $subj -- stat -c '%i' $base)
+	    inode=$(runcon $subj stat -c '%i' $base)
 	    if [[ -n $inode ]]; then
 		# If the kernel fails to create the object, audit does not
 		# update the value for the "name" field, so the inode number is
@@ -993,7 +993,7 @@ function create_fs_objects_mac {
 
 	    # see above comment regarding directory write tests
             name="$base/" # audit adds a trailing /
-	    runcon $subj -- ls $base >/dev/null || \
+	    runcon $subj ls $base >/dev/null || \
 		augrokfunc=augrok_mls_search_fail
 
             # for syscalls that operate on more than one pathname
@@ -1053,7 +1053,7 @@ function create_ipc_objects_mac {
 	    # do_ipc utility purely because the harness wants to find a
 	    # do_$syscall binary.
 	    read result foo bar \
-		<<<"$(runcon $obj -- do_msgsnd $target $flag 'test message')"
+		<<<"$(runcon $obj do_msgsnd $target $flag 'test message')"
 	    [[ $result == 0 ]] || exit_error "could not send initial message" ;;
     esac
 
@@ -1081,7 +1081,7 @@ function create_mq_objects_mac {
 	# get the real object type
 	mkdir $mq_dir ; mount -t mqueue mqueue $mq_dir
 	obj=$(get_fsobj_context "$mq_dir/$target")
-	runcon $subj -- ls "$mq_dir/$target" || \
+	runcon $subj ls "$mq_dir/$target" || \
 	    augrokfunc=augrok_mls_search_fail
 	umount $mq_dir ; rmdir $mq_dir
     fi

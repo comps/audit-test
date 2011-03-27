@@ -80,7 +80,7 @@ esac
 log_mark=$(stat -c %s $audit_log)
 
 # Now update the context using the helper program
-runcon -t $runcon_type -- $TOPDIR/utils/test_setcon $new_context 
+runcon -t $runcon_type $TOPDIR/utils/test_setcon $new_context 
 
 case $op:$? in
     success:0)

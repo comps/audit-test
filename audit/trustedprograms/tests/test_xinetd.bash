@@ -86,7 +86,7 @@ function xinetd_test {
     log_mark=$(stat -c %s $audit_log)
 
     # connect through xinetd
-    rem_subj="$(runcon -t lspp_test_netlabel_t -l $subj -- \
+    rem_subj="$(runcon -t lspp_test_netlabel_t -l $subj \
 	        $cmd_nc 127.0.0.1 5001 <<< $cmd_str)"
     [[ $? != 0 ]] && exit_error "unable to connect to localhost"
 

@@ -45,11 +45,11 @@ LSPP = R+sha256
 !$(pwd)
 EOF
 
-runcon -l SystemHigh -- aide -c ./aide-local.conf -i
+runcon -l SystemHigh aide -c ./aide-local.conf -i
 mv aide.db.new.gz aide.db.gz
 
 # test
-runcon -l SystemHigh -- aide -c ./aide-local.conf -C
+runcon -l SystemHigh aide -c ./aide-local.conf -C
 
 # verify
 if [ $? -ne 0 ]; then

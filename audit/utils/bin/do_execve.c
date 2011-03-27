@@ -19,6 +19,8 @@
 int main(int argc, char **argv)
 {
     int result, error, status;
+    char *targv[1] = {'\0'};
+    char *tenvp[1] = {'\0'};
     pid_t pid;
 
     if (argc != 2) {
@@ -32,7 +34,7 @@ int main(int argc, char **argv)
 	return 1;
     }
     if (pid == 0) {
-	execve(argv[1], NULL, NULL);
+	execve(argv[1], targv, tenvp);
 	_exit(errno);
     } else {
 	if (waitpid(pid, &status, 0) < 0) {

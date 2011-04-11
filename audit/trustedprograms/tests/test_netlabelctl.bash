@@ -67,7 +67,7 @@ unset log_mark
 # the state is restored automatically when this test exits.
 #
 function netlabel_save {
-    nlbl_unlbl_allow=$(netlabelctl unlbl list)
+    nlbl_unlbl_allow=$(netlabelctl unlbl list | cut -f 2 -d ":")
     prepend_cleanup "netlabelctl unlbl accept $nlbl_unlbl_allow"
 }
 
@@ -118,13 +118,30 @@ function netlabel_add {
 # If either of these removal operations fail the function calls the
 # exit_error() function to signify failure.
 #
+# This sometimes fails with EBUSY but then succeeds the next time
+# so try more than once.
+#
 function netlabel_remove {
     # remove the LSM/SELinux domain mapping
+    sec=0
     netlabelctl map del domain:"foo_t" &> /dev/null
+    while [[ $? != 0 && $sec -le 5 ]]; do
+	sec=$(expr $sec + 1)
+	echo "retrying map del"
+	sleep 1
+	netlabelctl map del domain:"foo_t" &> /dev/null
+    done
     [[ $? != 0 ]] && exit_error "unable to perform the remove operation"
 
     # remove the CIPSO DOI definition
+    sec=0
     netlabelctl cipsov4 del doi:6000 &> /dev/null
+    while [[ $? != 0 && $sec -le 5 ]]; do
+	sec=$(expr $sec + 1)
+	echo "retrying cipsov4 del"
+	sleep 1
+	netlabelctl cipsov4 del doi:6000 &> /dev/null
+    done
     [[ $? != 0 ]] && exit_error "unable to perform the remove operation"
 }
 
@@ -164,7 +181,7 @@ function netlabel_add_verify {
 	exit_fail "missing audit record"
 
     # check the unlabeled traffic flag
-    [[ "$unlbl_cmd" == "on" ]] || exit_fail "failed to configure NetLabel"
+    [[ "$unlbl_cmd" == "accept:on" ]] || exit_fail "failed to configure NetLabel"
     augrok --seek=$log_mark type==MAC_UNLBL_ALLOW unlbl_accept=1 || \
 	exit_fail "missing audit record"
 }

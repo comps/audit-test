@@ -19,8 +19,9 @@
 
 int main(int argc, char **argv)
 {
-    int exitval, result;
+    int result;
     int flags = 0;
+    long exitval;
 
     if (check_ipc_usage("shmat", argc))
 	return 1;
@@ -33,6 +34,6 @@ int main(int argc, char **argv)
 
     result = exitval == -1;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    printf("%d %ld %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

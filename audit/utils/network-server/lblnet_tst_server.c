@@ -61,7 +61,7 @@
 #define LCK_FILE                        "/var/lock/lblnet_tst_server"
 
 /* control socket constants */
-#define CTL_SOCK_PORT_DEFAULT           5000
+#define CTL_SOCK_PORT_DEFAULT           4000
 #define CTL_SOCK_LISTEN_QUEUE           1
 #define CTL_SOCK_BUF_SIZE               4096    /* bytes */
 

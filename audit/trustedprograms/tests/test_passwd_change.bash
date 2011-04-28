@@ -21,28 +21,42 @@
 source tp_auth_functions.bash || exit 2
 
 # setup
-useradd -n -u $uid $user || exit_error "useradd failed"
+uaddopts="-n"
+grep "release 6" /etc/redhat-release && uaddopts="-N"
+useradd $uaddopts -u $uid $user || exit_error "useradd failed"
 
 # test
 newpass=$(date +OsLO\!%sMo)
+# On RHEL 5 systems the prompts are different
+#        -nocase \"Enter new UNIX password:\" {send \"$newpass\\r\"; exp_continue}
+#        -nocase \"Re-type new UNIX password:\" {send \"$newpass\\r\"; exp_continue}
 expect -c "
     spawn passwd $user
     expect {
-        -nocase \"new password:\" {send \"$newpass\\r\"; exp_continue}
+        -nocase -re \"New\.\*password:\" {send \"$newpass\\r\"; exp_continue}
+        -nocase -re \"Retype new\.\*password:\" {send \"$newpass\\r\"; exp_continue}
         eof
     }
     set pidfile [open \"$tmp1\" w]
     puts \$pidfile [exp_pid]"
 pid=$(<$tmp1)
 
-for msg_1 in \
-    "PAM: chauthtok acct=\"*$user\"* : exe=./usr/bin/passwd.*res=success.*"
-do
+if grep "release 5" /etc/redhat-release ; then
+    msg_1="PAM:chauthtok acct=\"*$user\"* : exe=./usr/bin/passwd.*res=success.*"
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \
             uid=$EUID \
             auid=$(</proc/self/loginuid) \
             msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
-done
+else
+    for msg in "op=PAM:chauthtok acct=\"$user\" exe=\"/usr/bin/passwd\".*res=success" \
+      "op=change password id=$uid exe=\"/usr/bin/passwd\".*res=success" ; do
+        augrok -q type=USER_CHAUTHTOK \
+            user_pid=$pid \
+            uid=$EUID \
+            auid=$(</proc/self/loginuid) \
+            msg_1=~"$msg" || exit_fail "missing: \"$msg\""
+    done
+fi
 
 exit_pass

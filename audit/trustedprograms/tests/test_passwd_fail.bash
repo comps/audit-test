@@ -22,6 +22,8 @@ source tp_auth_functions.bash || exit 2
 
 # test
 newpass=123
+test_user_uid=$(id -u $TEST_USER)
+
 chown $TEST_USER "$tmp1"
 su $TEST_USER -c "
     expect -c '
@@ -34,14 +36,23 @@ su $TEST_USER -c "
         puts \$pidfile [exp_pid]'"
 pid=$(<$tmp1)
 
-for msg_1 in \
-    "PAM: chauthtok acct=\"*$TEST_USER\"* : exe=./usr/bin/passwd.*res=failed.*"
-do
+if grep "release 5" /etc/redhat-release ; then
+    msg_1="PAM: chauthtok acct=\"*$TEST_USER\"* : exe=./usr/bin/passwd.*res=failed.*"
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \
-            uid=$(id -u $TEST_USER) \
+            uid=$test_user_uid \
             auid=$(</proc/self/loginuid) \
             msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
-done
+else
+
+    for msg in "op=PAM:chauthtok acct=\"$TEST_USER\" exe=\"/usr/bin/passwd\".*res=failed" \
+        "op=change password id=$test_user_uid exe=\"/usr/bin/passwd\".*res=failed" ; do
+        augrok -q type=USER_CHAUTHTOK \
+            user_pid=$pid \
+            uid=$test_user_uid \
+            auid=$(</proc/self/loginuid) \
+            msg_1=~"$msg" || exit_fail "missing: \"$msg\""
+    done
+fi
 
 exit_pass

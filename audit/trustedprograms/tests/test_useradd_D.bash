@@ -28,14 +28,17 @@ backup "$useradd_conf"
 setpid useradd -D -g games -b /tmp -e 2038-01-18 -f 42 -s /bin/true \
     || exit_error "useradd failed"
 
-for msg_1 in \
-    '^op=changing user defaults id=.* exe=./usr/sbin/useradd.*res=success.*'
-do
-    augrok -q type=USER_CHAUTHTOK \
-            user_pid=$pid \
-            uid=$EUID \
-            auid=$(</proc/self/loginuid) \
-            msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
-done
+
+msg_type=USYS_CONFIG
+msg_1='op=changing useradd defaults id=.* exe=\"/usr/sbin/useradd\".*res=success'
+if grep "release 5" /etc/redhat-release ; then
+    msg_type=USER_CHAUTHTOK
+    msg_1='^op=changing user defaults id=.* exe=./usr/sbin/useradd.*res=success.*'
+fi
+augrok -q type=$msg_type \
+    user_pid=$pid \
+    uid=$EUID \
+    auid=$(</proc/self/loginuid) \
+    msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
 
 exit_pass

@@ -35,14 +35,15 @@ expect -c "
     puts \$pidfile [exp_pid]"
 pid=$(<$tmp1)
 
-for msg_1 in \
-    "op=changing password acct=\"*$group\"* exe=./usr/bin/gpasswd.*res=success.*"
-do
-    augrok -q type=USER_CHAUTHTOK \
-            user_pid=$pid \
-            uid=$EUID \
-            auid=$(</proc/self/loginuid) \
-            msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
-done
+op="changing password"
+grep "release 6" /etc/redhat-release && \
+    op="password of group testuser1 changed by root"
+msg_1="op=$op acct=\"*$group\"* exe=./usr/bin/gpasswd.*res=success.*"
+
+augrok -q type=USER_CHAUTHTOK \
+    user_pid=$pid \
+    uid=$EUID \
+    auid=$(</proc/self/loginuid) \
+    msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
 
 exit_pass

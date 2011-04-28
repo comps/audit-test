@@ -27,14 +27,23 @@ read group2 gid2 <<<"$(generate_unique_group)"
 # test
 setpid groupmod -g $gid2 $group || exit_error "groupmod failed"
 
-for msg_1 in \
-    "op=modifing group id=$gid exe=\"*\.*/usr/sbin/groupmod\"*.*res=success.*"
-do
+if grep "release 5" /etc/redhat-release ; then
+    msg_1="op=modifing group id=$gid exe=./usr/sbin/groupmod.*res=success.*"
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \
             uid=$EUID \
             auid=$(</proc/self/loginuid) \
             msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
-done
+else
+    for msg in "op=changing /etc/group; group $group/$gid, new gid: $gid2 acct=\"$group\" exe=\"/usr/sbin/groupmod\".*res=success" \
+      "op=changing /etc/passwd; group $group/$gid, new gid: $gid2 acct=\"$group\" exe=\"/usr/sbin/groupmod\".*res=success" \
+      "op=modifying group acct=\"$group\" exe=\"/usr/sbin/groupmod\".*res=success" ; do
+        augrok -q type=USER_ACCT \
+            user_pid=$pid \
+            uid=$EUID \
+            auid=$(</proc/self/loginuid) \
+            msg_1=~"$msg" || exit_fail "missing: \"$msg\""
+    done
+fi
 
 exit_pass

@@ -26,14 +26,23 @@ groupadd -g $gid $group || exit_error "groupadd failed"
 # test
 setpid groupdel $group || exit_error "groupdel failed"
 
-for msg_1 in \
-    "op=deleting group id=$gid exe=\"*\.*/usr/sbin/groupdel\"*.*res=success.*"
-do
+if grep "release 5" /etc/redhat-release ; then
+    msg_1="op=deleting group id=$gid exe=./usr/sbin/groupdel.*res=success.*"
     augrok -q type=USER_CHAUTHTOK \
             user_pid=$pid \
             uid=$EUID \
             auid=$(</proc/self/loginuid) \
             msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
-done
+else
+    for msg in "op=removing group from /etc/group id=$gid exe=\"/usr/sbin/groupdel\".*res=success" \
+      "op=removing group from /etc/gshadow id=$gid exe=\"/usr/sbin/groupdel\".*res=success" \
+      "op= id=$gid exe=\"/usr/sbin/groupdel\".*res=success" ; do
+        augrok -q type=DEL_GROUP \
+            user_pid=$pid \
+            uid=$EUID \
+            auid=$(</proc/self/loginuid) \
+            msg_1=~"$msg" || exit_fail "missing: \"$msg\""
+    done
+fi
 
 exit_pass

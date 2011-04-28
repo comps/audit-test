@@ -25,17 +25,20 @@ source tp_auth_functions.bash || exit 2
 setpid useradd -n -m -G games -u $uid -d /home/$user $user \
     || exit_error "useradd failed"
 
+
+msg_type=ADD_USER
+grep "release 5" /etc/redhat-release &&  msg_type=USER_CHAUTHTOK
 for msg_1 in \
     "op=adding user id=$uid exe=\"*\.*/usr/sbin/useradd\"*.*res=success.*" \
     "op=adding user to group acct=\"*$user\"* exe=\"*\.*/usr/sbin/useradd\"*.*res=success.*" \
     "op=adding user to shadow group acct=\"*$user\"* exe=\"*\.*/usr/sbin/useradd\"*.*res=success.*" \
     "op=adding home directory id=$uid exe=\"*\.*/usr/sbin/useradd\"*.*res=success.*"
 do
-    augrok -q type=USER_CHAUTHTOK \
-            user_pid=$pid \
-            uid=$EUID \
-            auid=$(</proc/self/loginuid) \
-            msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
+    augrok -q type=$msg_type\
+        user_pid=$pid \
+        uid=$EUID \
+        auid=$(</proc/self/loginuid) \
+        msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
 done
 
 exit_pass

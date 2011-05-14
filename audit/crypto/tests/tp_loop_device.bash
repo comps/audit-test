@@ -20,8 +20,6 @@
 # Loop device helper functions
 #
 
-source testcase.bash || exit 2
-
 # Create new loop device. The paramters are optional. If you intend to pass
 # only second paramater you need to supply the first too!
 # $1 = loop device (default /dev/loop/0)

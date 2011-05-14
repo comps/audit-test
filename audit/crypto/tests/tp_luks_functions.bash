@@ -20,8 +20,6 @@
 # Loop device helper functions
 #
 
-source testcase.bash || exit 2
-
 # default loop device to use
 LOOPDEV="/dev/loop0"
 

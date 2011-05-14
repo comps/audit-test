@@ -20,8 +20,6 @@
 # Selinux helper functions.
 #
 
-source testcase.bash || exit 2
-
 #### globals
 AUDIT_LOG="/var/log/audit/audit.log"
 

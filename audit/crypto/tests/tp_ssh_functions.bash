@@ -22,7 +22,6 @@
 # SSH helper functions
 #
 
-source testcase.bash || exit 2
 source functions.bash || exit 2
 
 #### global configuration

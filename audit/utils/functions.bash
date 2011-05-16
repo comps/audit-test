@@ -312,7 +312,7 @@ function rolecall {
         export CMD
 
         expect -c '
-            eval spawn newrole $env(NEWROLE_ARGS) -- -c $env(CMD)
+            eval spawn newrole $env(NEWROLE_ARGS) -- -c \"$env(CMD)\"
             expect -nocase {password:} {
                 send "$env(PASSWD)\r"
             }

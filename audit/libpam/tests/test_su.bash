@@ -25,6 +25,10 @@ if [[ $EUID == 0 ]]; then
     # allow TEST_USER to write to tmpfile created by root
     chmod 666 $tmp1
 
+    # turn off screen in /etc/profile
+    backup /etc/profile
+    sed -i 's/\[ -w $(tty) \]/false/' /etc/profile
+
     # test
     # rerun this script as TEST_USER.  Confine the exports to a subshell
     (

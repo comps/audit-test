@@ -24,6 +24,10 @@ source pam_functions.bash || exit 2
 # allow TEST_USER to write to tmpfile
 chmod 666 $localtmp
 
+# turn off screen in /etc/profile
+backup /etc/profile
+sed -i 's/\[ -w $(tty) \]/false/' /etc/profile
+
 # if in LSPP mode, map the TEST_USER to staff_u
 if [[ $PPROFILE == "lspp" ]]; then
 	semanage login -d $TEST_USER

@@ -23,7 +23,7 @@ set -x
 
 export AUDIT_SEEK=$(stat -c %s /var/log/audit/audit.log)
 
-service auditd restart
+service auditd restart 63>/dev/null || return 2
 npid=$(pidof auditd)
 
 auid=$(</proc/$$/loginuid)

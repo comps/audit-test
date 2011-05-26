@@ -31,27 +31,27 @@ vsftpd
 
 Configure System
 ----------------
-Verify that each ext3 filesystem in /etc/fstab has the “user_xattr” option.
+Verify that each ext4 filesystem in /etc/fstab has the 'user_xattr' option.
 
 If you do not have an administrative eal user other than the root user, add 
 one with the following commands:
 
 # useradd -c "EAL Test User" -g wheel eal
 
-The administrative user’s password must be the same as the root user’s password.
-# passwd <root’s password>
+The administrative user's password must be the same as the root user's password.
+# passwd <root's password>
 
 If on a LSPP system perform the following additional step:
-# semanage login –m –s staff_u –r SystemLow-SystemHigh eal
+# semanage login -a -s staff_u -r SystemLow-SystemHigh eal
 
 Make sure vsftpd is available on the system and configured to start in
 runlevel 3.  If it is not, configure vsftpd with the following commands: 
 
-On a CAPP machine:
+On a CAPP machine (except RHE6):
 # chkconfig vsftpd on
 # service vsftpd start
 
-On a LSPP machine:
+On a LSPP machine (except RHE6):
 # chkconfig vsftpd on
 # run_init /etc/init.d/vsftpd start
 
@@ -65,11 +65,12 @@ README.netwk_svr file.
 
 Install
 -------
-Change to root. 
-$ /bin/su -
 
 If running on a LSPP system, change your role to "sysadm_r".
 # newrole -r sysadm_r
+
+Change to root. 
+$ /bin/su -
 
 Make the following directory for the tests.  You must use this directory name
 and location for the tests to run correctly.
@@ -91,7 +92,7 @@ Build
 If running on a LSPP system, install the test policy and change to the
 "lspp_test_r" role.
 # make policy
-# newrole –r lspp_test_r
+# newrole -r lspp_test_r
 
 Build the tests.
 # make
@@ -164,7 +165,7 @@ In the top level audit-test directory, or in any test sub-directory:
 Or to run the 32-bit tests on an x86_64 box do:
 # make MODE=32 run
 
-Note:•The tests must be run from an interactive terminal; running the tests as
+Note: The tests must be run from an interactive terminal; running the tests as
 a backgrounded task does not work, and will result in spurious test case
 failures.
 
@@ -192,8 +193,8 @@ workaround if you experience these failures.
 
 1. Reboot the test machine
 2. Login as eal
-3. Use '/bin/su -' to change to root
-4. Use 'newrole -r lspp_test_r' to change to root/lspp_test_r
+3. Use 'newrole -r lspp_test_r' to change to root/lspp_test_r
+4. Use '/bin/su -' to change to root
 5. Run 'run_init /etc/rc.local' to re-initialize the IPsec subsystem
 6. Run the following commands:
    # export PASSWD=<password>

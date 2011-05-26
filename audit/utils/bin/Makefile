@@ -62,6 +62,7 @@ ONLY32_EXE	= do_chown32 \
 		  do_ioperm \
 		  do_iopl \
 		  do_lchown32 \
+		  do_mmap2 \
 		  do_setfsgid32 \
 		  do_setfsuid32 \
 		  do_setgid32 \
@@ -70,7 +71,8 @@ ONLY32_EXE	= do_chown32 \
 		  do_setresgid32 \
 		  do_setresuid32 \
 		  do_setreuid32 \
-		  do_setuid32
+		  do_setuid32 \
+		  do_uselib
 
 ONLYIA64_EXE	= do_clone2
 
@@ -148,6 +150,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_unlinkat \
 		  do_uselib \
 		  do_utime \
+		  do_utimensat \
 		  do_utimes
 
 ifeq ($(MODE), 32)

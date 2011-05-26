@@ -756,6 +756,12 @@ function create_fs_objects_dac {
             create_exec target mode="${dacugo:0:1}+rx"
             name=$target;;
 
+        lib_load)
+            # basedir can't be /tmp because it's mounted with noexec
+            # which will cause the uselib syscall to fail with EACCESS.
+            create_exec target basedir=$PWD mode="${dacugo:0:1}+rx"
+            name=$target ;;
+
         symlink_read)
             create_symlink target mode="${dacugo:0:1}+r"
             name=$target ;;
@@ -955,6 +961,11 @@ function create_fs_objects_mac {
 	    obj=$setcontext ;;
         symlink_read)
             create_symlink target context=$obj
+            name=$target ;;
+        lib_load)
+            # basedir can't be /tmp because it's mounted with noexec
+            # which will cause the uselib syscall to fail with EACCESS.
+            create_exec target basedir=$PWD context=$obj
             name=$target ;;
 
         # changes to directory entries

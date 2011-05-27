@@ -67,11 +67,7 @@ function get_error_code {
 
 # usage: get_ipc_op <e.g. msgctl>
 function get_ipc_op {
-    if [[ $DISTRO == RHEL ]]; then
-        gcc -E -dM /usr/include/asm-generic/ipc.h | grep -i $1 | awk '{print $3}';
-    else
-        gcc -E -dM /usr/include/linux/ipc.h | grep -i $1 | awk '{print $3}';
-    fi
+    gcc -E -dM /usr/include/linux/ipc.h | grep -i $1 | awk '{print $3}';
 }
 
 # usage: get_socketcall_op <e.g. bind>

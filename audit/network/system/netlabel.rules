@@ -4,6 +4,11 @@
 # LSPP Test Configuration
 ######################################################################
 
+# Default labels
+
+unlbl add default address:0.0.0.0/0 label:system_u:object_r:unlabeled_t:s0
+unlbl add default address:::/0 label:system_u:object_r:unlabeled_t:s0
+
 # CIPSO DOI definition
 cipsov4 add pass doi:100 tags:1
 

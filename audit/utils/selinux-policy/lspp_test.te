@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,0.6.2)
+policy_module(lspp_test,6.2.1)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -46,6 +46,9 @@ gen_require(`
         type auditd_t, inetd_t, initrc_t, passwd_t;
         # objects
         type auditd_log_t, sysadm_lpr_t, ipsec_spd_t;
+	# more objects for network controls
+	type lo_netif_t, netif_t, node_t, unlabeled_t, netlabel_peer_t;
+	type kernel_t, inetd_t, sshd_t, ping_t;
 ')
 
 ###
@@ -269,3 +272,39 @@ unconfined_domain_noaudit(lspp_test_ipsec_t)
 
 # give the test domain the ability to match against the SPD entries
 allow lspp_test_ipsec_t ipsec_spd_t:association polmatch;
+
+
+# network controls for interfaces
+
+allow unlabeled_t lo_netif_t:netif ingress;
+allow unlabeled_t unlabeled_t:netif ingress;
+allow netlabel_peer_t netif_t:netif ingress;
+allow netlabel_peer_t unlabeled_t:netif ingress;
+allow netlabel_peer_t node_t:node recvfrom;
+allow kernel_t unlabeled_t:netif egress;
+
+# network controls for the test harness and tests
+
+allow lspp_harness_t unlabeled_t:netif egress;
+allow lspp_harness_t netlabel_peer_t:peer recv;
+
+allow lspp_test_ipsec_t unlabeled_t:netif egress;
+allow lspp_test_ipsec_t netlabel_peer_t:peer recv;
+
+allow lspp_test_generic_t unlabeled_t:netif egress;
+allow lspp_test_generic_t netlabel_peer_t:peer recv;
+
+allow lspp_test_netlabel_t unlabeled_t:netif egress;
+allow lspp_test_netlabel_t netlabel_peer_t:peer recv;
+
+# network controls for specific daemons and controls
+
+allow inetd_t lo_netif_t:netif egress;
+allow inetd_t unlabeled_t:netif egress;
+
+allow sshd_t unlabeled_t:peer recv;
+allow sshd_t unlabeled_t:netif egress;
+allow unlabeled_t sshd_t:netif egress;
+
+allow ping_t unlabeled_t:netif egress;
+allow unlabeled_t ping_t:netif egress;

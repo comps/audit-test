@@ -66,7 +66,7 @@ install_setrans:
 	 echo "s0:c0=NetLowIncomp") >> /etc/selinux/mls/setrans.conf
 
 install_netlabel:
-	install -o root -g root -m 640 netlabel.rules /etc
+	install -o root -g root -m 640 --backup=t netlabel.rules /etc
 	chkconfig netlabel on
 
 install_ipsec_client: install_check

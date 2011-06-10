@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.2.1)
+policy_module(lspp_test,6.2.2)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -41,9 +41,9 @@ gen_require(`
         # roles
         role sysadm_r, secadm_r, auditadm_r, staff_r;
         # attributes
-        attribute domain;
+        attribute domain, virt_domain;
         # domains
-        type auditd_t, inetd_t, initrc_t, passwd_t;
+        type auditd_t, inetd_t, initrc_t, passwd_t, virtd_t, default_t;
         # objects
         type auditd_log_t, sysadm_lpr_t, ipsec_spd_t;
 	# more objects for network controls
@@ -255,6 +255,28 @@ domain_auto_trans(lspp_harness_t,lspp_test_generic_exec_t,lspp_test_generic_t)
 
 # give the test domain "unconfined" access
 unconfined_domain_noaudit(lspp_test_generic_t)
+
+##
+# virtualisation domain
+#
+
+# allow libvirt to create, read, write, delete, and relabel files with the
+# default file type.
+files_manage_default_dirs(virtd_t)
+files_manage_default_files(virtd_t)
+relabel_dirs_pattern(virtd_t, default_t, default_t)
+relabel_files_pattern(virtd_t, default_t, default_t)
+
+# allow the virtualisation domain to send child terminated signals to the
+# harness domain
+allow virt_domain lspp_harness_t:process sigchld;
+
+# temporary fix to allow the virtualisation domain to access vhost devices
+gen_require(`
+        type vhost_device_t;
+')
+
+mls_trusted_object(vhost_device_t)
 
 ##
 # netlabel test domain

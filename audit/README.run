@@ -230,3 +230,33 @@ tests are not run in LSPP mode.
 In the trustedprograms tests, the 'aide_update' test may fail in LSPP mode.  The
 aide program reports the changed file in the aide.log, but the return code does
 not reflect that there was a change.  This test is not run in CAPP mode.
+
+
+Configure and execute KVM Tests
+-------------------------------
+
+The KVM tests are optional and can be configured and executed as follows:
+
+1. Change working directory to the kvm/ subdirectory in the Audit Test
+installation directory.
+
+2. Edit the "config.bash" file and set the "install_media" configuration
+parameter to the path to an ISO image to use as the install media for the
+virtual machine environments. It is recommended to use the /var/lib/libvirt/
+directory to store the ISO image file.
+
+3. Still in the "config.bash" file, set the "password" configuration parameter
+to the system password of the user that will execute the test cases.
+
+4. Some test cases may fail if not executed with the "SystemLow-SystemHigh"
+SELinux level (e.g. logging in as a normal user and executing "su" or "sudo").
+
+The default SELinux level for normal users is "SystemLow". To change the
+default SELinux level for a specified user to "SystemLow-SystemHigh", use the
+following command:
+
+   semanage login -m -r SystemLow-SystemHigh username
+
+Where "username" is the specified user.
+
+5. Execute "make run".

@@ -54,7 +54,7 @@ fi
 for type in $types; do
 	offset=$(stat -c %s /var/log/audit/audit.log)
 
-	runcon -t $type -- runcon -t qemu_t -- /bin/true
+	runcon -t $type -- runcon -t qemu_t -- /tmp/true
 
 	if [[ $? -eq 0 ]]; then
 		if [[ ! "$type" =~ unconfined_t|virtd_t ]]; then

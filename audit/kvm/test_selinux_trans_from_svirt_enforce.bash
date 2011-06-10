@@ -46,7 +46,7 @@ fi
 for type in $types; do
 	offset=$(stat -c %s /var/log/audit/audit.log)
 
-	runcon -t svirt_t -- runcon -t $type -- /bin/true
+	runcon -t svirt_t -- runcon -t $type -- /tmp/true
 
 	if [[ $? -eq 0 ]]; then
 		if [[ ! "$type" =~ ptchown_t|abrt_helper_t ]]; then

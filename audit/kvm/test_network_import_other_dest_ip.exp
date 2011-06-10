@@ -1,0 +1,105 @@
+#!/usr/bin/expect -f
+#
+#   Copyright 2010, 2011 International Business Machines Corp.
+#   Copyright 2010, 2011 Ramon de Carvalho Valle
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+#   test_network_import_other_dest_ip.exp
+#
+#   Assert precesses representing virtual machine environments can not import
+#   data using the network with destination IP addresses of other non
+#   associated virtual networks.
+
+
+proc exit_pass {} { exit 0 }
+proc exit_fail {} { exit 1 }
+proc exit_error {} { exit 2 }
+
+set timeout -1
+
+set user "root"
+set password $env(kvm_guest_password)
+set prompt "]# "
+
+set first [expr $env(first) + 1]
+
+for {set i $first} {$i <= $env(last)} {incr i 1} {
+	#   Wait the specified timeout (total time, in minutes) for the
+	#   virtual machine environment network sshd service to start.
+
+	for {set j 1} {$j <= $env(kvm_guest_timeout)} {incr j 1} {
+		set rc [catch { exec nc -s $env(kvm_guest_${i}_hostaddr) -w 1 $env(kvm_guest_${i}_addr) 22 } results]
+
+		if { $rc eq 0 } {
+			break
+		}
+
+		sleep 60
+	}
+
+	#   Disable host key checking because the virtual machine environments
+	#   may have been reinstalled.
+
+	spawn ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$env(kvm_guest_${i}_addr)
+
+	expect {
+		default {
+			send_user "Login failed.\n"
+			exit_error
+		}
+
+		"(yes/no)?" {
+			send "yes\n"
+			exp_continue
+		}
+
+		"assword" {
+			send "$password\r"
+			exp_continue
+		}
+
+		-re $prompt {
+			#   Set the source IP address to kvm_guest_(N-1)_addr
+
+			set j [expr $i - 1]
+
+			set log_prefix [exec date +%Y%m%d%H%M%S]
+
+			send "iptables -A INPUT -s $env(kvm_guest_${j}_hostaddr) -p icmp --icmp-type echo-reply -j LOG --log-level=1 --log-prefix=\"$log_prefix: \"\r"
+			expect -re $prompt {}
+
+			catch { exec "ping -c 5 -I $env(kvm_guest_${j}_hostaddr) $env(kvm_guest_${j}_addr)" } results
+
+			send "grep -c -E \"$log_prefix: .* SRC=\$kvm_guest_${j}_addr\" /var/log/messages\r"
+			expect {
+				"\n0" {
+					expect -re $prompt {}
+					send_user "\n"
+					close
+					continue
+				}
+
+				-re $prompt {
+					exit_fail
+				}
+			}
+		}
+	}
+}
+
+exit_pass
+
+#   vim: set noet sw=8 ts=8 tw=0:

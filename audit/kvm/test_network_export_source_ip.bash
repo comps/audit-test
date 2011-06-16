@@ -41,10 +41,10 @@ for i in $(seq $first $last); do
 		exit_fail
 	fi
 
-	#   Wait indefinitely for the virtual machine environment network
-	#   service to start.
+	#   Wait the specified timeout (total time, in minutes) for the
+	#   virtual machine environment network service to start.
 
-	while true; do
+	for i in $(seq 1 $kvm_guest_timeout); do
 		eval "ping -c 5 -I \$kvm_guest_${i}_hostaddr \$kvm_guest_${i}_addr"
 
 		if [[ $? -eq 0 ]]; then

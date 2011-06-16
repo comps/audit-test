@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.2.2)
+policy_module(lspp_test,6.3.0)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -272,11 +272,17 @@ relabel_files_pattern(virtd_t, default_t, default_t)
 allow virt_domain lspp_harness_t:process sigchld;
 
 # temporary fix to allow the virtualisation domain to access vhost devices
+
 gen_require(`
         type vhost_device_t;
 ')
 
 mls_trusted_object(vhost_device_t)
+
+# add dynamic labeling "support" to libvirt:
+
+mls_file_upgrade(virtd_t)
+mls_file_downgrade(virtd_t)
 
 ##
 # netlabel test domain

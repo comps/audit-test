@@ -36,6 +36,8 @@ log_mark=$(stat -c %s $audit_log)
 do_open $name create
 
 augrok --seek=$log_mark type==SYSCALL syscall==open name==$name success==yes \
+    || augrok --seek=$log_mark type==SYSCALL syscall==openat name==$name \
+        success==yes \
     || exit_fail "Expected record not found for initial create of watched file"
 
 # remove the file; verify audit record
@@ -43,6 +45,8 @@ log_mark=$(stat -c %s $audit_log)
 rm $name
 
 augrok --seek=$log_mark type==SYSCALL syscall==unlink name==$name success==yes \
+    || augrok --seek=$log_mark type==SYSCALL syscall==unlinkat name==$name \
+        success==yes \
     || exit_fail "Expected record not found for removal of watched file"
 
 # create the file again; verify audit record
@@ -50,6 +54,8 @@ log_mark=$(stat -c %s $audit_log)
 do_open $name create
 
 augrok --seek=$log_mark type==SYSCALL syscall==open name==$name success==yes \
+    || augrok --seek=$log_mark type==SYSCALL syscall==openat name==$name \
+        success==yes \
     || exit_fail "Expected record not found for re-create of watched file"
 
 exit_pass

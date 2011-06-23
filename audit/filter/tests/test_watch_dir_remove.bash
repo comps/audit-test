@@ -22,15 +22,18 @@ source filter_functions.bash || exit 2
 
 # setup
 op=$1
+opat="${op}at"
 
 tmpd=$(mktemp -d) || exit_fail "create tempdir failed"
 watch="$tmpd"
 name="$tmpd/foo"
 
-auditctl -a exit,always -S $op -F path=$watch
+auditctl -a exit,always -F arch=b64 -S $op -F path=$watch
+auditctl -a exit,always -F arch=b64 -S $opat -F path=$watch
 
 prepend_cleanup "
-    auditctl -d exit,always -S $op -F path=$watch
+    auditctl -d exit,always -F arch=b64 -S $op -F path=$watch
+    auditctl -d exit,always -F arch=b64 -S $opat -F path=$watch
     rm -rf $tmpd"
 
 case $op in
@@ -50,6 +53,8 @@ eval "$gen_audit_event"
 
 # verify audit record
 augrok --seek=$log_mark type==SYSCALL syscall==$op name=="$watch/" success==yes \
+    || augrok --seek=$log_mark type==SYSCALL syscall==$opat name=="$watch/" \
+        success==yes \
     || exit_fail "Expected record not found."
 
 exit_pass

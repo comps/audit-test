@@ -29,7 +29,8 @@ RUN_DIRS       += fail-safe \
 		  audit-tools \
 		  libpam
 ifneq ($(DISTRO), SUSE)
-RUN_DIRS       += trustedprograms
+RUN_DIRS       += trustedprograms \
+		  netfilebt
 endif
 endif
 

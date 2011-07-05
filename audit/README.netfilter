@@ -38,15 +38,16 @@ the pertinent ipv4, ipv6, and mac addresses as well as device names to which
 these adresses are assigned. This allows considerable flexibility in
 configuring systems with 2 or possibly several more network interfaces on
 both the TOE platform as well as the network server platform. The
-config-server.bash script will build a profile in the /tmp directory that
+config-server.bash script will build a profile.<hostname> file in the
+utils/netfilter directory in the audit-test suite path. This file
 should be sourced prior to running the tests. it is important to pay
 attention to the format and correctness of the answers. While the
 config-server.bash script will echo your response to the questions and allow
 you the opportunity to change your responses, it currently does no format
 checking and cannot verify if an address or device name is accurate. It does
-however use a profile.sample file to provide a default answer which is
-primarily provided for the purpose of giving a sample of the format expected
-in the response.
+however use a profile.sample file n the same direcory to provide a default
+answer which is primarily provided for the purpose of giving a sample of the
+format expected in the response.
 
 TESTING STRATEGY
 The strategy of the testing is to provide a known and preferable empty
@@ -171,7 +172,7 @@ BRIDGE_FILTER   (Name of the bridge created on TOE for the ebtables testing.
 
 PROCEDURES FOR CONFIGURATION
 
-The config-server.bash script in the top level directory of the audit-test
+The config-server.bash script in the utils/netfilter directory of the audit-test
 suite should be run on each platform prior to running any of the netfilter
 tests. The config-server.bash script must be executed on the TOE first.
 
@@ -231,18 +232,21 @@ timer number of seconds.
 The setup of this bridge will be placed within the config-server.bash script
 at a later date.
 
-After the config-server script has been run there will be a file named profile
-in /tmp. This file will contain all the export commands for the environmental
+After the config-server script has been run there will be a file named
+profile.<hostname> int the utils/netfilter directory of the auidt-test suite
+path. This file will contain all the export commands for the environmental
 variables listed above. It contains environmental variables that are needed on
-each of the 3 platforms. To keep from having to do the many queries again on
-each platform the file /tmp/profile needs to be copied to the /tmp directory of
-each of the other two platforms and a source /tmp/profile should be executed
+each of the 3 platforms. The file profile.<hostname> file needs to be copied
+to the utils/netfilter directory in the audit-test suite path of each of the
+other two platforms as profile.<netserver hostname> in the case of the
+netserver and profile.<catcher hostname> in the case of the catcher. After
+the files have been copied a source of the profile.<hostname> should be execute
 on each of the platforms. The config-server script should be then be run on
 the other two platforms (netserver and catcher) The order of the remaining
 two platforms is not important. The config-server.bash script when
 run on the other two platforms will only query for the role (netserver or
 catcher) and the superuser password. It will use the information from the
-/tmp/profile to setup the network configuration and routing
+profile.<role hostname> to setup the network configuration and routing
 
 Once the config-server.bash script has been run on each of the 3 platforms
 (TOE first followed by the other two) The netfilter tests will be ready

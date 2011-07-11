@@ -63,6 +63,9 @@ install_setrans:
 	(echo ""; \
 	 echo "# labeled networking"; \
 	 echo "s15:c0.c239=NetHigh"; \
+	 echo "s1:c1=NetS1"; \
+	 echo "s1:c1.c3=NetIncomp1"; \
+	 echo "s1:c4.c6=NetIncomp2"; \
 	 echo "s0:c0=NetLowIncomp") >> /etc/selinux/mls/setrans.conf
 
 install_netlabel:

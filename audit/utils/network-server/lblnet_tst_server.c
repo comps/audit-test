@@ -341,6 +341,47 @@ void ctl_lock(int sock, char *param)
 		return;
 }
 
+void ctl_nccon(int sock, char *param)
+{
+  char *host_str, *ipv_str, *port_str;
+  int rc;
+
+  if (param == NULL) {
+    SMSG(SMSG_ERR, fprintf(stderr, "error(nccon): bad message\n"));
+    return;
+  }
+
+  /* parse the control message */
+  host_str = strtok(param, ",");
+  ipv_str = strtok(NULL, ",");
+  port_str = strtok(NULL, ",");
+
+
+  SMSG(SMSG_NOTICE, fprintf(stderr, "host = (%10s)\n, port = (%4s)\n", (char *)host_str, (char *)port_str));
+
+  pid_t pID = fork();
+  if (pID == 0){
+     if (strcasecmp(ipv_str, "ipv4") == 0) {
+        rc = execl("./runnc4.bash", (char *)port_str, (char *)NULL);
+        if (rc == -1)
+             SMSG(SMSG_ERR, fprintf(stderr, "error(nccon): execl failed\n"));
+        }
+     else if (strcasecmp(ipv_str, "ipv6") == 0) {
+           rc = execl("./runnc6.bash", (char *)port_str, (char *)NULL);
+           if (rc == -1)
+               SMSG(SMSG_ERR, fprintf(stderr, "error(nccon): execl failed\n"));
+        }
+     else
+           SMSG(SMSG_ERR, fprintf(stderr, "error(nccon): invalid ipv value\n"));
+     }
+  else if (pID < 0) {
+     SMSG(SMSG_ERR, fprintf(stderr, "error(nccon): fork failed\n"));
+     return;
+     }
+  else
+    SMSG(SMSG_NOTICE, fprintf(stderr, "parent process continues\n"));
+}
+
 /**
  * ctl_sendrand - Handle the "sendrand" control message
  * @sock: socket
@@ -1097,6 +1138,8 @@ int main(int argc, char *argv[])
 					ctl_sockcon(rem_sock, ctl_param);
 				} else if (strcasecmp(ctl_cmd, "getcon") == 0) {
 					ctl_getcon(rem_sock, ctl_param);
+				} else if (strcasecmp(ctl_cmd, "nccon") == 0) {
+					ctl_nccon(rem_sock, ctl_param);
 				} else {
 					SMSG(SMSG_WARN,
 					     fprintf(stderr,

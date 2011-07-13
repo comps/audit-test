@@ -52,6 +52,7 @@ NET_EXE		= do_accept \
 		  do_read \
 		  do_recvfrom \
 		  do_recvmsg \
+		  do_send \
 		  do_sendmsg \
 		  do_sendto
 

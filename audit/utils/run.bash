@@ -196,8 +196,8 @@ function startup {
     export TEST_USER=testuser
     export TEST_USER_PASSWD='2manySecre+S'
 
-    # testuser's password encrypted with perl -pe 's/.*/crypt $&, "AG"/e'
-    declare passwd_encrypted=AGVR9oEWQg4.k
+    export TEST_ADMIN=testadmin
+    export TEST_ADMIN_PASSWD='3manySecre+S'
 
     dmsg "Starting up"
 
@@ -238,7 +238,21 @@ function startup {
     dmsg "Adding group $TEST_USER"
     groupadd "$TEST_USER" || die
     dmsg "Adding user $TEST_USER"
-    useradd -g "$TEST_USER" -G wheel -p "$passwd_encrypted" -m "$TEST_USER" || die
+    useradd -g "$TEST_USER" -G wheel -m "$TEST_USER" || die
+    echo "$TEST_USER_PASSWD" | passwd --stdin $TEST_USER
+
+    # Add the test user which is in sysadm_r
+    userdel -r "$TEST_ADMIN" &>/dev/null
+    groupdel "$TEST_ADMIN" &>/dev/null
+    dmsg "Adding group $TEST_ADMIN"
+    groupadd "$TEST_ADMIN" || die
+    dmsg "Adding user $TEST_ADMIN"
+    if [[ $PROFILE == lspp ]] ; then
+        useradd -Z sysadm_u -g "$TEST_ADMIN" -G wheel -m "$TEST_ADMIN" || die
+    else
+        useradd -g "$TEST_ADMIN" -G wheel -m "$TEST_ADMIN" || die
+    fi
+    echo "$TEST_ADMIN_PASSWD" | passwd --stdin $TEST_ADMIN
 
     startup_hook
 }
@@ -252,6 +266,19 @@ function cleanup {
 	userdel -r "$TEST_USER" &>/dev/null
 	dmsg "Removing group $TEST_USER"
 	groupdel "$TEST_USER" &>/dev/null
+    fi
+
+    # Remove the test admin user
+    # XXX use prepend_cleanup in startup
+    if [[ -n $TEST_ADMIN ]]; then
+        # Remove the test user
+        dmsg "Removing user $TEST_ADMIN"
+        userdel -r "$TEST_ADMIN" &>/dev/null
+        dmsg "Removing group $TEST_ADMIN"
+        groupdel "$TEST_ADMIN" &>/dev/null
+        if [[ $PROFILE == lspp ]] ; then
+            semanage login -d "$TEST_ADMIN"
+        fi
     fi
 
     # Restore the original auditd configuration

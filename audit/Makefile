@@ -30,7 +30,8 @@ RUN_DIRS       += fail-safe \
 		  libpam
 ifneq ($(DISTRO), SUSE)
 RUN_DIRS       += trustedprograms \
-		  netfilebt
+		  netfilebt \
+		  crypto
 endif
 endif
 

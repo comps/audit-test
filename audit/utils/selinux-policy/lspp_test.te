@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.3.0)
+policy_module(lspp_test,6.3.1)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -49,8 +49,9 @@ gen_require(`
 	# more objects for network controls
 	type lo_netif_t, netif_t, node_t, unlabeled_t, netlabel_peer_t;
 	type kernel_t, inetd_t, sshd_t, ping_t;
+    # more objects needed for strace
+    type staff_t, namespace_init_t, ssh_t, user_t, setfiles_t;
 ')
-
 ###
 #
 # types and attributes
@@ -291,6 +292,9 @@ mls_file_downgrade(virtd_t)
 # give the test domain "unconfined" access
 unconfined_domain_noaudit(lspp_test_netlabel_t)
 
+# override privilages for the test domain
+mls_file_write_all_levels(lspp_test_netlabel_t)
+
 ##
 # ipsec test domain
 #
@@ -309,6 +313,7 @@ allow unlabeled_t unlabeled_t:netif ingress;
 allow netlabel_peer_t netif_t:netif ingress;
 allow netlabel_peer_t unlabeled_t:netif ingress;
 allow netlabel_peer_t node_t:node recvfrom;
+allow netlabel_peer_t lo_netif_t:netif ingress;
 allow kernel_t unlabeled_t:netif egress;
 
 # network controls for the test harness and tests
@@ -336,3 +341,11 @@ allow unlabeled_t sshd_t:netif egress;
 
 allow ping_t unlabeled_t:netif egress;
 allow unlabeled_t ping_t:netif egress;
+
+# needed for strace to work in crypto/ssh_sym test
+allow namespace_init_t lspp_harness_t:process sigchld;
+allow setfiles_t lspp_harness_t:process sigchld;
+allow sshd_t lspp_harness_t:process sigchld;
+allow staff_t lspp_harness_t:process sigchld;
+allow user_t lspp_harness_t:process sigchld;
+allow ssh_t lspp_harness_t:process sigchld;

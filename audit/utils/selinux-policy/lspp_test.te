@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.3.1)
+policy_module(lspp_test,6.3.2)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -51,6 +51,8 @@ gen_require(`
 	type kernel_t, inetd_t, sshd_t, ping_t;
     # more objects needed for strace
     type staff_t, namespace_init_t, ssh_t, user_t, setfiles_t;
+    # more objects needed for dmcrypt and cryptsetup
+    type lvm_t, fsadm_t, udev_t;
 ')
 ###
 #
@@ -349,3 +351,8 @@ allow sshd_t lspp_harness_t:process sigchld;
 allow staff_t lspp_harness_t:process sigchld;
 allow user_t lspp_harness_t:process sigchld;
 allow ssh_t lspp_harness_t:process sigchld;
+
+# needed for dmcrypt to work in crypto/ssh_sym test
+allow lvm_t lspp_harness_t:sem { read write unix_write associate };
+allow udev_t fsadm_t:process { siginh noatsecure rlimitinh };
+allow udev_t lvm_t:process { siginh noatsecure rlimitinh };

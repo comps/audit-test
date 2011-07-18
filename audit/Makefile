@@ -31,7 +31,8 @@ RUN_DIRS       += fail-safe \
 ifneq ($(DISTRO), SUSE)
 RUN_DIRS       += trustedprograms \
 		  netfilebt \
-		  crypto
+		  crypto \
+		  misc
 endif
 endif
 

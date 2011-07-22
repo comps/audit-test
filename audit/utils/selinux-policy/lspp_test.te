@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.3.2)
+policy_module(lspp_test,6.3.3)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -239,6 +239,11 @@ logging_run_auditctl(lspp_harness_t,lspp_test_r,{ ttynode ptynode })
 # give the harness domain access to run_init
 seutil_run_runinit(lspp_harness_t,lspp_test_r,{ ttynode ptynode })
 allow initrc_t lspp_harness_t:fd use;
+
+# give the harness domain access to the local login domain
+locallogin_domtrans(lspp_harness_t)
+allow local_login_t user_devpts_t:chr_file { read write ioctl relabelfrom relabelto setattr getattr open };
+allow local_login_t devpts_t:dir search;
 
 # give the harness domain access to the sysadm lpr domain
 allow sysadm_lpr_t user_devpts_t:chr_file { read write };

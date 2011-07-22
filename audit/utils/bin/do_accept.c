@@ -32,14 +32,17 @@ int main(int argc, char **argv)
   int sock;
   int bool_true = 1;
 
-  if (argc != 3) {
-    fprintf(stderr, "Usage:\n%s ipv4|ipv6 <port>\n", argv[0]);
+  if (argc < 3 || argc > 4) {
+    fprintf(stderr, "Usage:\n%s ipv4|ipv6 <port> <alarmv>\n", argv[0]);
     return TEST_ERROR;
   }
 
   signal(SIGALRM, sig_handler);
   siginterrupt(SIGALRM, 1);
-  alarm(ALARM_TIMER);
+  if (argc == 4) {
+     alarm(atoi(argv[3]));
+  } else
+      alarm(ALARM_TIMER);
 
   memset(&sock_addr, 0, sizeof(sock_addr));
   if (strcasecmp(argv[1], "ipv4") == 0) {

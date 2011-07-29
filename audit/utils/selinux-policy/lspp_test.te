@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.3.3)
+policy_module(lspp_test,6.3.4)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -49,10 +49,12 @@ gen_require(`
 	# more objects for network controls
 	type lo_netif_t, netif_t, node_t, unlabeled_t, netlabel_peer_t;
 	type kernel_t, inetd_t, sshd_t, ping_t;
-    # more objects needed for strace
-    type staff_t, namespace_init_t, ssh_t, user_t, setfiles_t;
-    # more objects needed for dmcrypt and cryptsetup
-    type lvm_t, fsadm_t, udev_t;
+	# Needed for login
+	type staff_t;
+	# more objects needed for strace
+	type staff_t, namespace_init_t, ssh_t, user_t, setfiles_t;
+	# more objects needed for dmcrypt and cryptsetup
+	type lvm_t, fsadm_t, udev_t;
 ')
 ###
 #
@@ -244,6 +246,12 @@ allow initrc_t lspp_harness_t:fd use;
 locallogin_domtrans(lspp_harness_t)
 allow local_login_t user_devpts_t:chr_file { read write ioctl relabelfrom relabelto setattr getattr open };
 allow local_login_t devpts_t:dir search;
+# the following is needed for the libpam/login test but seems to be related
+# to some questionable filesystem namespace behavior so maybe this is
+# temporary.
+allow local_login_t default_t:dir { read getattr open mounton relabelto rmdir setattr };
+allow staff_t lspp_test_output_t:file { write open };
+allow local_login_t var_t:dir mounton;
 
 # give the harness domain access to the sysadm lpr domain
 allow sysadm_lpr_t user_devpts_t:chr_file { read write };

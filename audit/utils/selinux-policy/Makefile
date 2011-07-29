@@ -25,6 +25,9 @@ SELINUX_POLICY_RPM := selinux-policy-$(SELINUX_POLICY_TYPE)
 SELINUX_DEV_RPM := selinux-policy
 
 SELINUX_POLICY_DEFTYPEFILE := /etc/selinux/$(SELINUX_POLICY_TYPE)/contexts/default_type
+SELINUX_POLICY_STAFFUCONTEXTS := /etc/selinux/$(SELINUX_POLICY_TYPE)/contexts/users/staff_u
+TEST_STAFFUCONTEXTS := "lspp_test_r:local_login_t:s0       staff_r:staff_t:s0 sysadm_r:sysadm_t:s0"
+
 SELINUX_DEV_BASEDIR := /usr/share/selinux/devel
 
 
@@ -67,11 +70,20 @@ verify:
 	else \
 		echo "not installed"; \
 	fi;
+	@echo -n " Checking test login context: "; \
+	role=$$(echo $(MODULE_ROLE) | cut -d':' -f 1); \
+	if grep -q $$role $(SELINUX_POLICY_STAFFUCONTEXTS); then \
+		echo "installed"; \
+	else \
+		echo "not installed"; \
+	fi;
 	@echo -n " Number of LSPP test files labeled incorrectly: "; \
 	fixfiles -l /dev/stdout check $(TEST_BASEDIR) | wc -l;
 
-# During this install a role is added to an SELinux user which we use as a positive test
-# of semanage.  If this did not work correctly the testing infrastructure would not run.
+# During this install a role is added to an SELinux user which we use 
+# as a positive test of semanage.  If this did not work correctly the 
+# testing infrastructure would not run.
+
 install: $(MODULE_NAME).pp
 	@if semodule -l | grep -q $(MODULE_NAME); then \
 		echo -n "Upgrading $(MODULE_NAME) module ... "; \
@@ -90,7 +102,15 @@ install: $(MODULE_NAME).pp
 			echo "Adding role/type to the default_types file"; \
 			echo $(MODULE_ROLE) >> $(SELINUX_POLICY_DEFTYPEFILE); \
 		fi; \
-	fi;
+	fi; \
+	echo -n "Adding test login context ..."; \
+	role=$$(echo $(MODULE_ROLE) | cut -d':' -f 1); \
+        if grep -q $$role $(SELINUX_POLICY_STAFFUCONTEXTS); then \
+                echo "already installed"; \
+        else \
+		echo $(TEST_STAFFUCONTEXTS) >> $(SELINUX_POLICY_STAFFUCONTEXTS);\
+                echo "added"; \
+        fi;
 
 uninstall:
 	@role=$$(echo $(MODULE_ROLE) | cut -d':' -f 1); \
@@ -102,7 +122,14 @@ uninstall:
 			echo "ok" || echo "failed"; \
 	fi; \
 	echo -n "Unloading $(MODULE_NAME) module ... "; \
-	semodule -r $(MODULE_NAME) &> /dev/null && echo "ok" || echo "failed";
+	semodule -r $(MODULE_NAME) &> /dev/null && echo "ok" || echo "failed"; \
+	echo -n "Removing test login context ...";  \
+	if grep -q $$role $(SELINUX_POLICY_STAFFUCONTEXTS); then \
+		sed -i -e /$$role/d $(SELINUX_POLICY_STAFFUCONTEXTS); \
+		echo "removed"; \
+	else \
+		echo "not installed"; \
+	fi;
 
 relabel:
 	@echo "Resetting file ownership in $(TEST_BASEDIR)"

@@ -61,13 +61,15 @@ runcon $LPQ1CON lpq -P $printer > $CON1OUT
     spawn login
     expect -nocase {login: $} {send "$env(TEST_USER)\r"}
     expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
-    expect -nocase {level} {send "N\r"}
+    expect -nocase {level} {send "y\r"}
+    expect -nocase {role} { send "sysadm_r\r" }
+    expect -nocase {level} { send "\r" }
     send "PS1=\"::\\#$ \"\r";
     expect {
-      ::2 { send "lpq -P $env(printer)\r"; exp_continue; }
+      ::2 { send "runcon -t sysadm_t -- lpq -P $env(printer)\r"; exp_continue; }
       ::3 { exit 0; }
     }
-    exit 1; '
+    exit 1'
 )
 
 if [ $? -ne 0 ]; then

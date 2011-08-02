@@ -25,7 +25,7 @@ source tp_print_functions.bash || exit 2
 
 # setup
 PRINTER=testp$$
-PRINTERDEV=/dev/parport0
+PRINTERDEV=/dev/lp0
 EXECCON=staff_u:lspp_test_r:lspp_test_generic_t:SystemLow-Unclassified
 PRINTERCON=Secret
 SAVEDCON=`ls -lZ $PRINTERDEV | awk '{print $4}'`
@@ -39,7 +39,7 @@ chcon -l $PRINTERCON $PRINTERDEV
 # test
 runcon $EXECCON /usr/bin/lpr -P $PRINTER /etc/passwd
 
-msg_1="job=.* auid=$(</proc/self/loginuid) acct= obj=$EXECCON refused unable to access printer=$PRINTER.*failed."
+msg_1="job=.* auid=$(</proc/self/loginuid) acct= obj=$EXECCON refused unable to access printer=$PRINTER.*failed"
 augrok -q type=USER_LABELED_EXPORT msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
 
 exit_pass

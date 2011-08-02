@@ -35,7 +35,7 @@ function create_parallel_printer {
 
     /usr/bin/lpq -P $PRINTER 2> /dev/null && return 0 # bail if the printer already exists
         
-    /usr/sbin/lpadmin -p $PRINTER -E -v parallel:/$PRINTERDEV -m postscript.ppd.gz
+    /usr/sbin/lpadmin -p $PRINTER -E -v parallel:/$PRINTERDEV -m drv:///sample.drv/generic.ppd
 }
 
 # Optional args
@@ -56,7 +56,7 @@ function create_socket_printer {
 
     /usr/bin/lpq -P $PRINTER 2> /dev/null && return 0 # bail if printer already exists
 
-    /usr/sbin/lpadmin -p $PRINTER -E -v socket://localhost:$PRINTERPORT -m postscript.ppd.gz
+    /usr/sbin/lpadmin -p $PRINTER -E -v socket://localhost:$PRINTERPORT -m drv:///sample.drv/generic.ppd
 }
 
 # Optional args
@@ -77,7 +77,7 @@ function create_socket_listener {
     fi
 
     if [ -z $3 ]; then
-        SECONDS=7
+        SECONDS=15
     else
         SECONDS=$3
     fi

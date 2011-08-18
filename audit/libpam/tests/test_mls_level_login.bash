@@ -30,8 +30,8 @@ if [[ $PPROFILE == "lspp" ]]; then
 	semanage login -d $TEST_USER	
 	semanage login -a -s staff_u -r s0-s2 $TEST_USER
 	# XXX should compute the default context from the policy
-	def_context=staff_u:sysadm_r:sysadm_t:s0-s2
-	sel_context=staff_u:sysadm_r:sysadm_t:s2
+	def_context=staff_u:staff_r:staff_t:s0-s2
+	sel_context=staff_u:staff_r:staff_t:s2
 	auid=$(id -u "$TEST_USER")
 else 
 	exit_error "Not in lspp mode"
@@ -52,8 +52,8 @@ backup /var/run/utmp
 	expect -nocase {role:} {send "\r"}
 	expect -nocase {level:} {send "s2\r"}
         send "PS1=:\\::\r"
-        expect {:::$} {send "printf \"pts=%s\\n\" `tty` > $env(localtmp)\r"}
-        expect {:::$} {send "printf \"sel_context2=%s\\n\" `cat /proc/self/attr/current` >> $env(localtmp)\r"}
+        expect {:::$} {send "printf \"sel_context2=%s\\n\" `cat /proc/self/attr/current` > $env(localtmp)\r"}
+        expect {:::$} {send "printf \"pts=%s\\n\" `tty` >> $env(localtmp)\r"}
         expect {:::$} {close; wait}'
 )
 
@@ -64,10 +64,10 @@ if [[ $sel_context != $sel_context2 ]]; then
 	exit_fail;
 fi
 
-msg_1="acct=\"*$TEST_USER\"* : exe=./bin/login.* res=success.*"
-augrok -q type=USER_AUTH msg_1=~"PAM: authentication $msg_1" || exit_fail
-augrok -q type=USER_ACCT msg_1=~"PAM: accounting $msg_1" || exit_fail
-augrok -q type=USER_START msg_1=~"PAM: session open $msg_1" auid=$auid \
+msg_1="acct=\"*$TEST_USER\"* exe=./bin/login.* res=success.*"
+augrok -q type=USER_AUTH msg_1=~"PAM:authentication $msg_1" || exit_fail
+augrok -q type=USER_ACCT msg_1=~"PAM:accounting $msg_1" || exit_fail
+augrok -q type=USER_START msg_1=~"PAM:session_open $msg_1" auid=$auid \
 	subj=$login_context || exit_fail
 augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$sel_context: exe=./bin/login.* res=success.*" auid=$auid || exit_fail
 exit_pass

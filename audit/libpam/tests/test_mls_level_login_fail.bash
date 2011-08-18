@@ -30,8 +30,8 @@ if [[ $PPROFILE == "lspp" ]]; then
 	semanage login -d $TEST_USER
 	semanage login -a -s staff_u $TEST_USER
 	# XXX should compute the default context from the policy
-	def_context=staff_u:sysadm_r:sysadm_t:s0
-	sel_context=staff_u:sysadm_r:sysadm_t:s15
+	def_context=staff_u:staff_r:staff_t:s0
+	sel_context=staff_u:staff_r:staff_t:s15
 	auid=$(id -u "$TEST_USER")
 else 
 	exit_error "Not in lspp mode"
@@ -54,8 +54,8 @@ backup /var/run/utmp
 	expect -nocase {"authentication failure"} {close; wait}'
 )
 
-msg_1="acct=\"*$TEST_USER\"* : exe=./bin/login.* res=failed.*"
-augrok -q type=USER_START msg_1=~"PAM: session open $msg_1" auid=$auid \
+msg_1="acct=\"*$TEST_USER\"* exe=./bin/login.* res=failed.*"
+augrok -q type=USER_START msg_1=~"PAM:session_open $msg_1" auid=$auid \
 	subj=$login_context || exit_fail 
 augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$sel_context: exe=./bin/login.* res=failed.*" auid=$auid || exit_fail
 exit_pass

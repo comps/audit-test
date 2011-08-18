@@ -41,10 +41,10 @@ if [[ $PPROFILE == "lspp" ]]; then
 	semanage login -d $TEST_USER	
 	semanage login -a -s staff_u -r s0-s2 $TEST_USER
 	# XXX should compute the context from the policy
-	s0_context=staff_u:sysadm_r:sysadm_t:SystemLow
-	s2_context=staff_u:sysadm_r:sysadm_t:Secret
-	s0_obj=staff_u:object_r:sysadm_tmp_t:s0
-	s2_obj=staff_u:object_r:sysadm_tmp_t:s2
+	s0_context=staff_u:staff_r:staff_t:SystemLow
+	s2_context=staff_u:staff_r:staff_t:Secret
+	s0_obj=staff_u:object_r:user_tmp_t:s0
+	s2_obj=staff_u:object_r:user_tmp_t:s2
 	auid=$(id -u "$TEST_USER")
 else 
 	exit_error "Not in lspp mode"

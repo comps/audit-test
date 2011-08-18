@@ -17,8 +17,11 @@
 
 source testcase.bash || exit 2
 
-######################################################################
-# global variables
-######################################################################
+function tar_cleanup {
+	rm -f $EXTRACT_DIR/*
+	rm -f $TAR_FILE
+	rm -f $EXTRACT_DIR.list
+	rm -f $FILE_DIR.list
+}
 
 set -x

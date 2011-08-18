@@ -24,4 +24,4 @@ do_tty: do_tty.c
 	$(CC) -o do_tty -Wall do_tty.c
 
 clean:
-	rm -f do_tty
+	rm -f do_tty extract_dir/*

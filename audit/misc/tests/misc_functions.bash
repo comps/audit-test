@@ -18,7 +18,12 @@
 source testcase.bash || exit 2
 
 function tar_cleanup {
-	rm -f $EXTRACT_DIR/*
+	if [ -d $EXTRACT_DIR ]; then
+		rm -rf $EXTRACT_DIR
+	fi
+	if [ -d $FILE_DIR ]; then
+		rm -rf $FILE_DIR
+	fi
 	rm -f $TAR_FILE
 	rm -f $EXTRACT_DIR.list
 	rm -f $FILE_DIR.list

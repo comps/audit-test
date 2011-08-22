@@ -41,6 +41,12 @@ tar_cleanup
 # Clean up at test exit
 prepend_cleanup tar_cleanup
 
+# Create test files
+mkdir -m 0755 $FILE_DIR $EXTRACT_DIR
+echo "This file is at level SystemHigh." > $FILE_DIR/fileHigh
+echo "This file is at level SystemLow." > $FILE_DIR/fileLow
+echo "This file is at level SystemSecret." > $FILE_DIR/fileSecret
+
 # Ensure the test files have the proper permissions/context
 chmod 644 $FILE_DIR/fileHigh || exit_fail
 chcon -t var_t -l SystemHigh $FILE_DIR/fileHigh || exit_fail

@@ -87,17 +87,18 @@ function xinetd_test {
 
     # connect through xinetd
     rem_subj="$(runcon -t lspp_test_netlabel_t -l $subj \
-	        $cmd_nc 127.0.0.1 5001 <<< $cmd_str)"
+	        $cmd_nc 127.0.0.1 4001 <<< $cmd_str)"
     [[ $? != 0 ]] && exit_error "unable to connect to localhost"
 
     # verify label
     [[ "$rem_subj" != "$subj" ]] && exit_fail "labels do not match"
 
     # verify audit record
-    augrok --seek=$log_mark type==SYSCALL syscall=execve success=yes \
-	subj=system_u:system_r:lspp_harness_t:$subj || \
+    augrok --seek=$log_mark type==SYSCALL success=yes \
+	syscall=$(ausyscall execve | awk '{print $2}') \
+	comm=lblnet_tst_serv \
+	subj=staff_u:lspp_test_r:lspp_harness_t:$subj || \
 	exit_fail "missing audit record"
-
 }
 
 ######################################################################

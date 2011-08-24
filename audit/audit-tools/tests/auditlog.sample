@@ -25,3 +25,5 @@ type=PATH msg=audit(1133818506.374:49969): name=".Xdefaults" flags=1  inode=1196
 type=SYSCALL msg=audit(1133821357.979:50097): arch=c000003e syscall=90 success=yes exit=0 a0=50a1c0 a1=1a4 a2=8 a3=4 items=1 pid=26438 auid=10208 uid=10208 gid=10208 euid=10208 suid=10208 fsuid=10208 egid=10208 sgid=10208 fsgid=10208 comm="chmod" exe="/bin/chmod"
 type=CWD msg=audit(1133821357.979:50097):  cwd="/home/agriffis/audit-test/audit-tools"
 type=PATH msg=audit(1133821357.979:50097): name="/home/agriffis/.Xdefaults" flags=1  inode=1196355 dev=fd:01 mode=0100755 ouid=10208 ogid=10208 rdev=00:00
+type=USER_AUTH msg=audit(1308862821.623:649500): user pid=16571 uid=0 auid=4294967295 ses=4294967295 subj=system_u:system_r:sshd_t:s0-s15:c0.c1023 msg='op=PAM:authentication acct="abc" exe="/usr/sbin/sshd" hostname=remote.system.domain.com addr=123.456.789.10 terminal=ssh res=success'
+type=PATH msg=audit(1308863665.472:655416): item=0 name="/lib64/libpthread.so.0" inode=7995430 dev=fd:00 mode=0100755 ouid=0 ogid=0 rdev=00:00 obj=system_u:object_r:lib_t:s0

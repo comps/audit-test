@@ -65,10 +65,8 @@ ifneq ($(MODE), $(NATIVE))
 	    endif
     endif
     ifeq ($(MODE), 64)
-	    ifeq (,$(findstring $(MACHINE),$(X) $(IA)))
-		    CFLAGS += -m64
-		    LDFLAGS += -m64
-	    endif
+	    CFLAGS += -m64
+	    LDFLAGS += -m64
     endif
 endif
 RELEASE = $(wildcard /etc/*-release)

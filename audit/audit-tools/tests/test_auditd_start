@@ -6,12 +6,12 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
@@ -20,15 +20,17 @@
 #
 # =============================================================================
 
+if service auditd status | grep -q "running"; then
+	service auditd stop 63>/dev/null
+fi
+
 export AUDIT_SEEK=`stat -c %s /var/log/audit/audit.log`
 
-service auditd restart 63>/dev/null || return 2
+service auditd start 63>/dev/null || return 2
+
 npid=$(pidof auditd)
 
 auid=$(</proc/$$/loginuid)
 
-if augrok --seek=$AUDIT_SEEK type=DAEMON_END auid=$auid; then
-	augrok --seek=$AUDIT_SEEK type=DAEMON_START auid=$auid pid=$npid
-else
-	exit 1
-fi
+augrok --seek=$AUDIT_SEEK type=DAEMON_END auid=$auid res=success
+augrok --seek=$AUDIT_SEEK type=DAEMON_START pid=$npid res=success

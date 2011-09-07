@@ -749,7 +749,7 @@ function create_fs_objects_dac {
             create_file target mode="${dacugo:0:1}+rw"
             name=$target;;
         file_exec)
-            create_exec target mode="${dacugo:0:1}+rx"
+            create_exec target basedir=$HOME mode="${dacugo:0:1}+rx"
             name=$target;;
 
         symlink_read)
@@ -932,7 +932,7 @@ function create_fs_objects_mac {
             create_file target context=$obj
             name=$target;;
         file_exec)
-            create_exec target context=$obj
+            create_exec target basedir=$HOME context=$obj
             name=$target;;
 	file_create)
             create_dir target context=$subj

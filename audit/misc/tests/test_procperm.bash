@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+#*********************************************************************
+#   Copyright (C) International Business Machines  Corp., 2000
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+#   the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program;  if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#  FILE: Proc Filesystem Test
+#
+#  PURPOSE: Wrapper script to run procpermtest.sh script as user perm_user.
+#
+#  HISTORY:
+#		9/04 Loulwa Salem (loulwa@us.ibm.com)
+#		09/11 T.N Santhosh (santhosh.tn@hp.com)
+#
+#  Note: 	Test originally called procperm.sh is now test_procperm.bash
+
+TEST_USER="perm_user"
+TEST_USER_PASSWD="ltp_test_pass"
+TEST_USER_ENCRYPTED_PASSWD="\$1\$1yzzszzz\$7P9AphbzAN43pTktT/kpp/"
+
+#-----------------------------------------------------------------------
+# FUNCTION:  create_user
+#-----------------------------------------------------------------------
+
+function create_user(){
+        echo "Creating test user $TEST_USER..."
+
+        #erase user if he may exist , so we can have a clean env
+        userdel $TEST_USER >& /dev/null
+	groupdel $TEST_USER >& /dev/null
+        [ -d "/home/$TEST_USER" ] && rm -rf /home/$TEST_USER
+
+        sleep 1
+
+        useradd -m -p $TEST_USER_ENCRYPTED_PASSWD $TEST_USER
+
+        if [ "$?" != 0 ]; then
+                echo "Could not add test user $TEST_USER."
+                exit 1
+        fi
+}
+
+#-----------------------------------------------------------------------
+# FUNCTION:  delete_user
+#-----------------------------------------------------------------------
+
+function delete_user(){
+        echo "Deleting test user $TEST_USER..."
+
+        userdel $TEST_USER >& /dev/null
+	sleep 1
+	groupdel $TEST_USER >& /dev/null
+        [ -d "/home/$TEST_USER" ] && rm -rf /home/$TEST_USER
+
+        if [ "$?" != "0" ]; then
+                echo "Not able to delete test user $TEST_USER."
+                exit 1
+        fi
+}
+
+#
+# main
+#
+
+create_user
+/bin/su $TEST_USER -c ./procpermtest.sh
+delete_user

@@ -18,10 +18,12 @@ TOPDIR		= ../..
 
 include $(TOPDIR)/rules.mk
 
-all: do_tty
+CFLAGS=-g
+LDLIBS += -lrt -pthread
 
-do_tty: do_tty.c
-	$(CC) -o do_tty -Wall do_tty.c
+EXECUTABLE=do_tty devfileperm dirperm fileperm namedpipes_fifoperm suid_sgid unixdomainsocketperm semperm shmperm msqperm sys_procperms
+
+all: $(EXECUTABLE)
 
 clean:
-	rm -f do_tty extract_dir/*
+	rm -f $(EXECUTABLE) extract_dir/* *.log

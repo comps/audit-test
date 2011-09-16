@@ -5,16 +5,16 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
-# 
+#
 # PURPOSE:
 # Verify that newrole -l fails when the tty type is not listed in
 # /etc/selinux/mls/contexts/securetty_types  The test first checks to be sure
@@ -24,8 +24,12 @@
 source testcase.bash || exit 2
 set -x
 
+prepend_cleanup cp -f /etc/selinux/mls/contexts/securetty_types{.orig,}
+
 # setup
 tty_type=$(ls -lZ $(tty) | awk -F: '{print $3}')
+# Make sure we don't have the tty type allowed in securetty_types for testing
+sed -i.orig "s/$tty_type//"  /etc/selinux/mls/contexts/securetty_types
 grep -q $tty_type /etc/selinux/mls/contexts/securetty_types \
 	&& exit_fail "$tty_type appears in /etc/selinux/mls/contexts/securetty_types"
 

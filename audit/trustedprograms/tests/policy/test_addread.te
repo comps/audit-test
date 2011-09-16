@@ -38,11 +38,11 @@ gen_require(`
 
 ## Type for test file.
 type test_open_file_t;
-files_type(test_open_file_t);
+files_type(test_open_file_t)
 
 ## Domain for process that can open the test file for reading and writing.
-userdom_unpriv_user_template(test_open);
-allow test_open_t test_open_file_t:file { getattr read };
+userdom_unpriv_user_template(test_open)
+allow test_open_t test_open_file_t:file read_file_perms;
 
 # We want to see this to verify that reads are granted
 auditallow test_open_t test_open_file_t:file read;
@@ -51,7 +51,7 @@ auditallow test_open_t test_open_file_t:file read;
 neverallow test_open_t test_open_file_t:file write;
 
 ## Domain for process that cannot open the test file for reading or writing.
-userdom_unpriv_user_template(test_noopen);
+userdom_unpriv_user_template(test_noopen)
 
 allow test_noopen_t test_open_file_t:file { getattr };
 

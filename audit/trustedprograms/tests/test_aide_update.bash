@@ -5,16 +5,16 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
-# 
+#
 # PURPOSE:
 # Verify that aide will successfully notice an updated file, and that it
 # reports an audit event about the change.  To test this first a database
@@ -68,7 +68,7 @@ fi
 
 grep -q $modified aide.log || exit_fail "Modified file not found in aide.log"
 
-msg1="added=0 removed=0 changed=1: exe=./usr/sbin/aide.*res=failed."
+msg1="added=0 removed=0 changed=1: exe=./usr/sbin/aide.*res=failed"
 augrok -q type=ANOM_RBAC_INTEGRITY_FAIL msg_1=~"${msg1}" || \
   exit_fail "unable to find audit record containing $msg1"
 

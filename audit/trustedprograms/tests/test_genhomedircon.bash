@@ -6,12 +6,12 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
@@ -26,7 +26,7 @@
 #
 # Test procedure:
 # - Verify that the test user exist but doesn't have any entries on the
-#   file_contexts.homedirs file 
+#   file_contexts.homedirs file
 # - Use semanage to map the test user to the staff_u selinux user
 # - Verify that there are now entries for this user in the file_contexts.homedirs
 #   file and that they're all staff_u
@@ -51,7 +51,8 @@ function verify_homecontext {
 
 	# Count all the contexts for this user's /home contents, and all the ones
 	# that are for this seuser - they should be the same number.
-	login_lines=$(grep $1 $homedirs | grep -c /home )
+	# Ignore lines for .gvfs and .debug directories
+	login_lines=$(grep $1 $homedirs | grep /home | grep -c -v -e '.gvfs' -e '.debug')
 	seuser_lines=$(grep $1 $homedirs | grep /home | grep -c $2)
 	if [[ $login_lines != $seuser_lines ]] ; then
 		exit_fail "verify_homecontext: $TEST_USER has some non-$2 contexts"
@@ -64,12 +65,12 @@ function verify_homecontext {
 
 [[ -n $TEST_USER ]] || exit_error "TEST_USER is not set"
 
-# configure to cleanup at test exit 
+# configure to cleanup at test exit
 prepend_cleanup semanage login -d $TEST_USER
 
 set -x
 
-# verify the user has been created 
+# verify the user has been created
 grep -q $TEST_USER /etc/passwd \
 	|| exit_error "test harness failure - test user not created"
 

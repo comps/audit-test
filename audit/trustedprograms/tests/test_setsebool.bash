@@ -17,8 +17,16 @@
 # 
 # PURPOSE:
 # Verify audit of setting selinux booleans.
+#
+# IMPORTANT NOTE:
+# This test disables the screen execution in the global profile because
+# SELinux throws a capability denial if trying to do so. This is expected.
+# The changed global profile is restored after the testing.
+#
 
 source testcase.bash || exit 2
+
+PROFILE="/etc/profile"
 
 unset orig control
 unset bool value
@@ -58,6 +66,11 @@ function check_bool_result {
         1) [[ $result != 0 ]] && exit_error "unexpected test result" ;;
     esac
 }
+
+
+# backup global profile and remove screen execution from it
+backup $PROFILE
+sed -i 's/^[ \t]*exec $SCREENEXEC.*//g' $PROFILE
 
 # setup
 set -x

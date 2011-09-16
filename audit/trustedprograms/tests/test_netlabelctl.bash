@@ -5,12 +5,12 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
@@ -157,7 +157,7 @@ function netlabel_remove {
 # DESCRIPTION
 # This function verifies that the netlabel_add() function was successful in all
 # of it's attempts to configure the kernel's NetLabel subsystem.  This
-# function checks for both the actual configuration changes as well as audit 
+# function checks for both the actual configuration changes as well as audit
 # records for each of the changes.  If either the configuration is not correct
 # or an audit record is missing the function calls the exit_fail() function to
 # signify failure.
@@ -181,7 +181,7 @@ function netlabel_add_verify {
 	exit_fail "missing audit record"
 
     # check the unlabeled traffic flag
-    [[ "$unlbl_cmd" == "accept:on" ]] || exit_fail "failed to configure NetLabel"
+    [[ "$unlbl_cmd" =~ "accept:on" ]] || exit_fail "failed to configure NetLabel"
     augrok --seek=$log_mark type==MAC_UNLBL_ALLOW unlbl_accept=1 || \
 	exit_fail "missing audit record"
 }

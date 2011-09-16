@@ -6,12 +6,12 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
@@ -66,7 +66,7 @@ function init_files {
 function load_test_policy {
 	declare log_mark
 	log_mark=$(stat -c %s $audit_log)
-	semodule -i $1 
+	semodule -i $1
 	[[ $? != 0 ]] && exit_error "unable to load test policy $1"
 	augrok -q --seek=$log_mark type==MAC_POLICY_LOAD \
 		subj=$subj auid=$auid success=yes \
@@ -77,8 +77,8 @@ function load_test_policy {
 function verify_chcon_level {
 	declare log_mark
 	log_mark=$(stat -c %s $audit_log)
-	auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S setxattr 
-	auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S getxattr 
+	auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S setxattr
+	auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S lgetxattr
 	chcon -l $2 $3
 	[[ $? != 0 ]] && exit_error "chcon failed"
 	# chcon causes a setxattr and only shows the old context
@@ -88,7 +88,7 @@ function verify_chcon_level {
 		|| exit_fail "missing audit record"
 	log_mark=$(stat -c %s $audit_log)
 	ls -lZ $3
-	# ls causes a getxattr which shows the new context
+	# ls causes a lgetxattr which shows the new context
 	augrok -q --seek=$log_mark type==SYSCALL \
 		subj=$subj auid=$auid success=yes comm=ls \
 		name=$3 obj=$obj_nolevel:$2 \
@@ -100,8 +100,8 @@ function verify_chcon_level {
 function verify_fail_chcon_level {
 	declare log_mark
 	log_mark=$(stat -c %s $audit_log)
-	auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S setxattr 
-	auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S getxattr 
+	auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S setxattr
+	auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S newfstatat
 	runcon -t lspp_test_generic_t chcon -l $2 $3
 	[[ $? == 0 ]] && exit_fail "chcon successed unexpectedly"
 	# chcon causes a setxattr and only shows the old context

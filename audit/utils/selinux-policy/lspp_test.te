@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.3.4)
+policy_module(lspp_test,6.3.5)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -55,6 +55,8 @@ gen_require(`
 	type staff_t, namespace_init_t, ssh_t, user_t, setfiles_t;
 	# more objects needed for dmcrypt and cryptsetup
 	type lvm_t, fsadm_t, udev_t;
+	# more objects needed for cupsd and lpr
+	type cupsd_t, initrc_t, portreserve_t;
 ')
 ###
 #
@@ -369,3 +371,10 @@ allow ssh_t lspp_harness_t:process sigchld;
 allow lvm_t lspp_harness_t:sem { read write unix_write associate };
 allow udev_t fsadm_t:process { siginh noatsecure rlimitinh };
 allow udev_t lvm_t:process { siginh noatsecure rlimitinh };
+
+# needed for lpr and nc to pass in trustedprograms/lpr_* tests
+allow cupsd_t lo_netif_t:netif egress;
+allow cupsd_t lspp_harness_t:fifo_file write;
+allow initrc_t lspp_harness_t:fifo_file write;
+allow portreserve_t lspp_harness_t:fifo_file write;
+allow udev_t lspp_harness_t:fifo_file write;

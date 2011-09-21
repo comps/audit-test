@@ -5,12 +5,12 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
@@ -34,7 +34,7 @@ function create_parallel_printer {
     fi
 
     /usr/bin/lpq -P $PRINTER 2> /dev/null && return 0 # bail if the printer already exists
-        
+
     /usr/sbin/lpadmin -p $PRINTER -E -v parallel:/$PRINTERDEV -m drv:///sample.drv/generic.ppd
 }
 
@@ -103,8 +103,8 @@ function setup_cupsd {
     # if everything appears to be right, assume it is
     /sbin/service cups status
     if [ $? -eq 0 \
-         -a $(grep -i ^Classification /etc/cups/cupsd.conf | awk '{print $2}') == mls \
-         -a $(grep -i ^PerPageLabels /etc/cups/cupsd.conf | awk '{print $2}') == yes ]; then
+         -a "x$(grep -i ^Classification /etc/cups/cupsd.conf | awk '{print $2}')" == "xmls" \
+         -a "x$(grep -i ^PerPageLabels /etc/cups/cupsd.conf | awk '{print $2}')" == "xyes" ]; then
         return
     fi
 

@@ -30,9 +30,16 @@
 # * CAP_SYS_ADMIN capability is needed
 # * mount point and files are labeled correctly after mount operation
 #
+# Note:
+# The test needs to have mcstrans service stopped during the testing
+#
 
 source tp_mount_functions.bash || exit 2
 source tp_context_functions.bash || exit 2
+
+# stop mcstrans service (the mcstrans is by default started during testing)
+service mcstrans stop
+prepend_cleanup 'service mcstrans start'
 
 # create a loopback VFAT filesystem
 dd if=/dev/zero of=$tmp1 count=100k bs=1024 || exit_error "dd failed"

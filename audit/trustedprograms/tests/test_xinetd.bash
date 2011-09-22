@@ -97,7 +97,7 @@ function xinetd_test {
     augrok --seek=$log_mark type==SYSCALL success=yes \
 	syscall=$(ausyscall execve | awk '{print $2}') \
 	comm=lblnet_tst_serv \
-	subj=staff_u:lspp_test_r:lspp_harness_t:$subj || \
+	subj=system_u:system_r:lspp_harness_t:$subj || \
 	exit_fail "missing audit record"
 }
 

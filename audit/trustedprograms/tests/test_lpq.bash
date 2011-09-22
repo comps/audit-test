@@ -57,6 +57,7 @@ runcon $LPQ1CON lpq -P $printer > $CON1OUT
   export printer
   export CON2OUT
   expect -c '
+    set timeout 30
     log_file -noappend $env(CON2OUT)
     spawn login
     expect -nocase {login: $} {send "$env(TEST_USER)\r"}

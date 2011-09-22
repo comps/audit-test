@@ -21,7 +21,9 @@ include $(TOPDIR)/rules.mk
 CFLAGS=-g
 LDLIBS += -lrt -pthread
 
-EXECUTABLE=do_tty devfileperm dirperm fileperm namedpipes_fifoperm suid_sgid unixdomainsocketperm semperm shmperm msqperm sys_procperms
+EXECUTABLE=do_tty devfileperm dirperm fileperm namedpipes_fifoperm suid_sgid unixdomainsocketperm semperm shmperm msqperm \
+	sys_procperms \
+	objreuse-brk objreuse-ftruncate objreuse-lseek objreuse-mmap objreuse-msg objreuse-sem objreuse-shm
 
 all: $(EXECUTABLE)
 

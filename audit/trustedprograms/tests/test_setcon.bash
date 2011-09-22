@@ -38,7 +38,7 @@
 
 source testcase.bash || exit 2
 
-lspp_policy="lspp_policy"
+lspp_policy="cc_mls_policy"
 current_con=staff_u:lspp_test_r:lspp_harness_t:s0-s15:c0.c1023
 new_pass=staff_u:lspp_test_r:lspp_harness_t:SystemHigh
 new_fail_self=staff_u:lspp_test_r:lspp_test_generic_t:Secret
@@ -93,6 +93,9 @@ case $op:$? in
     fail_self:0)
 	exit_fail "runcon returned zero status" ;;
     fail_self:*)
+	augrok -q --seek=$log_mark type==SYSCALL syscall=write \
+		subj=$fail_self_con auid=$auid success=no \
+		|| exit_fail "syscall audit record missing"
 	exit_pass ;;
 esac
 

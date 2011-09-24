@@ -21,8 +21,6 @@
 # DESCRIPTION: Cgroup device tests for SRF FDP_ACF.1(VIRT)
 #
 
-
-source testcase.bash || exit 2
 source functions_cgroup_device.bash || exit 2
 
 #

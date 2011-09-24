@@ -21,9 +21,6 @@
 # DESCRIPTION: Helper functions for cgroup device tests for SRF FDP_ACF.1(VIRT)
 #
 
-
-source testcase.bash || exit 2
-
 #
 # Global variables
 #

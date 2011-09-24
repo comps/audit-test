@@ -32,6 +32,7 @@ ifneq ($(DISTRO), SUSE)
 RUN_DIRS       += trustedprograms \
 		  netfilebt \
 		  crypto \
+		  kvm-cgroups \
 		  misc
 endif
 endif

@@ -4,7 +4,7 @@ ABOUT NETFILTER TESTS
 The netfilter tests reside in the sub-directories netfilter and netfilebt of
 the audit-test suite. The tests of the iptables and ip6tables reside in
 netfilter, and the bridge table filtering tests are in netfilebt. The use
-of a remote server running the lblnet_tst_serves required for these tests.
+of a remote server running the lblnet_tst_server is required for these tests.
 
 The ebtables tests also require the creation of a bridge (logical) device on
 a secondary network to which the secondary network's ethernet (physical)
@@ -13,20 +13,17 @@ config-server.bash script is run
 
 The iptables and ip6tables tests have a large number of the tests that run
 over the local loopback device to a locally running lblnet_tst_server.
-Some of the tests for iptables and ip6tables are run over the primry ethernet
+Some of the tests for iptables and ip6tables are run over the primary ethernet
 device against a remote server executing the lblnet_tst_server application.
 The locally run lblnet_tst_server which the iptables and ip6tables tests
 utilize is automatically started and stopped in the run.conf file, however
 the lblnet_tst_server that runs on the remote server must be started before
 any of the tests can begin as connectivity to it is tested prior to the
 start of any tests. If connectivity cannot be established the test will
-error out. The iptables/ip6tables tests have some tests that check the
-ability to filter packets requiring forwarding. This requires the use of
-a third platform known as the catcher. It can be any platform capable of
-running netcat listens.
+error out.
 
 You should read the README.netwk_svr for instructions on how to setup the
-remote network server.
+remote network server (referred to as the netserver in netfilter documentation).
 
 There are a number of environmental variables required in order to provide
 the information needed to set the rules in iptables, ip6tables and ebtables.
@@ -52,7 +49,7 @@ format expected in the response.
 TESTING STRATEGY
 The strategy of the testing is to provide a known and preferable empty
 chain in the tables prior to the start of the testing. Then a test message is
-run throught the appropriate chain of the tables showiing that it is not
+run throught the appropriate chain of the tables showing that it is not
 blocking or filtering on the test message. The rule is applied with the
 approriate filter information and the test message is run through again.
 The result is checked for the expected result of either the dropping,
@@ -102,14 +99,6 @@ LOCAL_SEC_IPV4 (IPv4 address of secondary device on TOE)
 
 LOCAL_SEC_IPV6 (IPv6 address of secondary device on TOE)
 
-TOE_GLOBAL     (This needs to be either a global or site local IPv6
-                address for the primary device on the TOE. Link local
-                addresses are not forwarded and this is used in the
-                forwarding test)
-
-TOE_SEC_GLOBAL (Must be a global or site local IPv6 address for the
-                secondary device on the TOE)
-
 LBLNET_SVR_IPV4 (This is the IPv4 address for the primary device on the
                  network server where the lblnet_tst_server application
                  is running)
@@ -136,7 +125,7 @@ SECNET_SVR_DEV  (Device name for the network server's secondary interface
 SECNET_SVR_MAC  (MAC address of secondary device on the network server
                  where the remote lblnet_tst_server application is running)
 
-SECNET_IPV4     (IPV4 address of the secondary device onn the network server
+SECNET_IPV4     (IPV4 address of the secondary device on the network server
                  where the remote lblnet_tst_server application is running)
 
 SNET4MASK       (Network mask being used on the secondary IPv4 network for
@@ -144,27 +133,6 @@ SNET4MASK       (Network mask being used on the secondary IPv4 network for
 
 SNET6MASK       (Network mask being used on the secondary IPv6 network,
                  specified in number of bits for example "64")
-
-CATCHER_IPV4    (IPv4 address of 3rd platform where netcat listen on
-                 specified port is performed ...nc -l $CATCHER_PORT4)
-
-CATCHER_IPV6    (Global or site local IPv6 address of 3rd platform where
-                 netcat listen is performed ...nc -l $CATCHER_PORT6)
-
-CATCHER_DEV     (Device name of interface on 3rd platform providing
-                 connectivity to the TOE's secondary network)
-
-CATCHER_PORT4   (Port # on 3rd platform designated for the IPv4 netcat listen
-                 for example "4100")
-
-CATCHER_PORT6   (Port # on 3rd platform designated for the IPv4 netcat listen
-                 for example "4200")
-
-PITCHER_IPV6    (Global or site local IPv6 address of network server's
-                 primary network interface)
-
-PITCHER_DEV     (Is always the same as LBLNET_SVR_DEV simply used in the
-                 scripts to signify the forwarding tests)
 
 BRIDGE_FILTER   (Name of the bridge created on TOE for the ebtables testing.
                  This bridge should have the secondary device enslaved to
@@ -174,7 +142,9 @@ PROCEDURES FOR CONFIGURATION
 
 The config-server.bash script in the utils/netfilter directory of the audit-test
 suite should be run on each platform prior to running any of the netfilter
-tests. The config-server.bash script must be executed on the TOE first.
+tests. The config-server.bash script must be executed on the TOE first. You
+will need to have the MAC, IPV4, and IPV6 addresses for the two interfaces on both
+the TOE and network server (netserver) handy as well as the device names.
 
 The config-server script will query the user for the adresses, device names,
 and network masks needed to properly configure the network, set routes in
@@ -236,18 +206,21 @@ After the config-server script has been run there will be a file named
 profile.<hostname> int the utils/netfilter directory of the auidt-test suite
 path. This file will contain all the export commands for the environmental
 variables listed above. It contains environmental variables that are needed on
-each of the 3 platforms. The file profile.<hostname> file needs to be copied
+each of the 2 platforms. The file profile.<hostname> file needs to be copied
 to the utils/netfilter directory in the audit-test suite path of each of the
-other two platforms as profile.<netserver hostname> in the case of the
-netserver and profile.<catcher hostname> in the case of the catcher. After
-the files have been copied a source of the profile.<hostname> should be execute
-on each of the platforms. The config-server script should be then be run on
-the other two platforms (netserver and catcher) The order of the remaining
-two platforms is not important. The config-server.bash script when
-run on the other two platforms will only query for the role (netserver or
-catcher) and the superuser password. It will use the information from the
-profile.<role hostname> to setup the network configuration and routing
+other platform as profile.<netserver hostname> in the case of the netserver
+After the file has been copied a source of the profile.<hostname> should be
+executed on the platform. The config-server script should be then be run on
+the platform (netserver)
+The config-server.bash script when run on the netserver platform will only
+query for the role (netserver) and the superuser password. It will use the
+information from the profile.<role hostname> to setup the network configuration
+and routing.
 
-Once the config-server.bash script has been run on each of the 3 platforms
-(TOE first followed by the other two) The netfilter tests will be ready
-to run.
+Once the config-server.bash script has been run on each of the 2 platforms
+(TOE first followed by the netserver) The netfilter tests will be ready
+to run. Once the initial setup has been completed the config-server.bash does
+not need to be run again unless an address or device name is changed for the
+configuration. After initial setup the only thing that needs to be executed
+when re-running the tests from a new login session is "source profile.<hostname>"
+on the TOE and the netserver prior to running the the netfilter tests.

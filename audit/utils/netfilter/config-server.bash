@@ -40,12 +40,8 @@ ifconfig $LOCAL_DEV inet6 add $LOCAL_IPV6/$LNET6MASK
 ifconfig $LOCAL_DEV inet6 add $TOE_GLOBAL/$LNET6MASK
 ifconfig $BRIDGE_FILTER $LOCAL_SEC_IPV4 netmask $SNET4MASK
 ifconfig $BRIDGE_FILTER inet6 add $LOCAL_SEC_IPV6/$SNET6MASK
-ifconfig $BRIDGE_FILTER inet6 add $TOE_SEC_GLOBAL/$SNET6MASK
-route add -net $SECNET_IPV4 netmask $SNET4MASK dev $BRIDGE_FILTER
 route -A inet6 add $LBLNET_SVR_IPV6 dev $LOCAL_DEV
 route -A inet6 add $SECNET_SVR_IPV6 dev $BRIDGE_FILTER
-route -A inet6 add $CATCHER_IPV6 dev $BRIDGE_FILTER
-route -A inet6 add $PITCHER_IPV6 dev $LOCAL_DEV
 }
 #
 # This function assigns the addresses obtained during the questioning
@@ -60,27 +56,6 @@ ifconfig $LBLNET_SVR_DEV $LBLNET_SVR_IPV4 netmask $LNET4MASK
 ifconfig $LBLNET_SVR_DEV inet6 add $LBLNET_SVR_IPV6/$LNET6MASK
 ifconfig $SECNET_SVR_DEV $SECNET_SVR_IPV4 netmask $SNET4MASK
 ifconfig $SECNET_SVR_DEV inet6 add $SECNET_SVR_IPV6/$SNET6MASK
-ifconfig $PITCHER_DEV inet6 add $PITCHER_IPV6/$LNET6MASK
-route -A inet6 add $CATCHER_IPV6 gw $TOE_GLOBAL dev $PITCHER_DEV
-}
-
-#
-# This function sets the 3rd platforms interface that connects to the
-# secondary network with the addresses obtained earlier by this script.
-# it then sets up a netcat listen on the ipv4 port specified and a netcat
-# listen on the ipv6 port specified for the purpose of receiving packets
-# during the ipv4 and ipv6 forwarding test. These packets are sent from
-# a netcat script called by the lblnet_tst_server and forwarded through
-# the TOE.
-function setup_catcher {
-
-source ./profile.$hostext
-ifconfig $CATCHER_DEV $CATCHER_IPV4 netmask $SNET4MASK
-ifconfig $CATCHER_DEV inet6 add $CATCHER_IPV6/$SNET6MASK
-route add $LBLNET_SVR_IPV4 gw $LOCAL_SEC_IPV4 dev $CATCHER_DEV
-route -A inet6 add $PITCHER_IPV6 gw $TOE_SEC_GLOBAL dev $CATCHER_DEV
-nc -l $CATCHER_PORT4 &
-nc -6 -l $CATCHER_PORT6 &
 }
 
 #
@@ -133,8 +108,6 @@ LOCAL_IPV4="$(ask "IPV4 address of TOE primary device" "$LOCAL_IPV4")"
 LOCAL_IPV6="$(ask "IPV6 address of TOE primary device" "$LOCAL_IPV6")"
 LOCAL_SEC_IPV4="$(ask "IPV4 address of TOE secondary device" "$LOCAL_SEC_IPV4")"
 LOCAL_SEC_IPV6="$(ask "IPV6 address of TOE secondary device" "$LOCAL_SEC_IPV6")"
-TOE_GLOBAL="$(ask "Global IPV6 address of TOE primary device" "$TOE_GLOBAL")"
-TOE_SEC_GLOBAL="$(ask "Global IPV6 address of TOE secondary device" "$TOE_SEC_GLOBAL")"
 
 echo "export AUDITPATH=\"$AUDITPATH\"" >> ./profile.$hostext
 echo "export LOCAL_DEV=\"$LOCAL_DEV\"" >> ./profile.$hostext
@@ -144,8 +117,6 @@ echo "export LOCAL_IPV4=\"$LOCAL_IPV4\"" >> ./profile.$hostext
 echo "export LOCAL_IPV6=\"$LOCAL_IPV6\"" >> ./profile.$hostext
 echo "export LOCAL_SEC_IPV4=\"$LOCAL_SEC_IPV4\"" >> ./profile.$hostext
 echo "export LOCAL_SEC_IPV6=\"$LOCAL_SEC_IPV6\"" >> ./profile.$hostext
-echo "export TOE_GLOBAL=\"$TOE_GLOBAL\"" >> ./profile.$hostext
-echo "export TOE_SEC_GLOBAL=\"$TOE_SEC_GLOBAL\"" >> ./profile.$hostext
 
 LBLNET_SVR_IPV4="$(ask "Network server's primary IPV4 address" "$LBLNET_SVR_IPV4")"
 LBLNET_SVR_IPV6="$(ask "Network server's primary IPV6 address" "$LBLNET_SVR_IPV6")"
@@ -157,7 +128,6 @@ SECNET_SVR_IPV4="$(ask "Network server's secondary IPV4 address" "$SECNET_SVR_IP
 SECNET_SVR_IPV6="$(ask "Network server's secondary IPV6 address" "$SECNET_SVR_IPV6")"
 SECNET_SVR_DEV="$(ask "Network server's secondary device name" "$SECNET_SVR_DEV")"
 SECNET_SVR_MAC="$(ask "Network server's secondary mac address (mac/mask)" "$SECNET_SVR_MAC")"
-SECNET_IPV4="$(ask "Network server's secondary IPV4 network address" "$SECNET_IPV4")"
 SNET4MASK="$(ask "Network server's secondary IPV4 mask" "$SNET4MASK")"
 SNET6MASK="$(ask "Network server's secondary IPV6 mask" "$SNET6MASK")"
 
@@ -171,26 +141,11 @@ echo "export SECNET_SVR_IPV4=\"$SECNET_SVR_IPV4\"" >> ./profile.$hostext
 echo "export SECNET_SVR_IPV6=\"$SECNET_SVR_IPV6\"" >> ./profile.$hostext
 echo "export SECNET_SVR_DEV=\"$SECNET_SVR_DEV\"" >> ./profile.$hostext
 echo "export SECNET_SVR_MAC=\"$SECNET_SVR_MAC\"" >> ./profile.$hostext
-echo "export SECNET_IPV4=\"$SECNET_IPV4\"" >> ./profile.$hostext
 echo "export SNET4MASK=\"$SNET4MASK\"" >> ./profile.$hostext
 echo "export SNET6MASK=\"$SNET6MASK\"" >> ./profile.$hostext
 
-CATCHER_IPV4="$(ask "Catcher's secondary IPV4 address" "$CATCHER_IPV4")"
-CATCHER_IPV6="$(ask "Catcher's secondary global IPV6 address" "$CATCHER_IPV6")"
-CATCHER_DEV="$(ask "Catcher's secondary device name?" "$CATCHER_DEV")"
-
-PITCHER_IPV6="$(ask "Network server's primary global IPV6 address" "$PITCHER_IPV6")"
-PITCHER_DEV="$LBLNET_SVR_DEV"
-
 BRIDGE_FILTER="$(ask "Name of bridge device created for the filter testing" "$BRIDGE_FILTER")"
 
-echo "export CATCHER_IPV4=\"$CATCHER_IPV4\"" >> ./profile.$hostext
-echo "export CATCHER_IPV6=\"$CATCHER_IPV6\"" >> ./profile.$hostext
-echo "export CATCHER_DEV=\"$CATCHER_DEV\"" >> ./profile.$hostext
-echo "export CATCHER_PORT4=\"4100\"" >> ./profile.$hostext
-echo "export CATCHER_PORT6=\"4200\"" >> ./profile.$hostext
-echo "export PITCHER_IPV6=\"$PITCHER_IPV6\"" >> ./profile.$hostext
-echo "export PITCHER_DEV=\"$PITCHER_DEV\"" >> ./profile.$hostext
 echo "export BRIDGE_FILTER=\"$BRIDGE_FILTER\"" >> ./profile.$hostext
 
 }
@@ -226,24 +181,23 @@ die () {
         exit 1
 }
 
-echo "Valid role names are: toe, netserver, catcher"
+echo "Valid role names are: toe, and netserver"
 echo ""
 echo "toe (target of evaluation) is the platform being certified"
 echo ""
 echo "netserver is the remote server where the lblnet_tst_server"
 echo "    is being run"
 echo ""
-echo "catcher is the third platform that will be the recipient of packets"
-echo "transmitted by the lblnet_tst_server during the forwarding tests."
-echo ""
 echo "This script has to be run on the toe first. It will obtain required"
-echo "info for all three roles and create a file in the utils/netfilter"
+echo "info for both roles and create a file in the utils/netfilter"
 echo "directory of the audit-test suite path named profile.<hostname>"
 echo "The file profile.<hostname> on the toe should then be copied to the"
 echo "utils/netfilter directory of the audit-test suite path on the netserver"
-echo "as profile.<netserver's hostname>, and to the catcher in the same"
-echo "directory as profile.<catcher's hostname> The file should then be"
-echo "sourced on each of those other 2 platforms prior to running this script"
+echo "as profile.<netserver's hostname> The file should then be"
+echo "sourced on the netserver platform and this script ru on it"
+echo "The profile should be sourced on each platform prior to running the"
+echo "netfilter and netfilebt tests. This script needs to be re-run"
+echo "whenever platform addresses or device names change"
 echo ""
 hostext="$(hostname | awk 'BEGIN { FS = "." } { print $1 }')"
 SERVER_ROLE="$(ask "Which role does this server perform" "toe")"
@@ -289,22 +243,6 @@ if [[ "$SERVER_ROLE" == "netserver" ]]; then
       echo "path does not exist"
       echo "Copy the /utils/netfilter/profile.$hostext from toe platform"
       echo "to the same named directory on the netserver"
-      exit
-   fi
-fi
-if [[ "$SERVER_ROLE" == "catcher" ]]; then
-   if test -f ./profile.$hostext
-      then
-      PASSWD="$(ask "Superuser passwword")"
-      echo "export PASSWD=$PASSWD" >> ./profile.$hostext
-      source ./profile.$hostext
-      setup_catcher
-      exit
-   else
-      echo "the utils/netfilter/profile.$hostext in the audit-test path"
-      echo "does not exist"
-      echo "Copy the /utils/netfilter/profile.$hostext from toe platform"
-      echo "to the same named directory on the catcher"
       exit
    fi
 fi

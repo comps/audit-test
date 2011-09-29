@@ -1,0 +1,46 @@
+#!/bin/sh
+###############################################################################
+# (c) Copyright Hewlett-Packard Development Company, L.P., 2007
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of version 2 the GNU General Public License as
+#   published by the Free Software Foundation.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+###############################################################################
+#
+# This script will be executed *after* all the other init scripts.
+# You can put your own initialization stuff in here if you don't
+# want to do the full Sys V style init stuff.
+
+touch /var/lock/subsys/local
+
+# Source function library.
+. /etc/init.d/functions
+
+######################################################################
+# LSPP Test Configuration
+######################################################################
+
+# Setup IPsec
+echo -n "Starting ipsec for the LSPP tests: "
+echo 0 > /proc/sys/net/ipv4/conf/lo/disable_xfrm
+echo 0 > /proc/sys/net/ipv4/conf/lo/disable_policy
+ip xfrm state flush && ip xfrm policy flush
+service ipsec status && service ipsec stop
+service ipsec start && \
+    ip xfrm policy add dir out src 127.0.0.1  dst 127.0.0.1 proto udp dport 4300 ctx staff_u:lspp_test_r:lspp_harness_t:s0:c0-s15:c0.c1023 action block && \
+    ip xfrm policy add dir in src 127.0.0.1  dst 127.0.0.1 proto udp sport 4300 ctx staff_u:lspp_test_r:lspp_harness_t:s0:c0-s15:c0.c1023 action block && \
+    ip xfrm policy add dir out src 127.0.0.1  dst 127.0.0.1 proto udp dport 4301 ctx staff_u:lspp_test_r:lspp_harness_t:s0-s15:c0.c1022 action block && \
+    ip xfrm policy add dir in src 127.0.0.1  dst 127.0.0.1 proto udp sport 4301 ctx staff_u:lspp_test_r:lspp_harness_t:s0-s15:c0.c1022 action block && \
+    ip xfrm policy add dir out src %LOCAL_IPV4% dst %REMOTE_IPV4% proto udp dport 4300 ctx staff_u:lspp_test_r:lspp_harness_t:s0:c0-s15:c0.c1023 action block && \
+    ip xfrm policy add dir in src %REMOTE_IPV4% dst %LOCAL_IPV4% proto udp sport 4300 ctx staff_u:lspp_test_r:lspp_harness_t:s0:c0-s15:c0.c1023 action block && \
+    ip xfrm policy add dir out src %LOCAL_IPV4% dst %REMOTE_IPV4% proto udp dport 4301 ctx staff_u:lspp_test_r:lspp_harness_t:s0-s15:c0.c1022 action block && \
+    ip xfrm policy add dir in src %REMOTE_IPV4% dst %LOCAL_IPV4% proto udp sport 4301 ctx staff_u:lspp_test_r:lspp_harness_t:s0-s15:c0.c1022 action block && \
+    (success; echo) || (failure; echo)

@@ -4,12 +4,12 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
@@ -34,6 +34,7 @@ getaddress: install_check
 	@echo "Local IPv6 address -> %LOCAL_IPV6_RAW%" | ../addr_filter.bash
 
 install_client: install_setrans install_ipsec_client install_netlabel
+	cat rc.local.client | ../addr_filter.bash > rc.local
 	install -o root -g root -m 755 rc.local /etc/rc.d
 	if [[ ! -L /etc/rc3.d/S99local ]]; then \
 		(cd /etc/rc3.d; ln -s ../rc.local S99local); \
@@ -41,6 +42,13 @@ install_client: install_setrans install_ipsec_client install_netlabel
 	restorecon /etc
 
 install_server: install_setrans install_ipsec_server install_netlabel
+	if [[ ! -f client_list.txt ]]; then \
+		echo "error: file client_list.txt does not exist"; \
+		exit 1; \
+	fi
+	cat rc.local.server.in_header > rc.local
+	cat client_list.txt | ../addr_loop.bash -4 rc.local.server.in_body >> rc.local
+	cat rc.local.server.in_footer >> rc.local
 	install -o root -g root -m 755 rc.local /etc/rc.d
 	if [[ ! -L /etc/rc3.d/S99local ]]; then \
 		(cd /etc/rc3.d; ln -s ../rc.local S99local); \
@@ -73,26 +81,16 @@ install_netlabel:
 	chkconfig netlabel on
 
 install_ipsec_client: install_check
-	cat setkey.conf.in | ../addr_filter.bash > setkey.conf
-	cat psk.txt.in | ../addr_filter.bash > psk.txt
-	install -o root -g root -m 600 racoon.conf /etc/racoon
-	install -o root -g root -m 600 psk.txt /etc/racoon
-	install -o root -g root -m 600 setkey.conf /etc/racoon
+	cat ipsec.conf.client | ../addr_filter.bash > ipsec.conf
+	install -o root -g root -m 600 ipsec.conf /etc/ipsec.conf
+	install -o root -g root -m 600 ipsec.secrets /etc/ipsec.secrets
 
 install_ipsec_server: install_check_server
 	if [[ ! -f client_list.txt ]]; then \
 		echo "error: file client_list.txt does not exist"; \
 		exit 1; \
 	fi
-	cat setkey.conf.in_header > setkey.conf
-	cat client_list.txt | \
-		../addr_loop.bash -4 setkey.conf.in_ipv4 \
-	                          -6 setkey.conf.in_ipv6 >> \
-		setkey.conf
-	cat setkey.conf.in_footer >> setkey.conf
-	cat psk.txt.in_header > psk.txt
-	cat client_list.txt | ../addr_loop.bash -A psk.txt.in_body >> psk.txt
-	cat psk.txt.in_footer >> psk.txt
-	install -o root -g root -m 600 racoon.conf /etc/racoon
-	install -o root -g root -m 600 psk.txt /etc/racoon
-	install -o root -g root -m 600 setkey.conf /etc/racoon
+	cat ipsec.conf.server.in_header > ipsec.conf
+	cat client_list.txt | ../addr_loop.bash -4 ipsec.conf.server.in_body >> ipsec.conf
+	install -o root -g root -m 600 ipsec.conf /etc/ipsec.conf
+	install -o root -g root -m 600 ipsec.secrets /etc/ipsec.secrets

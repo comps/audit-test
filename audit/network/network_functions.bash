@@ -69,7 +69,7 @@ function get_error_code {
 
 # usage: get_sockcall_num <syscall, e.g. connect>
 function get_sockcall_num {
-    gcc -E -dM /usr/include/linux/net.h | grep -i SYS_$1 | awk '{print $3}'
+    gcc -E -dM /usr/include/linux/net.h | grep -i "SYS_$1 " | awk '{print $3}'
 }
 
 # usage: get_sockcall_num_hex <syscall, e.g. connect>

@@ -33,6 +33,7 @@ RUN_DIRS       += trustedprograms \
 		  netfilebt \
 		  crypto \
 		  kvm-cgroups \
+		  kvm-iommu \
 		  misc
 endif
 endif

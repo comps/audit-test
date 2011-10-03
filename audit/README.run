@@ -33,7 +33,7 @@ Configure System
 ----------------
 Verify that each ext4 filesystem in /etc/fstab has the 'user_xattr' option.
 
-If you do not have an administrative eal user other than the root user, add 
+If you do not have an administrative eal user other than the root user, add
 one with the following commands:
 
 # useradd -c "EAL Test User" -g wheel eal
@@ -61,7 +61,7 @@ On a SuSE system:
 
 Configure the Network Test Server
 ---------------------------------
-Configure the Network Test Server according to the instructions in the 
+Configure the Network Test Server according to the instructions in the
 README.netwk_svr file.
 
 Install
@@ -80,15 +80,15 @@ and location for the tests to run correctly.
 # cd /usr/local/eal4_testing
 
 Move the audit-test directory into the newly created /usr/local/eal4_testing
-directory.  
+directory.
 
-Set the directory permissions appropriately to allow the tests to be built 
+Set the directory permissions appropriately to allow the tests to be built
 and run:
 # chown -R root:root /usr/local/eal4_testing
 
 Build
 -----
-# cd /usr/local/eal4_testing/audit-test 
+# cd /usr/local/eal4_testing/audit-test
 
 If running on a LSPP system, install the test policy and change to the
 "lspp_test_r" role.
@@ -104,11 +104,17 @@ Or to build the 32-bit tests on an x86_64 box do:
 Relabel test files.
 # make -C utils/selinux-policy relabel verify
 
+Configure the KVM iommu test
+----------------------------
+Edit the file
+'/usr/local/eal4_testing/audit-test/kvm-iommu/pci_device.conf'
+and select a PCI device to use for PCI passthrough testing.
+
 Configure the Labeled Networking Tests
 --------------------------------------
 On the test machine:
 
-From the /usr/local/eal4_testing/audit-test directory, perform the following 
+From the /usr/local/eal4_testing/audit-test directory, perform the following
 commands to setup the required configuration for the labeled networking tests:
 
     # export RHOST="localhost"
@@ -116,15 +122,15 @@ commands to setup the required configuration for the labeled networking tests:
     # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
     # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
     # export PATH="$PATH:."
-    
+
     # make netconfig
 
 On the network test server:
 
-Confirm that the 
-'/usr/local/eal4_testing/audit-test/network/system/client_list.txt' file on 
-the network test server contains both the IPv4 and IPv6 addresses of the test 
-machine.  
+Confirm that the
+'/usr/local/eal4_testing/audit-test/network/system/client_list.txt' file on
+the network test server contains both the IPv4 and IPv6 addresses of the test
+machine.
 
 NOTE: If you need to determine the test machine's IP addresses to add to the
 client_list.txt file, run the following commands on the test machine:
@@ -188,9 +194,9 @@ To run a single testcase by number:
 
 Workaround for Network Test Failures
 ------------------------------------
-Some test runs may experience network test failures in the labeled IPsec 
-tests due to the current implementation of racoon. Use the following 
-workaround if you experience these failures. 
+Some test runs may experience network test failures in the labeled IPsec
+tests due to the current implementation of racoon. Use the following
+workaround if you experience these failures.
 
 1. Reboot the test machine
 2. Login as eal
@@ -208,16 +214,16 @@ workaround if you experience these failures.
    # export PATH="$PATH:."
 7. Change to the '/usr/local/eal4_testing/audit-test/network' directory
 8. Type './run.bash host=remote*type=ipsec'. There may be a few failures;
-rerun the command until all of the tests pass. At most, this should be two 
+rerun the command until all of the tests pass. At most, this should be two
 passes.
 9. Logoff the system
 
 Re-login into the system and re-run the audit testsuite (or just networking
-tests) as following the directions in previous sections of this README.  
+tests) as following the directions in previous sections of this README.
 
-Each time you reboot the system and run the network tests, you 
-must follow the steps above.  It is also possible, although unlikely, that if 
-you wait an excessive period of time between step #8 above and running the 
+Each time you reboot the system and run the network tests, you
+must follow the steps above.  It is also possible, although unlikely, that if
+you wait an excessive period of time between step #8 above and running the
 test suite, the network tests may fail. For that reason, it is recommended that
 you do these steps only when you are ready to re-run the test suite.
 

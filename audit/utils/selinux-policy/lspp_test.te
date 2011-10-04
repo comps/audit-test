@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.3.5)
+policy_module(lspp_test,6.3.6)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -355,6 +355,7 @@ allow inetd_t unlabeled_t:netif egress;
 allow sshd_t unlabeled_t:peer recv;
 allow sshd_t unlabeled_t:netif egress;
 allow unlabeled_t sshd_t:netif egress;
+allow sshd_t lo_netif_t:netif egress;
 
 allow ping_t unlabeled_t:netif egress;
 allow unlabeled_t ping_t:netif egress;

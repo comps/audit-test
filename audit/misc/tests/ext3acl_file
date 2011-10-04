@@ -1,0 +1,497 @@
+#!/usr/bin/perl
+
+# $Id: acl_file01,v 1.1 2004/06/30 18:22:41 danjones Exp $
+#
+# Purpose: verify that the ACL permission system works as documented.
+#
+# Method: This program contains a Perl implementation of the algorithm
+#	described in the acl(5) manual page, which was written completely
+#	independently of the implementation in the kernel.
+#
+#	Several test files with specific ownership, permissions and ACLs are
+#	created, and all access modes are tested for three separate user
+#	IDs. The expected result returned by the Perl implementation of the
+#	ACL algorithm is compared to the result of tests using the
+#	filesystem, with failure being returned on any mismatch.
+#
+#	Code coverage analysis is used to verify that all possible exits
+#	from the ACL algorithm are being taken during verification.
+#
+# Expected result: exit code 0 indicates that all tests worked as expected,
+#	and all code paths were covered.
+
+use strict;
+use warnings;
+
+use FileHandle;
+use File::Temp;
+use File::Copy;
+use English;
+
+# Put name of directory used for testing here - must have ACL support
+my $test_dir = "/tmp";
+
+my $failures = 0;
+my @test_files;
+my %test_description;
+
+sub setup_test_files {
+	# test cases without ACLs
+	create_test_file('root', 'root', 0000, '');
+	create_test_file('root',  'daemon', 0660, '');
+
+	# simple ACL tests
+	create_test_file('root', 'root', 0600, 'u:daemon:r');
+	create_test_file('root', 'root', 0600, 'u:daemon:x');
+	create_test_file('root', 'root', 0600, 'g:daemon:rw');
+	create_test_file('daemon',  'daemon', 0555, 'u:daemon:-');
+
+	# daemon is in groups 'daemon' and 'bin' - can process open
+	# a file "rw" if each group only supplies one bit? No.
+	create_test_file('root', 'root', 0600, 'g:daemon:r,g:bin:w');
+
+	# a more complex case with several users and groups
+	create_test_file('bin',  'floppy', 0700,
+		'u:daemon:rx,u:bin:rwx,g:daemon:w,g:users:r,g:root:-');
+
+	# intentional failure to verify that error checking works
+	eval {
+		print STDERR "Expected fail: ";
+		create_test_file('root', 'root', 0600, 'u:baduser:rwx');
+	};
+	die "FAIL: test that should have failed was unexpectedly successful"
+		unless $@;
+}
+
+sub main {
+	chdir($test_dir) or die "can't chdir to $test_dir: $!\n";
+
+	setup_test_files();
+
+	for my $file (@test_files) {
+		print $test_description{$file}, "\n";
+
+		for my $username (qw(root daemon nobody)) {
+			switch_to_user($username);
+
+			for my $perm_req (4, 2, 6, 1, 5, 3, 7) {
+				my $expected = verify_acl_algorithm($file, $perm_req);
+				my $actual   = acl_test($file, $perm_req);
+
+				print "$file\t$username\t", perm_string($perm_req), "\t";
+
+				print $expected ? "yes\t" : "no\t";
+				print $actual   ? "yes\t" : "no\t";
+
+				if ( $expected == $actual ) {
+					print "PASS";
+				} else {
+					print "FAIL";
+					++ $failures;
+				}
+				print "\n";
+			}
+		}
+	}
+
+	verify_coverage(qw(0a 0b 0c 1a 1b 2a 2b 3a1 3a2 3a 3b 4 5));
+
+	if ($failures) {
+		# prevent deletion of temp files
+		switch_to_user('nobody');
+
+		print STDERR "FAILED tests: $failures\n";
+		exit 1;
+	} else {
+		switch_to_user('root');
+
+		print "All tests okay.\n";
+		exit 0;
+	}
+}
+
+sub create_test_file {
+	my ($owner, $group, $mode, $acl) = @_;
+
+	my ($fh, $filename) = File::Temp::tempfile("aclXXXXXX", UNLINK => 1);
+
+	copy("/bin/echo", $fh);
+
+	my $uid = scalar getpwnam($owner);
+	my $gid = scalar getgrnam($group);
+	chown $uid, $gid, $filename or die "can't chown $filename: $!\n";
+
+	chmod $mode, $filename or die "can't chmod $filename: $!\n";
+
+	if (defined $acl && $acl ne '') {
+		my $ret = system("setfacl -m '$acl' '$filename'");
+		die "can't setfacl $filename to $acl\n" if $ret<0 || ($ret>>8);
+	}
+	close $fh;
+
+	$test_description{$filename} = sprintf "owner='%s', group='%s', mode='0%03o', acl='%s'",
+		$owner, $group, $mode, $acl;
+
+
+	push @test_files, $filename;
+}
+
+sub cmd {
+	my ($cmd) = @_;
+
+	# untaint
+	$cmd =~ /(.*)/;
+	my $clean_cmd = $1;
+
+	my $out = qx($clean_cmd);
+	chomp $out;
+	return $out;
+}
+
+sub switch_to_user {
+	my ($username) = @_;
+
+	# switch to root
+	$EUID = 0;
+	$UID = 0;
+
+	my $new_gid = cmd("/usr/bin/id -g $username");
+	my $new_egid = cmd("/usr/bin/id -g $username") ." ". cmd("/usr/bin/id -G $username");
+	my $new_uid = cmd("/usr/bin/id -u $username");
+
+	$GID = $new_gid;
+        $EGID = "$new_gid $new_gid";
+        $UID = $new_uid;
+        $EUID = $new_uid;
+	#system('id');
+}
+
+sub acl_test {
+	my ($file, $req_perm) = @_;
+
+	my $ret = 1;
+
+	if (($req_perm & 6) == 6) {
+		# read and write
+		my $F = new FileHandle $file, "r+";
+		$ret=0 unless $F;
+	}
+
+	if ($req_perm & 4) {
+		# read only
+		my $F = new FileHandle $file, "r";
+		$ret=0 unless $F;
+	}
+
+	if ($req_perm & 2) {
+		# write (append) only
+		my $F = new FileHandle $file, "a";
+		$ret=0 unless $F;
+	}
+
+	if ($req_perm & 1) {
+		# execute
+		my $c = system("'./$file' >/dev/null 2>&1");
+		$ret=0 if $c < 0 || ($c>>8);
+	}
+
+	return $ret;
+}
+
+my %Code_Covered;
+sub CODE_COVERAGE {
+	my ($tag) = @_;
+
+	$Code_Covered{$tag} = 1;
+}
+
+sub verify_coverage {
+	my (@expected) = @_;
+
+	my @missing;
+	for my $tag (@expected) {
+		push @missing, $tag unless $Code_Covered{$tag};
+	}
+
+	print "Code covered: ", join(" ", sort keys %Code_Covered), "\n";
+
+	if (@missing) {
+		print "FAIL: Code NOT covered: ", join(" ", @missing), "\n";
+		++ $failures;
+	}
+}
+
+#ACCESS CHECK ALGORITHM (from acl(5) manual page)
+#     A process may request read, write, or execute/search access to a file
+#     object protected by an ACL. The access check algorithm determines whether
+#     access to the object will be granted.
+#
+#     1.   If the effective user ID of the process matches the user ID of the
+#          file object owner, then
+#
+#              if  the  ACL_USER_OBJ  entry contains the requested permissions,
+#              access is granted,
+#
+#              else access is denied.
+#
+#     2.   else if the effective user ID of the process matches the qualifier
+#          of any entry of type ACL_USER, then
+#
+#              if  the  matching  ACL_USER entry and the ACL_MASK entry contain
+#              the requested permissions, access is granted,
+#
+#              else access is denied.
+#
+#     3.   else if the effective group ID or any of the supplementary group IDs
+#          of the process match the qualifier of the entry of type
+#          ACL_GROUP_OBJ, or the qualifier of any entry of type ACL_GROUP, then
+#
+#              if  the  ACL_MASK entry and any of the matching ACL_GROUP_OBJ or
+#              ACL_GROUP entries contain the requested permissions,  access  is
+#              granted,
+#
+#              else access is denied.
+#
+#     4.   else if the ACL_OTHER entry contains the requested permissions,
+#          access is granted.
+#
+#     5.   else access is denied.
+
+sub verify_acl_algorithm {
+	my ($file, $req_perm) = @_;
+
+	my $facl = new ACL $file;
+
+	# get numeric list of groups user is member of
+	my @GROUPS = split / /, $EGID;
+
+	# Handle special privileges for 'root' first
+	if ($EUID == 0) {
+		if ($req_perm & 1) {
+			# execute requested - okay if any execute bit is set
+			if ($facl->any_exec) {
+				::CODE_COVERAGE("0a");
+				return 1;
+			} else {
+				::CODE_COVERAGE("0b");
+				return 0;
+			}
+		} else {
+			# read and write always permitted
+			::CODE_COVERAGE("0c");
+			return 1;
+		}
+	}
+
+	if ($EUID == $facl->obj_fowner) {
+		if (perm_ok($req_perm, $facl->perm_fowner)) {
+			::CODE_COVERAGE("1a");
+			return 1;
+		} else {
+			::CODE_COVERAGE("1b");
+			return 0;
+		}
+	} elsif (set_and([$EUID], [ $facl->user_list ])) {
+		if (perm_ok($req_perm, $facl->perm_user($EUID))) {
+			::CODE_COVERAGE("2a");
+			return 1;
+		} else {
+			::CODE_COVERAGE("2b");
+			return 0;
+		}
+	} elsif (set_and([ @GROUPS ], [ $facl->group_list, $facl->obj_fgroup ])) {
+		my $permitted = 0;
+
+		if (set_and([ @GROUPS ], [$facl->obj_fgroup])
+		   && perm_ok($req_perm, $facl->perm_fgroup)
+		) {
+			::CODE_COVERAGE("3a1");
+			$permitted = 1;
+		}
+
+		my @matched_groups = set_and([ @GROUPS ], [$facl->group_list]);
+		for my $group (@matched_groups) {
+			my $group_perm = $facl->perm_group($group);
+			if (perm_ok($req_perm, $group_perm & $facl->mask)) {
+				::CODE_COVERAGE("3a2");
+				$permitted = 1;
+			}
+		}
+
+		if ($permitted) {
+			::CODE_COVERAGE("3a");
+			return 1;
+		} else {
+			::CODE_COVERAGE("3b");
+			return 0;
+		}
+	} elsif (perm_ok($req_perm, $facl->perm_other)) {
+		::CODE_COVERAGE("4");
+		return 1;
+	}
+
+	::CODE_COVERAGE("5");
+	return 0;
+}
+
+sub perm_ok {
+	my ($req, $allowed) = @_;
+
+	if ($req & ~$allowed) {
+		return 0;
+	} else {
+		return 1,
+	}
+}
+
+sub perm_string {
+	my ($perm) = @_;
+
+	my $out = "";
+	$out .= $perm&4 ? "r" : "-",
+	$out .= $perm&2 ? "w" : "-",
+	$out .= $perm&1 ? "x" : "-";
+
+	return $out;
+}
+
+sub set_and {
+	my ($A, $B) = @_;
+
+	my @out;
+	for my $e (@$A) {
+		push @out, grep { $e == $_ } @$B;
+	}
+
+	return @out;
+}
+
+###########################################################################
+package ACL;
+
+sub _perm_parse_string {
+	my ($string) = @_;
+
+	my $perm = 0;
+	$perm |= 4 if substr($string, 0, 1) ne '-';
+	$perm |= 2 if substr($string, 1, 1) ne '-';
+	$perm |= 1 if substr($string, 2, 1) ne '-';
+
+	return $perm;
+}
+
+sub new {
+	my ($pkg, $file) = @_;
+
+	my $self = {
+		PermGroup => {},
+		PermUser => {},
+		Mask => 0,
+	};
+
+	my @stat = stat $file or die "can't stat $file: $!\n";
+
+	$self->{Owner} = $stat[4];
+	$self->{Group} = $stat[5];
+
+	local *I;
+	open(I, "getfacl --omit-header --no-effective '$file' |") or die "can't getfacl $file: $!\n";
+	while (<I>) {
+		chomp;
+
+		next if /^$/;
+
+		my ($type, $name, $permstring) = split /:/;
+		#print "$file: type=$type name=$name permstring=$permstring\n";
+
+		my $perm = _perm_parse_string($permstring);
+
+		if ($type eq 'user') {
+			if ($name eq '') {
+				$self->{PermFOwner} = $perm;
+			} else {
+				my $uid = getpwnam($name);
+				$self->{PermUser}->{$uid} = $perm;
+			}
+		} elsif ($type eq 'group') {
+			if ($name eq '') {
+				$self->{PermFGroup} = $perm;
+			} else {
+				my $gid = getgrnam($name);
+				$self->{PermGroup}->{$gid} = $perm;
+			}
+		} elsif ($type eq 'mask') {
+			$self->{Mask} = $perm;
+		} elsif ($type eq 'other') {
+			$self->{PermOther} = $perm;
+		} else {
+			die "unexpected type '$type'";
+		}
+	}
+
+	return bless $self, $pkg;
+}
+
+sub obj_fowner { (shift)->{Owner} }
+
+sub obj_fgroup { (shift)->{Group} }
+
+sub perm_fowner { (shift)->{PermFOwner} }
+sub perm_fgroup { (shift)->{PermFGroup} }
+sub perm_other { (shift)->{PermOther} }
+
+sub mask { (shift)->{Mask} }
+
+sub user_list {
+	my ($self) = @_;
+
+	return keys %{ $self->{PermUser} };
+}
+
+sub group_list {
+	my ($self) = @_;
+
+	return keys %{ $self->{PermGroup} };
+}
+
+sub perm_user {
+	my ($self, $uid) = @_;
+
+	return $self->{PermUser}->{$uid} || 0;
+}
+
+sub perm_group {
+	my ($self, $gid) = @_;
+
+	return $self->{PermGroup}->{$gid} || 0;
+}
+
+sub any_exec {
+	my ($self) = @_;
+
+	my $mask = 0;
+
+	$mask |= $self->perm_fowner;
+	$mask |= $self->perm_fgroup;
+	$mask |= $self->perm_other;
+
+	for my $p (values %{ $self->{PermUser} }) {
+		$mask |= $p;
+	}
+
+	for my $p (values %{ $self->{PermGroup} }) {
+		$mask |= $p;
+	}
+
+	if ($mask&1) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+###########################################################################
+main::main();
+1;
+
+# EOF

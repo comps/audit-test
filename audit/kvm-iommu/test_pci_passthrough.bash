@@ -22,7 +22,12 @@
 # DESCRIPTION: IOMMU tests for SRF FDP_ACF.1(VIRT)
 #
 # IMPORTANT NOTES:
-# Please note that these tests skip testing of succesful
+# Please note that these tests skip testing of succesful detaching
+# of the driver. This is because of bugs, which will not be fixed
+# in RHEL6.2:
+#
+# https://bugzilla.redhat.com/show_bug.cgi?id=736437
+# https://bugzilla.redhat.com/show_bug.cgi?id=736423
 #
 
 source testcase.bash || exit 2
@@ -41,6 +46,10 @@ pkg_list="qemu-kvm libvirt libvirt-client"
 # Memory regions to be looked for in qemu-kvm process maps later
 pci_regions=`lspci -vvv -s $pci_device | \
     sed -ne 's/Region.*Memory at \([a-f0-9]\{8\}\) .*/-e \1/p'`
+
+# check if pci_device specified
+[[ $pci_device == *X* ]] && \
+    exit_error "PCI device in pci_device.conf not specified"
 
 # PCI device variables
 pci_device_name="pci_$(echo $pci_device | tr ':.' '_')"

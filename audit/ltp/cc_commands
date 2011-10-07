@@ -1,0 +1,5 @@
+ping export LTPROOT; ping01
+ssh01 ssh01
+ssh02 ssh02
+ssh03 ssh03
+su01 export TCbin=$LTPROOT/../testcases/bin;su01

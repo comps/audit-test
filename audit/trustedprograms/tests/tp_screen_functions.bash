@@ -102,6 +102,7 @@ exit 3
 EOT
 
     # run the expect script as user
+    chown ${1}:$1 $EXPSCRIPT
     /bin/su - -c "expect $EXPSCRIPT" $1
     RET=$?
 
@@ -147,6 +148,7 @@ exit 4
 EOT
 
     # run the expect script as user
+    chown ${1}:$1 $EXPSCRIPT
     /bin/su - -c "expect $EXPSCRIPT" $1
     RET=$?
 
@@ -197,6 +199,7 @@ exit 3
 EOT
 
     # run the expect script as user
+    chown ${1}:$1 $EXPSCRIPT
     /bin/su - -c "expect $EXPSCRIPT" $1
     RET=$?
 
@@ -266,6 +269,7 @@ exit 8
 EOT
 
     # run the expect script as user
+    chown ${1}:$1 $EXPSCRIPT
     /bin/su - -c "expect $EXPSCRIPT" $1
     RET=$?
 

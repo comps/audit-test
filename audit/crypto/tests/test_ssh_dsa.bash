@@ -34,17 +34,29 @@ source tp_selinux_functions.bash || exit 2
 #### main ####
 
 # globals
-PROFILE="/etc/profile"
+MPROFILE="/etc/profile"
+SSHDCONF="/etc/sysconfig/sshd"
+CCCONF="/etc/profile.d/cc-configuration.sh"
 
 # be verbose
 set -x
 
 # enable sysadm_u login via ssh
 setsebool ssh_sysadm_login=1
+append_cleanup "setsebool ssh_sysadm_login=0"
 
 # backup global profile and remove sleep and screen
-backup $PROFILE
-ssh_remove_screen $PROFILE
+backup $MPROFILE
+backup $SSHDCONF
+backup $CCCONF
+ssh_remove_screen $MPROFILE
+
+# remove SSH_USE_STRONG_RNG from environment
+ssh_remove_strong_rng_env
+# remove SSH_USE_STRONG_RNG from files
+ssh_remove_strong_rng $SSHDCONF
+ssh_remove_strong_rng $CCCONF
+ssh_restart_daemon
 
 # run for both test users
 original_params=("$@")
@@ -78,8 +90,5 @@ ssh_check_audit $AUDITMARK
 AUDITMARK=$(get_audit_mark)
 ssh_connect_nopass $TEST_USER $TEST_USER_PASSWD $TEST_ADMIN
 ssh_check_audit $AUDITMARK
-
-# disable sysadm_u login via ssh
-setsebool ssh_sysadm_login=0
 
 exit_pass

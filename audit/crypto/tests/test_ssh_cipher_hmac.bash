@@ -38,22 +38,25 @@ source tp_selinux_functions.bash || exit 2
 #### main ####
 
 # globals
-PROFILE="/etc/profile"
+MPROFILE="/etc/profile"
+SSHDCONF="/etc/sysconfig/sshd"
+CCCONF="/etc/profile.d/cc-configuration.sh"
 
 # be verbose
 set -x
 
 # backup global profile and remove sleep
-backup $PROFILE
-ssh_remove_screen $PROFILE
+backup $MPROFILE
+backup $SSHDCONF
+backup $CCCONF
+ssh_remove_screen $MPROFILE
 
 # enable sysadm_u login via ssh
 setsebool ssh_sysadm_login=1
+append_cleanup "setsebool ssh_sysadm_login=0"
 
-# Try all key sizes
-for CRYPTO in 3des-cbc aes128-cbc aes192-cbc aes256-cbc aes128-ctr \
-    aes192-ctr aes256-ctr; do
-
+# Try few key sizes with USE_SSH_CRYPTO_RNG enabled
+for CRYPTO in aes128-cbc; do
     # test connection from admin->user and vice versa
     AUDITMARK=$(get_audit_mark)
     ssh_connect_pass $TEST_ADMIN $TEST_ADMIN_PASSWD \
@@ -67,7 +70,27 @@ for CRYPTO in 3des-cbc aes128-cbc aes192-cbc aes256-cbc aes128-ctr \
     ssh_check_audit $AUDITMARK pass $CRYPTO
 done
 
-# disable sysadm_u login via ssh
-setsebool ssh_sysadm_login=0
+# remove SSH_USE_STRONG_RNG from environment
+ssh_remove_strong_rng_env
+# remove SSH_USE_STRONG_RNG from files
+ssh_remove_strong_rng $SSHDCONF
+ssh_remove_strong_rng $CCCONF
+ssh_restart_daemon
+
+# Try all key sizes
+for CRYPTO in 3des-cbc aes192-cbc aes256-cbc aes128-ctr \
+    aes192-ctr aes256-ctr; do
+    # test connection from admin->user and vice versa
+    AUDITMARK=$(get_audit_mark)
+    ssh_connect_pass $TEST_ADMIN $TEST_ADMIN_PASSWD \
+        $TEST_USER $TEST_USER_PASSWD "-c $CRYPTO -m hmac-sha1" || \
+        exit_fail "Failed to connect from $TEST_ADMIN to $TEST_USER"
+    ssh_check_audit $AUDITMARK pass $CRYPTO
+    AUDITMARK=$(get_audit_mark)
+    ssh_connect_pass $TEST_USER $TEST_USER_PASSWD \
+        $TEST_ADMIN $TEST_ADMIN_PASSWD "-c $CRYPTO -m hmac-sha1" || \
+        exit_fail "Failed to connect from $TEST_USER to $TEST_ADMIN"
+    ssh_check_audit $AUDITMARK pass $CRYPTO
+done
 
 exit_pass

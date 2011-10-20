@@ -6,16 +6,16 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
-# 
+#
 # This script is responsible for:
 # - system config file backup, modification and restore (e.g. auditd
 #   configuration and audit rules)
@@ -64,7 +64,7 @@ opt_width=$(stty size 2>/dev/null | cut -d' ' -f2)
 [[ -n $opt_width ]] || opt_width=80
 
 unset TESTS TNUMS
-unset pass fail error total 
+unset pass fail error total
 unset auditd_orig
 
 #----------------------------------------------------------------------
@@ -176,7 +176,7 @@ function early_startup {
 	    read role <<<"$(getcontext role)"
 	    if [[ $role != lspp_test_r ]]; then
 		die "Please run this suite as lspp_test_r"
-            else 
+            else
 		if [[ -z $PPROFILE ]] ; then
 	  	    export PPROFILE=lspp
                 fi
@@ -208,9 +208,9 @@ function startup {
 
     # Check for password
     if [[ -z $PASSWD ]]; then
-	    trap 'stty echo; exit' 1 2; 
-	    read -sp "Login user password: " PASSWD; echo; export PASSWD; 
-	    trap - 1 2; 
+	    trap 'stty echo; exit' 1 2;
+	    read -sp "Login user password: " PASSWD; echo; export PASSWD;
+	    trap - 1 2;
     fi
 
     # Initialize audit configuration and make sure auditd is running
@@ -224,7 +224,7 @@ function startup {
     # remove the configuration for the audit dispatcher
     write_config -r "$auditd_conf" dispatcher DISP_qos || return 2
 
-    if [[ $PPROFILE == lspp ]] ; then 
+    if [[ $PPROFILE == lspp ]] ; then
         chcon system_u:object_r:auditd_etc_t:s15:c0.c1023 $auditd_orig
         chcon system_u:object_r:auditd_etc_t:s15:c0.c1023 $auditd_conf
     fi
@@ -247,7 +247,7 @@ function startup {
     dmsg "Adding group $TEST_ADMIN"
     groupadd "$TEST_ADMIN" || die
     dmsg "Adding user $TEST_ADMIN"
-    if [[ $PROFILE == lspp ]] ; then
+    if [[ $PPROFILE == lspp ]] ; then
         useradd -Z sysadm_u -g "$TEST_ADMIN" -G wheel -m "$TEST_ADMIN" || die
     else
         useradd -g "$TEST_ADMIN" -G wheel -m "$TEST_ADMIN" || die
@@ -276,14 +276,14 @@ function cleanup {
         userdel -r "$TEST_ADMIN" &>/dev/null
         dmsg "Removing group $TEST_ADMIN"
         groupdel "$TEST_ADMIN" &>/dev/null
-        if [[ $PROFILE == lspp ]] ; then
+        if [[ $PPROFILE == lspp ]] ; then
             semanage login -d "$TEST_ADMIN"
         fi
     fi
 
     # Restore the original auditd configuration
     # XXX use prepend_cleanup in startup
-    if [[ -s $auditd_orig ]]; then 
+    if [[ -s $auditd_orig ]]; then
         mv "$auditd_orig" "$auditd_conf"
 	killall -HUP auditd
     fi
@@ -479,7 +479,7 @@ function run_tests {
     declare end_output="<blue>--- end output -------------------------------------------------------------"
 
     show_header
-    msg 
+    msg
     prf "%-$((opt_width-7))s %s\n" "Testcase" "Result"
     prf "%-$((opt_width-7))s %s\n" "--------" "------"
 
@@ -534,7 +534,7 @@ function run_tests {
 	else
 	    if [[ $status == 1 ]]; then
 		prf "<yellow>%11s\n" "FAIL "
-		(( fail++ )) 
+		(( fail++ ))
 		if ! $opt_quiet; then
 		    s=$(sed -n 's/^exit_fail:/       /p' <<<"$output")
 		    [[ -n $s ]] && prf "%s\n" "$s"

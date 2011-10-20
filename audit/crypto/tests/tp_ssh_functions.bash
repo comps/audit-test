@@ -31,7 +31,32 @@ RND=$RANDOM
 # default expect timeout 10 minutes - in case of not enough entropy
 TIMEOUT=300
 
-# Removed sleep calls from given file
+# Restart ssh daemon
+function ssh_restart_daemon {
+    expect -c "
+set timeout $TIMEOUT
+spawn run_init service sshd restart
+expect {
+    -nocase {password:} {send \"$PASSWD\r\"; exp_continue}
+    eof
+}"
+}
+
+# Remove SSH_USE_STRONG_RNG from environment
+function ssh_remove_strong_rng_env {
+    export -n SSH_USE_STRONG_RNG
+    prepend_cleanup "export SSH_USE_STRONG_RNG=12; readonly SSH_USE_STRONG_RNG"
+}
+
+# Remove SSH_USE_STRONG_RNG exporting from give file
+function ssh_remove_strong_rng {
+    [ "x$1" = "x" ] && exit_error "No file given for $FUNCNAME"
+    [ -f $1 ] || exit_error "$FUNCNAME: No file $1 found"
+
+    sed -i "s/.*SSH_USE_STRONG_RNG.*//g" $1
+}
+
+# Remove sleep calls from given file
 # $1 - file
 function ssh_remove_screen {
     [ "x$1" = "x" ] && exit_error "No file given for $FUNCNAME"
@@ -173,7 +198,7 @@ function ssh_check_home {
         exit_fail "Folder .ssh has bad permissions"
     ssh_cmd $1 $2 "stat -c '%a' /home/$1/.ssh/id_$3" | grep 600 || \
         exit_fail "File id_$3 has bad permissions"
-    ssh_cmd $1 $2 "stat -c '%a' /home/$1/.ssh/id_$3.pub" | grep 644 || \
+    ssh_cmd $1 $2 "stat -c '%a' /home/$1/.ssh/id_$3.pub" | grep 640 || \
         exit_fail "File id_$3.pub has bad permissions"
 
     # check SELinux permissions

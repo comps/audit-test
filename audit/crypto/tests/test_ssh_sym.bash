@@ -39,17 +39,51 @@ source tp_selinux_functions.bash || exit 2
 
 # globals
 CIPHERS="aes128-cbc 3des-cbc aes192-cbc aes256-cbc"
-PROFILE="/etc/profile"
+MPROFILE="/etc/profile"
+SSHDCONF="/etc/sysconfig/sshd"
+CCCONF="/etc/profile.d/cc-configuration.sh"
 
 # be verbose
 set -x
 
 # enable sysadm_u login via ssh
 setsebool ssh_sysadm_login=1
+append_cleanup "setsebool ssh_sysadm_login=0"
 
 # backup global profile and remove sleep
-backup $PROFILE
-ssh_remove_screen $PROFILE
+backup $MPROFILE
+backup $SSHDCONF
+backup $CCCONF
+ssh_remove_screen $MPROFILE
+
+# restart sshd to get default state with SSH_USE_STRONG_RNG enabled
+ssh_restart_daemon
+
+# get the pid of sshd process running on port 22
+SSHDPID=$(netstat -putna | grep ":22" | grep -m1 LISTEN | \
+    sed 's/.*\(\b[0-9]\+\)\/sshd\b.*/\1/')
+
+# check if SSH_USE_STRONG_RNG set in environemnt of the sshd process
+grep "SSH_USE_STRONG_RNG" /proc/$SSHDPID/environ
+[ $? -ne 0 ] && exit_fail "SSH_USE_STRONG_RNG not exported for sshd"
+
+# check if data read from /dev/random if client connects
+SOUT=$(mktemp)
+prepend_cleanup "rm -f $SOUT"
+strace -fp $SSHDPID &> $SOUT &
+prepend_cleanup "pkill -9 strace"
+ssh_connect_pass $TEST_ADMIN $TEST_ADMIN_PASSWD $TEST_USER \
+    $TEST_USER_PASSWD || \
+    exit_fail "Failed to connect from $TEST_USER to $TEST_ADMIN"
+egrep -A4 "open.*/dev/random" $SOUT | grep read &> /dev/null
+[ $? -ne 0 ] && exit_fail "sshd failed to read /dev/random"
+
+# remove SSH_USE_STRONG_RNG from environment
+ssh_remove_strong_rng_env
+# remove SSH_USE_STRONG_RNG from files
+ssh_remove_strong_rng $SSHDCONF
+ssh_remove_strong_rng $CCCONF
+ssh_restart_daemon
 
 # connect using all ciphers with password authentication
 for CIPHER in $CIPHERS; do
@@ -65,30 +99,5 @@ for CIPHER in $CIPHERS; do
         exit_fail "Failed to connect from $TEST_USER to $TEST_ADMIN"
     ssh_check_audit $AUDITMARK
 done
-
-# get the pid of sshd process running on port 22
-SSHDPID=$(netstat -putna | grep ":22" | grep -m1 LISTEN | \
-    sed 's/.*\(\b[0-9]\+\)\/sshd\b.*/\1/')
-
-# check if SSH_USE_STRONG_RNG set in environemnt of the sshd process
-grep "SSH_USE_STRONG_RNG=1" /proc/$SSHDPID/environ
-[ $? -ne 0 ] && exit_fail "SSH_USE_STRONG_RNG not exported for sshd"
-
-# check if 48bit data read from /dev/random if client connects
-SOUT=$(mktemp)
-prepend_cleanup "rm -f $SOUT"
-strace -fp $SSHDPID &> $SOUT &
-prepend_cleanup "pkill -9 strace"
-ssh_connect_pass $TEST_ADMIN $TEST_ADMIN_PASSWD $TEST_USER \
-    $TEST_USER_PASSWD || \
-    exit_fail "Failed to connect from $TEST_USER to $TEST_ADMIN"
-RCOUNT=$(cat $SOUT | egrep -A4 "open.*/dev/random" | grep read | \
-    egrep -m1 -o "[0-9]+$")
-[ "x$RCOUNT" = "x" ] && exit_fail "sshd failed to read /dev/random"
-[ $RCOUNT -ne 6 ] && exit_fail "sshd read $RCOUNT \
-bytes from /dev/random intead of 6"
-
-# disable sysadm_u login via ssh
-setsebool ssh_sysadm_login=0
 
 exit_pass

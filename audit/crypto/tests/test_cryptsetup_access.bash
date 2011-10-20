@@ -82,6 +82,7 @@ mount -o acl $DMCRYPTDEV $MOUNT || exit_fail "Cannot mount LUKS"
 
 # add some sample data and umount the fs
 echo "CCC TEST" >> $MOUNT/testfile
+chmod 644 $MOUNT/testfile
 setfacl -m u:root:r $MOUNT/testfile || exit_fail "Failed to set ACL"
 chcon -t etc_t $MOUNT/testfile
 umount $MOUNT

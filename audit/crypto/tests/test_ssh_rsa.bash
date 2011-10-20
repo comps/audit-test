@@ -40,17 +40,29 @@ source tp_selinux_functions.bash || exit 2
 
 # globals
 KEY_SIZE="1024 2048 3072"
-PROFILE="/etc/profile"
+MPROFILE="/etc/profile"
+SSHDCONF="/etc/sysconfig/sshd"
+CCCONF="/etc/profile.d/cc-configuration.sh"
 
 # be verbose
 set -x
 
 # enable sysadm_u login via ssh
 setsebool ssh_sysadm_login=1
+append_cleanup "setsebool ssh_sysadm_login=0"
 
 # backup global profile and remove sleep
-backup $PROFILE
-ssh_remove_screen $PROFILE
+backup $MPROFILE
+backup $SSHDCONF
+backup $CCCONF
+ssh_remove_screen $MPROFILE
+
+# remove SSH_USE_STRONG_RNG from environment
+ssh_remove_strong_rng_env
+# remove SSH_USE_STRONG_RNG from files
+ssh_remove_strong_rng $SSHDCONF
+ssh_remove_strong_rng $CCCONF
+ssh_restart_daemon
 
 # cleanup .ssh folders
 prepend_cleanup "ssh_cleanup_home $TEST_USER $TEST_USER_PASSWD"
@@ -91,8 +103,5 @@ for KEY in $KEY_SIZE; do
     ssh_connect_nopass $TEST_USER $TEST_USER_PASSWD $TEST_ADMIN
     ssh_check_audit $AUDITMARK
 done
-
-# disable sysadm_u login via ssh
-setsebool ssh_sysadm_login=0
 
 exit_pass

@@ -38,7 +38,9 @@ source tp_selinux_functions.bash || exit 2
 
 # global
 PHRASE="anYP4ss"
-PROFILE="/etc/profile"
+MPROFILE="/etc/profile"
+SSHDCONF="/etc/sysconfig/sshd"
+CCCONF="/etc/profile.d/cc-configuration.sh"
 
 # be verbose
 set -x
@@ -48,8 +50,17 @@ setsebool ssh_sysadm_login=1
 append_cleanup "setsebool ssh_sysadm_login=0"
 
 # backup global profile and remove sleep
-backup $PROFILE
-ssh_remove_screen $PROFILE
+backup $MPROFILE
+backup $SSHDCONF
+backup $CCCONF
+ssh_remove_screen $MPROFILE
+
+# remove SSH_USE_STRONG_RNG from environment
+ssh_remove_strong_rng_env
+# remove SSH_USE_STRONG_RNG from files
+ssh_remove_strong_rng $SSHDCONF
+ssh_remove_strong_rng $CCCONF
+ssh_restart_daemon
 
 # remove .ssh folders at cleanup
 prepend_cleanup "ssh_cleanup_home $TEST_USER $TEST_USER_PASSWD"
@@ -116,8 +127,5 @@ ssh_connect_pass $TEST_USER $TEST_USER_PASSWD $TEST_ADMIN \
     "BADPASS" && \
     exit_fail "Connected from $TEST_USER to $TEST_ADMIN with bad password"
 ssh_check_audit $AUDITMARK fail
-
-# disable sysadm_u login via ssh
-setsebool ssh_sysadm_login=0
 
 exit_pass

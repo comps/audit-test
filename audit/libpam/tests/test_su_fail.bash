@@ -22,9 +22,11 @@ if [[ $EUID == 0 ]]; then
     source pam_functions.bash || exit 2
 
     # test -- reruns this script as TEST_USER
+    # We must be in group 'wheel' to execute /bin/su.
     TEST_USER=$TEST_USER TEST_USER_PASSWD=badpassword \
     TEST_EUID=$(id -u "$TEST_USER") tmp1=$tmp1 zero=$0 \
-    perl -MPOSIX -e 'setuid $ENV{TEST_EUID}; system $ENV{zero}'
+    WHEEL_GID=$(grep wheel /etc/group | cut -d: -f3) \
+    perl -MPOSIX -e 'setgid $ENV{WHEEL_GID}; setuid $ENV{TEST_EUID}; system $ENV{zero}'
 
     msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./bin/su.*res=failed.*"
     augrok -q type=USER_AUTH msg_1=~"PAM: *authentication $msg_1" || exit_fail

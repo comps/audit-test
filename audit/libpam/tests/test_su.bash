@@ -31,10 +31,12 @@ if [[ $EUID == 0 ]]; then
 
     # test
     # rerun this script as TEST_USER.  Confine the exports to a subshell
+    # We must be in group 'wheel' to execute /bin/su.
     (
         export tmp1
         export TEST_EUID=$(id -u "$TEST_USER") zero=$0
-        perl -MPOSIX -e 'setuid $ENV{TEST_EUID}; system $ENV{zero}'
+        export WHEEL_GID=$(grep wheel /etc/group | cut -d: -f3)
+        perl -MPOSIX -e 'setgid $ENV{WHEEL_GID}; setuid $ENV{TEST_EUID}; system $ENV{zero}'
     )
 
     # returned from test, collect results

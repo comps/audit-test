@@ -1,60 +1,64 @@
 README.netwk_svr: Installing the Network Test Server
 
-Several of the networking tests require a remote host to either connect to or 
-initiate a connection on the local test machine.  This remote machine is to 
-be referred to as the "network test server" and should be installed and 
-configured in a manner similar to the test machines.  The installation and 
+Several of the networking tests require a remote host to either connect to or
+initiate a connection on the local test machine.  This remote machine is to
+be referred to as the "network test server" and should be installed and
+configured in a manner similar to the test machines.  The installation and
 configuration steps are described below:
 
 1. Install the network test server as if it were a test machine.
 
 2. A new test user should be added to the system using the commands below:
 
-      # useradd -m eal_test
-      # passwd eal_test
+  # useradd -m eal_test
+  # passwd eal_test
 
-3. After the standard test installation and setup is complete, build and 
+3. After the standard test installation and setup is complete, build and
 install the lblnet_tst_server daemon as shown below:
 
-      # cd /usr/local/eal4_testing/audit-test/utils/network-server
-      # make
-      # make install
+  # make -C /usr/local/eal4_testing/audit-test/utils/network-server
+  # make -C /usr/local/eal4_testing/audit-test/utils/network-server install
 
-4. Create a file, 
-'/usr/local/eal4_testing/audit-test/network/system/client_list.txt', hereafter 
-referred to as the "client address file".  This file contains the IPv4 and 
-IPv6 addresses of all the clients connecting to the network test server.  The 
-hash symbol, "#", can be used as a comment delimiter. Example syntax is shown 
+4. Create a file,
+'/usr/local/eal4_testing/audit-test/network/system/client_list.txt', hereafter
+referred to as the "client address file".  This file contains the IPv4 and
+IPv6 addresses of all the clients connecting to the network test server.  The
+hash symbol, "#", can be used as a comment delimiter. Example syntax is shown
 below:
 
-      # client_list.txt
-      #
-      # A file containing the IPv4|6 addresses of all the test machines
+  # client_list.txt
+  #
+  # A file containing the IPv4|6 addresses of all the test machines
 
-      # foo.domain.com
-      1.2.3.4
-      1::2
-      # bar.domain.com
-      5.6.7.8
-      3::4
+  # foo.domain.com
+  1.2.3.4 1::2
+  # bar.domain.com
+  5.6.7.8 3::4
 
 5. Switch to the lspp_test_r role:
 
-      # newrole -r lspp_test_r
+  # newrole -r lspp_test_r
 
-6. Set the LBLNET_PREFIX_IPV6 environment variable to the IPV6 prefix to be 
+6. Set the LBLNET_PREFIX_IPV6 environment variable to the IPV6 prefix to be
 used for testing.  An example variable value is "fd7b:826d:00f2::/64".
 
-7. Generate and install the system's labeled network configuration as shown 
+  # export LBLNET_PREFIX_IPV6="<the IPV6 prefix to be used for testing>"
+
+7. Generate and install the system's labeled network configuration as shown
 below:
 
-      # cd /usr/local/eal4_testing/audit-test/network/system
-      # make install_server
+  # make -C /usr/local/eal4_testing/audit-test/network/system install_server
 
-NOTE: This step, as well as step 8, should be repeated whenever the client 
+NOTE: This step, as well as step 8, should be repeated whenever the client
 address file changes.
 
 8. Reboot the network test server or run the following commands:
 
-      # run_init /etc/init.d/xinetd restart
-      # run_init /etc/rc.local
+  # run_init service netlabel restart
+  # run_init service xinetd restart
+  # run_init /etc/rc.local
+
+Please note that currently you have to flush SA after each of the following
+ipsec tests (trustedprograms/tests/test_ipsec.bash)
+
+  # ip xfrm state flush

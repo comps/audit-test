@@ -125,6 +125,7 @@ commands to setup the required configuration for the labeled networking tests:
     # export RHOST6="::1"
     # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
     # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
+    # export LBLNET_PREFIX_IPV6="<the IPV6 prefix to be used for testing>"
     # export PATH="$PATH:."
 
     # make netconfig
@@ -167,6 +168,7 @@ variables:
 # export RHOST6="::1"
 # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
 # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
+# export LBLNET_PREFIX_IPV6="<the IPV6 prefix to be used for testing>"
 # export PATH="$PATH:."
 
 In the top level audit-test directory, or in any test sub-directory:
@@ -199,7 +201,7 @@ To run a single testcase by number:
 Workaround for Network Test Failures
 ------------------------------------
 Some test runs may experience network test failures in the labeled IPsec
-tests due to the current implementation of racoon. Use the following
+tests due to the current implementation of ipsec. Use the following
 workaround if you experience these failures.
 
 1. Reboot the test machine
@@ -215,6 +217,7 @@ workaround if you experience these failures.
    # export RHOST6="::1"
    # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
    # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
+   # export LBLNET_PREFIX_IPV6="<the IPV6 prefix to be used for testing>"
    # export PATH="$PATH:."
 7. Change to the '/usr/local/eal4_testing/audit-test/network' directory
 8. Type './run.bash host=remote*type=ipsec'. There may be a few failures;

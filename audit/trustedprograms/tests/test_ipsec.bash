@@ -53,22 +53,52 @@ unset ip_src ip_dst
 ######################################################################
 
 #
-# get_ipv4_addr - Get the local system's glboal IPv4 address
+# get_ip_addr - Get the local system's glboal IPv4 or IPv6 address
 #
 # INPUT
-# none
+# X - 4 for IPv4 or 6 for IPv6
 #
 # OUTPUT
-# Writes the first global IPv4 address on the local system to stdout
+# Writes the first global IPvX address on the local system to stdout
 #
 # DESCRIPTION
 # This function queries the local system, through the "ip" command, for a list
-# of global IPv4 addresses, it then selects the first address in the list and
+# of global IPvX addresses, it then selects the first address in the list and
 # writes it to stdout.
 #
-function get_ipv4_addr {
-    ip -o -f inet addr show scope global | head -n 1 | \
-    awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }'
+function get_ip_addr {
+    if [ $1 == "4" ]; then
+	ip -o -f inet addr show scope global | head -n 1 | \
+	    awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }'
+    elif [ $1 == "6" ]; then
+	ip -o -f inet6 addr show scope global to $LBLNET_PREFIX_IPV6 | head -n 1 | \
+	    awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }'
+    else
+        die "error: expected parameter 4 | 6 not given"
+    fi
+}
+
+#
+# normalize_addr - Add leading zeros to a comparessed IPv6 address
+#
+# INPUT
+# IPv6 address
+#
+# OUTPUT
+# Writes the normalized IPv6 address to stdout
+#
+# DESCRIPTION
+# This function add leading zeros to a compressed IPv6 address,
+# e.g. 2620:52:0:2223:216:3eff:fe00:28 will be updated to
+# 2620:52:0000:2223:0216:3eff:fe00:0028
+#
+function normalize_addr {
+    echo "$1" | sed -e 's/:\([0-9a-f]\):/:000\1:/g' \
+	            -e 's/:\([0-9a-f][0-9a-f]\):/:00\1:/g' \
+	            -e 's/:\([0-9a-f][0-9a-f][0-9a-f]\):/:0\1:/g' \
+		    -e 's/:\([0-9a-f]\)$/:000\1/g' \
+	            -e 's/:\([0-9a-f][0-9a-f]\)$/:00\1/g' \
+	            -e 's/:\([0-9a-f][0-9a-f][0-9a-f]\)$/:0\1/g'
 }
 
 ######################################################################
@@ -79,6 +109,7 @@ function get_ipv4_addr {
 # ipsec_add - Attempt to negotiate a new IPsec SA using ipsec
 #
 # INPUT
+# 4 for IPv4 or 6 for IPv6 test
 # none
 #
 # OUTPUT
@@ -87,32 +118,29 @@ function get_ipv4_addr {
 # DESCRIPTION
 # This function attempts to negotiate a IPsec SA with a remote node using the
 # "ipsec" daemon.  The function does this by using a test driver on the remote
-# node which the function configures to listen on IPv4/TCP port 5300.  Once the
-# remote test driver is waiting for new connections the function tries to
-# connect to the remote test driver which triggers a SPD rule in the IPsec
-# subsystem which sends a SA "acquire" message to the "ipsec" daemon which
-# then attempts to negotiate an IPsec SA with the remote host.  If the "ipsec"
-# deamon is unable to negotiate a SA with the remote host the connection will
-# fail.  If this function can not setup the remote test driver or initiate a
-# connection to the remote test driver it will fail, calling exit_error() in
-# the process.
+# node which the function configures to listen on IPv4 or IPv6 TCP port 4300
+# (given by parameter X).  Once the remote test driver is waiting for new
+# connections the function tries to connect to the remote test driver which
+# triggers a SPD rule in the IPsec subsystem which sends a SA "acquire" message
+# to the "ipsec" daemon which then attempts to negotiate an IPsec SA with the
+# remote host.  If the "ipsec" deamon is unable to negotiate a SA with the
+# remote host the connection will fail.  If this function can not setup the
+# remote test driver or initiate a connection to the remote test driver it
+# will fail, calling exit_error() in the process.
 #
 function ipsec_add {
-    declare setup_str="recv:ipv4,tcp,4300,0;"
+    declare setup_str="recv:ipv$1,tcp,4300,0;"
     declare msg_str="Hi Mom!"
 
-    # determine the netcat variant
-    if which nc6 >& /dev/null; then
-        cmd_nc="nc6 ----idle-timeout=1 -w 1 "
-    elif which nc >& /dev/null; then
-        cmd_nc="nc -w 30 -v "
+    if which nc >& /dev/null; then
+        cmd_nc="nc -$1 -w 30 -v "
     else
-        die "error: netcat not installed"
+        die "error: nc not installed"
     fi
 
     # do the setup
     runcon -t lspp_test_netlabel_t -l SystemLow -- \
-	$cmd_nc $ip_dst 4001 <<< $setup_str &
+	$cmd_nc $ip_dst 400$1 <<< $setup_str &
 
     # configure the remote system (try twice to allow for IKE negotiation)
     runcon -t lspp_harness_t -l SystemLow -- \
@@ -203,18 +231,19 @@ function ipsec_remove_verify {
 
 set -x
 
-[[ -n $LBLNET_SVR_IPV4 ]] || exit_error
+[[ -n $(eval echo \$LBLNET_SVR_IPV${1}) ]] || exit_error
+[[ -n $(eval echo \$LBLNET_SVR_IPV${1}) ]] || exit_error
 ip xfrm state flush || exit_error
 
 # setup the global variables
-ip_src=$(get_ipv4_addr)
-ip_dst=$LBLNET_SVR_IPV4
+ip_src=$(normalize_addr $(get_ip_addr $1))
+ip_dst=$(normalize_addr $(eval echo \$LBLNET_SVR_IPV${1}))
 
 # mark the log for augrok later
 log_mark=$(stat -c %s $audit_log)
 
 # attempt to negotiate a SA using ipsec and verify the results
-ipsec_add
+ipsec_add $1
 ipsec_add_verify
 
 # attempt to remove the SA and verify the results

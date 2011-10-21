@@ -5,16 +5,16 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
-# 
+#
 # It is important to note that prior to running the tests below the
 # system must be configured using the configuration templates in the
 # "network/system" directory as directed by the test plan.  Failure to
@@ -87,7 +87,7 @@ function xinetd_test {
 
     # connect through xinetd
     rem_subj="$(runcon -t lspp_test_netlabel_t -l $subj \
-	        $cmd_nc 127.0.0.1 4001 <<< $cmd_str)"
+	        $cmd_nc 127.0.0.1 4004 <<< $cmd_str)"
     [[ $? != 0 ]] && exit_error "unable to connect to localhost"
 
     # verify label

@@ -1,10 +1,10 @@
 # LSPP labeled networking test server
-#  listens on IPv6/TCP port 4000 for unlabeled connections
-#  listens on IPv4/TCP port 4001 for labeled connections
+#  listens on IPv6/TCP port 4006 for unlabeled connections
+#  listens on IPv4/TCP port 4004 for labeled connections
 
-service lblnet_tst
+service lblnet_tst_unlabeled_ipv6
 {
-	id		= lblnet_tst
+	id		= lblnet_tst_unlabeled_ipv6
 	type		= UNLISTED
 	flags		= REUSE IPv6
 	wait		= no
@@ -15,15 +15,15 @@ service lblnet_tst
 
 	socket_type	= stream
 	protocol	= tcp
-	port		= 4000
+	port		= 4006
 
 	server		= /usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server
 	server_args	= -i -t 10
 }
 
-service lblnet_tst_labeled
+service lblnet_tst_labeled_ipv4
 {
-	id		= lblnet_tst_labeled
+	id		= lblnet_tst_labeled_ipv4
 	type		= UNLISTED
 	flags		= REUSE IPv4 LABELED
 	wait		= no
@@ -34,7 +34,7 @@ service lblnet_tst_labeled
 
 	socket_type	= stream
 	protocol	= tcp
-	port		= 4001
+	port		= 4004
 
 	server		= /usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server
 	server_args	= -i -t 10

@@ -48,9 +48,11 @@ MQ_EXE		= do_mq_open \
 		  do_mq_unlink
 
 NET_EXE		= do_accept \
+		  do_accept4 \
 		  do_connect \
 		  do_read \
 		  do_recvfrom \
+		  do_recvmmsg \
 		  do_recvmsg \
 		  do_send \
 		  do_sendmsg \

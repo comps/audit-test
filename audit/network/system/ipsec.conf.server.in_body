@@ -10,6 +10,22 @@ conn test2-%REMOTE_IPV4%
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
         rightprotoport=tcp/4300
+        leftprotoport=tcp
+
+conn test2-%REMOTE_IPV6%
+        auto=route
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=%REMOTE_IPV6%
+        right=%LOCAL_IPV6%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
+        rightprotoport=tcp/4300
+        leftprotoport=tcp
 
 conn test4-1-%REMOTE_IPV4%
         auto=route
@@ -23,6 +39,22 @@ conn test4-1-%REMOTE_IPV4%
         labeled_ipsec=yes
         policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
         rightprotoport=udp/4300
+        leftprotoport=udp
+
+conn test4-1-%REMOTE_IPV6%
+        auto=route
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=%REMOTE_IPV6%
+        right=%LOCAL_IPV6%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+        policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
+        rightprotoport=udp/4300
+        leftprotoport=udp
 
 conn test4-2-%REMOTE_IPV4%
         auto=route
@@ -36,3 +68,19 @@ conn test4-2-%REMOTE_IPV4%
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s15:c0.c1023
         rightprotoport=udp/4301
+        leftprotoport=udp
+
+conn test4-2-%REMOTE_IPV6%
+        auto=route
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=%REMOTE_IPV6%
+        right=%LOCAL_IPV6%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=staff_u:lspp_test_r:lspp_harness_t:s15:c0.c1023
+        rightprotoport=udp/4301
+        leftprotoport=udp

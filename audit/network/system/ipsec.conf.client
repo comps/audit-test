@@ -5,7 +5,7 @@ config setup
     nat_traversal=yes
     plutostderrlog=/var/log/pluto.log
 
-conn test1-1
+conn test1-1-ipv4
         auto=route
         authby=secret
         type=transport
@@ -18,8 +18,9 @@ conn test1-1
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0-s15:c0.c1023
         rightprotoport=tcp/4300
+        leftprotoport=tcp
 
-conn test1-2
+conn test1-2-ipv4
         auto=add
         authby=secret
         type=transport
@@ -32,8 +33,39 @@ conn test1-2
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0-s15:c0.c1023
         leftprotoport=tcp/4300
+        leftprotoport=tcp
 
-conn test2
+conn test1-1-ipv6
+        auto=route
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=::1
+        right=::1
+        ike=3des-sha1
+        phase2=esp
+        phase2alg=aes-sha1
+        loopback=yes
+        labeled_ipsec=yes
+	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0-s15:c0.c1023
+        leftprotoport=tcp/4300
+
+conn test1-2-ipv6
+        auto=add
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=::1
+        right=::1
+        ike=3des-sha1
+        phase2=esp
+        phase2alg=aes-sha1
+        loopback=yes
+        labeled_ipsec=yes
+	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0-s15:c0.c1023
+        leftprotoport=tcp/4300
+
+conn test2-ipv4
         auto=route
         authby=secret
         type=transport
@@ -45,8 +77,24 @@ conn test2
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
         rightprotoport=tcp/4300
+        leftprotoport=tcp
 
-conn test3-1-1
+conn test2-ipv6
+        auto=route
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=%LOCAL_IPV6%
+        right=%REMOTE_IPV6%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
+        rightprotoport=tcp/4300
+        leftprotoport=tcp
+
+conn test3-1-1-ipv4
         auto=route
         authby=secret
         type=transport
@@ -59,8 +107,9 @@ conn test3-1-1
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
         rightprotoport=udp/4300
+        leftprotoport=tcp
 
-conn test3-1-2
+conn test3-1-2-ipv4
         auto=add
         authby=secret
         type=transport
@@ -74,7 +123,37 @@ conn test3-1-2
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
         leftprotoport=udp/4300
 
-conn test3-2-1
+conn test3-1-1-ipv6
+        auto=route
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=::1
+        right=::1
+        ike=3des-sha1
+        phase2=esp
+        phase2alg=aes-sha1
+        loopback=yes
+        labeled_ipsec=yes
+	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
+        leftprotoport=udp/4300
+
+conn test3-1-2-ipv6
+        auto=add
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=::1
+        right=::1
+        ike=3des-sha1
+        phase2=esp
+        phase2alg=aes-sha1
+        loopback=yes
+        labeled_ipsec=yes
+	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
+        leftprotoport=udp/4300
+
+conn test3-2-1-ipv4
         auto=route
         authby=secret
         type=transport
@@ -87,8 +166,9 @@ conn test3-2-1
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s15:c0.c1023
         rightprotoport=udp/4301
+        leftprotoport=udp
 
-conn test3-2-2
+conn test3-2-2-ipv4
         auto=add
         authby=secret
         type=transport
@@ -101,8 +181,41 @@ conn test3-2-2
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s15:c0.c1023
         rightprotoport=udp/4301
+        leftprotoport=udp
 
-conn test4-1
+conn test3-2-1-ipv6
+        auto=route
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=::1
+        right=::1
+        ike=3des-sha1
+        phase2=esp
+        phase2alg=aes-sha1
+        loopback=yes
+        labeled_ipsec=yes
+	policy_label=staff_u:lspp_test_r:lspp_harness_t:s15:c0.c1023
+        rightprotoport=udp/4301
+        leftprotoport=udp
+
+conn test3-2-2-ipv6
+        auto=add
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=::1
+        right=::1
+        ike=3des-sha1
+        phase2=esp
+        phase2alg=aes-sha1
+        loopback=yes
+        labeled_ipsec=yes
+	policy_label=staff_u:lspp_test_r:lspp_harness_t:s15:c0.c1023
+        rightprotoport=udp/4301
+        leftprotoport=udp
+
+conn test4-1-ipv4
         auto=route
         authby=secret
         type=transport
@@ -114,8 +227,24 @@ conn test4-1
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
         rightprotoport=udp/4300
+        leftprotoport=udp
 
-conn test4-2
+conn test4-1-ipv6
+        auto=route
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=%LOCAL_IPV6%
+        right=%REMOTE_IPV6%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
+        rightprotoport=udp/4300
+        leftprotoport=udp
+
+conn test4-2-ipv4
         auto=route
         authby=secret
         type=transport
@@ -127,3 +256,19 @@ conn test4-2
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s15:c0.c1023
         rightprotoport=udp/4301
+        leftprotoport=udp
+
+conn test4-2-ipv6
+        auto=route
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=%LOCAL_IPV6%
+        right=%REMOTE_IPV6%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=staff_u:lspp_test_r:lspp_harness_t:s15:c0.c1023
+        rightprotoport=udp/4301
+        leftprotoport=udp

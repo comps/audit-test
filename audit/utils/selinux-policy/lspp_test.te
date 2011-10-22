@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.3.8)
+policy_module(lspp_test,6.3.9)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -373,6 +373,7 @@ allow hostname_t lspp_harness_t:process sigchld;
 
 # needed for crypto/ssh tests
 allow sshd_t lspp_harness_t:fifo_file write;
+allow ssh_t lo_netif_t:netif egress;
 
 # needed for dmcrypt to work in crypto/cryptsetup_access test
 allow lvm_t lspp_harness_t:sem { read write unix_write associate unix_read };

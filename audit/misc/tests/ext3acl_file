@@ -27,9 +27,11 @@ use FileHandle;
 use File::Temp;
 use File::Copy;
 use English;
+use Cwd;
+use File::Path;
 
 # Put name of directory used for testing here - must have ACL support
-my $test_dir = "/tmp";
+my $test_dir = "tmp";
 
 my $failures = 0;
 my @test_files;
@@ -64,6 +66,11 @@ sub setup_test_files {
 }
 
 sub main {
+	my $cwd = cwd;
+        unless(-d $test_dir) {
+                mkdir($test_dir) or die "can't create dir: [$test_dir]";
+        }
+        chmod(0777, $test_dir) or die "can't chmod $test_dir: $!\n";
 	chdir($test_dir) or die "can't chdir to $test_dir: $!\n";
 
 	setup_test_files();
@@ -95,15 +102,18 @@ sub main {
 	}
 
 	verify_coverage(qw(0a 0b 0c 1a 1b 2a 2b 3a1 3a2 3a 3b 4 5));
+	chdir($cwd) or die "Cannot change directory: [$cwd]\n";
 
 	if ($failures) {
 		# prevent deletion of temp files
 		switch_to_user('nobody');
+		rmtree $test_dir;
 
 		print STDERR "FAILED tests: $failures\n";
 		exit 1;
 	} else {
 		switch_to_user('root');
+		rmtree $test_dir;
 
 		print "All tests okay.\n";
 		exit 0;

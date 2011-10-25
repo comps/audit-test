@@ -57,8 +57,3 @@ address file changes.
   # run_init service netlabel restart
   # run_init service xinetd restart
   # run_init /etc/rc.local
-
-Please note that currently you have to flush SA after each of the following
-ipsec tests (trustedprograms/tests/test_ipsec.bash)
-
-  # ip xfrm state flush

@@ -93,12 +93,20 @@ function get_ip_addr {
 # 2620:52:0000:2223:0216:3eff:fe00:0028
 #
 function normalize_addr {
-    echo "$1" | sed -e 's/:\([0-9a-f]\):/:000\1:/g' \
-	            -e 's/:\([0-9a-f][0-9a-f]\):/:00\1:/g' \
-	            -e 's/:\([0-9a-f][0-9a-f][0-9a-f]\):/:0\1:/g' \
-		    -e 's/:\([0-9a-f]\)$/:000\1/g' \
-	            -e 's/:\([0-9a-f][0-9a-f]\)$/:00\1/g' \
-	            -e 's/:\([0-9a-f][0-9a-f][0-9a-f]\)$/:0\1/g'
+    addr=$1
+    while [ $[`echo $addr | sed 's/[^:]//g' | wc -m`-1] -lt 7 ]; do
+    	addr=`echo $addr | sed 's/::/:0000::/g'`
+    done
+
+    echo $addr | sed -e 's/:\([0-9a-f]\):/:000\1:/g' \
+	-e 's/:\([0-9a-f][0-9a-f]\):/:00\1:/g' \
+	-e 's/:\([0-9a-f][0-9a-f][0-9a-f]\):/:0\1:/g' \
+	-e 's/:\([0-9a-f]\)$/:000\1/g' \
+	-e 's/:\([0-9a-f][0-9a-f]\)$/:00\1/g' \
+	-e 's/:\([0-9a-f][0-9a-f][0-9a-f]\)$/:0\1/g' \
+	-e 's/::/:0000:/g' \
+	-e 's/^:/0000:/g' \
+	-e 's/:$/:0000/g'
 }
 
 ######################################################################
@@ -129,8 +137,6 @@ function normalize_addr {
 # will fail, calling exit_error() in the process.
 #
 function ipsec_add {
-    declare setup_str="recv:ipv$1,tcp,4300,0;"
-    declare msg_str="Hi Mom!"
 
     if which nc >& /dev/null; then
         cmd_nc="nc -$1 -w 30 -v "
@@ -139,16 +145,22 @@ function ipsec_add {
     fi
 
     # do the setup
-    runcon -t lspp_test_netlabel_t -l SystemLow -- \
-	$cmd_nc $ip_dst 400$1 <<< $setup_str &
-
+    if [ $1 == "6" ]; then
+	runcon -t lspp_test_netlabel_t -l SystemLow -- \
+	    $cmd_nc $ip_dst 4000 <<< "recv:ipv6,tcp,4300,0;" &
+    elif [ $1 == "4" ]; then
+	runcon -t lspp_test_netlabel_t -l SystemLow -- \
+	    $cmd_nc $ip_dst 4001 <<< "recv:ipv4,tcp,4300,0;" &
+    else
+        die "error: expected parameter 4 | 6 not given"
+    fi
     # configure the remote system (try twice to allow for IKE negotiation)
     runcon -t lspp_harness_t -l SystemLow -- \
-	$cmd_nc $ip_dst 4300 <<< $msg_str
+	$cmd_nc $ip_dst 4300 <<< "Hello"
     [[ $? == 0 ]] && return
     sleep 2
     runcon -t lspp_harness_t -l SystemLow -- \
-	$cmd_nc $ip_dst 4300 <<< $msg_str
+	$cmd_nc $ip_dst 4300 <<< "Hello"
     [[ $? != 0 ]] && exit_error "unable to establish a SA"
 }
 
@@ -231,13 +243,23 @@ function ipsec_remove_verify {
 
 set -x
 
-[[ -n $(eval echo \$LBLNET_SVR_IPV${1}) ]] || exit_error
-[[ -n $(eval echo \$LBLNET_SVR_IPV${1}) ]] || exit_error
-ip xfrm state flush || exit_error
+if [ $1 == "6" ]; then
+    [[ -n $(eval echo \$LBLNET_SVR_IPV6) ]] || exit_error
 
-# setup the global variables
-ip_src=$(normalize_addr $(get_ip_addr $1))
-ip_dst=$(normalize_addr $(eval echo \$LBLNET_SVR_IPV${1}))
+    # setup the global variables
+    ip_src=$(normalize_addr $(get_ip_addr $1))
+    ip_dst=$(normalize_addr $(eval echo \$LBLNET_SVR_IPV6))
+elif [ $1 == "4" ]; then
+    [[ -n $(eval echo \$LBLNET_SVR_IPV4) ]] || exit_error
+
+    # setup the global variables
+    ip_src=$(get_ip_addr $1)
+    ip_dst=$LBLNET_SVR_IPV4
+else
+        die "error: expected parameter 4 | 6 not given"
+fi
+
+ip xfrm state flush || exit_error
 
 # mark the log for augrok later
 log_mark=$(stat -c %s $audit_log)

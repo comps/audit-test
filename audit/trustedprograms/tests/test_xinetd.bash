@@ -87,7 +87,7 @@ function xinetd_test {
 
     # connect through xinetd
     rem_subj="$(runcon -t lspp_test_netlabel_t -l $subj \
-	        $cmd_nc 127.0.0.1 4004 <<< $cmd_str)"
+	        $cmd_nc 127.0.0.1 4001 <<< $cmd_str)"
     [[ $? != 0 ]] && exit_error "unable to connect to localhost"
 
     # verify label

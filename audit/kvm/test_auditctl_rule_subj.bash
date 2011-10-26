@@ -27,9 +27,10 @@ source testcase.bash || exit 2
 
 set -x
 
-append_cleanup "rm -f /tmp/true"
-rm -f /tmp/true
-cp -p /bin/true /tmp/true
+true_file=$(mktemp test_auditctl_rule_subj_trueXXXX)
+append_cleanup "rm -f $true_file"
+rm -f $true_file
+cp -p /bin/true $true_file
 
 for label in $labels; do
 	levl=$(echo "$label" | awk 'BEGIN { FS = ":" } ; { print $4 ":" $5 }')
@@ -49,7 +50,7 @@ for label in $labels; do
 	auditctl -a exit,always -F arch=b32 -S close -S open -F subj_sen=$subj_sen,subj_clr=$subj_clr
 	auditctl -a exit,always -F arch=b64 -S close -S open -F subj_sen=$subj_sen,subj_clr=$subj_clr
 
-	runcon -l $levl /tmp/true
+	runcon -l $levl ./$true_file
 
 	subj=$(id -Z | awk 'BEGIN { FS = ":" } ; { print $1 ":" $2 ":" $3 }')
 	subj=$subj:$levl

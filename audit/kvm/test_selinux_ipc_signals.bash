@@ -33,46 +33,47 @@ pids_count=$(echo "$pids" | wc -l)
 #   Neither the SIGSTOP signal -which causes a process to halt its execution-
 #   nor the SIGKILL signal -which causes a process to exit- can be ignored.
 
-append_cleanup "rm -f /tmp/kill"
-rm -f /tmp/kill
-cp -p /bin/kill /tmp/kill
+kill_file=$(mktemp test_selinux_ipc_signals_killXXXXXX)
+append_cleanup "rm -f $kill_file"
+rm -f $kill_file
+cp -p /bin/kill $kill_file
 
-chcon -t qemu_exec_t /tmp/kill
+chcon -t qemu_exec_t $kill_file
 
 for pid in $pids; do
 	offset=$(stat -c %s /var/log/audit/audit.log)
 
-	runcon -t svirt_t -- /tmp/kill -9 $pid
+	runcon -t svirt_t -- ./$kill_file -9 $pid
 
 	if [[ $? -eq 0 ]]; then
 		exit_fail
 	fi
 
-	expression="type==AVC and extra_text=~denied and comm==kill and scontext=~svirt_t"
+	expression="type==AVC and extra_text=~denied and comm=~test_selinux.* and scontext=~svirt_t"
 
 	if [[ $(augrok -c --seek $offset $expression) -eq 0 ]]; then
 		exit_fail
 	fi
 
-	expression="type==SYSCALL and syscall==62 and success==no and a1==9 and comm==kill and subj=~svirt_t"
+	expression="type==SYSCALL and syscall==62 and success==no and a1==9 and comm=~test_selinux.* and subj=~svirt_t"
 
 	if [[ $(augrok -c --seek $offset $expression) -eq 0 ]]; then
 		exit_fail
 	fi
 
-	runcon -t svirt_t -- /tmp/kill -19 $pid
+	runcon -t svirt_t -- ./$kill_file -19 $pid
 
 	if [[ $? -eq 0 ]]; then
 		exit_fail
 	fi
 
-	expression="type==AVC and extra_text=~denied and comm==kill and scontext=~svirt_t"
+	expression="type==AVC and extra_text=~denied and comm=~test_selinux.* and scontext=~svirt_t"
 
 	if [[ $(augrok -c --seek $offset $expression) -lt 2 ]]; then
 		exit_fail
 	fi
 
-	expression="type==SYSCALL and syscall==62 and success==no and a1==13 and comm==kill and subj=~svirt_t"
+	expression="type==SYSCALL and syscall==62 and success==no and a1==13 and comm=~test_selinux.* and subj=~svirt_t"
 
 	if [[ $(augrok -c --seek $offset $expression) -eq 0 ]]; then
 		exit_fail

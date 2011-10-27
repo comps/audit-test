@@ -8,7 +8,7 @@ directory "ltp" to the designated locations as shown below.
 
 cc_ospp.sh   -> ltp/testscripts/cc_ospp.sh
 cc_commands  -> ltp/runtest/cc_commands
-ssh03        -> ltp/testcases/network/tcp_cmds/ssh03
+ssh03        -> ltp/testcases/network/tcp_cmds/ssh/ssh03
 su01         -> ltp/testcases/commands/su/su01
 
 create tarball of the ltp tree

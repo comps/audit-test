@@ -85,6 +85,9 @@ directory.
 Set the directory permissions appropriately to allow the tests to be built
 and run:
 # chown -R root:root /usr/local/eal4_testing
+# find /usr/local/eal4_testing -executable -type f -exec chmod 755 {} \;
+# find /usr/local/eal4_testing -executable -type d -exec chmod 755 {} \;
+# find /usr/local/eal4_testing -type f -not -executable -exec chmod 644 {} \;
 
 Build
 -----

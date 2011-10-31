@@ -6,12 +6,12 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
@@ -24,7 +24,7 @@
 # everything has to work correctly.
 #
 # The test procedure is:
-# 
+#
 # - Load a test policy that defines contexts for test files and directories
 # - Create the test files and directories as described in the policy
 # - Verify the operation of 'setfiles':
@@ -35,8 +35,8 @@
 #     the policy.  (We verify the context of individual files while
 #     testing chcon next.)
 # - Verify the operation of 'chcon':
-#   - From a privileged type (the test harness), use 'chcon' to modify 
-#     the contexts of the files and directories and verify the initial 
+#   - From a privileged type (the test harness), use 'chcon' to modify
+#     the contexts of the files and directories and verify the initial
 #     context and the new contexts
 #     - Issue an audit rule to audit setxattr and getxattr calls
 #     - Use chcon to upgrade, downgrade and change the category of
@@ -49,7 +49,7 @@
 #     have the wrong contexts.
 #   - Use 'restorecon' to fix the contexts.
 #   - Use 'restorecon' to verify that there are no discrepancies.
-# 
+#
 #  Note:  There are no tests for setfiles and restorecon run from
 #  an unprivileged user because those commands will happily attempt
 #  to run, spewing failures from the underlying operations which
@@ -64,7 +64,7 @@ source tp_context_functions.bash || exit 2
 # cleanup
 cleanup_context_policy
 
-# configure to cleanup at test exit 
+# configure to cleanup at test exit
 prepend_cleanup auditctl -D
 prepend_cleanup rm -rf $testbase
 prepend_cleanup cleanup_context_policy
@@ -79,7 +79,7 @@ init_files
 
 # Use sefiles to check the contexts on the newly created files and directories
 # There should be discrepancies written to $tmp1.
-setfiles -o $tmp1 -n policy/test_context.fc $testbase \
+setfiles -F -o $tmp1 -n policy/test_context.fc $testbase \
 	|| exit_error "setfiles failed during setup"
 lines=$(wc -l < $tmp1)
 if [[ $lines != $items ]]; then
@@ -87,13 +87,13 @@ if [[ $lines != $items ]]; then
 fi
 
 # Use setfiles to set the contexts on the newly created files and directories
-# according to the policy.  
-setfiles policy/test_context.fc $testbase \
+# according to the policy.
+setfiles -F policy/test_context.fc $testbase \
 	|| exit_error "setfiles failed"
 
 # Use setfiles to check the contexts on the files and directories
 # There should be no discrepancies written to $tmp1.
-setfiles -o $tmp1 -n policy/test_context.fc $testbase \
+setfiles -F -o $tmp1 -n policy/test_context.fc $testbase \
 	|| exit_error "setfiles failed"
 lines=$(wc -l < $tmp1)
 if [[ $lines != 0 ]]; then
@@ -119,7 +119,7 @@ verify_fail_chcon_level s2:c0 s2:c1 $testbase/s2_testdir
 
 # Check the contexts on the test files...should be alot of differences now
 # so there should be discrepancies written to $tmp1.
-restorecon -n -R -o $tmp1 $testbase \
+restorecon -F -n -R -o $tmp1 $testbase \
 	|| exit_error "restorecon failed unexpectedly"
 lines=$(wc -l < $tmp1)
 if [[ $lines != $items ]]; then
@@ -127,12 +127,12 @@ if [[ $lines != $items ]]; then
 fi
 
 # restore the contexts of the test files
-restorecon -R $testbase \
+restorecon -F -R $testbase \
 	|| exit_error "restorecon failed unexpectedly"
 
 # Check the contexts on the files and directories
 # There should be no discrepancies written to $tmp1.
-restorecon -n -R -o $tmp1 $testbase \
+restorecon -F -n -R -o $tmp1 $testbase \
 	|| exit_error "restorecon failed"
 lines=$(wc -l < $tmp1)
 if [[ $lines != 0 ]]; then

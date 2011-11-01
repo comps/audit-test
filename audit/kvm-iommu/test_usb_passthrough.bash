@@ -31,6 +31,9 @@ source usb_device.conf || exit 2
 # Global variables
 #
 
+# audit log
+AUDIT_LOG="/var/log/audit/audit.log"
+
 # Test scenario to test for by calling corresponding function
 scenario=$1
 
@@ -66,6 +69,10 @@ img_path="/var/lib/libvirt/images"
 # General helper functions
 #
 
+function get_audit_mark {
+    echo "$(stat -c %s $AUDIT_LOG)"
+}
+
 relabel_usb_device_files_for_domain() {
     # Using context label from guest domain XML template file will allow us
     # to relabel device files also for guests which are not running.
@@ -74,7 +81,7 @@ relabel_usb_device_files_for_domain() {
     /usr/bin/chcon -v system_u:object_r:svirt_image_t:s0:$category \
         /dev/bus/usb/$usb_bus/$usb_device
     append_cleanup  /sbin/restorecon -RvvvF \
-        /dev/bus/$usb_bus/$usb_device
+        /dev/bus/usb/$usb_bus/$usb_device
 }
 
 reload_kvm_module_for_unsafe_interrupts() {
@@ -212,11 +219,13 @@ check_usb_device() {
 # Check if USB device cannot be accessed by an rogue VM
 rogue_usb_device_access() {
     local domlabel
+    AUDITMARK=$(get_audit_mark)
+    chcon -t qemu_exec_t /bin/cat
     runcon system_u:system_r:svirt_t:s0:c1,c2 /bin/cat \
-        /dev/bus/usb/$usb_bus/$usb_device 2>&1 | tee &> /tmp/mycatout
-    grep "Permission denied" /tmp/mycatout || \
-        exit_fail "Rogue qemu process can read USB device"
-    rm -f /tmp/mycatout
+        /dev/bus/usb/$usb_bus/$usb_device
+    restorecon -vvF /bin/cat
+    augrok --seek=$AUDITMARK type==AVC comm=cat name=$usb_device success=no \
+        || exit_fail "Rogue qemu process can read USB device"
 }
 
 

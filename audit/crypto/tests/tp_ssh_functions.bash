@@ -29,7 +29,7 @@ source functions.bash || exit 2
 BFOLDER="/tmp"
 RND=$RANDOM
 # default expect timeout 10 minutes - in case of not enough entropy
-TIMEOUT=300
+TIMEOUT=600
 
 # Restart ssh daemon
 function ssh_restart_daemon {

@@ -74,24 +74,6 @@ if [[ $? -ne 0 ]]; then
 	exit_fail
 fi
 
-#   Assert non privileged users in libvirt group are allowed to connect to
-#   session mode daemon.
-
-/bin/su - testuser1 -c "virsh connect qemu:///session"
-
-if [[ $? -ne 0 ]]; then
-	exit_fail
-fi
-
-#   Assert non privileged users in libvirt group are allowed to connect to
-#   session mode daemon in read-only mode.
-
-/bin/su - testuser1 -c "virsh connect qemu:///session --readonly"
-
-if [[ $? -ne 0 ]]; then
-	exit_fail
-fi
-
 #   Assert non privileged users not in libvirt group are allowed to connect to
 #   system mode daemon.
 
@@ -107,24 +89,6 @@ fi
 /bin/su - testuser2 -c "virsh connect qemu:///system --readonly"
 
 if [[ $? -eq 0 ]]; then
-	exit_fail
-fi
-
-#   Assert non privileged users not in libvirt group are allowed to connect to
-#   session mode daemon.
-
-/bin/su - testuser2 -c "virsh connect qemu:///session"
-
-if [[ $? -ne 0 ]]; then
-	exit_fail
-fi
-
-#   Assert non privileged users not in libvirt group are allowed to connect to
-#   session mode daemon in read-only mode.
-
-/bin/su - testuser2 -c "virsh connect qemu:///session --readonly"
-
-if [[ $? -ne 0 ]]; then
 	exit_fail
 fi
 

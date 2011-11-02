@@ -105,24 +105,6 @@ if [[ $? -ne 0 ]]; then
 	exit_fail
 fi
 
-#   Assert non privileged users in libvirt group are allowed to connect to
-#   session mode daemon through SSH.
-
-/bin/su - testuser1 -c "virsh connect qemu+ssh:///session"
-
-if [[ $? -ne 0 ]]; then
-	exit_fail
-fi
-
-#   Assert non privileged users in libvirt group are allowed to connect to
-#   session mode daemon in read-only mode through SSH.
-
-/bin/su - testuser1 -c "virsh connect qemu+ssh:///session --readonly"
-
-if [[ $? -ne 0 ]]; then
-	exit_fail
-fi
-
 #   Assert non privileged users not in libvirt group are allowed to connect to
 #   system mode daemon through SSH.
 
@@ -138,24 +120,6 @@ fi
 /bin/su - testuser2 -c "virsh connect qemu+ssh:///system --readonly"
 
 if [[ $? -eq 0 ]]; then
-	exit_fail
-fi
-
-#   Assert non privileged users not in libvirt group are allowed to connect to
-#   session mode daemon through SSH.
-
-/bin/su - testuser2 -c "virsh connect qemu+ssh:///session"
-
-if [[ $? -ne 0 ]]; then
-	exit_fail
-fi
-
-#   Assert non privileged users not in libvirt group are allowed to connect to
-#   session mode daemon in read-only mode through SSH.
-
-/bin/su - testuser2 -c "virsh connect qemu+ssh:///session --readonly"
-
-if [[ $? -ne 0 ]]; then
 	exit_fail
 fi
 

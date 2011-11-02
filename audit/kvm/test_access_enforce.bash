@@ -28,6 +28,7 @@ source testcase.bash || exit 2
 
 set -x
 
+chmod o+x . # Make sure anyone can run "./$script_file"
 script_file=$(mktemp test_access_enforce_scriptXXXXXX)
 append_cleanup "rm $script_file"
 

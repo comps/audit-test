@@ -18,8 +18,7 @@ conn test1-1-ipv4
         loopback=yes
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0-s15:c0.c1023
-        rightprotoport=tcp/4300
-        leftprotoport=tcp
+        leftprotoport=tcp/4300
 
 conn test1-2-ipv4
         auto=add
@@ -35,7 +34,6 @@ conn test1-2-ipv4
         labeled_ipsec=yes
 	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0-s15:c0.c1023
         leftprotoport=tcp/4300
-        leftprotoport=tcp
 
 conn test1-1-ipv6
         auto=route

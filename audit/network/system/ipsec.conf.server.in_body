@@ -1,6 +1,7 @@
 conn test2-%REMOTE_IPV4%
         auto=route
 	rekey=no
+	salifetime=30s
         authby=secret
         type=transport
         left=%REMOTE_IPV4%
@@ -16,6 +17,7 @@ conn test2-%REMOTE_IPV4%
 conn test2-%REMOTE_IPV6%
         auto=route
 	rekey=no
+	salifetime=30s
 	connaddrfamily=ipv6
         authby=secret
         type=transport
@@ -32,6 +34,7 @@ conn test2-%REMOTE_IPV6%
 conn test4-1-%REMOTE_IPV4%
         auto=route
 	rekey=no
+	salifetime=30s
         authby=secret
         type=transport
         left=%REMOTE_IPV4%
@@ -47,6 +50,7 @@ conn test4-1-%REMOTE_IPV4%
 conn test4-1-%REMOTE_IPV6%
         auto=route
 	rekey=no
+	salifetime=30s
 	connaddrfamily=ipv6
         authby=secret
         type=transport
@@ -63,6 +67,7 @@ conn test4-1-%REMOTE_IPV6%
 conn test4-2-%REMOTE_IPV4%
         auto=route
 	rekey=no
+	salifetime=30s
         authby=secret
         type=transport
         left=%REMOTE_IPV4%
@@ -78,6 +83,7 @@ conn test4-2-%REMOTE_IPV4%
 conn test4-2-%REMOTE_IPV6%
         auto=route
 	rekey=no
+	salifetime=30s
 	connaddrfamily=ipv6
         authby=secret
         type=transport

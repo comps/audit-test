@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.3.9)
+policy_module(lspp_test,6.3.10)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -59,6 +59,8 @@ gen_require(`
 	type cupsd_t, initrc_t, portreserve_t;
 	# more objects needed for ipsec
 	type ifconfig_t, ipsec_t;
+	# needed for mls cron (maybe)
+	type tmp_t, crond_t, cronjob_t;
 ')
 ###
 #
@@ -324,7 +326,6 @@ unconfined_domain_noaudit(lspp_test_ipsec_t)
 # give the test domain the ability to match against the SPD entries
 allow lspp_test_ipsec_t ipsec_spd_t:association polmatch;
 
-
 # network controls for interfaces
 
 allow unlabeled_t lo_netif_t:netif ingress;
@@ -390,3 +391,10 @@ allow udev_t lspp_harness_t:fifo_file write;
 # needed for ipsec to be able to start via run_init
 allow ifconfig_t lspp_harness_t:association setcontext;
 allow ipsec_t lspp_harness_t:association setcontext;
+
+# needed for cron tests - this may be temporary as if these
+# are really needed, they're probably needed in the mls policy
+allow crond_t cronjob_t:key create;
+allow cronjob_t tmp_t:dir { add_name write };
+allow cronjob_t tmp_t:file { write create open ioctl getattr };
+allow cronjob_t user_home_dir_t:dir read;

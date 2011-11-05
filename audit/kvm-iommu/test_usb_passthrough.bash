@@ -34,6 +34,9 @@ source usb_device.conf || exit 2
 # audit log
 AUDIT_LOG="/var/log/audit/audit.log"
 
+# default usb context
+USB_DEFCON="usb_device_t"
+
 # Test scenario to test for by calling corresponding function
 scenario=$1
 
@@ -63,6 +66,7 @@ usb_device=$(lsusb | grep -m1 $usb_device_id | tr ':' ' ' | cut -d\  -f4)
 # Do not change this or make sure to update also domain template XML files.
 dom1="guest1"
 dom2="guest1-dynamic"
+dom3="guest2-dynamic"
 img_path="/var/lib/libvirt/images"
 
 #
@@ -111,10 +115,14 @@ EOX
 prepare_guest_domains() {
     # Create empty fake disk images
     /bin/dd if=/dev/zero of=$img_path/${dom1}.img bs=1M count=1
+    /bin/dd if=/dev/zero of=$img_path/${dom2}.img bs=1M count=1
+    /bin/dd if=/dev/zero of=$img_path/${dom3}.img bs=1M count=1
     # Set preconfigured disk image labels for static labeling
     /usr/bin/chcon system_u:object_r:svirt_image_t:s0:c50,c70 $img_path/${dom1}.img
     # Remove disk image at cleanup
     append_cleanup "/bin/rm -f $img_path/${dom1}.img"
+    append_cleanup "/bin/rm -f $img_path/${dom2}.img"
+    append_cleanup "/bin/rm -f $img_path/${dom3}.img"
 }
 
 # Create and start a guest domain. Adds the usb device to the guest domain
@@ -189,16 +197,29 @@ check_usb_device() {
 
 # Check if USB device has owner and selinux label
 # set correctly when dynamic labeling is used
+# $1 - domain to check
+# $2 - yes/no - check for attached(yes)/detached(no) device
 check_usb_device_dynamic() {
     local owner label domlabel
     owner=$(stat -c "%U:%G" /dev/bus/usb/$usb_bus/$usb_device)
-    [ $owner != "qemu:qemu" ] && ((rc+=1))
-
+    perms=$(stat -c "%a" /dev/bus/usb/$usb_bus/$usb_device)
     label=$(stat -c "%C" /dev/bus/usb/$usb_bus/$usb_device)
-    domlabel=$(ps -p $(get_guest_domain_pid $1) -Z | grep -v LABEL \
-        | sed 's/svirt_t/svirt_image_t/' | tr ':' ' ' \
-        | awk '{printf "%s:%s:%s", $3, $4, $5}')
-    echo $label | grep $domlabel || ((rc+=1))
+
+    # checks for attached device
+    if [ "x$2" = "xyes" ]; then
+        [ $owner != "qemu:qemu" ] && ((rc+=1))
+
+	    domlabel=$(ps -p $(get_guest_domain_pid $1) -Z | grep -v LABEL \
+            | sed 's/svirt_t/svirt_image_t/' | tr ':' ' ' \
+            | awk '{printf "%s:%s:%s", $3, $4, $5}')
+        echo $label | grep $domlabel || ((rc+=1))
+
+    # check for dettached device
+    else
+        [ $owner != "root:root" ] && ((rc+=1))
+        [ $perms != 664 ] && ((rc+=1))
+        echo $label | grep $USB_DEFCON  || ((rc+=1))
+    fi
 
     return $rc
 }
@@ -217,17 +238,38 @@ check_usb_device() {
 }
 
 # Check if USB device cannot be accessed by an rogue VM
+# This test expects 
 rogue_usb_device_access() {
-    local domlabel
+    local runcat roguecat
+    roguecat="c1,c2"
     AUDITMARK=$(get_audit_mark)
     chcon -t qemu_exec_t /bin/cat
-    runcon system_u:system_r:svirt_t:s0:c1,c2 /bin/cat \
+    # get category of running domain
+    runcat=$(ps -p $(get_guest_domain_pid $1) -Z | grep -v LABEL \
+        | sed 's/.*\(c[0-9]*,c[0-9]*\).*/\1/')
+    # change category if 
+    [ "x$runcat" = "x$roguecat" ] && roguecat="c1,c5"
+    runcon system_u:system_r:svirt_t:s0:$roguecat /bin/cat \
         /dev/bus/usb/$usb_bus/$usb_device
     restorecon -vvF /bin/cat
     augrok --seek=$AUDITMARK type==AVC comm=cat name=$usb_device success=no \
         || exit_fail "Rogue qemu process can read USB device"
 }
 
+# Check if the given domains have unique SELinux context
+# $1 - first domain
+# $2 - second domain
+check_guests_labels() {
+    local dom1label dom2label
+    dom1label=$(ps -p $(get_guest_domain_pid $1) -Z | grep -v LABEL \
+            | awk '{printf $1}')
+    dom2label=$(ps -p $(get_guest_domain_pid $2) -Z | grep -v LABEL \
+            | awk '{printf $1}')
+
+    [ $dom1label = $dom2label ] && return 1
+
+    return 0
+}
 
 # USB device handling and individual test sets
 #
@@ -324,16 +366,24 @@ test_sanity_detach_2() {
 }
 
 #
-# Test if dynamic labeling works and attached USB device gets the dynamically assigned
-# context correctly. Also test if another rogue VM cannot access the USB device
+# Test if dynamic labeling works and attached USB device gets the dynamically 
+# assigned context correctly. Also test if another rogue VM cannot access 
+# the USB device.
 #
 test_dynamic_attach_on_boot() {
     start_guest_with_usb_device $dom2 || \
         exit_fail "Failed to start guest with assigned USB $usb_device"
-    check_usb_device_dynamic $dom2 || exit_fail "USB permission check failed"
+    start_guest_with_usb_device $dom3 || \
+        exit_fail "Failed to start guest domain $dom3"
+    check_guests_labels $dom2 $dom3 || \
+        exit_fail "Domains $dom2 and $dom3 have the same SELinux category"
+    check_usb_device_dynamic $dom2 yes || \
+        exit_fail "Permission check failed for attached USB device"
     rogue_usb_device_access $dom2 || \
         exit_fail "Rogue VM can access the attached USB device"
-    detach_usb_device $dom2 || exit_fail "Detach failed"
+    destroy_guest_domain $dom2
+    check_usb_device_dynamic $dom2 no || \
+        exit_fail "Permission check failed for dettached USB device"
 }
 
 

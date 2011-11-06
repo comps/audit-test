@@ -38,12 +38,12 @@ on a development system and then transfered to the target system.
 
 Clone the git tree:
 
-# git clone git://audit-test.git.sourceforge.net/gitroot/audit-test/audit-test
+# git clone git://audit-test.git.sourceforge.net/gitroot/audit-test/audit-test audit-test
 
 Create the tar file by running 'make dist' from the 'audit' directory
 at the top of the git tree:
 
-# cd audit-test.git/audit
+# cd audit-test/audit
 # make dist
 
 The tar file will be ../audit-test-<commit>.tar.gz
@@ -103,9 +103,7 @@ When the test suite is installed using the tar file, the ownership
 and permissions will be set correctly.  If another method is used to
 transfer the test suite, manually set the directory permissions:
 # chown -R root:root /usr/local/eal4_testing
-# find /usr/local/eal4_testing -executable -type f -exec chmod 755 {} \;
-# find /usr/local/eal4_testing -executable -type d -exec chmod 755 {} \;
-# find /usr/local/eal4_testing -type f -not -executable -exec chmod 644 {} \;
+# chmod a+rX /usr/local/eal4_testing
 
 Build the audit-test suite
 --------------------------

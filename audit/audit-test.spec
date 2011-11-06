@@ -1,5 +1,5 @@
 Name:           audit-test
-Version:        2015
+Version:        4b7984
 Release:        1
 Summary:        Audit testsuite for RHEL5 CAPP/LSPP evaluation
 Vendor:         Hewlett-Packard
@@ -8,7 +8,7 @@ Source0:        %{name}-%{version}.tar.gz
 License:        GPL v2
 Group:          Development/Tests
 BuildArch:      noarch
-Requires:       audit-libs-devel binutils cpp expect flex gcc gcc-c++ glibc-devel libattr-devel libstdc++-devel make libselinux-devel selinux-policy-devel
+Requires:       audit libcap-devel
 Prefix:         /usr/local/eal4_testing
 BuildRoot:      %{_tmppath}/%{name}-root
 

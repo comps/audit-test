@@ -5,7 +5,7 @@ Check the TODO file for the current state of the test suite.
 
 Dependencies
 ------------
-audit-test requires the following packages in order to run:
+The audit-test suite requires the following packages in order to run:
 
 audit-libs-devel
 expect
@@ -29,17 +29,34 @@ pwdutils-plugin-audit
 python-selinux
 vsftpd
 
-Configure System
-----------------
+Create the audit-test tar file
+------------------------------
+
+The audit-test suite is best installed from a tar file built from the
+git tree on sourceforge.  The tar file can be built on the target system or
+on a development system and then transfered to the target system.
+
+Clone the git tree:
+
+# git clone git://audit-test.git.sourceforge.net/gitroot/audit-test/audit-test
+
+Create the tar file by running 'make dist' from the 'audit' directory
+at the top of the git tree:
+
+# cd audit-test.git/audit
+# make dist
+
+The tar file will be ../audit-test-<commit>.tar.gz
+
+Configure the target system
+---------------------------
+
 Verify that each ext4 filesystem in /etc/fstab has the 'user_xattr' option.
 
 If you do not have an administrative eal user other than the root user, add
 one with the following commands:
-
 # useradd -c "EAL Test User" -g wheel eal
-
-The administrative user's password must be the same as the root user's password.
-# passwd <root's password>
+# passwd eal <root's password>
 
 If on an LSPP/MLS system perform the following additional step:
 # semanage login -a -s staff_u -r SystemLow-SystemHigh eal
@@ -59,13 +76,8 @@ On an LSPP/MLS machine (except RHEL6):
 On a SuSE system:
 # echo audit >> /etc/pwdutils/logging
 
-Configure the Network Test Server
----------------------------------
-Configure the Network Test Server according to the instructions in the
-README.netwk_svr file.
-
-Install
--------
+Install the audit-test suite
+----------------------------
 
 If running on an LSPP/MLS system, change your role to "sysadm_r".
 # newrole -r sysadm_r
@@ -79,21 +91,28 @@ and location for the tests to run correctly.
 # chmod 755 /usr/local/eal4_testing
 # cd /usr/local/eal4_testing
 
-Move the audit-test directory into the newly created /usr/local/eal4_testing
+Transfer the audit-test tar file to the target system if not using a
+git tree on the target.
+
+Untar the audit-test tar file into the newly created /usr/local/eal4_testing
 directory.
 
-Set the directory permissions appropriately to allow the tests to be built
-and run:
+# tar xvf audit-test-<commit>.tar.gz
+
+When the test suite is installed using the tar file, the ownership
+and permissions will be set correctly.  If another method is used to
+transfer the test suite, manually set the directory permissions:
 # chown -R root:root /usr/local/eal4_testing
 # find /usr/local/eal4_testing -executable -type f -exec chmod 755 {} \;
 # find /usr/local/eal4_testing -executable -type d -exec chmod 755 {} \;
 # find /usr/local/eal4_testing -type f -not -executable -exec chmod 644 {} \;
 
-Build
------
+Build the audit-test suite
+--------------------------
+
 # cd /usr/local/eal4_testing/audit-test
 
-If running on a LSPP system, install the test policy and change to the
+If running on an LSPP/MLS system, install the test policy and change to the
 "lspp_test_r" role.
 # make policy
 # newrole -r lspp_test_r
@@ -101,11 +120,27 @@ If running on a LSPP system, install the test policy and change to the
 Build the tests.
 # make
 
-Or to build the 32-bit tests on an x86_64 box do:
+Or if re-building the tests to run the 32-bit tests on an x86_64 system do:
+# make clean
 # make MODE=32
 
-Relabel test files.
+If running on an LSPP/MLS system, relabel test files.
 # make -C utils/selinux-policy relabel verify
+
+Configure the network test server
+---------------------------------
+
+Configure the network test server according to the instructions in the
+README.netwk_svr file.
+
+Confirm that the
+'/usr/local/eal4_testing/audit-test/network/system/client_list.txt' file on
+the network test server contains both the IPv4 and IPv6 addresses of the test
+machine.
+
+NOTE: If you need to determine the test machine's IP addresses to add to the
+client_list.txt file, run the following commands on the test machine:
+# make -C network/system getaddress
 
 Configure the KVM iommu tests
 -----------------------------
@@ -117,39 +152,29 @@ Edit the file
 '/usr/local/eal4_testing/audit-test/kvm-iommu/usb_device.conf'
 and select a USB device to use for USB passthrough testing.
 
-Configure the Labeled Networking Tests
+Configure the labeled networking tests
 --------------------------------------
 On the test machine:
 
 From the /usr/local/eal4_testing/audit-test directory, perform the following
 commands to setup the required configuration for the labeled networking tests:
 
-    # export RHOST="localhost"
-    # export RHOST6="::1"
-    # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
-    # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
-    # export LBLNET_PREFIX_IPV6="<the IPV6 prefix to be used for testing>"
-    # export PATH="$PATH:."
+# export RHOST="localhost"
+# export RHOST6="::1"
+# export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
+# export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
+# export LBLNET_PREFIX_IPV6="<the IPV6 prefix to be used for testing>"
+# export PATH="$PATH:."
 
-    # make netconfig
+# make netconfig
 
-On the network test server:
+Reboot the test machine.  This is necessary to restart all the
+system services configured for the network tests (xinetd, netlabel,
+ipsec, rc.local).
 
-Confirm that the
-'/usr/local/eal4_testing/audit-test/network/system/client_list.txt' file on
-the network test server contains both the IPv4 and IPv6 addresses of the test
-machine.
-
-NOTE: If you need to determine the test machine's IP addresses to add to the
-client_list.txt file, run the following commands on the test machine:
-
-    # make -C network/system getaddress
-
-Reboot the test machine.
-
-Run Batch Tests
+Run batch tests
 ---------------
-Login to the system as the administrative user.
+Login to the system as the administrative user (eal).
 
 The audit tests require you to login as a non-root user in order to verify the
 login UID in the audit records.
@@ -185,11 +210,12 @@ Note: The tests must be run from an interactive terminal; running the tests as
 a backgrounded task does not work, and will result in spurious test case
 failures.
 
-Run Individual Tests
+Run individual tests
 --------------------
 You can use run.bash to run a set of tests or a single test case. This must be
 done in a test sub-directory.  Before running individual tests please do
-a 'make' in the top-level directory.
+a 'make' in the top-level directory.  Some test directories require
+manually setting the MODE, DISTRO, and PPROFILE environment variables.
 
 To run all variations of a given testcase, e.g. to run all the ptrace() tests:
 # ./run.bash ptrace
@@ -200,8 +226,7 @@ To list all testcases:
 To run a single testcase by number:
 # ./run.bash <number>
 
-
-Workaround for Network Test Failures
+Workaround for network test failures
 ------------------------------------
 Some test runs may experience network test failures in the labeled IPsec
 tests due to the current implementation of ipsec. Use the following
@@ -237,8 +262,13 @@ you wait an excessive period of time between step #8 above and running the
 test suite, the network tests may fail. For that reason, it is recommended that
 you do these steps only when you are ready to re-run the test suite.
 
+If you interrupt the network tests, the network test server may be
+lefted in a locked condition, preventing subsequent network tests
+from running.  To unlock the network test server:
+# cd /usr/local/eal4_testing/audit-test/network
+# make unlock
 
-Other Known Failures
+Other known failures
 --------------------
 In the fail-safe tests, the 'admin_space_left email' and 'space_left email'
 tests may fail in CAPP mode if SELInux is enabled and in enforcing mode.  These
@@ -248,31 +278,20 @@ In the trustedprograms tests, the 'aide_update' test may fail in LSPP/MLS mode.
 The aide program reports the changed file in the aide.log, but the return code
 does not reflect that there was a change.  This test is not run in CAPP mode.
 
-Configure and execute KVM Tests
+Configure and execute KVM tests
 -------------------------------
 
 The KVM tests are optional and can be configured and executed as follows:
 
-1. Change working directory to the kvm/ subdirectory in the Audit Test
+Change working directory to the kvm/ subdirectory in the audit-test
 installation directory.
 
-2. Edit the "config.bash" file and set the "install_media" configuration
+Edit the "config.bash" file and set the "install_media" configuration
 parameter to the path to an ISO image to use as the install media for the
 virtual machine environments. It is recommended to use the /var/lib/libvirt/
 directory to store the ISO image file.
 
-3. Still in the "config.bash" file, set the "password" configuration parameter
+Still in the "config.bash" file, set the "password" configuration parameter
 to the system password of the user that will execute the test cases.
 
-4. Some test cases may fail if not executed with the "SystemLow-SystemHigh"
-SELinux level (e.g. logging in as a normal user and executing "su" or "sudo").
-
-The default SELinux level for normal users is "SystemLow". To change the
-default SELinux level for a specified user to "SystemLow-SystemHigh", use the
-following command:
-
-   semanage login -m -r SystemLow-SystemHigh username
-
-Where "username" is the specified user.
-
-5. Execute "make run".
+Execute "make run".

@@ -51,7 +51,14 @@ for i in $(seq $first $last); do
 	#   Assert processes executing with qemu_t SELinux are not allowed to
 	#   change virtual machine resource category labels.
 
-	eval "runcon -t qemu_t -- chcon -l s0:c1,c3 \$kvm_guest_${i}_resource"
+    offset=$(stat -c '%s' /var/log/audit/audit.log)
+
+    if [[ $PPROFILE == lspp ]]; then
+	    eval "runcon -t qemu_t -- chcon -l s0:c1,c3 \$kvm_guest_${i}_resource"
+    else
+        eval "runcon -u system_u -r system_r -t initrc_t -- runcon -t virtd_t -- \
+        runcon -t qemu_t -- chcon -l s0:c1,c3 /var/lib/libvirt/images/KVM-Guest-1.img"
+    fi
 
 	if [[ $? -eq 0 ]]; then
 		exit_fail
@@ -63,7 +70,11 @@ for i in $(seq $first $last); do
 		exit_fail
 	fi
 
-	expression="type==SYSCALL syscall==59 and success==no and comm==runcon and subj=~lspp_harness_t"
+    if [[ $PPROFILE == lspp ]]; then
+	    expression="type==SYSCALL syscall==59 and success==no and comm==runcon and subj=~lspp_harness_t"
+    else
+	    expression="type==SYSCALL syscall==59 and success==no and comm==runcon and subj=~virtd_t"
+    fi
 
 	if [[ $(augrok -c --seek $offset $expression) -eq 0 ]]; then
 		exit_fail
@@ -72,7 +83,14 @@ for i in $(seq $first $last); do
 	#   Assert processes executing with svirt_t SELinux are not allowed to
 	#   change virtual machine resource category labels.
 
-	eval "runcon -t svirt_t -- chcon -l s0:c1,c3 \$kvm_guest_${i}_resource"
+    offset=$(stat -c '%s' /var/log/audit/audit.log)
+
+    if [[ $PPROFILE == lspp ]]; then
+	    eval "runcon -t svirt_t -- chcon -l s0:c1,c3 \$kvm_guest_${i}_resource"
+    else
+        eval "runcon -u system_u -r system_r -t initrc_t -- runcon -t virtd_t -- \
+        runcon -t svirt_t -- chcon -l s0:c1,c3 /var/lib/libvirt/images/KVM-Guest-1.img"
+    fi
 
 	if [[ $? -eq 0 ]]; then
 		exit_fail
@@ -84,7 +102,11 @@ for i in $(seq $first $last); do
 		exit_fail
 	fi
 
-	expression="type==SYSCALL syscall==59 and success==no and comm==runcon and subj=~lspp_harness_t"
+    if [[ $PPROFILE == lspp ]]; then
+	    expression="type==SYSCALL syscall==59 and success==no and comm==runcon and subj=~lspp_harness_t"
+    else
+	    expression="type==SYSCALL syscall==59 and success==no and comm==runcon and subj=~virtd_t"
+    fi
 
 	if [[ $(augrok -c --seek $offset $expression) -eq 0 ]]; then
 		exit_fail

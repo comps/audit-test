@@ -35,6 +35,11 @@ kickstart=1
 process_count=2
 
 
+#   MLS labels for virtual machine environments
+guest_label_1=s0:c50,c70
+guest_label_2=s0:c19,c83
+
+
 #   The amount of memory (total size, in megabytes) to allocate for a virtual
 #   machine environment.
 #

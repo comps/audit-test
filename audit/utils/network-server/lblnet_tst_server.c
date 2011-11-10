@@ -81,6 +81,9 @@
   } while (0)
 
 
+/* log file */
+FILE *log_fd = NULL;
+
 /* network operation timeout value */
 unsigned int net_timeout_sec = NET_TIMEOUT_DEFAULT;
 
@@ -98,8 +101,8 @@ unsigned int smsg_level = SMSG_ERR;
 void hlp_usage(char *name)
 {
 	SMSG(SMSG_ERR,
-	      fprintf(stderr,
-		       "usage: %s [-i] [-p <port>] [-q] [-t <secs>] [-v]\n",
+	      fprintf(log_fd,
+		       "usage: %s [-i] [-l <log_file>] [-p <port>] [-q] [-t <secs>] [-v]\n",
 		       (name != NULL ? name : "?")));
 		       exit(1);
 }
@@ -199,10 +202,64 @@ void ctl_echo(int sock, char *param)
 	int rc = write(sock, param, strlen(param) + 1);
 	if (rc < 0)
 		SMSG(SMSG_WARN,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			       "warning(echo): "
 			       "failed to write to the socket (%d)\n",
 			       errno));
+}
+
+/**
+ * ctl_audit_remote_call - Handle the "audit_remote_call" control message
+ * @sock: socket
+ * @param: parameter string
+ *
+ * Description:
+ * Call given funtion in audit-remote test actions.  The control message
+ * format:
+ *
+ *  audite_remote_call:<action,mode,caller_ipv4>
+ *
+ * This is intended for audit-remote testing only.
+ *
+ */
+void ctl_audit_remote_call(int sock, char *param)
+{
+  char *action_str, *caller_ipv4_str, *mode_str;
+  int rc;
+
+  if (param == NULL) {
+    SMSG(SMSG_ERR, fprintf(log_fd, "error(audit_remote_call): bad message\n"));
+    return;
+  }
+
+  /* Close leaked sockets, or we will get AVC denials requesting policy rule:
+   *   allow run_init_t inetd_exec_t:file execute; 
+   * For development/debugging it's better NOT to close the socket and leave 
+   * the function call in a commented. */
+  /* net_hlp_socket_close(&sock); */
+  
+  /* parse the control message */
+  action_str = strtok(param, ",");
+  mode_str = strtok(NULL, ",");
+  caller_ipv4_str = strtok(NULL, ",");
+
+
+  SMSG(SMSG_NOTICE, fprintf(log_fd, "action = (%10s)\n, mode = (%10s), caller_ipv4 = (%10s)\n",
+			    (char *) action_str, (char *) mode_str, (char *) caller_ipv4_str));
+
+  pid_t pID = fork();
+  if (pID == 0) {
+    rc = execl("/usr/local/eal4_testing/audit-test/audit-remote/tests/remote_call.bash", 
+               "/usr/local/eal4_testing/audit-test/audit-remote/tests/remote_call.bash",
+	       (char *) action_str, (char *) mode_str, (char *) caller_ipv4_str, (char *) NULL);
+    if (rc == -1)
+      SMSG(SMSG_ERR, fprintf(log_fd, "error(audit_remote_call): execl failed (%d)\n", errno));
+
+  } else if (pID < 0) {
+    SMSG(SMSG_ERR, fprintf(log_fd, "error(audit_remote_call): fork failed\n"));
+    return;
+  } else
+    SMSG(SMSG_NOTICE, fprintf(log_fd, "parent process continues\n"));
 }
 
 /**
@@ -221,7 +278,7 @@ void ctl_sleep(int sock, char *param)
 	int rc = sleep(atoi(param));
 	if (rc > 0)
 		SMSG(SMSG_WARN,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "warning(sleep): "
 			     "failed to sleep for the full time\n"));
 }
@@ -250,7 +307,7 @@ void ctl_lock(int sock, char *param)
 	FILE *lock_file;
 
 	if (param == NULL) {
-		SMSG(SMSG_ERR, fprintf(stderr, "error(lock): bad message\n"));
+		SMSG(SMSG_ERR, fprintf(log_fd, "error(lock): bad message\n"));
 		return;
 	}
 
@@ -274,7 +331,7 @@ void ctl_lock(int sock, char *param)
 			lock_file = fopen(LCK_FILE, "w");
 			if (lock_file == NULL) {
 				SMSG(SMSG_ERR,
-				      fprintf(stderr,
+				      fprintf(log_fd,
 					      "error(lock): "
 					      "unable to access the "
 					      "lock file\n"));
@@ -285,7 +342,7 @@ void ctl_lock(int sock, char *param)
 			rc = fscanf(lock_file, "%ld", &time_lock);
 			if (rc != 1 && rc != EOF) {
 				SMSG(SMSG_ERR,
-				      fprintf(stderr,
+				      fprintf(log_fd,
 					      "error(lock): "
 					      "unable to read the "
 					      "lock file\n"));
@@ -307,7 +364,7 @@ void ctl_lock(int sock, char *param)
 		lock_file = fopen(LCK_FILE, "w");
 		if (lock_file == NULL) {
 			SMSG(SMSG_ERR,
-			      fprintf(stderr,
+			      fprintf(log_fd,
 				      "error(lock): "
 				      "unable to access the lock file\n"));
 			      return;
@@ -319,7 +376,7 @@ void ctl_lock(int sock, char *param)
 		lock_file = fopen(LCK_FILE, "r");
 		if (lock_file == NULL) {
 			SMSG(SMSG_ERR,
-			      fprintf(stderr,
+			      fprintf(log_fd,
 				      "error(lock): "
 				      "unable to access the lock file\n"));
 			      return;
@@ -327,7 +384,7 @@ void ctl_lock(int sock, char *param)
 		rc = fscanf(lock_file, "%ld", &time_lock);
 		if (rc != 1 && rc != EOF) {
 			SMSG(SMSG_ERR,
-			      fprintf(stderr,
+			      fprintf(log_fd,
 				      "error(lock): "
 				      "unable to read the lock file\n"));
 			      return;
@@ -347,7 +404,7 @@ void ctl_nccon(int sock, char *param)
   int rc;
 
   if (param == NULL) {
-    SMSG(SMSG_ERR, fprintf(stderr, "error(nccon): bad message\n"));
+    SMSG(SMSG_ERR, fprintf(log_fd, "error(nccon): bad message\n"));
     return;
   }
 
@@ -357,29 +414,29 @@ void ctl_nccon(int sock, char *param)
   port_str = strtok(NULL, ",");
 
 
-  SMSG(SMSG_NOTICE, fprintf(stderr, "host = (%10s)\n, port = (%4s)\n", (char *)host_str, (char *)port_str));
+  SMSG(SMSG_NOTICE, fprintf(log_fd, "host = (%10s)\n, port = (%4s)\n", (char *)host_str, (char *)port_str));
 
   pid_t pID = fork();
   if (pID == 0){
      if (strcasecmp(ipv_str, "ipv4") == 0) {
         rc = execl("./runnc4.bash", (char *)port_str, (char *)NULL);
         if (rc == -1)
-             SMSG(SMSG_ERR, fprintf(stderr, "error(nccon): execl failed\n"));
+             SMSG(SMSG_ERR, fprintf(log_fd, "error(nccon): execl failed\n"));
         }
      else if (strcasecmp(ipv_str, "ipv6") == 0) {
            rc = execl("./runnc6.bash", (char *)port_str, (char *)NULL);
            if (rc == -1)
-               SMSG(SMSG_ERR, fprintf(stderr, "error(nccon): execl failed\n"));
+               SMSG(SMSG_ERR, fprintf(log_fd, "error(nccon): execl failed\n"));
         }
      else
-           SMSG(SMSG_ERR, fprintf(stderr, "error(nccon): invalid ipv value\n"));
+           SMSG(SMSG_ERR, fprintf(log_fd, "error(nccon): invalid ipv value\n"));
      }
   else if (pID < 0) {
-     SMSG(SMSG_ERR, fprintf(stderr, "error(nccon): fork failed\n"));
+     SMSG(SMSG_ERR, fprintf(log_fd, "error(nccon): fork failed\n"));
      return;
      }
   else
-    SMSG(SMSG_NOTICE, fprintf(stderr, "parent process continues\n"));
+    SMSG(SMSG_NOTICE, fprintf(log_fd, "parent process continues\n"));
 }
 
 /**
@@ -409,7 +466,7 @@ void ctl_sendrand(int sock, struct sockaddr_storage *peer_addr, char *param)
 
 	if (param == NULL) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr, "error(sendrand): bad message\n"));
+		     fprintf(log_fd, "error(sendrand): bad message\n"));
 		rc = EINVAL;
 		goto sendrand_return;
 	}
@@ -421,7 +478,7 @@ void ctl_sendrand(int sock, struct sockaddr_storage *peer_addr, char *param)
 	bytes_str = strtok(NULL, "");
 	if (bytes_str == NULL) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr, "error(sendrand): bad message\n"));
+		     fprintf(log_fd, "error(sendrand): bad message\n"));
 		rc = EINVAL;
 		goto sendrand_return;
 	}
@@ -434,14 +491,14 @@ void ctl_sendrand(int sock, struct sockaddr_storage *peer_addr, char *param)
 		addr_hints.ai_protocol = IPPROTO_UDP;
 	} else {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr, "error(sendrand): bad message\n"));
+		     fprintf(log_fd, "error(sendrand): bad message\n"));
 		rc = EINVAL;
 		goto sendrand_return;
 	}
 	rc = getaddrinfo(host_str, port_str, &addr_hints, &host);
 	if (rc < 0) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "error(sendrand): name resolution failure (%s)\n",
 			     host_str));
 		rc = EFAULT;
@@ -451,20 +508,20 @@ void ctl_sendrand(int sock, struct sockaddr_storage *peer_addr, char *param)
 
 	/* if the peer is using ipv6 link-local addressing then copy the scope-id
 	* from the peer's control socket to the new data socket */
-	if (host->ai_family == AF_INET6 && 
+	if (host->ai_family == AF_INET6 &&
 	    IN6_IS_ADDR_LINKLOCAL(
 		         &((struct sockaddr_in6 *)host->ai_addr)->sin6_addr)) {
 		((struct sockaddr_in6 *)host->ai_addr)->sin6_scope_id =	\
 		((struct sockaddr_in6 *)peer_addr)->sin6_scope_id;
 		SMSG(SMSG_NOTICE,
-		     fprintf(stderr, "notice(sendrand): adjusted scope-id\n"));
+		     fprintf(log_fd, "notice(sendrand): adjusted scope-id\n"));
 	}
 
 	/* connect to the remote host */
 	data_sock = socket(host->ai_family, host->ai_socktype, host->ai_protocol);
 	if (data_sock < 0) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "error(sendrand): failed to create socket (%d)\n",
 			     errno));
 		rc = errno;
@@ -479,7 +536,7 @@ void ctl_sendrand(int sock, struct sockaddr_storage *peer_addr, char *param)
 	rc = connect(data_sock, host->ai_addr, host->ai_addrlen);
 	if (rc < 0) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "error(sendrand): "
 			     "unable to connect to remote host (%d)\n", errno));
 		rc = errno;
@@ -491,7 +548,7 @@ void ctl_sendrand(int sock, struct sockaddr_storage *peer_addr, char *param)
 		rc = write(data_sock, &byte, 1);
 		if (rc != 1)
 			SMSG(SMSG_WARN,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "warning(sendrand): "
 				     "write to socket failed (%d)\n", errno));
 		if (byte++ == 'z')
@@ -537,7 +594,7 @@ void ctl_recv(int sock, char *param)
 	int bool_true = 1;
 
 	if (param == NULL) {
-		SMSG(SMSG_ERR, fprintf(stderr, "error(recv): bad message\n"));
+		SMSG(SMSG_ERR, fprintf(log_fd, "error(recv): bad message\n"));
 		rc = EINVAL;
 		goto recv_return;
 	}
@@ -548,7 +605,7 @@ void ctl_recv(int sock, char *param)
 	port_str = strtok(NULL, ",");
 	bytes_str = strtok(NULL, "");
 	if (bytes_str == NULL) {
-		SMSG(SMSG_ERR, fprintf(stderr, "error(recv): bad message\n"));
+		SMSG(SMSG_ERR, fprintf(log_fd, "error(recv): bad message\n"));
 		rc = EINVAL;
 		goto recv_return;
 	}
@@ -557,7 +614,7 @@ void ctl_recv(int sock, char *param)
 	} else if (strcasecmp(inet_family_str, "ipv6") == 0) {
 		inet_family = AF_INET6;
 	} else {
-		SMSG(SMSG_ERR, fprintf(stderr, "error(recv): bad message\n"));
+		SMSG(SMSG_ERR, fprintf(log_fd, "error(recv): bad message\n"));
 		rc = EINVAL;
 		goto recv_return;
 	}
@@ -568,7 +625,7 @@ void ctl_recv(int sock, char *param)
 		data_sock_type = SOCK_DGRAM;
 		data_sock_proto = IPPROTO_UDP;
 	} else {
-		SMSG(SMSG_ERR, fprintf(stderr, "error(recv): bad message\n"));
+		SMSG(SMSG_ERR, fprintf(log_fd, "error(recv): bad message\n"));
 		rc = EINVAL;
 		goto recv_return;
 	}
@@ -576,7 +633,7 @@ void ctl_recv(int sock, char *param)
 	bytes = atoi(bytes_str);
 	if (bytes < 0) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "error(recv): "
 			     "message size must be non-negative\n"));
 		rc = EINVAL;
@@ -587,7 +644,7 @@ void ctl_recv(int sock, char *param)
 	data_sock = socket(inet_family, data_sock_type, data_sock_proto);
 	if (data_sock < 0) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "error(recv): failed to create socket (%d)\n",
 			     errno));
 		rc = errno;
@@ -596,7 +653,7 @@ void ctl_recv(int sock, char *param)
 	rc = setsockopt(data_sock, SOL_SOCKET, SO_REUSEADDR, &bool_true, sizeof(int));
 	if (rc < 0) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "error(recv): failed to configure socket (%d)\n",
 			     errno));
 		goto recv_return;
@@ -616,7 +673,7 @@ void ctl_recv(int sock, char *param)
 		  sizeof(data_sockaddr));
 	if (rc < 0) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "error(recv): failed to bind the socket (%d)\n",
 			     errno));
 		rc = errno;
@@ -628,7 +685,7 @@ void ctl_recv(int sock, char *param)
 		rc = listen(data_sock, 1);
 		if (rc < 0) {
 			SMSG(SMSG_ERR,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error(recv): "
 				     "failed to listen on the socket (%d)\n",
 				     errno));
@@ -638,7 +695,7 @@ void ctl_recv(int sock, char *param)
 		rc = net_hlp_timeout_rcv(data_sock);
 		if (rc < 0) {
 			SMSG(SMSG_ERR,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error(recv): "
 				     "select failed while waiting (%d)\n",
 				     errno));
@@ -646,7 +703,7 @@ void ctl_recv(int sock, char *param)
 			goto recv_return;
 		} else if (rc == 0) {
 			SMSG(SMSG_NOTICE,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "notice(recv): "
 				     "timeout while waiting for "
 				     "a connection\n"));
@@ -656,7 +713,7 @@ void ctl_recv(int sock, char *param)
 		child_sock = accept(data_sock, NULL, 0);
 		if (child_sock < 0) {
 			SMSG(SMSG_WARN,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error(recv): "
 				     "failed to accept a connection (%d)\n",
 				     errno));
@@ -678,7 +735,7 @@ void ctl_recv(int sock, char *param)
 			recv_buf = realloc(recv_buf, recv_buf_len + 1);
 			if (recv_buf == NULL) {
 				SMSG(SMSG_ERR,
-				     fprintf(stderr,
+				     fprintf(log_fd,
 					     "error(recv): "
 					     "out of memory (%zu)\n",
 					     recv_buf_len));
@@ -688,7 +745,7 @@ void ctl_recv(int sock, char *param)
 			rc = net_hlp_timeout_rcv(data_sock);
 			if (rc < 0) {
 				SMSG(SMSG_ERR,
-				     fprintf(stderr,
+				     fprintf(log_fd,
 					     "error(recv): "
 					     "select failed while "
 					     "waiting (%d)\n", errno));
@@ -696,7 +753,7 @@ void ctl_recv(int sock, char *param)
 				goto recv_return;
 			} else if (rc == 0) {
 				SMSG(SMSG_NOTICE,
-				     fprintf(stderr,
+				     fprintf(log_fd,
 					     "notice(recv): "
 					     "timeout while waiting "
 					     "for data\n"));
@@ -740,7 +797,7 @@ void ctl_sockcon(int sock, char *param)
 
 	if (param == NULL) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr, "error(sockcon): bad message\n"));
+		     fprintf(log_fd, "error(sockcon): bad message\n"));
 		rc = EINVAL;
 		goto sockcon_return;
 	}
@@ -750,7 +807,7 @@ void ctl_sockcon(int sock, char *param)
 	ctx_str = strtok(NULL, "");
 	if (ctx_str == NULL) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr, "error(sockcon): bad message\n"));
+		     fprintf(log_fd, "error(sockcon): bad message\n"));
 		rc = EINVAL;
 		goto sockcon_return;
 	}
@@ -764,7 +821,7 @@ void ctl_sockcon(int sock, char *param)
 		rc = getcon(&sctx);
 		if (rc < 0) {
 			SMSG(SMSG_ERR,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error(sockcon): "
 				     "failed to get current context\n"));
 			goto sockcon_return;
@@ -772,7 +829,7 @@ void ctl_sockcon(int sock, char *param)
 		ctx = context_new(sctx);
 		if (ctx == NULL) {
 			SMSG(SMSG_ERR,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error(sockcon): "
 				     "failed to convert the context\n"));
 			rc = -1;
@@ -781,7 +838,7 @@ void ctl_sockcon(int sock, char *param)
 		rc = context_range_set(ctx, ctx_str);
 		if (rc < 0) {
 			SMSG(SMSG_ERR,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error(sockcon): "
 				     "failed to modify context\n"));
 			goto sockcon_return;
@@ -789,7 +846,7 @@ void ctl_sockcon(int sock, char *param)
 		sctx_tmp = context_str(ctx);
 		if (sctx_tmp == NULL) {
 			SMSG(SMSG_ERR,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error(sockcon): "
 				     "failed to convert the context\n"));
 			rc = -1;
@@ -798,13 +855,13 @@ void ctl_sockcon(int sock, char *param)
 		sctx = strdup(sctx_tmp);
 	} else {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr, "error(sockcon): bad message\n"));
+		     fprintf(log_fd, "error(sockcon): bad message\n"));
 		rc = EINVAL;
 		goto sockcon_return;
 	}
 	if (sctx == NULL) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr, "error(sockcon): out of memory\n"));
+		     fprintf(log_fd, "error(sockcon): out of memory\n"));
 		rc = ENOMEM;
 		goto sockcon_return;
 	}
@@ -813,7 +870,7 @@ void ctl_sockcon(int sock, char *param)
 	rc = setsockcreatecon(sctx);
 	if (rc < 0) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "error(sockcon): "
 			     "failed to set the socket context (%s)\n", sctx));
 		goto sockcon_return;
@@ -850,7 +907,7 @@ void ctl_getcon(int sock, char *param)
 	/* XXX - check to make sure we are not leaking security_context_t */
 
 	if (param == NULL) {
-		SMSG(SMSG_ERR, fprintf(stderr, "error(getcon): bad message\n"));
+		SMSG(SMSG_ERR, fprintf(log_fd, "error(getcon): bad message\n"));
 		goto getcon_return;
 	}
 
@@ -858,7 +915,7 @@ void ctl_getcon(int sock, char *param)
 	type_str = strtok(param, ",");
 	if (type_str == NULL) {
 		SMSG(SMSG_ERR,
-		      fprintf(stderr, "error(sockcon): bad message\n"));
+		      fprintf(log_fd, "error(sockcon): bad message\n"));
 		rc = EINVAL;
 		goto getcon_return;
 	}
@@ -867,14 +924,14 @@ void ctl_getcon(int sock, char *param)
 	rc = getcon(&sctx);
 	if (rc < 0) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "error(getcon): unable to get the context\n"));
 		goto getcon_return;
 	}
 	ctx = context_new(sctx);
 	if (ctx == NULL) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "error(getcon): unable to get the context\n"));
 		goto getcon_return;
 	}
@@ -885,12 +942,12 @@ void ctl_getcon(int sock, char *param)
 	else if (strcasecmp(type_str, "mls") == 0)
 		ctx_str = context_range_get(ctx);
 	else {
-		SMSG(SMSG_ERR, fprintf(stderr, "error(getcon): bad message\n"));
+		SMSG(SMSG_ERR, fprintf(log_fd, "error(getcon): bad message\n"));
 		goto getcon_return;
 	}
 	if (ctx_str == NULL) {
 		SMSG(SMSG_ERR,
-		     fprintf(stderr,
+		     fprintf(log_fd,
 			     "error(getcon): unable to parse the context\n"));
 		goto getcon_return;
 	}
@@ -927,9 +984,11 @@ int main(int argc, char *argv[])
 	size_t tmp_sze;
 	int inetd_flag = 0;
 
+	log_fd = stderr;
+
 	/* command line arguments */
 	do {
-		arg_iter = getopt(argc, argv, "ip:qt:v");
+		arg_iter = getopt(argc, argv, "ip:qt:vl:");
 		switch (arg_iter) {
 			case 'i':
 				/* [x]inetd flag */
@@ -952,6 +1011,14 @@ int main(int argc, char *argv[])
 				if (smsg_level < SMSG_ALL)
 					smsg_level++;
 				break;
+			case 'l':
+				/* logging (custom logfile, otherwise stderr) */
+  			        if ((log_fd = fopen(optarg, "a")) == NULL) {
+				  fprintf(stderr,
+					  "error: failed to open given log file (%s)\n", optarg);
+				  log_fd = stderr;
+				}
+				break;
 			case '?':
 				hlp_usage(argv[0]);
 				break;
@@ -963,7 +1030,7 @@ int main(int argc, char *argv[])
 		ctl_sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 		if (ctl_sock < 0) {
 			SMSG(SMSG_ERR,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error: failed to create "
 				     "control socket (%d)\n", errno));
 			return 1;
@@ -973,7 +1040,7 @@ int main(int argc, char *argv[])
 				&bool_true, sizeof(int));
 		if (rc < 0) {
 			SMSG(SMSG_ERR,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error: failed to configure "
 				     "control socket (%d)\n", errno));
 			return 1;
@@ -986,7 +1053,7 @@ int main(int argc, char *argv[])
 			  sizeof(ctl_sockaddr));
 		if (rc < 0) {
 			SMSG(SMSG_ERR,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error: failed to bind the "
 				     "control socket (%d)\n", errno));
 			return 1;
@@ -994,7 +1061,7 @@ int main(int argc, char *argv[])
 		rc = listen(ctl_sock, CTL_SOCK_LISTEN_QUEUE);
 		if (rc < 0) {
 			SMSG(SMSG_ERR,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error: failed to listen on the "
 				     "control socket (%d)\n", errno));
 			return 1;
@@ -1004,7 +1071,7 @@ int main(int argc, char *argv[])
 		rem_sock = dup(fileno(stdin));
 		if (rem_sock < 0) {
 			SMSG(SMSG_ERR,
-			     fprintf(stderr,
+			     fprintf(log_fd,
 				     "error: failed to duplicate "
 				     "control fd (%d)\n", errno));
 			return 1;
@@ -1022,7 +1089,7 @@ int main(int argc, char *argv[])
 					  &peer_addr_len);
 			if (rem_sock < 0) {
 				SMSG(SMSG_WARN,
-				     fprintf(stderr,
+				     fprintf(log_fd,
 					     "warning: failed to accept new "
 					     "control connection (%d)\n",
 					     errno));
@@ -1039,7 +1106,7 @@ int main(int argc, char *argv[])
 				recv_buf = realloc(recv_buf, recv_buf_len + 1);
 				if (recv_buf == NULL) {
 					SMSG(SMSG_ERR,
-					     fprintf(stderr,
+					     fprintf(log_fd,
 						     "error: out of memory "
 						     "(%zu)\n", recv_buf_len));
 					return 1;
@@ -1047,14 +1114,14 @@ int main(int argc, char *argv[])
 				rc = net_hlp_timeout_rcv(rem_sock);
 				if (rc < 0) {
 					SMSG(SMSG_ERR,
-					     fprintf(stderr,
+					     fprintf(log_fd,
 						     "error: select failed "
 						     "while waiting (%d)\n",
 						     errno));
 					return 1;
 				} else if (rc == 0) {
 					SMSG(SMSG_NOTICE,
-					     fprintf(stderr,
+					     fprintf(log_fd,
 						     "notice: timeout while "
 						     "waiting for data\n"));
 					if (!inetd_flag)
@@ -1078,7 +1145,7 @@ int main(int argc, char *argv[])
 				continue;
 			} else if (rc < 0) {
 				SMSG(SMSG_WARN,
-				     fprintf(stderr,
+				     fprintf(log_fd,
 					     "warning: failed to read the "
 					     "control message (%d)\n", errno));
 				continue;
@@ -1089,7 +1156,7 @@ int main(int argc, char *argv[])
 				tmp_sze = strcspn(recv_buf, CTL_MSG_BAD_CHARS);
 				if (tmp_sze < strlen(recv_buf)) {
 					char *bad_str = recv_buf + tmp_sze;
-					char *good_str = bad_str + 
+					char *good_str = bad_str +
 					     strspn(bad_str, CTL_MSG_BAD_CHARS);
 					memmove(bad_str, good_str, strlen(good_str) + 1);
 				}
@@ -1100,7 +1167,7 @@ int main(int argc, char *argv[])
 				msg_buf = realloc(msg_buf, strlen(msg_buf) + strlen(recv_buf) + 1);
 				if (msg_buf == NULL) {
 					SMSG(SMSG_ERR,
-					     fprintf(stderr,
+					     fprintf(log_fd,
 						     "error: out of memory\n"));
 					return 1;
 				}
@@ -1140,9 +1207,11 @@ int main(int argc, char *argv[])
 					ctl_getcon(rem_sock, ctl_param);
 				} else if (strcasecmp(ctl_cmd, "nccon") == 0) {
 					ctl_nccon(rem_sock, ctl_param);
+				} else if (strcasecmp(ctl_cmd, "audit_remote_call") == 0) {
+					ctl_audit_remote_call(rem_sock, ctl_param);
 				} else {
 					SMSG(SMSG_WARN,
-					     fprintf(stderr,
+					     fprintf(log_fd,
 						     "warning: unknown control "
 						     "message (%s)\n",
 						     ctl_cmd));
@@ -1157,6 +1226,6 @@ int main(int argc, char *argv[])
 	net_hlp_socket_close(&ctl_sock);
 	if (recv_buf)
 		free(recv_buf);
-	
+
 	return 0;
 }

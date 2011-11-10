@@ -159,6 +159,8 @@ fi
 
 function start_auditd {
     declare i
+    local log_file=${1:-"/var/log/audit/audit.log"}
+
     if ! pidof auditd &>/dev/null; then
 	if [ $DISTRO = "SUSE" ]; then
 	    rcauditd start || return 2
@@ -174,7 +176,7 @@ function start_auditd {
     echo -n "start_auditd: Waiting for auditd to start"
     for ((i = 0; i < 100; i++)); do
 	auditctl -r 0 >/dev/null
-	if tail -n10 /var/log/audit/audit.log | grep -Fq audit_rate_limit=0; then
+	if tail -n10 $log_file | grep -Fq audit_rate_limit=0; then
 	    echo
 	    return 0
 	fi

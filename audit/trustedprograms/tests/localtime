@@ -1,0 +1,175 @@
+#!/bin/sh
+
+##########################################################################
+# Copyright (C) 2005 Hewlett-Packard Development Company, L.P.
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+#   the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program;  if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#  FILE   : localtime
+#
+#  HISTORY:
+#    12/2005 created by Paul Moore <paul.moore@hp.com>
+#
+##########################################################################
+
+#
+# This test checks to make sure that /etc/localtime is working correctly
+# and that the time difference between local and UTC time is calculated
+# correctly.
+#
+
+####
+#
+# helper functions
+#
+
+# echo the number of days in the given year
+days_in_year() {
+    # sanity check
+    if [ "$1" = "" -o "$1" -lt "0" ]; then
+        echo " test error - FAIL"
+        exit 1
+    fi
+
+    # years that are multiples of 4 are leap years, except for years which are
+    # multiples of 100 (centuries) with the exception of years which are
+    # multiples of 400
+
+    # leap year test
+    if [ "$(expr $1 % 4)" -eq "0" ] && [ "$(expr $1 % 100)" -ne "0" -o "$(expr $1 % 400)" -eq "0" ]; then
+        # lear year
+        echo "366"
+    else
+        # normal year
+        echo "365"
+    fi
+}
+
+# cleanup a number (printf balks at "08")
+num_clean () {
+    echo "$(expr $1 + 0)"
+}
+
+####
+#
+# main
+#
+
+# sanity check
+if [ ! -r "/etc/localtime" ]; then
+    echo "File /etc/localtime not found - PASS"
+    exit 0
+fi
+
+# print header
+echo "Checking that /etc/localtime works ..."
+
+# capture the current time
+time_ref=$(date -u)
+
+# capture the timezone offset
+time_zoneoff=$(date "+%z")
+
+# determine the timezone offset adjustment
+if [ "$(echo $time_zoneoff | cut -c 1)" = "-" ]; then
+    time_zoneadj="+$(echo $time_zoneoff | cut -c 2-5)"
+elif [ "$(echo $time_zoneoff | cut -c 1)" = "+" ]; then
+    time_zoneadj="-$(echo $time_zoneoff | cut -c 2-5)"
+else
+    echo " strange timezone offset - FAIL"
+    exit 1
+fi
+
+#
+# determine the utc time
+#
+
+year_utc=$(date -u -d "$time_ref" "+%Y")
+
+day_utc=$(date -u -d "$time_ref" "+%j")
+
+hour_utc=$(date -u -d "$time_ref" "+%H")
+
+min_utc=$(date -u -d "$time_ref" "+%M")
+
+#
+# determine the local time
+#
+
+year_local=$(date -d "$time_ref" "+%Y")
+
+day_local=$(date -d "$time_ref" "+%j")
+
+hour_local=$(date -d "$time_ref" "+%H")
+
+min_local=$(date -d "$time_ref" "+%M")
+
+#
+# add/subtract the timezone offset
+#
+
+year_adj=$year_local
+
+day_adj=$day_local
+
+hour_adj=$(expr $hour_local $(echo $time_zoneadj | cut -c 1) $(echo $time_zoneadj | cut -c 2-3))
+
+min_adj=$(expr $min_local $(echo $time_zoneadj | cut -c 1) $(echo $time_zoneadj | cut -c 4-5))
+
+# adjust for out of range minutes
+if [ "$min_adj" -lt "0" ]; then
+    hour_adj=$(expr $hour_adj - 1)
+    min_adj=$(expr $min_adj + 60)
+elif [ "$min_adj" -gt "59" ]; then
+    hour_adj=$(expr $hour_adj + 1)
+    min_adj=$(expr $min_adj - 60)
+fi
+
+# adjust for out of range hours
+if [ "$hour_adj" -lt "0" ]; then
+    day_adj=$(expr $day_adj - 1)
+    hour_adj=$(expr $hour_adj + 24)
+elif [ "$hour_adj" -gt "23" ]; then
+    day_adj=$(expr $day_adj + 1)
+    hour_adj=$(expr $hour_adj - 24)
+fi
+
+# check for out of range days
+if [ "$day_adj" -lt "0" ]; then
+    year_adj=$(expr $year_adj - 1)
+    day_adj=$(expr $day_adj + $(days_in_year $year_adj))
+elif [ "$day_adj" -gt "$(days_in_year $year_local)" ]; then
+    year_adj=$(expr $year_adj + 1)
+    day_adj=$(expr $day_adj - $(days_in_year $year_local))
+fi
+
+#
+# compare the adjusted time with utc
+#
+
+# display the various times
+echo   " timezone offset: $time_zoneoff"
+printf " local time:      %.4d-%.3d-%.2d-%.2d (YYYY-DDD-HH-MM)\n" "$(num_clean $year_local)" "$(num_clean $day_local)" "$(num_clean $hour_local)" "$(num_clean $min_local)"
+printf " UTC time:        %.4d-%.3d-%.2d-%.2d (YYYY-DDD-HH-MM)\n" "$(num_clean $year_utc)" "$(num_clean $day_utc)" "$(num_clean $hour_utc)" "$(num_clean $min_utc)"
+printf " adjusted time:   %.4d-%.3d-%.2d-%.2d (YYYY-DDD-HH-MM)\n" "$(num_clean $year_adj)" "$(num_clean $day_adj)" "$(num_clean $hour_adj)" "$(num_clean $min_adj)"
+
+# do the actual check and report pass/fail
+if [ "$year_adj" -eq "$year_utc" -a "$day_adj" -eq "$day_utc" -a "$hour_adj" -eq "$hour_utc" -a "$min_adj" -eq "$min_utc" ]; then
+    echo " adjusted time matches UTC time - PASS"
+    exit 0
+else
+    echo " adjusted time does not match UTC time - FAIL"
+    exit 1
+fi

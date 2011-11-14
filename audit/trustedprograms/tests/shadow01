@@ -1,0 +1,353 @@
+#!/usr/bin/perl
+#*********************************************************************
+#   Copyright (C) International Business Machines  Corp., 2003
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+#   the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this pronram;  if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#
+#
+#  FILE   : shadow01
+#
+#  PURPOSE: Tests that the expiration data in /etc/shadow correctly
+#             affects user logins.
+#
+#  SETUP: This script requires perl, as well as the Expect module
+#           for perl.  The script must be run by "root".
+#
+#  HISTORY:
+#    04/03 originated by Dustin Kirkland (k1rkland@us.ibm.com)
+#
+#*********************************************************************
+#!/usr/bin/perl
+
+use Expect;
+use strict;
+use warnings;
+
+require "utils.plib";
+
+my $username1 = "sha_user";
+my $initial_password1 = "ltp_test_pass";
+my $initial_encrypted_password1 = "\\\$1\\\$1yzzszzz\\\$7P9AphbzAN43pTktT\/kpp\/";
+my $new_password = "what_an_incredible_password";
+
+my @result;
+my $error = 0;
+my $exit_code = 0;
+my $test = 0;
+my %ARGV;
+foreach $_ (@ARGV) {
+  $ARGV{$_} = 1;
+}
+
+# Create the users to get system defaults
+$Expect::Log_Stdout = 0;
+create_user($username1);
+$Expect::Log_Stdout = 1;
+my $minimum = chage_read($username1, 4) + 1;
+my $maximum = chage_read($username1, 5) + 1;
+my $warning = chage_read($username1, 6) + 1;
+my $inactive1 = chage_read($username1, 2) + 1;
+my $lastchange = "2007-01-01";
+my $expiration = "2007-01-01";
+my $inactive2 = chage_read($username1, 3);
+if ($inactive2 eq "Never") {
+  $inactive2 = 1;
+} else {
+  $inactive2++;
+}
+my $expire_days = 1;
+my $inactive_days = 1;
+$Expect::Log_Stdout = 0;
+delete_user($username1);
+$Expect::Log_Stdout = 1;
+
+
+################################################################
+# Test matrix for tests 3-9                                    #
+# arg 0 - unused                                               #
+# arg 1 - line number passed to chage_read used to verify test #
+# arg 2 - test description                                     #
+# arg 3 - chage commands that make up the test                 #
+################################################################
+my @test = (
+            [],
+            [],
+            [],
+            [0, 4, "Changing minimum days for password", "chage -m $minimum $username1"],
+            [0, 5, "Changing maximum days for password", "chage -M $maximum $username1"],
+            [0, 6, "Changing warning days for password", "chage -W $warning $username1"],
+            [0, 2, "Changing inactive for password", "chage -I $inactive1 $username1"],
+            [0, 0, "Changing last change for password", "chage -d $lastchange $username1"],
+            [0, 1, "Changing password expiration of password", "chage -M $expire_days $username1"],
+            [0, 2, "Changing password inactive of password", "chage -M ".++$expire_days." $username1 ; chage -I $inactive_days $username1"]
+           );
+
+
+#################
+# Begin Testing #
+#################
+
+print("========================================================================\n");
+print("Begin execution of shadow01\n");
+print("Tests that the expiration data in /etc/shadow correctly affects user logins.\n");
+print("========================================================================\n");
+
+
+print("Username1: [$username1]\n");
+print("Password1: [$initial_password1]\n");
+
+
+#############
+# Test 0    #
+# passwd -x #
+#############
+
+print("\n-> Test \#$test : Setting the maximum number of days a password is valid\n");
+# Create the users for this test
+print("Creating users...\n");
+$Expect::Log_Stdout = 0;
+create_user($username1);
+set_encrypted_password($username1, $initial_encrypted_password1);
+$Expect::Log_Stdout = 1;
+
+# Set the expiration of username1's password to 30 days
+print("Setting expiration of password to 30 days...\n");
+`passwd -x 30 $username1`;
+if ($? != 0)  {
+  $error += 1;
+}
+
+# Login as username1 to show login now valid
+print("Login as $username1 and `pwd`...\n");
+my $status = run_as_user($username1, $initial_password1, "pwd");
+my $upper = $status % 256;
+my $lower = $status / 256;
+if (($lower != 0) || ($upper != 0)) {
+  $error += 2;
+}
+
+# Set system time ahead 31 days
+my $current_time = advance_system_time(31);
+
+# Login as username1, must change password
+print("Login as $username1 again, and must change password...\n");
+$status = check_expired($username1, "$initial_password1", "$new_password", "pwd");
+if ($status != 0) {
+  print("($status)\n");
+  $error += 8;
+}
+
+# Set system time back
+  revert_system_time($current_time);
+
+# Delete the users that were created for this test
+print("Deleting the users that were created...\n");
+$Expect::Log_Stdout = 0;
+delete_user($username1);
+$Expect::Log_Stdout = 1;
+
+if ($error == 0) {
+  $result[$test] .= "==> Test \#$test : PASS (setting maximum days password is valid)\n";
+} else {
+  $result[$test] .= "==> Test \#$test : FAIL (setting maximum days password is valid)\n";
+  $exit_code = 1;
+}
+print("$result[$test]");
+
+
+#############
+# Test 1    #
+# passwd -n #
+#############
+
+$test++;
+print("\n-> Test \#$test : Setting the minimum number of days a password is valid\n");
+
+# Create the users for this test
+print("Creating users...\n");
+$Expect::Log_Stdout = 0;
+create_user($username1);
+set_encrypted_password($username1, $initial_encrypted_password1);
+$Expect::Log_Stdout = 1;
+
+# Set the minimum interval for password change of username1 to 30 days
+print("Setting minimum password interval to 30 days...\n");
+`passwd -n 30 $username1`;
+if ($? != 0)  {
+  $error += 1;
+}
+
+# Login as username1 to show login now valid
+print("Login as $username1 and `pwd`...\n");
+$status = run_as_user($username1, $initial_password1, "pwd");
+$upper = $status % 256;
+$lower = $status / 256;
+if (($lower != 0) || ($upper != 0)) {
+  $error += 2;
+}
+
+# Attempt to login and change username1's password
+print("Attempting to change password...\n");
+clear_oldpassword();
+$status = change_password($username1, $initial_password1, $new_password);
+clear_oldpassword();
+$upper = $status % 256;
+$lower = $status / 256;
+if (($lower != 1) || ($upper != 0)) {
+  $error += 4;
+}
+
+# Set system time ahead 31 days
+$current_time = advance_system_time(31);
+
+# Login as username1 and attempt to change password
+print("Attempting to change password...\n");
+clear_oldpassword();
+$status = change_password($username1, $initial_password1, $new_password);
+clear_oldpassword();
+if ($status != 0) {
+  print("$status\n");
+  $error += 16;
+}
+
+# Set system time back
+revert_system_time($current_time);
+
+# Delete the users that were created for this test
+print("Deleting the users that were created...\n");
+$Expect::Log_Stdout = 0;
+delete_user($username1);
+$Expect::Log_Stdout = 1;
+
+if ($error == 0) {
+  $result[$test] .= "==> Test \#$test : PASS (setting minimum days password is valid)\n";
+} else {
+  $result[$test] .= "==> Test \#$test : FAIL (setting minimum days password is valid)\n";
+  $exit_code = 1;
+}
+print("$result[$test]");
+
+
+#############
+# Test 2    #
+# passwd -e #
+#############
+
+$test++;
+print("\n-> Test \#$test : Root expires a user account\n");
+
+# Create the users for this test
+print("Creating users...\n");
+$Expect::Log_Stdout = 0;
+create_user($username1);
+set_encrypted_password($username1, $initial_encrypted_password1);
+$Expect::Log_Stdout = 1;
+
+# Login as username1 to show login now valid
+print("Login as $username1 and `pwd`...\n");
+$status = run_as_user($username1, $initial_password1, "pwd");
+$upper = $status % 256;
+$lower = $status / 256;
+if (($lower != 0) || ($upper != 0)) {
+  $error += 2;
+}
+
+# Root expires a user password
+print("Expiring user's account...\n");
+`chage -E 1 $username1`;
+if ($? != 0) {
+  print("$?\n");
+  $error += 4;
+}
+
+# Try to login as username1 but it should fail
+print("Attempt login as $username1 but it should fail...\n");
+$status = run_as_user($username1, $initial_password1, "pwd");
+if ($status == 0) {
+  print("($status)\n");
+  $error += 8;
+}
+
+# Delete the users that were created for this test
+print("Deleting the users that were created...\n");
+$Expect::Log_Stdout = 0;
+delete_user($username1);
+$Expect::Log_Stdout = 1;
+
+if ($error == 0) {
+  $result[$test] .= "==> Test \#$test : PASS (root expires a user password)\n";
+} else {
+  $result[$test] .= "==> Test \#$test : FAIL (root expires a user password)\n";
+  $exit_code = 1;
+}
+print("$result[$test]");
+
+
+#################
+# Rest of Tests #
+#################
+
+$test++;
+for (my $i=$test; $i<@test; $i++) {
+  print("\n-> Test \#$i : Trying $test[$i][2] `$test[$i][3]`\n");
+
+# Create the users for testing purposes
+# Set the users' initial passwords
+  $Expect::Log_Stdout = 0;
+  create_user($username1);
+  set_encrypted_password($username1, $initial_encrypted_password1);
+  $Expect::Log_Stdout = 1;
+
+  my $before = chage_read($username1, $test[$i][1]);
+  `$test[$i][3]`;
+  my $after = chage_read($username1, $test[$i][1]);
+
+  $result[$i] = "==> Test \#$i : ";
+  if ($before ne $after) {
+    $result[$i] .= "PASS ($test[$i][2])\n";
+  } else {
+    $result[$i] .= "FAIL ($test[$i][2])\n *** Test \#$i [$before] = [$after]\n";
+    $exit_code = 1;
+  }
+  print($result[$i]);
+
+
+# Delete the user that was created for this tests
+  $Expect::Log_Stdout = 0;
+  delete_user($username1);
+  $Expect::Log_Stdout = 1;
+
+}
+
+
+###############
+# End Testing #
+###############
+
+# Print rolled up results
+print("\nSummary of Results\n");
+foreach my $result (@result) {
+  if ($result) {
+    print($result);
+  }
+}
+
+print("========================================================================\n");
+print("End execution of shadow01\n");
+print("========================================================================\n");
+
+
+exit $exit_code;

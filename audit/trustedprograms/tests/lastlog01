@@ -1,0 +1,151 @@
+#!/bin/sh
+#
+#   Copyright (C) International Business Machines  Corp., 2003
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+#   the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this pronram;  if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#
+#
+#  FILE   : lastlog01
+#
+#  PURPOSE: Test functionality of the /var/log/lastlog file; verify that this
+#           effectively reflects a user's last login
+#
+#  HISTORY:
+#     04/03  Dustin Kirkland (k1rkland@us.ibm.com)
+#
+#  NOTE:
+#	This version is intended for EAL certification, it will need modification
+#	to conform with LTP standards in the offical LTP tree.
+
+RHOST="localhost"
+TEST_USER="ll_user"
+TEST_USER_PASSWD="ltp_test_pass"
+TEST_USER_ENCRYPTED_PASSWD="\$1\$1yzzszzz\$7P9AphbzAN43pTktT/kpp/"
+TEST_USER_HOMEDIR="/home/$TEST_USER"
+TEST=0
+
+#-----------------------------------------------------------------------
+# FUNCTION:  create_user
+#-----------------------------------------------------------------------
+
+create_user(){
+
+        echo "Creating test user $TEST_USER..."
+
+	#erase user if he may exist , so we can have a clean env
+        rm -rf /home/$TEST_USER
+	userdel $TEST_USER
+        sleep 1
+
+	useradd -m -p $TEST_USER_ENCRYPTED_PASSWD -g 100 $TEST_USER
+
+	if [ $? != 0 ]
+	then {
+		echo "Could not add test user $TEST_USER to system $RHOST."
+		exit 1
+	}
+	fi
+
+}
+
+#-----------------------------------------------------------------------
+# FUNCTION:  delete_user
+#-----------------------------------------------------------------------
+
+delete_user(){
+        echo "Deleting test user $TEST_USER..."
+        rm -rf /home/$TEST_USER
+	userdel $TEST_USER
+        if [ $? != 0 ]
+        then
+                echo "Not able to delete test user $TEST_USER."
+                exit 1
+        fi
+}
+
+#-----------------------------------------------------------------------
+# FUNCTION:  verify_user_never_logged_in
+#-----------------------------------------------------------------------
+
+verify_user_never_logged_in(){
+
+        echo "Verifying test user $TEST_USER never logged in..."
+
+        RESULT=`lastlog | grep "^$TEST_USER " | grep "**Never logged in**"`
+        echo $RESULT
+        if [ "x$RESULT" == "x" ]
+        then {
+            echo "Test user $TEST_USER **Never logged in** message not found."
+            echo "==> TEST #$TEST : FAIL (Verifying test user never logged in)"
+            exit 1
+        }
+        fi
+        echo "==> TEST #$TEST : PASS (Verifying lastlog for test user updated)"
+        TEST=$(($TEST+1))
+}
+
+#-----------------------------------------------------------------------
+# FUNCTION:  login_user
+#-----------------------------------------------------------------------
+
+login_user(){
+        echo "Logging in test user $TEST_USER over ssh..."
+        expect -c "
+                   spawn ssh $TEST_USER@localhost
+                   expect \"Password:\"
+                   sleep 1
+                   exp_send \"$TEST_USER_PASSWD\r\"
+                   expect \"> \"
+                   sleep 1
+                   exp_send \"exit\r\"
+                   expect success
+                   exit 0;
+                  "
+}
+
+#-----------------------------------------------------------------------
+# FUNCTION:  verify_lastlog_for_user_updated
+#-----------------------------------------------------------------------
+
+verify_lastlog_for_user_updated(){
+
+        echo "Verifying lastlog for test user $TEST_USER updated..."
+
+        RESULT=`lastlog | grep "^$TEST_USER " | grep "**Never logged in**"`
+        echo $RESULT
+        if [ "x$RESULT" != "x" ]
+        then {
+            echo "Test user $TEST_USER **Never logged in** message found."
+            echo "==> TEST #$TEST : FAIL (Verifying lastlog for test user updated)"
+            exit 1
+        }
+        fi
+        echo "==> TEST #$TEST : PASS (Verifying lastlog for test user updated)"
+        TEST=$(($TEST+1))
+}
+
+#----------------------------------------------------------------------
+# FUNCTION: MAIN
+# PURPOSE:  To invoke the functions to perform the tasks described in
+#           the prologue.
+#----------------------------------------------------------------------
+create_user
+echo "-> TEST #$TEST : Verify user never logged in"
+verify_user_never_logged_in
+echo "-> TEST #$TEST : Login user, verify lastlog updated"
+login_user
+verify_lastlog_for_user_updated
+delete_user

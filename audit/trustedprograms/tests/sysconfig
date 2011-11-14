@@ -1,0 +1,53 @@
+#!/bin/sh
+
+##########################################################################
+# Copyright (C) 2005 Hewlett-Packard Development Company, L.P.
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+#   the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program;  if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#  FILE   : sysconfig
+#
+#  HISTORY:
+#    12/2005 created by Paul Moore <paul.moore@hp.com>
+#
+##########################################################################
+
+#
+# This test checks for the presence of /etc/sysconfig and if present it
+# verifies that the owner, group, and permissions are set correctly.
+#
+
+# sanity check
+if [ ! -e "/etc/sysconfig" ]; then
+    echo "Directory /etc/sysconfig not found - PASS"
+    exit 0
+fi
+
+# print header
+echo "Checking the permissions on /etc/sysconfig ..."
+
+# check the permissions
+entries_total=$(find /etc/sysconfig -name "*" | wc -l)
+entries_fail=$(find /etc/sysconfig/ ! -uid 0 -o ! -gid 0 -o \( -perm +002 ! -type l \) | wc -l)
+entries_pass=$(expr $entries_total - $entries_fail)
+
+# display the verdict
+if [ "$entries_fail" -gt "0" ]; then
+    echo " $entries_fail/$entries_total entries do not have correct permissions - FAIL"
+    exit 1
+else
+    echo " all $entries_total entries have correct permissions - PASS"
+    exit 0
+fi

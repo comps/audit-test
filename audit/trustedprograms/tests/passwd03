@@ -1,0 +1,130 @@
+#!/usr/bin/perl
+#*********************************************************************
+#   Copyright (C) International Business Machines  Corp., 2003
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+#   the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this pronram;  if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#
+#
+#  FILE   : passwd03
+#
+#  PURPOSE: Tests that the shell data in /etc/passwd is modified
+#             appropriately.
+#
+#  SETUP: This script requires perl, as well as the Expect module
+#           for perl.  The script must be run by "root".
+#
+#  HISTORY:
+#    03/03 originated by Dustin Kirkland (k1rkland@us.ibm.com)
+#
+#*********************************************************************
+#!/usr/bin/perl
+
+use Expect;
+use strict;
+use warnings;
+
+require "utils.plib";
+
+my $username1 = "cs_user1";
+my $initial_password1 = "ltp_test_pass";
+my $initial_encrypted_password1 = "\\\$1\\\$1yzzszzz\\\$7P9AphbzAN43pTktT\/kpp\/";
+my $username2 = "cs_user2";
+my $initial_password2 = "ltp_test_pass";
+my $initial_encrypted_password2 = "\\\$1\\\$1yzzszzz\\\$7P9AphbzAN43pTktT\/kpp\/";
+
+my @test = (
+#           [ exit_code, description_of_test, command_to_execute ]
+            [255, "chsh change shell of self to non-existant shell", "chsh -s /null", "/null"],          # 7
+            [255, "chsh change shell of self to dev-null shell", "chsh -s /dev/null", "/dev/null"],          # 8
+            [0, "chsh change shell of self to valid shell", "chsh -s /bin/bash", "/bin/bash"]              # 9
+           );
+my @result;
+my $exit_code = 0;
+my %ARGV;
+foreach $_ (@ARGV) {
+  $ARGV{$_} = 1;
+}
+
+
+#################
+# Begin Testing #
+#################
+
+print("========================================================================\n");
+print("Begin execution of passwd03\n");
+print("Tests that the shell data in /etc/passwd is modified appropriately.\n");
+print("========================================================================\n");
+
+print("Username1: [$username1]\n");
+print("Password2: [$initial_password1]\n");
+print("Username2: [$username2]\n");
+print("Password2: [$initial_password2]\n");
+
+
+for (my $i=0; $i<@test; $i++) {
+  if ((@ARGV) && (!$ARGV{$i})) {
+    next;
+  }
+# Create the users for testing purposes
+# Set the users' initial passwords
+  $Expect::Log_Stdout = 0;
+  create_user($username1);
+  set_encrypted_password($username1, $initial_encrypted_password1);
+  create_user($username2);
+  set_encrypted_password($username2, $initial_encrypted_password2);
+  $Expect::Log_Stdout = 1;
+
+  print("\n-> Test \#$i : Trying $test[$i][1] for user [$username1]: `$test[$i][2]`\n");
+  my $status = user_change_shell($username1, $initial_password1, $test[$i][2], $test[$i][3]);
+  my $lower = $status / 256;
+  my $upper = $status % 256;
+  my $shell = `su -l $username1 -c 'echo \$SHELL'`;
+  chomp($shell);
+  $result[$i] = "==> Test \#$i : ";
+  if (($upper == 0) && ($lower == $test[$i][0]) && ($test[$i][0] != 0)) {
+    $result[$i] .= "PASS ($test[$i][1])\n";
+  } elsif (($upper == 0) && ($lower == $test[$i][0]) && ($test[$i][0] == 0) && ($shell =~ /$test[$i][3]$/)) {
+    $result[$i] .= "PASS ($test[$i][1])\n";
+  } else {
+    $result[$i] .= "FAIL ($test[$i][1])\n *** Text \#$i expected exit code [$test[$i][0]] but got [$lower]\n";
+    $exit_code = 1;
+  }
+  print($result[$i]);
+
+# Delete the user that was created for this tests
+  $Expect::Log_Stdout = 0;
+  delete_user($username1);
+  delete_user($username2);
+  $Expect::Log_Stdout = 1;
+}
+
+###############
+# End Testing #
+###############
+
+# Print rolled up results
+print("\nSummary of Results\n");
+foreach my $result (@result) {
+  if ($result) {
+    print($result);
+  }
+}
+
+print("========================================================================\n");
+print("End execution of passwd03\n");
+print("========================================================================\n");
+
+exit $exit_code;

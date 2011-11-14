@@ -1,0 +1,435 @@
+#!/usr/bin/perl
+
+if (`whoami` ne "root\n") {
+  print("ERROR: You must be root to execute this program.\n");
+  exit 1;
+}
+
+# Need to delay between prompts and responses in Expect code
+$SLEEP = 2;
+
+sub create_user($) {
+  my $username = shift;
+  if ( ! $username ) {
+    return -1;
+  }
+  `rm -rf /home/$username`;
+  `userdel $username 2> /dev/null`;
+  sleep(1);
+  `useradd -m -g 100 $username`;
+  if ($? != 0) {
+    die("ERROR $?: Cannot create user $username");
+  }
+  return $?;
+}
+
+sub delete_user($) {
+  my $username = shift;
+  if ( ! $username ) {
+    return -1;
+  }
+  clear_oldpassword();
+  `rm -rf /home/$username; userdel $username`;
+  if ($? != 0) {
+    die("ERROR $?: Cannot delete user $username");
+  }
+  return $?;
+}
+
+sub clear_oldpassword() {
+  `cat /dev/null > /etc/security/opasswd; chmod 600 /etc/security/opasswd`;
+  return $?;
+}
+
+sub set_password($$) {
+  my $username = shift;
+  my $password = shift;
+  my $exp = new Expect;
+  $exp->raw_pty(1);
+  $exp->spawn("passwd $username")
+    or die "Cannot spawn: $!\n";
+  $exp->expect("10",
+    [
+      qr/New password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ]
+  );
+}
+
+sub set_encrypted_password($$) {
+  my $username = shift;
+  my $encrypted_password = shift;
+  `usermod -p $encrypted_password $username`;
+  if ($? != 0) {
+    die("ERROR $?: Cannot set encrypted password");
+  }
+  return $?;
+}
+
+sub change_password ($$$) {
+  my $username = shift;
+  my $current_password = shift;
+  my $new_password = shift;
+print("[$username], [$current_password], [$new_password]\n");
+  my $exp = new Expect;
+  $exp->raw_pty(1);
+  $exp->spawn("ssh -t $username\@localhost 'passwd'")
+    or die "ERROR: Cannot spawn: $!\n";
+  $exp->expect("10",
+    [
+      qr/\(yes\/no\)\? $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("yes\n");
+          exp_continue;
+        }
+    ],
+    [
+      qr/(current) UNIX password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$current_password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/New UNIX password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$new_password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/Retype new UNIX password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$new_password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/Enter current password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$current_password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/Old Password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$current_password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/New password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$new_password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/Re-type new password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$new_password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/Password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$current_password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ]
+
+  );
+  $exp->do_soft_close();
+  return $exp->exp_exitstatus();
+}
+
+sub run_as_user ($$$) {
+  my $username = shift;
+  my $password = shift;
+  my $command = shift;
+  for my $item (@_) {
+    $command .= " " . $item;
+  }
+  my $exp = new Expect;
+  $exp->raw_pty(1);
+  $exp->spawn("ssh -t $username\@localhost '$command'")
+    or die "ERROR: Cannot spawn: $!\n";
+  $exp->expect("10",
+    [
+      qr/\(yes\/no\)\? $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("yes\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$password\n");
+          sleep($SLEEP);
+          print("\n> $command");
+          exp_continue;
+        }
+    ]
+  );
+  $exp->do_soft_close();
+  return $exp->exp_exitstatus();
+}
+
+sub check_expired ($$$) {
+  my $username = shift;
+  my $password = shift;
+  my $new_password = shift;
+  my $command = shift;
+  my $exit = 1;
+  my $exp = new Expect;
+  $exp->raw_pty(1);
+  $exp->spawn("ssh -t $username\@localhost '$command'")
+    or die "ERROR: Cannot spawn: $!\n";
+  $exp->expect("10",
+    [
+      qr/\(yes\/no\)\? $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("yes\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/(password aged).*changing password.*password: /si,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$password\n");
+          sleep($SLEEP);
+          $exit = 0;
+          exp_continue;
+        }
+    ],
+    [
+      qr/new password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$new_password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ]
+  );
+  $exp->do_soft_close();
+  return $exit;
+}
+
+sub user_change_shell($$$$) {
+  my $username = shift;
+  my $password = shift;
+  my $command = shift;
+  my $newshell = shift;
+  my $exp = new Expect;
+  $exp->raw_pty(1);
+  $exp->spawn("ssh -t $username\@localhost '$command'")
+    or die "ERROR: Cannot spawn: $!\n";
+  $exp->expect("10",
+    [
+      qr/\(yes\/no\)\? $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("yes\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/Password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/Login Shell .*: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$newshell\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ]
+  );
+  $exp->do_soft_close();
+  return $exp->exp_exitstatus();
+}
+
+sub user_change_finger($$$$$$) {
+  my $username = shift;
+  my $password = shift;
+  my $command = shift;
+  my $newroom = shift;
+  my $newwork = shift;
+  my $newhome = shift;
+  my $exp = new Expect;
+  $exp->raw_pty(1);
+  $exp->spawn("ssh -t $username\@localhost '$command'")
+    or die "ERROR: Cannot spawn: $!\n";
+  $exp->expect("10",
+    [
+      qr/\(yes\/no\)\? $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("yes\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/Password: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$password\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/Room Number .*: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$newroom\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/Work Phone .*: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$newwork\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ],
+    [
+      qr/Home Phone .*: $/i,
+        sub {
+          sleep($SLEEP);
+          my $self = shift;
+          $self->send("$newhome\n");
+          sleep($SLEEP);
+          exp_continue;
+        }
+    ]
+  );
+  $exp->do_soft_close();
+  return $exp->exp_exitstatus();
+}
+
+sub zero_fill(@) {
+  my @array = @_;
+  for (my $i=0; $i<@array; $i++) {
+    if ($array[$i] < 10) {
+      $array[$i] = "0" . $array[$i];
+    }
+  }
+  return @array;
+}
+
+sub get_set_time_string(@) {
+  my @time = @_;
+  $time[4]++;
+  $time[5] -= 100;
+  @time = zero_fill(@time);
+  return $time[4] . $time[3] . $time[2] . $time[1] . $time[5];
+}
+
+sub advance_system_time($) {
+  my $days = $_[0];
+  my $really = `date`;
+  print("Currently: $really");
+  print("Setting system time ahead $days days...\n");
+  my @current_time = localtime();
+  my $current_time = time();
+  my @new_time = localtime($current_time +  (60 * 60 * 24 * $days));
+  $current_time = get_set_time_string(@current_time);
+  my $new_time = get_set_time_string(@new_time);
+  `date $new_time`;
+  my $fakey = `date`;
+  print("Now: $fakey");
+  return $current_time;
+}
+
+sub revert_system_time($) {
+  print("Setting the system time back to current time...\n");
+  `date $_[0]`;
+}
+
+sub chage_read($$) {
+  my $user = $_[0];
+  my $line = $_[1];
+  my @array = `chage -l $user`;
+  @array = split(/:\s+/, $array[$line]);
+  chomp($array[1]);
+  return $array[1];
+}
+
+return 1;

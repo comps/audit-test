@@ -37,7 +37,6 @@ function setup_toe {
 source ./profile.$hostext
 ifconfig $LOCAL_DEV $LOCAL_IPV4 netmask $LNET4MASK
 ifconfig $LOCAL_DEV inet6 add $LOCAL_IPV6/$LNET6MASK
-ifconfig $LOCAL_DEV inet6 add $TOE_GLOBAL/$LNET6MASK
 ifconfig $BRIDGE_FILTER $LOCAL_SEC_IPV4 netmask $SNET4MASK
 ifconfig $BRIDGE_FILTER inet6 add $LOCAL_SEC_IPV6/$SNET6MASK
 route -A inet6 add $LBLNET_SVR_IPV6 dev $LOCAL_DEV
@@ -227,8 +226,7 @@ if [[ "$SERVER_ROLE" == "toe" ]]; then
       echo "utils/netfilter directory of the audit-test suite path"
       echo "for errors and if satisfied it is correct, copy it to the"
       echo "utils/netfilter directory of the audit-test suite path on"
-      echo "the netserver as profile.<netserver hostname>, and to the"
-      echo "same directory on the catcher as profile.<catcher hostname>"
+      echo "the netserver as profile.<netserver hostname>"
       exit
 fi
 if [[ "$SERVER_ROLE" == "netserver" ]]; then

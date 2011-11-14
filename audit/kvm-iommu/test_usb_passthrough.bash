@@ -238,7 +238,7 @@ check_usb_device() {
 }
 
 # Check if USB device cannot be accessed by an rogue VM
-# This test expects 
+# This test expects
 rogue_usb_device_access() {
     local runcat roguecat
     roguecat="c1,c2"
@@ -247,7 +247,7 @@ rogue_usb_device_access() {
     # get category of running domain
     runcat=$(ps -p $(get_guest_domain_pid $1) -Z | grep -v LABEL \
         | sed 's/.*\(c[0-9]*,c[0-9]*\).*/\1/')
-    # change category if 
+    # change category if
     [ "x$runcat" = "x$roguecat" ] && roguecat="c1,c5"
     runcon system_u:system_r:svirt_t:s0:$roguecat /bin/cat \
         /dev/bus/usb/$usb_bus/$usb_device
@@ -366,14 +366,14 @@ test_sanity_detach_2() {
 }
 
 #
-# Test if dynamic labeling works and attached USB device gets the dynamically 
-# assigned context correctly. Also test if another rogue VM cannot access 
+# Test if dynamic labeling works and attached USB device gets the dynamically
+# assigned context correctly. Also test if another rogue VM cannot access
 # the USB device.
 #
 test_dynamic_attach_on_boot() {
     start_guest_with_usb_device $dom2 || \
         exit_fail "Failed to start guest with assigned USB $usb_device"
-    start_guest_with_usb_device $dom3 || \
+    start_guest_without_usb_device $dom3 || \
         exit_fail "Failed to start guest domain $dom3"
     check_guests_labels $dom2 $dom3 || \
         exit_fail "Domains $dom2 and $dom3 have the same SELinux category"

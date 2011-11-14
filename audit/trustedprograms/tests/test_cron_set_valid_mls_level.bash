@@ -17,55 +17,55 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 #
-#  FILE   : test_cron_allow01.bash
+#  FILE   : test_cron_set_valid_mls_level.bash
 #
-#  TEST DESCRIPTION: Test the /etc/cron.allow functionality. Create crontab
-#                    and add a job for a user that is listed in the cron.allow
-#		     file.  Verify execution of the job and delete the crontab.
 #
-#  HISTORY:  05/2007  created by Lisa Smith <lisa.m.smith@hp.com>
+#  TEST DESCRIPTION: Test that the basic cron job functionality works as
+#                    expected. Create a crontab as a normal user and add a job.
+#                    Verify the correct execution of the job and delete crontab.
+#
 #            09/2011   modified by T.N Santhosh <santhosh.tn@hp.com>
-#	     11/2011   modified by T.N Santhosh <santhosh.tn@hp.com>
+#            11/2011   modified by T.N Santhosh <santhosh.tn@hp.com>
 #
 #############################################################################
 
 source testcase.bash || exit 2
 source cron_functions.bash || exit 2
 
+DEF_SEC_LEVEL="SystemLow-SystemHigh"
+TEST_SEC_LEVEL="Secret"
+
 # Prepare environment for test run
-echo "***** Starting cron_allow01 test ******"
+echo "***** Starting cron_set_valid_mls_level test ******"
 cleanup
 test_prep
 
-# Create 2nd user
-useradd -m -g users $TEST_USER2
-if [ $? != 0 ]; then
-	exit_fail "Could not add test user $TEST_USER2 to system"
-fi
+# An empty cron.deny file is needed to allow a non-root user to run crontab
+touch $CRON_DENY
 
-echo "TEST: $CRON_ALLOW should only allow those in the file to run cron jobs."
-echo "TEST THAT PERSON IN $CRON_ALLOW IS ABLE TO RUN JOB."
-
-# Create /etc/cron.allow file
-echo $TEST_USER > $CRON_ALLOW
+# In order to create a file at a level higher than the lowest level
+# allowed by the range of /tmp, create a directory at the level of which
+# we want to create the file
+chcon -u system_u -t user_tmp_t -l $TEST_SEC_LEVEL $TEST_DIR
 
 # Add new job
 /bin/su $TEST_USER -c "crontab - << EOF
-* * * * * echo 'TEST JOB RAN' >> $TEST_DIR/output_cron 2>&1
+MLS_LEVEL=$TEST_SEC_LEVEL
+* * * * * id >> $TEST_DIR/output_cron 2>&1
 EOF"
 
 # Verify the crontab was successfully added
 if [ $? != 0 ]; then
-	cleanup
-	exit_fail "Error while adding crontab for user $TEST_USER"
+        cleanup
+        exit_fail "Error while adding crontab for user $TEST_USER"
 fi
 
 # Change label and owner so crond executes properly
-chcon -t staff_cron_spool_t /var/spool/cron/$TEST_USER
+chcon -t user_cron_spool_t /var/spool/cron/$TEST_USER
 echo "New job added successfully"
 
 # Wait for execution of job
-echo "sleeping for 70 seconds..."
+echo "sleeping for up to 70 seconds..."
 rc=1
 for ((i=0; i<70; i++)); do
     if test -e $TEST_DIR/output_cron; then
@@ -76,9 +76,16 @@ for ((i=0; i<70; i++)); do
 done
 
 if [ $rc = 1 ]; then
-	cleanup
-	exit_fail "Cron did not allow user to execute job"
+        cleanup
+        exit_fail "Cron did not execute job"
 else
-	cleanup
-	exit_pass
+        ls -Z $TEST_DIR/output_cron | grep $TEST_SEC_LEVEL
+        if [ $? = 0 ]; then
+                echo "Job has been executed at the correct MLS_LEVEL specified"
+                cleanup
+                exit_pass "cron_set_valid_mls_level"
+        else
+                cleanup
+                exit_fail "Job did not execute at the specified MLS_LEVEL"
+        fi
 fi

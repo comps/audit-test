@@ -22,44 +22,45 @@
 # DESCRIPTION:  Helper functions available to cron test cases
 #
 # HISTORY:  04/2007  created by Lisa Smith <lisa.m.smith@hp.com>
+# HISTORY:  11/2011  Modified by T N Santhosh <santhosh.tn@hp.com>
 #
 ##############################################################################
 
 TEST_USER="eal"
 TEST_USER2="eal2"
 TEST_DIR="$(pwd)/tmp"
+CRON_ALLOW="/etc/cron.allow"
+CRON_DENY="/etc/cron.deny"
 
 function test_prep {
-        # Delete the old crontab files & any lingering output files
-        crontab -r -u $TEST_USER
-	userdel -r $TEST_USER2
-	rm -f /etc/cron.allow
-	rm -f /etc/cron.deny
-        rm -rf $TEST_DIR
+
 	mkdir $TEST_DIR
-	# Ensure tmp directory has the correct context/perms
-	chmod 777 $TEST_DIR
-	chcon -u system_u -t tmp_t -l SystemLow-SystemHigh $TEST_DIR
+
+        # Ensure tmp directory has the correct context/perms
+        chmod 777 $TEST_DIR
+        chcon -u system_u -t user_tmp_t -l SystemLow-SystemHigh $TEST_DIR
 }
 
 function cleanup {
         # Delete crontabs and tmp file
-        crontab -r -u $TEST_USER
-        rm -rf $TEST_DIR
-}
+        if test -e /var/spool/cron/$TEST_USER; then
+                crontab -r -u $TEST_USER
+        fi
 
-CRON_ALLOW="/etc/cron.allow"
-function allow_cleanup {
-        userdel $TEST_USER2
-        rm -rf /home/$TEST_USER2
-        rm $CRON_ALLOW
-	cleanup
-}
+	if [ -d "/home/$TEST_USER2" ]; then
+		userdel $TEST_USER2
+		rm -rf /home/$TEST_USER2
+	fi
 
-CRON_DENY="/etc/cron.deny"
-function deny_cleanup {
-        userdel $TEST_USER2
-        rm -rf /home/$TEST_USER2
-        rm $CRON_DENY
-	cleanup
+	if [ -d "$TEST_DIR" ]; then
+		rm -rf $TEST_DIR
+	fi
+
+	if test -e $CRON_ALLOW; then
+		rm -f $CRON_ALLOW
+	fi
+
+	if test -e $CRON_DENY; then
+	        rm -f $CRON_DENY
+	fi
 }

@@ -24,17 +24,19 @@
 #              	     Verify the correct execution of the job and delete crontab.
 #
 #  HISTORY:  04/2007  created by Lisa Smith <lisa.m.smith@hp.com>
-#	     09/2011  modified by T.N. Santhosh <santhosh.tn@hp.com>
+#            11/2011  Modified by T N Santhosh <santhosh.tn@hp.com>
 #
 #############################################################################
 
 source testcase.bash || exit 2
 source cron_functions.bash || exit 2
 
+DEF_SEC_LEVEL="SystemLow-SystemHigh"
+
 # Prepare environment for test run
 echo "***** Starting cron_basic_pass test ******"
+cleanup
 test_prep
-prepend_cleanup deny_cleanup
 
 # An empty cron.deny file is needed to allow a non-root user to run crontab
 touch $CRON_DENY
@@ -46,11 +48,12 @@ EOF"
 
 # Verify the crontab was successfully added
 if [ $? != 0 ]; then
+	cleanup
 	exit_fail "Error while adding crontab for user $TEST_USER"
 fi
 
 # Change label and owner so crond executes properly
-chcon -t staff_cron_spool_t /var/spool/cron/$TEST_USER
+chcon -t user_cron_spool_t /var/spool/cron/$TEST_USER
 echo "New job added successfully"
 
 # Wait for execution of job
@@ -65,13 +68,17 @@ for ((i=0; i<70; i++)); do
 done
 
 if [ $rc = 1 ]; then
-	exit_fail "Cron did not execute job"
+	cleanup
+        exit_fail "Cron did not execute job"
 else
-	grep "eal" $TEST_DIR/output_cron
-	if [ $? = "1" ]; then
-		exit_fail "Job has not produced valid output"
-	fi
-fi
+        ls -Z $TEST_DIR/output_cron | grep $DEF_SEC_LEVEL
+        if [ $? != 0 ]; then
+                echo "Job has been executed at the correct default MLS level"
+		cleanup
+                exit_pass "cron_mls_default_level"
 
-echo "Job has been executed"
-exit_pass
+        else
+		cleanup
+                exit_fail "Job did not execute at the user's default MLS level"
+        fi
+fi

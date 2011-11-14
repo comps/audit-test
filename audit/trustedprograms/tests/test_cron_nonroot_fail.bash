@@ -25,6 +25,7 @@
 #
 #  HISTORY:  05/2007  created by Lisa Smith <lisa.m.smith@hp.com>
 #	     09/2011  modified by T.N. Santhosh <santhosh.tn@hp.com>
+#            11/2011  modified by T.N. Santhosh <santhosh.tn@hp.com>
 #
 #############################################################################
 
@@ -33,8 +34,8 @@ source cron_functions.bash || exit 2
 
 # Prepare environment for test run
 echo "***** Starting cron_nonroot_fail test ******"
+cleanup
 test_prep
-prepend_cleanup deny_cleanup
 
 # An empty cron.deny file is needed to allow a non-root user to run crontab
 touch $CRON_DENY
@@ -48,7 +49,9 @@ EOF"
 
 # Verify the crontab command was not allowed
 if [ $? != 0 ]; then
+	cleanup
 	exit_pass
 else
+	cleanup
 	exit_fail "crontab -u allowed for a non-root user"
 fi

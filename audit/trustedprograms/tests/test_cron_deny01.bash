@@ -26,6 +26,7 @@
 #
 #  HISTORY:  05/2007  created by Lisa Smith <lisa.m.smith@hp.com>
 #	     09/2011  modified by T.N. Santhosh <santhosh.tn@hp.com>
+#            11/2011  modified by T.N. Santhosh <santhosh.tn@hp.com>
 #
 #############################################################################
 
@@ -34,8 +35,8 @@ source cron_functions.bash || exit 2
 
 # Prepare environment for test run
 echo "***** Starting cron_deny01 test ******"
+cleanup
 test_prep
-prepend_cleanup deny_cleanup
 
 # Create 2nd user
 useradd -m -g users $TEST_USER2
@@ -55,6 +56,7 @@ EOF"
 
 # Verify the crontab was successfully added
 if [ $? != 0 ]; then
+	cleanup
 	exit_fail "Error while adding crontab for user $TEST_USER"
 fi
 
@@ -74,7 +76,9 @@ for ((i=0; i<70; i++)); do
 done
 
 if [ $rc = 1 ]; then
+	cleanup
 	exit_fail "Cron did not allow user NOT in $CRON_DENY to execute job"
 else
+	cleanup
 	exit_pass
 fi

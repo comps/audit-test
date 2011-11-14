@@ -26,6 +26,7 @@
 #
 #  HISTORY:  05/2007  created by Lisa Smith <lisa.m.smith@hp.com>
 #	     09/2011  modified by T.N. Santhosh <santhosh.tn@hp.com>
+#            11/2011  modified by T.N. Santhosh <santhosh.tn@hp.com>
 #
 #############################################################################
 
@@ -34,8 +35,9 @@ source cron_functions.bash || exit 2
 
 # Prepare environment for test run
 echo "***** Starting cron_deny02 test ******"
+cleanup
 test_prep
-prepend_cleanup deny_cleanup
+
 
 echo "TEST THAT USER IN $CRON_DENY IS NOT ABLE TO RUN CRONTAB."
 
@@ -49,7 +51,9 @@ EOF"
 
 # Verify the crontab was successfully denied
 if [ $? != 0 ]; then
+	cleanup
 	exit_pass
 else
+	cleanup
 	exit_fail "Cron allowed user in $CRON_DENY to execute test job"
 fi

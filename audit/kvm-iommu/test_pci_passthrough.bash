@@ -37,6 +37,9 @@ source pci_device.conf || exit 2
 # Global variables
 #
 
+#
+PCI_DEFCON="sysfs_t"
+
 # Test scenario to test for by calling corresponding function
 scenario=$1
 
@@ -67,6 +70,8 @@ pci_function="$(echo $pci_device | cut -d. -f2)"
 # Do not change this or make sure to update also domain template XML files.
 dom1="guest1"
 dom2="guest2"
+dom3="guest1-dynamic"
+dom4="guest2-dynamic"
 img_path="/var/lib/libvirt/images"
 
 #
@@ -122,12 +127,17 @@ prepare_guest_domains() {
     # Create empty fake disk images
     /bin/dd if=/dev/zero of=$img_path/${dom1}.img bs=1M count=1
     /bin/dd if=/dev/zero of=$img_path/${dom2}.img bs=1M count=1
+    /bin/dd if=/dev/zero of=$img_path/${dom3}.img bs=1M count=1
+    /bin/dd if=/dev/zero of=$img_path/${dom4}.img bs=1M count=1
+
     # Set preconfigured disk image labels for static labeling
     /usr/bin/chcon system_u:object_r:svirt_image_t:s0:c50,c70 $img_path/${dom1}.img
     /usr/bin/chcon system_u:object_r:svirt_image_t:s0:c19,c83 $img_path/${dom2}.img
 
     append_cleanup "/bin/rm -f $img_path/${dom1}.img"
     append_cleanup "/bin/rm -f $img_path/${dom2}.img"
+    append_cleanup "/bin/rm -f $img_path/${dom3}.img"
+    append_cleanup "/bin/rm -f $img_path/${dom4}.img"
 }
 
 
@@ -234,11 +244,47 @@ check_proc_pid_maps() {
     return $?
 }
 
-check_pci_device_in_guest_domain() {
-    echo "Please make sure the device works correctly for the guest domain."
-    echo "For example: ping test server, mount USB flash card, ..."
-    echo "And then press ENTER to continue."
-    read
+#
+# Check if PCI device files are correclty labelled in case when dynamic labeling
+# is used. Also check the correct owner of the files.
+#
+# $1 - domain to check
+# $2 - yes/no - check for attached(yes)/detached(no) device
+#
+check_pci_device_dynamic() {
+    local owner label domlabel
+
+    # checks for attached device
+    if [ "x$2" = "xyes" ]; then
+        domlabel=$(ps -p $(get_guest_domain_pid $1) -Z | grep -v LABEL \
+            | sed 's/svirt_t/svirt_image_t/' | tr ':' ' ' \
+            | awk '{printf "%s:%s:%s", $3, $4, $5}')
+
+        # go through all required pci device files
+        for dfile in $(ls /sys/bus/pci/devices/$pci_device/{config,resource*,rom,reset});
+        do
+            owner=$(stat -c "%U:%G" $dfile)
+            label=$(stat -c "%C" $dfile)
+
+            [ $owner != "qemu:qemu" ] && ((rc+=1))
+
+            echo $label | grep $domlabel || ((rc+=1))
+        done
+    # check for dettached device
+    else
+        # go through all required pci device files
+        for dfile in $(ls /sys/bus/pci/devices/$pci_device/{config,resource*,rom,reset});
+        do
+            owner=$(stat -c "%U:%G" $dfile)
+            label=$(stat -c "%C" $dfile)
+
+            [ $owner != "root:root" ] && ((rc+=1))
+
+            echo $label | grep $PCI_DEFCON || ((rc+=1))
+        done
+    fi
+
+    return $rc
 }
 
 dump_dmesg_log() {
@@ -337,6 +383,20 @@ start_guest_without_pci_device() {
     return $?
 }
 
+# Check if the given domains have unique SELinux context
+# $1 - first domain
+# $2 - second domain
+check_guests_labels() {
+    local dom1label dom2label
+    dom1label=$(ps -p $(get_guest_domain_pid $1) -Z | grep -v LABEL \
+            | awk '{printf $1}')
+    dom2label=$(ps -p $(get_guest_domain_pid $2) -Z | grep -v LABEL \
+            | awk '{printf $1}')
+
+    [ $dom1label = $dom2label ] && return 1
+
+    return 0
+}
 
 #
 # Test set functions
@@ -436,6 +496,24 @@ test_shared_detach_used() {
     destroy_guest_domain $dom2
 }
 
+#
+# Test if dynamic labeling works and attached PCI device gets the dynamically
+# assigned context correctly.
+#
+test_dynamic_attach_on_boot() {
+    start_guest_with_pci_device $dom3 || \
+        exit_fail "Failed to start guest with assigned PCI"
+    start_guest_without_pci_device $dom4 || \
+        exit_fail "Failed to start guest domain $dom4"
+    check_guests_labels $dom3 $dom4 || \
+        exit_fail "Domains $dom3 and $dom4 have the same SELinux category"
+    check_pci_device_dynamic $dom3 yes || \
+        exit_fail "Permission check failed for attached PCI device"
+    destroy_guest_domain $dom3
+    destroy_guest_domain $dom4
+    check_pci_device_dynamic $dom3 no || \
+        exit_fail "Permission check failed for dettached PCI device"
+}
 
 #
 # Check common prerequisities and prepare test environment

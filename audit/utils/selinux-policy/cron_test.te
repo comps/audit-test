@@ -1,0 +1,19 @@
+
+policy_module(cron_test, 1.1)
+
+require{
+ type crond_t, sysadm_t;
+}
+
+# needed by "crontab -e"
+mls_file_read_all_levels(crond_t)
+mls_file_write_all_levels(crond_t)
+
+# needed because of kernel check of transition
+mls_process_set_level(crond_t)
+
+# to make cronjob working
+mls_fd_share_all_levels(crond_t)
+
+# to make crontab -e work for root
+cron_role(sysadm_r, sysadm_t)

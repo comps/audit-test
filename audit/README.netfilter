@@ -42,7 +42,7 @@ attention to the format and correctness of the answers. While the
 config-server.bash script will echo your response to the questions and allow
 you the opportunity to change your responses, it currently does no format
 checking and cannot verify if an address or device name is accurate. It does
-however use a profile.sample file n the same direcory to provide a default
+however use a profile.sample file in the same directory to provide a default
 answer which is primarily provided for the purpose of giving a sample of the
 format expected in the response.
 
@@ -137,6 +137,16 @@ SNET6MASK       (Network mask being used on the secondary IPv6 network,
 BRIDGE_FILTER   (Name of the bridge created on TOE for the ebtables testing.
                  This bridge should have the secondary device enslaved to
                  it.
+
+IMPORTANT NOTE
+
+When using xinetd to handle the network server (lblnet_tst_server)
+request/response exchange, IPV6 addresses must be global in scope
+(or site local). xinetd will not handle the scope extensions to an
+address at this time. Therefor link local addresses will not work properly
+when utilizing xinetd. The netfilter and netfilebt tests may use link local
+addresses but only when the lblnet_tst_server is started manually on the network
+server and xinetd is not running on either the network server or the TOE.
 
 PROCEDURES FOR CONFIGURATION
 

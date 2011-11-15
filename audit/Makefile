@@ -30,6 +30,7 @@ RUN_DIRS       += fail-safe \
 		  libpam
 ifneq ($(DISTRO), SUSE)
 RUN_DIRS       += trustedprograms \
+		  netfilter \
 		  netfilebt \
 		  crypto \
 		  kvm-cgroups \

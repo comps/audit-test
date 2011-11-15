@@ -11,6 +11,12 @@ audit-libs-devel
 expect
 libselinux-devel
 selinux-policy-devel
+perl-devel
+perl-Expect
+perl-IO-Tty
+
+The perl-Expect and perl-IO-Tty are available for RHEL6
+via a separate RHN channel.
 
 On SuSE systems the follow packages are also required:
 
@@ -223,6 +229,24 @@ To list all testcases:
 
 To run a single testcase by number:
 # ./run.bash <number>
+
+Workaround for MLS cron test failures
+-------------------------------------
+
+The MLS cron tests will fail until selinux-policy-3.7.19-127.el6
+is available.  In the meantime, the following steps will work
+around the problem:
+
+1) Edit the /etc/selinux/mls/contexts/users/staff_u file, changing
+this line:
+   system_r:crond_t:s0           staff_r:cronjob_t:s0
+to:
+   system_r:crond_t:s0           staff_r:staff_t:s0
+
+2) Build and load the temporary cron_test policy module:
+# cd /usr/local/eal4_testing/audit-test/utils/selinux-policy
+# make cron_test.pp
+# semodule -i cron_test.pp
 
 Workaround for network test failures
 ------------------------------------

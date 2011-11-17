@@ -35,6 +35,7 @@ RUN_DIRS       += trustedprograms \
 		  crypto \
 		  kvm-cgroups \
 		  kvm-iommu \
+		  audit-remote \
 		  misc
 endif
 endif

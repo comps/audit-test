@@ -1,6 +1,7 @@
 version	2.0
 
 config setup
-    protostack=netkey
-    nat_traversal=yes
-    plutostderrlog=/var/log/pluto.log
+	protostack=netkey
+	nat_traversal=yes
+	plutostderrlog=/var/log/pluto.log
+

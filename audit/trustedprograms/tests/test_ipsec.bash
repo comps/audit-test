@@ -155,11 +155,11 @@ function ipsec_add {
         die "error: expected parameter 4 | 6 not given"
     fi
     # configure the remote system (try twice to allow for IKE negotiation)
-    runcon -t lspp_harness_t -l SystemLow -- \
+    runcon -t lspp_test_ipsec_t -l SystemLow -- \
 	$cmd_nc $ip_dst 4300 <<< "Hello"
     [[ $? == 0 ]] && return
     sleep 2
-    runcon -t lspp_harness_t -l SystemLow -- \
+    runcon -t lspp_test_ipsec_t -l SystemLow -- \
 	$cmd_nc $ip_dst 4300 <<< "Hello"
     [[ $? != 0 ]] && exit_error "unable to establish a SA"
 }
@@ -206,7 +206,7 @@ function ipsec_add_verify {
     ip xfrm state | grep -q "proto ah .* mode transport" || \
 	exit_fail "failed to add the SA"
     augrok --seek=$log_mark type==MAC_IPSEC_EVENT op=SAD-add \
-	sec_alg=1 sec_doi=1 sec_obj=staff_u:lspp_test_r:lspp_harness_t:s0 \
+	sec_alg=1 sec_doi=1 sec_obj=staff_u:lspp_test_r:lspp_test_ipsec_t:s0 \
 	src=$ip_src dst=$ip_dst res=1 || \
 	exit_fail "missing audit record"
 }
@@ -232,7 +232,7 @@ function ipsec_remove_verify {
     ip xfrm state | grep -q "proto esp .* mode transport" && \
 	exit_fail "failed to remove the SA"
     augrok --seek=$log_mark type==MAC_IPSEC_EVENT op=SAD-delete \
-	sec_alg=1 sec_doi=1 sec_obj=staff_u:lspp_test_r:lspp_harness_t:s0 \
+	sec_alg=1 sec_doi=1 sec_obj=staff_u:lspp_test_r:lspp_test_ipsec_t:s0 \
 	src=$ip_src dst=$ip_dst res=1 || \
 	exit_fail "missing audit record"
 }

@@ -1,4 +1,4 @@
-conn test2-%REMOTE_IPV4%
+conn test2-1-%REMOTE_IPV4%
         auto=route
 	rekey=no
 	salifetime=30s
@@ -10,28 +10,61 @@ conn test2-%REMOTE_IPV4%
         phase2=ah
         phase2alg=sha1
         labeled_ipsec=yes
-	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
-        rightprotoport=tcp/4300
+	policy_label=system_u:object_r:ipsec_spd_t:s0
         leftprotoport=tcp
-
-conn test2-%REMOTE_IPV6%
-        auto=route
-	rekey=no
-	salifetime=30s
-	connaddrfamily=ipv6
-        authby=secret
-        type=transport
-        left=%REMOTE_IPV6%
-        right=%LOCAL_IPV6%
-        ike=3des-sha1
-        phase2=ah
-        phase2alg=sha1
-        labeled_ipsec=yes
-	policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
         rightprotoport=tcp/4300
+
+conn test2-2-%REMOTE_IPV4%
+        auto=route
+	rekey=no
+	salifetime=30s
+        authby=secret
+        type=transport
+        left=%REMOTE_IPV4%
+        right=%LOCAL_IPV4%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=system_u:object_r:ipsec_spd_t:s0
+        leftprotoport=tcp/4300
+        rightprotoport=tcp
+
+conn test2-1-%REMOTE_IPV6%
+        auto=route
+	rekey=no
+	salifetime=30s
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=%REMOTE_IPV6%
+        right=%LOCAL_IPV6%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=system_u:object_r:ipsec_spd_t:s0
+        leftprotoport=tcp/4300
+        rightprotoport=tcp
+
+conn test2-2-%REMOTE_IPV6%
+        auto=route
+	rekey=no
+	salifetime=30s
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=%REMOTE_IPV6%
+        right=%LOCAL_IPV6%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=system_u:object_r:ipsec_spd_t:s0
         leftprotoport=tcp
+        rightprotoport=tcp/4300
 
-conn test4-1-%REMOTE_IPV4%
+conn test4-1-1-%REMOTE_IPV4%
         auto=route
 	rekey=no
 	salifetime=30s
@@ -43,11 +76,27 @@ conn test4-1-%REMOTE_IPV4%
         phase2=ah
         phase2alg=sha1
         labeled_ipsec=yes
-        policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
-        rightprotoport=udp/4300
+        policy_label=system_u:object_r:ipsec_spd_t:s0
         leftprotoport=udp
+        rightprotoport=udp/4300
 
-conn test4-1-%REMOTE_IPV6%
+conn test4-1-2-%REMOTE_IPV4%
+        auto=route
+	rekey=no
+	salifetime=30s
+        authby=secret
+        type=transport
+        left=%REMOTE_IPV4%
+        right=%LOCAL_IPV4%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+        policy_label=system_u:object_r:ipsec_spd_t:s0
+        leftprotoport=udp/4300
+        rightprotoport=udp
+
+conn test4-1-1-%REMOTE_IPV6%
         auto=route
 	rekey=no
 	salifetime=30s
@@ -60,27 +109,11 @@ conn test4-1-%REMOTE_IPV6%
         phase2=ah
         phase2alg=sha1
         labeled_ipsec=yes
-        policy_label=staff_u:lspp_test_r:lspp_harness_t:s0
+        policy_label=system_u:object_r:ipsec_spd_t:s0
+        leftprotoport=udp
         rightprotoport=udp/4300
-        leftprotoport=udp
 
-conn test4-2-%REMOTE_IPV4%
-        auto=route
-	rekey=no
-	salifetime=30s
-        authby=secret
-        type=transport
-        left=%REMOTE_IPV4%
-        right=%LOCAL_IPV4%
-        ike=3des-sha1
-        phase2=ah
-        phase2alg=sha1
-        labeled_ipsec=yes
-	policy_label=staff_u:lspp_test_r:lspp_harness_t:s15:c0.c1023
-        rightprotoport=udp/4301
-        leftprotoport=udp
-
-conn test4-2-%REMOTE_IPV6%
+conn test4-1-2-%REMOTE_IPV6%
         auto=route
 	rekey=no
 	salifetime=30s
@@ -93,6 +126,72 @@ conn test4-2-%REMOTE_IPV6%
         phase2=ah
         phase2alg=sha1
         labeled_ipsec=yes
-	policy_label=staff_u:lspp_test_r:lspp_harness_t:s15:c0.c1023
-        rightprotoport=udp/4301
+        policy_label=system_u:object_r:ipsec_spd_t:s0
+        leftprotoport=udp/4300
+        rightprotoport=udp
+
+conn test4-2-1-%REMOTE_IPV4%
+        auto=route
+	rekey=no
+	salifetime=30s
+        authby=secret
+        type=transport
+        left=%REMOTE_IPV4%
+        right=%LOCAL_IPV4%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=system_u:object_r:ipsec_spd_t:s15:c0.c1023
         leftprotoport=udp
+        rightprotoport=udp/4301
+
+conn test4-2-2-%REMOTE_IPV4%
+        auto=route
+	rekey=no
+	salifetime=30s
+        authby=secret
+        type=transport
+        left=%REMOTE_IPV4%
+        right=%LOCAL_IPV4%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=system_u:object_r:ipsec_spd_t:s15:c0.c1023
+        leftprotoport=udp/4301
+        rightprotoport=udp
+
+conn test4-2-1-%REMOTE_IPV6%
+        auto=route
+	rekey=no
+	salifetime=30s
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=%REMOTE_IPV6%
+        right=%LOCAL_IPV6%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=system_u:object_r:ipsec_spd_t:s15:c0.c1023
+        leftprotoport=udp
+        rightprotoport=udp/4301
+
+conn test4-2-2-%REMOTE_IPV6%
+        auto=route
+	rekey=no
+	salifetime=30s
+	connaddrfamily=ipv6
+        authby=secret
+        type=transport
+        left=%REMOTE_IPV6%
+        right=%LOCAL_IPV6%
+        ike=3des-sha1
+        phase2=ah
+        phase2alg=sha1
+        labeled_ipsec=yes
+	policy_label=system_u:object_r:ipsec_spd_t:s15:c0.c1023
+        leftprotoport=udp/4301
+        rightprotoport=udp

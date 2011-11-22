@@ -30,6 +30,8 @@
 #
 ##########################################################################
 
+SHELL := /bin/bash
+
 MACHINE		= $(strip $(shell uname -m))
 X		= i486 i586 i686 ix86
 P		= ppc powerpc

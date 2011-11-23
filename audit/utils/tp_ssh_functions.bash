@@ -131,7 +131,7 @@ function ssh_create_key {
 
     # generate the keys
     expect -c "set timeout $TIMEOUT
-        spawn ssh $1@[info hostname] \"ssh-keygen -t $3 -b $4 -N '$5' -f \\\$(pwd)/.ssh/id_$3\"
+        spawn ssh $1@localhost \"ssh-keygen -t $3 -b $4 -N '$5' -f \\\$(pwd)/.ssh/id_$3\"
         expect {
             {yes/no} { send -- \"yes\r\"; exp_continue }
             {Password} { send -- \"$2\r\" }
@@ -171,7 +171,7 @@ function ssh_cmd {
     [ "x$3" = "x" ] && exit_error "Error: no comamnd for $FUNCNAME"
 
     expect -c "set timeout $TIMEOUT
-        spawn ssh $1@$HOSTNAME \"$3\"
+        spawn ssh $1@localhost \"$3\"
         expect {
             {yes/no} { send -- yes\r; exp_continue }
             {Password} { send -- $2\r }
@@ -227,13 +227,13 @@ function ssh_copy_key {
     # copy key from user1 to user2
     PRIVKEY="/home/$1/.ssh/id_$5"
     expect -c "set timeout $TIMEOUT
-        spawn ssh $1@$HOSTNAME
+        spawn ssh $1@localhost
         expect {
             {yes/no} { send -- yes\r; exp_continue }
             {Password} { send -- $2\r }
         }
         expect {$1}
-        send -- \"ssh-copy-id -i $PRIVKEY $3@$HOSTNAME\r\"
+        send -- \"ssh-copy-id -i $PRIVKEY $3@localhost\r\"
         expect {
             {yes/no} { send -- yes\r; exp_continue }
             {Password} { send -- $4\r }
@@ -260,13 +260,13 @@ function ssh_connect_nopass {
 
     # connect from user $1 to user $3
     expect -c "set timeout $TIMEOUT
-        spawn ssh $1@$HOSTNAME
+        spawn ssh $1@localhost
         expect {
             {yes/no} { send -- yes\r; exp_continue }
             {Password} { send -- $2\r }
         }
         expect {$1}
-        send -- \"ssh $3@$HOSTNAME whoami\r\"
+        send -- \"ssh $3@localhost whoami\r\"
         expect {
             {yes/no} { exit 1 }
             {$3} { exit 0 }
@@ -295,13 +295,13 @@ function ssh_connect_pass {
 
     # connect from user $1 to user $3
     expect -c "set timeout $TIMEOUT
-        spawn ssh $1@$HOSTNAME
+        spawn ssh $1@localhost
         expect {
             {yes/no} { send -- yes\r; exp_continue }
             {Password} { send -- $2\r }
         }
         expect {$1}
-        send -- \"ssh $5 $3@$HOSTNAME whoami\r\"
+        send -- \"ssh $5 $3@localhost whoami\r\"
         expect {
             {yes/no} { send -- yes\r; exp_continue }
             {Password} { send -- $4\r }

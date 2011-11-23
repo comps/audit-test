@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.3.12)
+policy_module(lspp_test,6.3.13)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -395,6 +395,9 @@ allow ipsec_t lspp_harness_t:association setcontext;
 # needed for ipsec to load ipsec.conf with ipsec_spd_t policy lines
 allow ipsec_t ipsec_spd_t:association setcontext;
 allow ipsec_t lspp_test_ipsec_t:association setcontext;
+
+# needed for ip commands that get initiated during tests
+allow ifconfig_t lspp_test_ipsec_t:association setcontext;
 
 # needed for cron tests - this may be temporary as if these
 # are really needed, they're probably needed in the mls policy

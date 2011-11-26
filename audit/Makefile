@@ -5,12 +5,12 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
@@ -36,14 +36,15 @@ RUN_DIRS       += trustedprograms \
 		  kvm-cgroups \
 		  kvm-iommu \
 		  audit-remote \
-		  misc
+		  misc \
+		  ltp
 endif
 endif
 
 SUB_DIRS	= $(RUN_DIRS) \
 		  utils
 
-run: 
+run:
 	@for l in run rollup; do \
 	    echo "audit.$$l.log will be collected from subdirectories when the test completes" >audit.$$l.log; \
 	done

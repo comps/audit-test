@@ -1,0 +1,24 @@
+| Running LTP tests for RHEL6.2 certification
++---------------------------------------------
+
+Requirements
+------------
+Be sure to have properly configured system according to README.run
+file.
+
+Running
+-------
+Running required LTP tests is fully automatized and they are run as
+part of the audit-test test suite.
+
+The LTP suite is built and installed during the make phase. The tests
+are executed during the make run phase.
+
+Logs from the runs are harvested and will be available in the
+audit.run.log and audit.rollup.log files.
+
+To run only the LTP tests use the commands below. These expect you
+already did run make in the audit-test root directory
+
+# cd ltp
+# make run

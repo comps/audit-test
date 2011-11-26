@@ -76,8 +76,10 @@
 #define SMSG_ALL                        16
 #define SMSG(_level,_cmd) \
   do {						\
-    if (_level <= smsg_level)			\
+    if (_level <= smsg_level) {			\
       _cmd;					\
+      fflush(log_fd);				\
+   }						\
   } while (0)
 
 
@@ -1177,6 +1179,10 @@ int main(int argc, char *argv[])
 				recv_buf = NULL;
 			}
 		}
+
+		SMSG(SMSG_NOTICE,
+			fprintf(log_fd,
+				"handling request %s\n", msg_buf));
 
 		/* parse/handle the message buffer */
 		while ((msg_buf_next = strchr(msg_buf, ';')) != NULL) {

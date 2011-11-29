@@ -33,6 +33,11 @@
 
 source testcase.bash || exit 2
 
+function get_ipv4_addr {
+    ip -o -f inet addr show scope global | head -n 1 | \
+    awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }'
+}
+
 #
 # Global variables
 #
@@ -55,10 +60,8 @@ total_written=0
 
 # Variables used by basic connection for TOE acting as server and client
 
-local_audit_server_ip=`hostname --ip-address`
-local_audit_server_hostname=`hostname`
+local_audit_server_ip=$(get_ipv4_addr)
 ping $local_audit_server_ip -c 1 || exit_error "Unable to ping audit server"
-ping $local_audit_server_hostname -c 1 || exit_error "Unable to ping audit server"
 
 auditd_conf="/etc/audit/auditd.conf"
 audisp_remote_conf="/etc/audisp/audisp-remote.conf"
@@ -186,7 +189,7 @@ configure_local_audit_server() {
 }
 
 configure_local_audisp_remote() {
-    write_config -s $audisp_remote_conf remote_server=$local_audit_server_hostname
+    write_config -s $audisp_remote_conf remote_server=$local_audit_server_ip
     write_config -s $audisp_remote_conf local_port=61
     write_config -s $audisp_remote_conf mode=$remote_loggig_mode
 }

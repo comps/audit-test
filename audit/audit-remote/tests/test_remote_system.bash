@@ -33,7 +33,6 @@
 source audisp-remote_functions.bash || exit 2
 
 [ -z "$LBLNET_SVR_IPV4" ] && exit_error "Please, define LBLNET_SVR_IPV4"
-[ -z "$LOCAL_IPV4" ] && exit_error "Please, define LOCAL_IPV4"
 
 #
 # Global variables
@@ -52,7 +51,7 @@ call_remote_function_seq=0
 
 call_remote_function() {
     local call_function="$1"
-    local my_ip="$LOCAL_IPV4"
+    local my_ip=$(get_ipv4_addr)
     # the mode variable will get here from audisp-remote_functions.bash
     echo "---- START [$call_remote_function_seq] call_remote_function($call_function) ----"
     # /usr/bin/nc -v $LBLNET_SVR_IPV4 4000 <<< "exec: bash -c \"$remote_script $call_function $mode $my_ip \";"

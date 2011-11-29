@@ -6,17 +6,9 @@ require manual configuration of a profile with varialbes to be exported.
 If these variables are not set correctly, tests in test_remote_system.bash
 will FAIL. Other tests do not require these exported variables.
 
-At least following variables have to be exported at TOE before running
-audit-remote tests:
-  # Local TOE (eth0)
-  export LOCAL_IPV4="192.168.122.XXX"
-  # Network server (eth0)
-  export LBLNET_SVR_IPV4="192.168.122.YYY"
-Example of minimal profile skeleton is in audit-remote.profile.
-
 Next, make sure on network server (NS) that file profile.bash exists
 in top-level directory (/usr/local/eal4_testing/audit-test/) and exports
-at least PASSWD variable with password for administrative user (should
+PASSWD variable with password for administrative user (should
 match also a password for root). This is required for restarting auditd
 service by lblnet_tst_server over xinetd on NS for audit-remote tests.
 

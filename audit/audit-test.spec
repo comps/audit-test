@@ -1,5 +1,5 @@
 Name:           audit-test
-Version:        4b7984
+Version:        5e00ff
 Release:        1
 Summary:        Audit testsuite for RHEL5 CAPP/LSPP evaluation
 Vendor:         Hewlett-Packard

@@ -101,3 +101,19 @@ report::
 	fi
 	# create run.log
 	cat cc_ospp$(LTP_RUN_LOG) syscalls$(LTP_RUN_LOG) > $(RUN_LOG)
+
+dist:
+	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \
+	tmpdir=$$(mktemp -d) && \
+	into=$${PWD%/*} && \
+	mkdir "$$tmpdir/ltp" && \
+	rsync -a --exclude=.git . "$$tmpdir/ltp" && \
+	$(MAKE) clean -C "$$tmpdir/ltp" && \
+	cd "$$tmpdir" && \
+	chmod -R a+rX ltp && \
+	tar czf "$$into/ltp-$$rev.tar.gz" ltp && \
+	cd "$$into" && \
+	rm -rf "$$tmpdir" && \
+	echo && \
+	ls -l ltp-$$rev.tar.gz
+

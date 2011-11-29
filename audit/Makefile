@@ -36,8 +36,7 @@ RUN_DIRS       += trustedprograms \
 		  kvm-cgroups \
 		  kvm-iommu \
 		  audit-remote \
-		  misc \
-		  ltp
+		  misc
 endif
 endif
 

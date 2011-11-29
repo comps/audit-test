@@ -1,24 +1,33 @@
 | Running LTP tests for RHEL6.2 certification
 +---------------------------------------------
 
+Notes
+-----
+LTP source code from 20110915 is automatically downloaded
+for testing during the make phase.
+
+If you do not have internet connection, please place the
+LTP sources as ltp-full.tar.bz2 to this directory. The download
+will be skipped if the sources are present.
+
+Download link:
+https://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-full-20110915.bz2
+
 Requirements
 ------------
-Be sure to have properly configured system according to README.run
-file.
+Be sure to have properly configured system according to the README.run
+from the audit-test suite.
 
 Running
 -------
-Running required LTP tests is fully automatized and they are run as
-part of the audit-test test suite.
+Running required LTP tests is fully automatized.
 
 The LTP suite is built and installed during the make phase. The tests
 are executed during the make run phase.
 
-Logs from the runs are harvested and will be available in the
-audit.run.log and audit.rollup.log files.
+To run the LTP tests use the commands below.
 
-To run only the LTP tests use the commands below. These expect you
-already did run make in the audit-test root directory
-
-# cd ltp
+# make
 # make run
+
+The logs from testing are stored in run.log and rollup.log files.

@@ -38,6 +38,8 @@ LTP_ROLLUP_LOG = .rollup.log
 LTP_RUN_LOG = .run.log
 
 LTP_FULL = ltp-full.tar.bz2
+LTP_SOURCE = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20110915/ltp-full-20110915.bz2/download
+
 
 all:: download extract patch build
 
@@ -75,8 +77,11 @@ clean::
 
 download::
 	echo "Makefile: download"
-	# download latest LTP source
-	wget -O $(LTP_FULL) http://sourceforge.net/projects/ltp/files/latest/download
+	if [ ! -e $(LTP_FULL) ]; then \
+		wget -O $(LTP_FULL) $(LTP_SOURCE); \
+	else \
+		echo "LTP source exists - skipping download"; \
+	fi
 
 runtests::
 	echo "Makefile: runtests"

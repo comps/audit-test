@@ -75,7 +75,7 @@ summary:
 dist:
 	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \
 	tmpdir=$$(mktemp -d) && \
-	into=$${PWD%/*} && \
+	into=$$(pwd) && \
 	for DIR in $(DIRS); do make -C "$$DIR" dist; done && \
 	mv "ltp-$$rev.tar.gz" "audit-test-$$rev.tar.gz" "$$tmpdir" && \
 	cp "Makefile" "rules.mk" "$$tmpdir" && \

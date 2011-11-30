@@ -80,8 +80,8 @@ dist:
 	mv "ltp-$$rev.tar.gz" "audit-test-$$rev.tar.gz" "$$tmpdir" && \
 	cp "Makefile" "rules.mk" "$$tmpdir" && \
 	cd "$$tmpdir" && \
-	tar xzvf "ltp-$$rev.tar.gz" && \
-	tar xzvf "audit-test-$$rev.tar.gz" && \
+	tar xpzvf "ltp-$$rev.tar.gz" && \
+	tar xpzvf "audit-test-$$rev.tar.gz" && \
 	tar czf "$$into/audit-$$rev.tar.gz" "Makefile" "rules.mk" "ltp" "audit-test" && \
 	echo "$$into" && \
 	cd "$$into" && \

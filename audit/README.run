@@ -233,7 +233,7 @@ To run a single testcase by number:
 Workaround for MLS cron test failures
 -------------------------------------
 
-The MLS cron tests will fail until selinux-policy-3.7.19-127.el6
+The MLS cron tests will fail until selinux-policy-3.7.19-126.el6_2.3
 is available.  In the meantime, the following steps will work
 around the problem:
 
@@ -317,3 +317,60 @@ Still in the "config.bash" file, set the "password" configuration parameter
 to the system password of the user that will execute the test cases.
 
 Execute "make run".
+
+Common reasons for failed results and known issues in audit-remote tests
+------------------------------------------------------------------------
+
+1) TOE and Network Server (NS for short) are have different time set. This
+  causes audit-remote tests to fail when looking for an audit record after
+  set test start time. Tests usually fail with "Missing DAEMON_ACCEPT record".
+  FIX: Sync time on TOE and NS, e.g. by using ntp daemon.
+
+2) The tests ask for a password and behave "strangely".
+  FIX: On TOE make sure that LBLNET_SVR_IPV4 contains IPv4 address of NS and
+  that PASSWD contains root / eal / admin password. Moreover, check that
+  profile.bash on NS correctly exports PASSWD with root / eal / admin password
+  (see README.netwk_svr).
+
+3) Tests hang on a TOE during execution. This can be a side effect when running
+  with SELinux in permissive mode.
+  FIX: Make sure SELinux is running in enforcing mode.
+
+4) Make sure you have really have correct permissions, owners, and SELinux
+  labels.
+  FIX: Follow related steps in README.run or reinstall if nothing helps :)
+
+5) TOE or NS unable to reach each other when using virt guests. This is
+  probably due to what `get_ipv4_addr` gives you for local_audit_server_ip.
+  FIX: Set local_audit_server_ip manually in audisp-remote_functions.bash to
+  local IPv4 address of global scope (if there are more of them, try them all
+  iteratively). Notice that you have to do this for both TOE and NS (they have
+  different setting for this variable!).
+
+6) NS fails to run init script via run_init due to bad password.
+  FIX: Make sure you have correctly set password in profile.bash, which should
+  be available in top-level audit-test directory.
+
+7) TOE has issues running remote actions on NS.
+  FIX: Suggested is debug you test env with simple action "ns_connection_check"
+  # /usr/bin/nc -v $LBLNET_SVR_IPV4 4000 <<< \
+    "audit_remote_call:ns_connection_check,no_mode,<TOE IPv4 of global scope>;"
+
+8) Make sure all configuration files related to audit remote logging are in
+  a "default" state before executing tests.
+  FIX: Suggested is to backup and diff orig and current version of following
+  config files:
+    /etc/audit/auditd.conf
+    /etc/audisp/audisp-remote.conf
+    /etc/audisp/audispd.conf
+    /etc/audisp/plugins.d/au-remote.conf
+
+9) There are AVC denials on NS side when running the tests. They reguire
+  addition of following SELinux rule:
+    "allow auditctl_t inetd_t:tcp_socket { read write };".
+  This is a known issue due to leaked descriptors passed to a remote_call.bash
+  script when execute by lblnet_tst_server.
+  FIX: Uncomment net_hlp_socket_close(&sock) in file lblnet_test_server.c func
+  ctl_audit_remote_call() and rebuild the lblnet_server_binary. As a side-effect
+  you will loose verbosity in netcat on TOE side. Therefore it is not used by
+  default.

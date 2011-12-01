@@ -155,7 +155,7 @@ create_guest_domain() {
     prepend_cleanup "/usr/bin/virsh destroy $1"
     append_cleanup  "/usr/bin/virsh nodedev-reattach $pci_device_name"
 
-    /usr/bin/virsh create ${1}.xml && sleep 3
+    /usr/bin/virsh create ${1}.xml && sleep 10
     return $?
 }
 

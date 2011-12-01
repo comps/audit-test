@@ -56,9 +56,9 @@ backup /var/run/utmp
 
 # backup namespace.conf and configured it for the test case
 backup /etc/security/namespace.conf
-echo "/tmp /tmp-inst/ level root,adm" > /etc/security/namespace.conf
+echo "/tmp /tmp-parent/tmp-inst/ level root,adm" > /etc/security/namespace.conf
 
-tmpinstdir=/tmp-inst
+tmpinstdir=/tmp-parent/tmp-inst/
 tmpnewfile=/tmp/newfile
 
 # cleanup old /tmp files 

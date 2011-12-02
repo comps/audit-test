@@ -44,6 +44,8 @@ test_prep
 # An empty cron.deny file is needed to allow a non-root user to run crontab
 touch $CRON_DENY
 
+semanage login -m -r $DEF_SEC_LEVEL $TEST_USER
+
 # In order to create a file at a level higher than the lowest level
 # allowed by the range of /tmp, create a directory at the level of which
 # we want to create the file

@@ -26,11 +26,23 @@
 #
 ##############################################################################
 
-TEST_USER="eal"
+TEST_USER=$TEST_ADMIN
 TEST_USER2="eal2"
 TEST_DIR="$(pwd)/tmp"
 CRON_ALLOW="/etc/cron.allow"
 CRON_DENY="/etc/cron.deny"
+
+function backup_files {
+      # taking backup of cron.allow and cron.deny files before starting the test.
+
+      if [ -e $CRON_ALLOW ]; then
+        backup $CRON_ALLOW
+      fi
+
+      if [ -e $CRON_DENY ]; then
+        backup $CRON_DENY
+      fi
+}
 
 function test_prep {
 
@@ -56,11 +68,11 @@ function cleanup {
 		rm -rf $TEST_DIR
 	fi
 
-	if test -e $CRON_ALLOW; then
-		rm -f $CRON_ALLOW
-	fi
+	if [ -e "$CRON_ALLOW" ]; then
+                rm -f $CRON_ALLOW
+        fi
 
-	if test -e $CRON_DENY; then
-	        rm -f $CRON_DENY
-	fi
+        if [ -e "$CRON_DENY" ]; then
+                rm -f $CRON_DENY
+        fi
 }

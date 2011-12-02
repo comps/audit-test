@@ -37,6 +37,7 @@ TEST_SEC_LEVEL="Secret"
 
 # Prepare environment for test run
 echo "***** Starting cron_set_valid_mls_level test ******"
+backup_files
 cleanup
 test_prep
 

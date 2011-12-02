@@ -41,6 +41,7 @@ TEST_INVALID_SEC_LEVEL="SystemHigh"
 
 # Prepare environment for test run
 echo "***** Starting cron_set_invalid_mls_level test ******"
+backup_files
 cleanup
 test_prep
 

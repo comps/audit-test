@@ -35,6 +35,7 @@ DEF_SEC_LEVEL="SystemLow-SystemHigh"
 
 # Prepare environment for test run
 echo "***** Starting cron_basic_pass test ******"
+backup_files
 cleanup
 test_prep
 

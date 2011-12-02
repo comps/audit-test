@@ -34,6 +34,7 @@ source cron_functions.bash || exit 2
 
 # Prepare environment for test run
 echo "***** Starting cron_nonroot_fail test ******"
+backup_files
 cleanup
 test_prep
 

@@ -15,8 +15,16 @@ perl-devel
 perl-Expect
 perl-IO-Tty
 
-The perl-Expect and perl-IO-Tty are available for RHEL6
-via a separate RHN channel.
+The perl-IO-Tty package is available for RHEL6 in the optional channel that
+is not available in the RHEL6 installation media. You should be able to download
+it via RHN.
+
+The perl-Expect is available via EPEL (Extra Packages for Enterprise Linux).
+You can install it after adding the EPEL repository:
+http://fedoraproject.org/wiki/EPEL#How_can_I_use_these_extra_packages.3F
+
+or download it directly from the koji build system:
+http://koji.fedoraproject.org/koji/packageinfo?packageID=2922
 
 On SuSE systems the follow packages are also required:
 
@@ -40,7 +48,7 @@ Create the audit-test tar file
 
 The audit-test suite is best installed from a tar file built from the
 git tree on sourceforge.  The tar file can be built on the target system or
-on a development system and then transfered to the target system.
+on a development system and then transferred to the target system.
 
 Clone the git tree:
 
@@ -285,7 +293,7 @@ test suite, the network tests may fail. For that reason, it is recommended that
 you do these steps only when you are ready to re-run the test suite.
 
 If you interrupt the network tests, the network test server may be
-lefted in a locked condition, preventing subsequent network tests
+left in a locked condition, preventing subsequent network tests
 from running.  To unlock the network test server:
 # cd /usr/local/eal4_testing/audit-test/network
 # make unlock
@@ -293,7 +301,7 @@ from running.  To unlock the network test server:
 Other known failures
 --------------------
 In the fail-safe tests, the 'admin_space_left email' and 'space_left email'
-tests may fail in CAPP mode if SELInux is enabled and in enforcing mode.  These
+tests may fail in CAPP mode if SELinux is enabled and in enforcing mode.  These
 tests are not run in LSPP/MLS mode.
 
 In the trustedprograms tests, the 'aide_update' test may fail in LSPP/MLS mode.
@@ -365,7 +373,7 @@ Common reasons for failed results and known issues in audit-remote tests
     /etc/audisp/audispd.conf
     /etc/audisp/plugins.d/au-remote.conf
 
-9) There are AVC denials on NS side when running the tests. They reguire
+9) There are AVC denials on NS side when running the tests. They require
   addition of following SELinux rule:
     "allow auditctl_t inetd_t:tcp_socket { read write };".
   This is a known issue due to leaked descriptors passed to a remote_call.bash

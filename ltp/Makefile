@@ -40,6 +40,10 @@ LTP_RUN_LOG = .run.log
 LTP_FULL = ltp-full.tar.bz2
 LTP_SOURCE = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20110915/ltp-full-20110915.bz2/download
 
+# set temporary directory to /opt/ltp/tmp for LTP tests
+# this is because the default /tmp is mounted noexec in evaluated 
+# configuration what causes a few tests to fail
+LTP_TMPDIR = /opt/ltp/tmp
 
 all:: download extract patch build
 
@@ -89,9 +93,9 @@ runtests::
 	setsebool allow_execmem=on
 	# run tests
 	echo "Running syscalls tests"
-	/opt/ltp/testscripts/syscalls.sh -p -l $(MDIR)/syscalls$(LTP_ROLLUP_LOG) 2>&1 | tee syscalls$(LTP_RUN_LOG)
+	/opt/ltp/testscripts/syscalls.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/syscalls$(LTP_ROLLUP_LOG) 2>&1 | tee syscalls$(LTP_RUN_LOG)
 	echo "Running cc_ospp tests"
-	/opt/ltp/testscripts/cc_ospp.sh -p -l $(MDIR)/cc_ospp$(LTP_ROLLUP_LOG) 2>&1 | tee cc_ospp$(LTP_RUN_LOG)
+	/opt/ltp/testscripts/cc_ospp.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/cc_ospp$(LTP_ROLLUP_LOG) 2>&1 | tee cc_ospp$(LTP_RUN_LOG)
 
 report::
 	echo "Makefile: report"

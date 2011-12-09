@@ -40,10 +40,15 @@ LTP_RUN_LOG = .run.log
 LTP_FULL = ltp-full.tar.bz2
 LTP_SOURCE = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20110915/ltp-full-20110915.bz2/download
 
-# set temporary directory to /opt/ltp/tmp for LTP tests
-# this is because the default /tmp is mounted noexec in evaluated 
-# configuration what causes a few tests to fail
+# set temporary directory to /opt/tmp for tests
+# this is because the default /tmp is mounted noexec in evaluated configuration
 LTP_TMPDIR = /opt/ltp/tmp
+
+# save allow_execmem 
+ORIG_BOOL = $(shell getsebool allow_execmem | cut -d\  -f3)
+
+# save kernel param msgmni
+ORIG_KPARAM = $(shell sysctl -n kernel.msgmni)
 
 all:: download extract patch build
 
@@ -91,11 +96,17 @@ runtests::
 	echo "Makefile: runtests"
 	# needed for sendfile tests
 	setsebool allow_execmem=on
+	# needed for msgctl11 to pass, see 
+	#  http://www.mail-archive.com/ltp-list@lists.sourceforge.net/msg12767.html
+	sysctl kernel.msgmni=2000
 	# run tests
 	echo "Running syscalls tests"
 	/opt/ltp/testscripts/syscalls.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/syscalls$(LTP_ROLLUP_LOG) 2>&1 | tee syscalls$(LTP_RUN_LOG)
 	echo "Running cc_ospp tests"
 	/opt/ltp/testscripts/cc_ospp.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/cc_ospp$(LTP_ROLLUP_LOG) 2>&1 | tee cc_ospp$(LTP_RUN_LOG)
+	# cleanup
+	setsebool allow_execmem=$(ORIG_BOOL)
+	sysctl kernel.msgmni=$(ORIG_KPARAM)
 
 report::
 	echo "Makefile: report"

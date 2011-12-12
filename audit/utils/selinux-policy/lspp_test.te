@@ -32,7 +32,7 @@ define(`ROLES_ALL',`sysadm_r secadm_r auditadm_r staff_r')
 # the policy_module() and gen_require() statements.
 #
 
-policy_module(lspp_test,6.3.13)
+policy_module(lspp_test,6.3.14)
 
 # we really shouldn't be accessing these policy constructs directly but there
 # isn't always a policy interface available for what we want to do, so just
@@ -313,7 +313,7 @@ mls_file_downgrade(virtd_t)
 # give the test domain "unconfined" access
 unconfined_domain_noaudit(lspp_test_netlabel_t)
 
-# override privilages for the test domain
+# override privilages for the test domain for file writes
 mls_file_write_all_levels(lspp_test_netlabel_t)
 
 ##
@@ -322,6 +322,9 @@ mls_file_write_all_levels(lspp_test_netlabel_t)
 
 # give the test domain "unconfined" access
 unconfined_domain_noaudit(lspp_test_ipsec_t)
+
+# override privilages for the test domain for file writes
+mls_file_write_all_levels(lspp_test_ipsec_t)
 
 # give the test domain the ability to match against the SPD entries
 allow lspp_test_ipsec_t ipsec_spd_t:association polmatch;

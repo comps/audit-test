@@ -178,7 +178,7 @@ conn test3-1-1-ipv6
 	phase2alg=aes-sha1
 	loopback=yes
 	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0
+	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
 	leftprotoport=udp
 	rightprotoport=udp/4300
 
@@ -195,7 +195,7 @@ conn test3-1-2-ipv6
 	phase2alg=aes-sha1
 	loopback=yes
 	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0
+	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
 	leftprotoport=udp/4300
 	rightprotoport=udp
 
@@ -276,7 +276,7 @@ conn test4-1-1-ipv4
 	phase2=ah
 	phase2alg=sha1
 	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0
+	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
 	leftprotoport=udp
 	rightprotoport=udp/4300
 
@@ -291,7 +291,7 @@ conn test4-1-2-ipv4
 	phase2=ah
 	phase2alg=sha1
 	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0
+	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
 	leftprotoport=udp/4300
 	rightprotoport=udp
 
@@ -307,7 +307,7 @@ conn test4-1-1-ipv6
 	phase2=ah
 	phase2alg=sha1
 	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0
+	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
 	leftprotoport=udp
 	rightprotoport=udp/4300
 
@@ -323,7 +323,7 @@ conn test4-1-2-ipv6
 	phase2=ah
 	phase2alg=sha1
 	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0
+	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
 	leftprotoport=udp/4300
 	rightprotoport=udp
 

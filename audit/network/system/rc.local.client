@@ -35,20 +35,4 @@ echo 0 > /proc/sys/net/ipv4/conf/lo/disable_policy
 ip xfrm state flush && ip xfrm policy flush
 service ipsec status && service ipsec stop
 service ipsec start && \
-    ip xfrm policy add dir out src 127.0.0.1  dst 127.0.0.1 proto udp dport 4300 ctx system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023 action block && \
-    ip xfrm policy add dir in src 127.0.0.1  dst 127.0.0.1 proto udp sport 4300 ctx system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023 action block && \
-    ip xfrm policy add dir out src 127.0.0.1  dst 127.0.0.1 proto udp dport 4301 ctx system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022 action block && \
-    ip xfrm policy add dir in src 127.0.0.1  dst 127.0.0.1 proto udp sport 4301 ctx system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022 action block && \
-    ip -6 xfrm policy add dir out src ::1  dst ::1 proto udp dport 4300 ctx system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023 action block && \
-    ip -6 xfrm policy add dir in src ::1  dst ::1 proto udp sport 4300 ctx system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023 action block && \
-    ip -6 xfrm policy add dir out src ::1  dst ::1 proto udp dport 4301 ctx system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022 action block && \
-    ip -6 xfrm policy add dir in src ::1  dst ::1 proto udp sport 4301 ctx system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022 action block && \
-    ip xfrm policy add dir out src %LOCAL_IPV4% dst %REMOTE_IPV4% proto udp dport 4300 ctx system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023 action block && \
-    ip xfrm policy add dir in src %REMOTE_IPV4% dst %LOCAL_IPV4% proto udp sport 4300 ctx system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023 action block && \
-    ip xfrm policy add dir out src %LOCAL_IPV4% dst %REMOTE_IPV4% proto udp dport 4301 ctx system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022 action block && \
-    ip xfrm policy add dir in src %REMOTE_IPV4% dst %LOCAL_IPV4% proto udp sport 4301 ctx system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022 action block && \
-    ip -6 xfrm policy add dir out src %LOCAL_IPV6% dst %REMOTE_IPV6% proto udp dport 4300 ctx system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023 action block && \
-    ip -6 xfrm policy add dir in src %REMOTE_IPV6% dst %LOCAL_IPV6% proto udp sport 4300 ctx system_u:object_r:ipsec_spd_t:s0:c0-s15:c0.c1023 action block && \
-    ip -6 xfrm policy add dir out src %LOCAL_IPV6% dst %REMOTE_IPV6% proto udp dport 4301 ctx system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022 action block && \
-    ip -6 xfrm policy add dir in src %REMOTE_IPV6% dst %LOCAL_IPV6% proto udp sport 4301 ctx system_u:object_r:ipsec_spd_t:s0-s15:c0.c1022 action block && \
     (success; echo) || (failure; echo)

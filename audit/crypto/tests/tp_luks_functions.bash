@@ -21,7 +21,7 @@
 #
 
 # default loop device to use
-LOOPDEV="/dev/loop0"
+[ -z $LOOPDEV ] && LOOPDEV=$(losetup -f)
 
 # Create LUKS on $LOOPDEV with $LUKSPASS password
 # $1 - password to use
@@ -50,7 +50,7 @@ function check_luks {
 
 	# dump the LUKS device
 	TMP=$(mktemp)
-	cryptsetup luksDump /dev/loop0 &> $TMP
+	cryptsetup luksDump $LOOPDEV &> $TMP
 
 	# Check for correct parameters
 	egrep "Cipher name.*aes" $TMP || exit_fail "Failed check on cipher name"

@@ -20,13 +20,15 @@
 # Loop device helper functions
 #
 
+# globals
+[ -z $LOOPDEV ] && LOOPDEV=$(losetup -f)
+
 # Create new loop device. The paramters are optional. If you intend to pass
 # only second paramater you need to supply the first too!
-# $1 = loop device (default /dev/loop/0)
+# $1 = loop device (default $LOOPDEV)
 # $2 = size in MB (default 100MB)
 function create_loop_device {
 	# defaults
-	LOOPDEV="/dev/loop0"
 	LOOPSIZE="100"
 
 	# if parameters given
@@ -46,11 +48,8 @@ function create_loop_device {
 
 # Umount, detach the loop device and remove the loop file.
 # The paramter is optional.
-# $1 = loop device (default /dev/loop/0)
+# $1 = loop device (default $LOOPDEV)
 function remove_loop_device {
-	# defaults
-	LOOPDEV="/dev/loop0"
-
 	# if parameter given
 	[ "x$1" != "x" ] && LOOPDEV=$1
 

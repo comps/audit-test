@@ -33,6 +33,7 @@ RUN_DIRS       += trustedprograms \
 		  netfilter \
 		  netfilebt \
 		  crypto \
+		  kvm \
 		  kvm-cgroups \
 		  kvm-iommu \
 		  audit-remote \

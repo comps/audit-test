@@ -154,6 +154,23 @@ NOTE: If you need to determine the test machine's IP addresses to add to the
 client_list.txt file, run the following commands on the test machine:
 # make -C network/system getaddress
 
+Configure the KVM tests
+-----------------------
+For the KVM tests to run you need to have RHEL6 iso image or DVD installation
+media handy. You also need to tell the tests where to search for the installation
+sources by modifying the config.bash file in the kvm subfolder.
+
+If you have an iso installation image you need to relabel it to make it accessible
+for libvirtd. The example below assumes the image is in the '/iso' subfolder.
+
+# chown qemu:qemu /iso
+# chcon -t virt_image_t /iso/RHEL6.iso
+
+Edit the file
+'/usr/local/eal4_testing/audit-test/kvm/config.bash'
+and set the variable 'install_media' to the path of the device of your optical drive
+or the iso image file.
+
 Configure the KVM iommu tests
 -----------------------------
 Edit the file

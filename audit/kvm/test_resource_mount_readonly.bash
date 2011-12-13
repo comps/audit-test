@@ -27,17 +27,18 @@ source testcase.bash || exit 2
 
 set -x
 
+LOOPDEV=$(losetup -f)
 append_cleanup "umount /mnt"
-append_cleanup "kpartx -d /dev/loop0"
-append_cleanup "losetup -d /dev/loop0"
+append_cleanup "kpartx -d $LOOPDEV"
+append_cleanup "losetup -d $LOOPDEV"
 
 for i in $(seq $first $last); do
 	umount /mnt
-	kpartx -d /dev/loop0
-	losetup -d /dev/loop0
+	kpartx -d $LOOPDEV
+	losetup -d $LOOPDEV
 
-	eval "losetup /dev/loop0 \$kvm_guest_${i}_resource"
-	kpartx -a /dev/loop0
+	eval "losetup $LOOPDEV \$kvm_guest_${i}_resource"
+	kpartx -a $LOOPDEV
 	mount -o ro /dev/mapper/loop0p1 /mnt
 
 	touch /mnt/testfile
@@ -47,8 +48,8 @@ for i in $(seq $first $last); do
 	fi
 
 	umount /mnt
-	kpartx -d /dev/loop0
-	losetup -d /dev/loop0
+	kpartx -d $LOOPDEV
+	losetup -d $LOOPDEV
 done
 
 exit_pass

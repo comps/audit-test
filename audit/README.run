@@ -1,10 +1,9 @@
 | Quickstart
 +-----------
 
-Check the TODO file for the current state of the test suite.
-
 Dependencies
 ------------
+
 The audit-test suite requires the following packages in order to run:
 
 audit-libs-devel
@@ -64,6 +63,9 @@ The tar file will be ../audit-test-<commit>.tar.gz
 
 Configure the target system
 ---------------------------
+
+Verify that the target system and the network test server have the same time,
+the best way is to use ntpd for such a synchronization.
 
 Verify that each ext4 filesystem in /etc/fstab has the 'user_xattr' option.
 
@@ -156,6 +158,7 @@ client_list.txt file, run the following commands on the test machine:
 
 Configure the KVM tests
 -----------------------
+
 For the KVM tests to run you need to have RHEL6 iso image or DVD installation
 media handy. You also need to tell the tests where to search for the installation
 sources by modifying the config.bash file in the kvm subfolder.
@@ -170,6 +173,7 @@ or the iso image file.
 
 Configure the KVM iommu tests
 -----------------------------
+
 Edit the file
 '/usr/local/eal4_testing/audit-test/kvm-iommu/pci_device.conf'
 and select a PCI device to use for PCI passthrough testing.
@@ -178,8 +182,16 @@ Edit the file
 '/usr/local/eal4_testing/audit-test/kvm-iommu/usb_device.conf'
 and select a USB device to use for USB passthrough testing.
 
+Note: The following network hardware was used for successful execution of
+kvm-iommu PCI passthrough tests:
+
+* NetXtreme BCM5720 Gigabit Ethernet PCIe (card) / tg3 (PCI device)
+* NetXtreme II BCM5706 Gigabit Ethernet / bnx2
+* Intel 82576 Gigabit Network Connection / igb
+
 Configure the labeled networking tests
 --------------------------------------
+
 On the test machine:
 
 From the /usr/local/eal4_testing/audit-test directory, perform the following
@@ -200,6 +212,7 @@ ipsec, rc.local).
 
 Run batch tests
 ---------------
+
 Login to the system as the administrative user (eal).
 
 The audit tests require you to login as a non-root user in order to verify the
@@ -238,6 +251,7 @@ failures.
 
 Run individual tests
 --------------------
+
 You can use run.bash to run a set of tests or a single test case. This must be
 done in a test sub-directory.  Before running individual tests please do
 a 'make' in the top-level directory.  Some test directories require
@@ -272,6 +286,7 @@ to:
 
 Workaround for network test failures
 ------------------------------------
+
 Some test runs may experience network test failures in the labeled IPsec
 tests due to the current implementation of ipsec. Use the following
 workaround if you experience these failures.
@@ -314,6 +329,7 @@ from running.  To unlock the network test server:
 
 Other known failures
 --------------------
+
 In the fail-safe tests, the 'admin_space_left email' and 'space_left email'
 tests may fail in CAPP mode if SELinux is enabled and in enforcing mode.  These
 tests are not run in LSPP/MLS mode.
@@ -378,3 +394,4 @@ Common reasons for failed results and known issues in audit-remote tests
   ctl_audit_remote_call() and rebuild the lblnet_server_binary. As a side-effect
   you will loose verbosity in netcat on TOE side. Therefore it is not used by
   default.
+

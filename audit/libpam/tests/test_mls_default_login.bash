@@ -31,6 +31,7 @@ if [[ $PPROFILE == "lspp" ]]; then
 	# XXX should compute the default context from the policy
 	def_context=staff_u:staff_r:staff_t:s0
 	auid=$(id -u "$TEST_USER")
+	append_cleanup user_cleanup
 else 
 	exit_error "Not in lspp mode"
 fi

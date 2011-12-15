@@ -32,6 +32,7 @@ sed -i 's/\[ -w $(tty) \]/false/' /etc/profile
 if [[ $PPROFILE == "lspp" ]]; then
 	semanage login -d $TEST_USER
 	semanage login -a -s staff_u $TEST_USER
+	append_cleanup user_cleanup
 fi
 
 # calling login in this manner leaves an entry in /var/run/utmp

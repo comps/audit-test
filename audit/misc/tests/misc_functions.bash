@@ -29,4 +29,8 @@ function tar_cleanup {
 	rm -f $FILE_DIR.list
 }
 
+function user_cleanup {
+        semanage login -d $TEST_USER
+}
+
 set -x

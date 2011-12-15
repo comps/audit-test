@@ -36,4 +36,8 @@ fi
 # XXX should determine this from policy
 login_context=staff_u:lspp_test_r:local_login_t:s0-s15:c0.c1023
 
+function user_cleanup {
+        semanage login -d $TEST_USER
+}
+
 set -x

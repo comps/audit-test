@@ -33,6 +33,7 @@ if [[ $PPROFILE == "lspp" ]]; then
 	def_context=staff_u:staff_r:staff_t:s0
 	sel_context=staff_u:staff_r:staff_t:s15
 	auid=$(id -u "$TEST_USER")
+	append_cleanup user_cleanup
 else 
 	exit_error "Not in lspp mode"
 fi

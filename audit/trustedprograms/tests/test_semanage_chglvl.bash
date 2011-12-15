@@ -30,6 +30,7 @@ useradd -Z staff_u -n -u $uid $user || exit_error "useradd failed"
 
 # test
 semanage login -m -r $range $user
+append_cleanup user_cleanup
 
 # verify
 if [ $? -ne 0 ]; then

@@ -27,6 +27,7 @@ seuser=staff_u
 useradd -n -u $uid $user || exit_error "useradd failed"
 semanage login -a -s $seuser $user || \
   exit_error "semanage: setting initial login user failed"
+append_cleanup user_cleanup
 
 # test
 expect -c "

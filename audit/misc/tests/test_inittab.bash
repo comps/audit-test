@@ -25,6 +25,7 @@ source misc_functions.bash || exit 2
 if [[ $PPROFILE == "lspp" ]]; then
 	semanage login -d $TEST_USER
 	semanage login -a -s staff_u $TEST_USER
+	append_cleanup user_cleanup
 fi
 
 #  Test case: Verification of the correct operation of inittab. This 

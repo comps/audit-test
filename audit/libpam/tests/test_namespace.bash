@@ -46,6 +46,7 @@ if [[ $PPROFILE == "lspp" ]]; then
 	s0_obj=staff_u:object_r:user_tmp_t:s0
 	s2_obj=staff_u:object_r:user_tmp_t:s2
 	auid=$(id -u "$TEST_USER")
+	append_cleanup user_cleanup
 else 
 	exit_error "Not in lspp mode"
 fi

@@ -160,11 +160,8 @@ For the KVM tests to run you need to have RHEL6 iso image or DVD installation
 media handy. You also need to tell the tests where to search for the installation
 sources by modifying the config.bash file in the kvm subfolder.
 
-If you have an iso installation image you need to relabel it to make it accessible
-for libvirtd. The example below assumes the image is in the '/iso' subfolder.
-
-# chown qemu:qemu /iso
-# chcon -t virt_image_t /iso/RHEL6.iso
+If you are using an iso installation image, please make sure it is accessible
+by the qemu user.
 
 Edit the file
 '/usr/local/eal4_testing/audit-test/kvm/config.bash'
@@ -324,24 +321,6 @@ tests are not run in LSPP/MLS mode.
 In the trustedprograms tests, the 'aide_update' test may fail in LSPP/MLS mode.
 The aide program reports the changed file in the aide.log, but the return code
 does not reflect that there was a change.  This test is not run in CAPP mode.
-
-Configure and execute KVM tests
--------------------------------
-
-The KVM tests are optional and can be configured and executed as follows:
-
-Change working directory to the kvm/ subdirectory in the audit-test
-installation directory.
-
-Edit the "config.bash" file and set the "install_media" configuration
-parameter to the path to an ISO image to use as the install media for the
-virtual machine environments. It is recommended to use the /var/lib/libvirt/
-directory to store the ISO image file.
-
-Still in the "config.bash" file, set the "password" configuration parameter
-to the system password of the user that will execute the test cases.
-
-Execute "make run".
 
 Common reasons for failed results and known issues in audit-remote tests
 ------------------------------------------------------------------------

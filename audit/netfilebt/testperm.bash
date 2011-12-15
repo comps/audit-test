@@ -28,7 +28,7 @@ set -x
 rc=0
 export TEST_USER=testuser2
 useradd -m -p usertest "$TEST_USER"
-/bin/su - $TEST_USER -c "/sbin/ebtables -I INPUT 1 -i $SECNET_SVR_DEV -j DROP"
+/bin/su - $TEST_USER -c "/sbin/ebtables -I INPUT 1 -i $LOCAL_SEC_DEV -j DROP"
 rc=$?
 if [[ $rc -ne 0 ]]; then
     echo "operation not permitted, return code is $rc"

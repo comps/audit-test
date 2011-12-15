@@ -18,11 +18,6 @@
 #
 
 
-#   Skip virtual machine environment installation
-#
-# skip_installation=0
-
-
 #   Enable kickstart installation
 #
 kickstart=1
@@ -46,8 +41,8 @@ guest_label_2=s0:c19,c83
 memory=1024
 
 
-#   The path to an ISO image to use as the install media for the virtual
-#   machine environments.
+#   The path to an ISO image or device of optical drive to use as the
+#   install media for the virtual machine environments.
 #
 # install_media=
 

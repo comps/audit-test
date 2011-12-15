@@ -191,6 +191,11 @@ function startup_hook {
     true
 }
 
+# this can be overridden in run.conf
+function cleanup_hook {
+    true
+}
+
 # startup runs after parsing run.conf, before running tests
 function startup {
     export TEST_USER=testuser
@@ -258,6 +263,9 @@ function startup {
 }
 
 function cleanup {
+
+    cleanup_hook
+
     # Remove the test user
     # XXX use prepend_cleanup in startup
     if [[ -n $TEST_USER ]]; then

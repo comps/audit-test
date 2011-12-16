@@ -391,7 +391,9 @@ Common reasons for failed results and known issues in audit-remote tests
     /etc/audisp/audispd.conf
     /etc/audisp/plugins.d/au-remote.conf
 
-9) There are AVC denials on NS side when running the tests. They require
+9) Please note that this is just a cosmetic issue and does not cause any
+   audit-remote tests to FAIL.
+  There are AVC denials on NS side when running the tests. They require
   addition of following SELinux rule:
     "allow auditctl_t inetd_t:tcp_socket { read write };".
   This is a known issue due to leaked descriptors passed to a remote_call.bash
@@ -400,4 +402,3 @@ Common reasons for failed results and known issues in audit-remote tests
   ctl_audit_remote_call() and rebuild the lblnet_server_binary. As a side-effect
   you will loose verbosity in netcat on TOE side. Therefore it is not used by
   default.
-

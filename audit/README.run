@@ -208,7 +208,13 @@ commands to setup the required configuration for the labeled networking tests:
 
 Reboot the test machine.  This is necessary to restart all the
 system services configured for the network tests (xinetd, netlabel,
-ipsec, rc.local).
+ipsec, rc.local, mcstrans).
+
+Configure the netfilter tests
+-----------------------------
+
+Follow the steps in README.netfilter. Make sure to have properly
+configured testing environment before proceeding.
 
 Run batch tests
 ---------------

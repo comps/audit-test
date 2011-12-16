@@ -47,6 +47,7 @@ source testcase.bash || exit 2
 
 unset log_mark
 unset ip_src ip_dst
+unset cmd_nc
 
 ######################################################################
 # helper functions
@@ -109,6 +110,32 @@ function normalize_addr {
 	-e 's/:$/:0000/g'
 }
 
+#
+# remote_ipsec_restart - restart ipsec on the lblnet test server
+#
+# INPUT
+# none
+#
+# OUTPUT
+# none
+#
+# DESCRIPTION
+# This function restarts ipsec on the remote lblnet_tst server
+# which flushes the SA state.  This is needed to reset the state
+# at the beginning of the tests.  It sleeps giving time for ipsec
+# to complete the restart.
+#
+# TODO:  Move this to common code because the ipsec network
+# tests should do this too.  Should also lock/unlock the lblnet_tst
+# server
+#
+function remote_ipsec_restart {
+    declare str="ipsec:restart;"
+    $cmd_nc -w 1  $1 4000 <<< $str
+    sleep 10
+}
+
+
 ######################################################################
 # functions
 ######################################################################
@@ -137,12 +164,6 @@ function normalize_addr {
 # will fail, calling exit_error() in the process.
 #
 function ipsec_add {
-
-    if which nc >& /dev/null; then
-        cmd_nc="nc -$1 -w 30 -v "
-    else
-        die "error: nc not installed"
-    fi
 
     # do the setup
     if [ $1 == "6" ]; then
@@ -259,7 +280,17 @@ else
         die "error: expected parameter 4 | 6 not given"
 fi
 
+if which nc >& /dev/null; then
+    cmd_nc="nc -$1 -w 30 -v "
+else
+    die "error: nc not installed"
+fi
+
+# flush the local state
 ip xfrm state flush || exit_error
+
+# restart (and flush) ipsec on the lblnet test server
+remote_ipsec_restart $ip_dst
 
 # mark the log for augrok later
 log_mark=$(stat -c %s $audit_log)

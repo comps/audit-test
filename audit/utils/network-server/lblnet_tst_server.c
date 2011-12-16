@@ -211,12 +211,64 @@ void ctl_echo(int sock, char *param)
 }
 
 /**
+ * ctl_ipsec - Handle the "ipsec" control message
+ * @sock: socket
+ * @param: parameter string
+ *
+ * Description:
+ * Call service ipsec with the restart param string
+ * format:
+ *
+ *  ipsec:restart
+ *
+ * This is intended to be used by ipsec audit tests to flush
+ * the test server between runs.
+ *
+ */
+void ctl_ipsec(int sock, char *param)
+{
+  char *action_str;
+  int rc;
+
+  if (param == NULL) {
+    SMSG(SMSG_ERR, fprintf(log_fd, "error(ipsec): bad message\n"));
+    return;
+  }
+
+  /* Close leaked sockets, or we will get AVC denials requesting policy rule:
+   *   allow run_init_t inetd_exec_t:file execute;
+   * For development/debugging it's better NOT to close the socket and leave
+   * the function call in a commented. */
+  /* net_hlp_socket_close(&sock); */
+
+  /* parse the control message */
+  action_str = strtok(param, ",");
+
+  SMSG(SMSG_NOTICE, fprintf(log_fd, "action = (%10s)\n",
+			    (char *) action_str));
+
+  pid_t pID = fork();
+  if (pID == 0) {
+    rc = execl("/sbin/service",
+               "/sbin/service",
+	       "ipsec", (char *) action_str, (char *) NULL);
+    if (rc == -1)
+      SMSG(SMSG_ERR, fprintf(log_fd, "error(ipsec): execl failed (%d)\n", errno));
+
+  } else if (pID < 0) {
+    SMSG(SMSG_ERR, fprintf(log_fd, "error(ipsec): fork failed\n"));
+    return;
+  } else
+    SMSG(SMSG_NOTICE, fprintf(log_fd, "parent process continues\n"));
+}
+
+/**
  * ctl_audit_remote_call - Handle the "audit_remote_call" control message
  * @sock: socket
  * @param: parameter string
  *
  * Description:
- * Call given funtion in audit-remote test actions.  The control message
+ * Call given function in audit-remote test actions.  The control message
  * format:
  *
  *  audite_remote_call:<action,mode,caller_ipv4>
@@ -1215,6 +1267,8 @@ int main(int argc, char *argv[])
 					ctl_nccon(rem_sock, ctl_param);
 				} else if (strcasecmp(ctl_cmd, "audit_remote_call") == 0) {
 					ctl_audit_remote_call(rem_sock, ctl_param);
+				} else if (strcasecmp(ctl_cmd, "ipsec") == 0) {
+					ctl_ipsec(rem_sock, ctl_param);
 				} else {
 					SMSG(SMSG_WARN,
 					     fprintf(log_fd,

@@ -23,10 +23,14 @@
 # default loop device to use
 [ -z $LOOPDEV ] && LOOPDEV=$(losetup -f)
 
+# set default expect timeout to 120s
+TIMEOUT=120
+
 # Create LUKS on $LOOPDEV with $LUKSPASS password
 # $1 - password to use
 function create_luks {
 	expect -c "
+		set timeout $TIMEOUT
 		spawn cryptsetup luksFormat $LOOPDEV
 		expect {Are you sure} {send \"YES\r\"}
 		expect {Enter LUKS} {send \"$1\r\"}
@@ -77,6 +81,7 @@ function addkey_luks {
 
 	# add new key slot
 	expect -c "
+		set timeout $TIMEOUT
 		spawn cryptsetup luksAddKey $LOOPDEV
 		expect {Enter any} {send \"$1\r\"}
 		expect {Enter new} {send \"$2\r\"}
@@ -98,6 +103,7 @@ function open_luks {
 
 	# try to open the device
 	expect -c "
+		set timeout $TIMEOUT
 		spawn cryptsetup luksOpen $LOOPDEV $1
 		expect {Enter passphrase} {send \"$2\r\"}
 		expect eof { exit 0 }

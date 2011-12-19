@@ -111,7 +111,7 @@ function normalize_addr {
 }
 
 #
-# remote_ipsec_restart - restart ipsec on the lblnet test server
+# remote_ipsec_flush - flush ipsec on the lblnet test server
 #
 # INPUT
 # none
@@ -120,8 +120,8 @@ function normalize_addr {
 # none
 #
 # DESCRIPTION
-# This function restarts ipsec on the remote lblnet_tst server
-# which flushes the SA state.  This is needed to reset the state
+# This function flush ipsec on the remote lblnet_tst server
+# to clear the SA state.  This is needed to reset the state
 # at the beginning of the tests.  It sleeps giving time for ipsec
 # to complete the restart.
 #
@@ -129,10 +129,9 @@ function normalize_addr {
 # tests should do this too.  Should also lock/unlock the lblnet_tst
 # server
 #
-function remote_ipsec_restart {
-    declare str="ipsec:restart;"
+function remote_ipsec_flush {
+    declare str="ipsec:flush;"
     $cmd_nc -w 1  $1 4000 <<< $str
-    sleep 10
 }
 
 
@@ -290,7 +289,7 @@ fi
 ip xfrm state flush || exit_error
 
 # restart (and flush) ipsec on the lblnet test server
-remote_ipsec_restart $ip_dst
+remote_ipsec_flush $ip_dst
 
 # mark the log for augrok later
 log_mark=$(stat -c %s $audit_log)

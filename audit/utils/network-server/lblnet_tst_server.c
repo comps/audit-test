@@ -216,10 +216,11 @@ void ctl_echo(int sock, char *param)
  * @param: parameter string
  *
  * Description:
- * Call service ipsec with the restart param string
+ * handle special ipsec operations, currently just a flush.
+ *
  * format:
  *
- *  ipsec:restart
+ *  ipsec:flush
  *
  * This is intended to be used by ipsec audit tests to flush
  * the test server between runs.
@@ -247,11 +248,15 @@ void ctl_ipsec(int sock, char *param)
   SMSG(SMSG_NOTICE, fprintf(log_fd, "action = (%10s)\n",
 			    (char *) action_str));
 
+  if (strcasecmp(action_str, "flush") != 0) {
+	SMSG(SMSG_ERR, fprintf(log_fd, "error(ipsec): invalid action %s\n",
+		action_str));
+	return;
+  }
   pid_t pID = fork();
   if (pID == 0) {
-    rc = execl("/sbin/service",
-               "/sbin/service",
-	       "ipsec", (char *) action_str, (char *) NULL);
+    rc = execl("/sbin/ip", "/sbin/ip",
+	       "xfrm", "state", "flush", (char *) NULL);
     if (rc == -1)
       SMSG(SMSG_ERR, fprintf(log_fd, "error(ipsec): execl failed (%d)\n", errno));
 

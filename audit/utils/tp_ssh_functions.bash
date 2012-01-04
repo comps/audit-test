@@ -347,6 +347,34 @@ function ssh_check_audit {
         augrok --seek=$1 type==USER_ERR \
             && exit_fail "Not expected audit record USER_ERR found."
     fi
+}
 
+# This function removes the strong rng configuration for ssh
+# and causes it to be restored at the end of the test.  This
+# should only be used for test cases that are using ssh as a
+# test tool and not explicitly testing the rng properties of ssh.
 
+function disable_ssh_strong_rng {
+    MPROFILE="/etc/profile"
+    SSHDCONF="/etc/sysconfig/sshd"
+    CCCONF="/etc/profile.d/cc-configuration.sh"
+
+    # backup global profile and remove sleep
+    backup $MPROFILE
+    backup $SSHDCONF
+    backup $CCCONF
+
+    ssh_remove_screen $MPROFILE
+
+    # restart sshd to get default state with SSH_USE_STRONG_RNG enabled
+    ssh_restart_daemon
+
+    # remove SSH_USE_STRONG_RNG from environment
+    ssh_remove_strong_rng_env
+
+    # remove SSH_USE_STRONG_RNG from files
+    ssh_remove_strong_rng $SSHDCONF
+    ssh_remove_strong_rng $CCCONF
+
+    ssh_restart_daemon
 }

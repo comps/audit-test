@@ -131,3 +131,23 @@ function close_luks {
 	[ $? -ne 0 ] && exit_fail "Failed to close LUKS device"
 
 }
+
+# Sets the random number source to given paramter
+# $1 - device to be used as the rng
+function gcrypt_set_rng {
+	# check if mandatory parameter given
+	[ "x$1" = "x" ] && \
+		exit_error "Error: no device given as gcrypt rng"
+
+	# check if device exists
+	[ -e $1 ]  || \
+		exit_error "Error: $1 doesn't exist!"
+
+	# remove symlink
+	unlink /etc/gcrypt/rngseed
+	
+	# set symlink to given device
+	ln -s $1 /etc/gcrypt/rngseed
+
+	restorecon -F /etc/gcrypt/rngseed
+}

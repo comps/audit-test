@@ -56,6 +56,12 @@ prepend_cleanup "remove_loop_device"
 # create LUKS on loop device
 create_luks $LUKSPASS
 
+# in FIPS mode set gcrypt RNG source to /dev/urandom
+if [ "x$(cat /proc/sys/crypto/fips_enabled)" = "x1" ]; then
+	gcrypt_set_rng /dev/urandom
+	prepend_cleanup "gcrypt_set_rng /dev/random" 
+fi
+
 # check if LUKS device uses 1 key slot
 check_luks 1
 

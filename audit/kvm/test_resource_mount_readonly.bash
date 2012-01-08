@@ -39,7 +39,7 @@ for i in $(seq $first $last); do
 
 	eval "losetup $LOOPDEV \$kvm_guest_${i}_resource"
 	kpartx -a $LOOPDEV
-	mount -o ro /dev/mapper/loop0p1 /mnt
+	mount -o ro /dev/mapper/$(basename $LOOPDEV)p1 /mnt
 
 	touch /mnt/testfile
 

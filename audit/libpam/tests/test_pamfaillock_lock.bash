@@ -19,10 +19,12 @@
 # Verify pam_faillock will lock an account
 
 source pam_functions.bash || exit 2
+source tp_ssh_functions.bash || exit 2
 
 # setup
 tuid=$(id -u $TEST_USER)
 grep -q pam_faillock /etc/pam.d/sshd || grep -q pam_faillock /etc/pam.d/password-auth || exit_error
+disable_ssh_strong_rng
 
 # Unlike pam_tally2, faillock doesn't have a --reset=n option that lets us 
 # pre-set the number of failures. So we need to fail the login multiple times 

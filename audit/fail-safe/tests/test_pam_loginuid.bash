@@ -26,6 +26,7 @@
 #
 
 source testcase.bash || exit 2
+source tp_ssh_functions.bash || exit 2
 
 action=$1
 auditd_active=$(pidof auditd)
@@ -44,6 +45,8 @@ prepend_cleanup 'start_auditd'
 if [[ $action == "fail" && -n $auditd_active ]]; then
     stop_auditd || exit_error
 fi
+
+disable_ssh_strong_rng
 
 # TEST_USER and TEST_USER_PASSWD are exported in run.bash startup()
 expect -c '

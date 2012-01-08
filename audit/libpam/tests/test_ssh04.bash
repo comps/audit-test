@@ -27,6 +27,9 @@
 #
 
 source testcase.bash || exit 2
+source tp_ssh_functions.bash || exit 2
+disable_ssh_strong_rng
+
 RUSER="root"
 
 expect -c '

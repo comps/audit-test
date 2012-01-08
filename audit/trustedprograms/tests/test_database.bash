@@ -27,26 +27,7 @@
 
 source testcase.bash || exit 2
 source tp_ssh_functions.bash || exit 2
-
-MPROFILE="/etc/profile"
-SSHDCONF="/etc/sysconfig/sshd"
-CCCONF="/etc/profile.d/cc-configuration.sh"
-
-# backup global profile and remove sleep
-backup $MPROFILE
-backup $SSHDCONF
-backup $CCCONF
-ssh_remove_screen $MPROFILE
-
-# restart sshd to get default state with SSH_USE_STRONG_RNG enabled
-ssh_restart_daemon
-
-# remove SSH_USE_STRONG_RNG from environment
-ssh_remove_strong_rng_env
-# remove SSH_USE_STRONG_RNG from files
-ssh_remove_strong_rng $SSHDCONF
-ssh_remove_strong_rng $CCCONF
-ssh_restart_daemon
+disable_ssh_strong_rng
 
 FILENAME=$1
 

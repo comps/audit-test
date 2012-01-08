@@ -32,6 +32,7 @@
 
 source testcase.bash || exit 2
 source pci_device.conf || exit 2
+source tp_luks_functions.bash || exit 2
 
 #
 # Global variables
@@ -73,6 +74,10 @@ dom2="guest2"
 dom3="guest1-dynamic"
 dom4="guest2-dynamic"
 img_path="/var/lib/libvirt/images"
+
+# in FIPS mode set gcrypt RNG source to /dev/urandom
+FIPS=$(cat /proc/sys/crypto/fips_enabled)
+[ "x$FIPS" = "x1" ] && gcrypt_set_rng /dev/urandom
 
 #
 # General helper functions
@@ -406,6 +411,8 @@ test_sanity_attach_after_boot() {
     # Positive test - sanity_attach_after_boot
     start_guest_without_pci_device $dom1 || \
         exit_fail "Failed to start guest without assigned PCI device"
+    # Restore /dev/random RNG source if in FIPS mode
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
     relabel_pci_device_files_for_domain $dom1
     attach_pci_device 1 $dom1 $dom1 $dom2 || exit_fail "Attach failed"
     destroy_guest_domain $dom1
@@ -416,6 +423,8 @@ test_sanity_attach_on_boot() {
     relabel_pci_device_files_for_domain $dom1
     start_guest_with_pci_device $dom1 || \
         exit_fail "Failed to start guest with assigned PCI $pci_device"
+    # Restore /dev/random RNG source if in FIPS mode
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
     destroy_guest_domain $dom1
 }
 
@@ -424,6 +433,8 @@ test_sanity_detach_1() {
     relabel_pci_device_files_for_domain $dom1
     start_guest_with_pci_device $dom1 || \
         exit_fail "Failed to start guest with assigned PCI $pci_device"
+    # Restore /dev/random RNG source if in FIPS mode
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
     detach_pci_device 1 $dom1 "" || exit_fail "Detach failed"
     destroy_guest_domain $dom1
 }
@@ -432,6 +443,8 @@ test_sanity_detach_2() {
     # Positive test - sanity_detach_2
     start_guest_without_pci_device $dom1 || \
         exit_fail "Failed to start guest without assigned PCI device"
+    # Restore /dev/random RNG source if in FIPS mode
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
     relabel_pci_device_files_for_domain $dom1
     attach_pci_device 1 $dom1 $dom1 $dom2 || exit_fail "Attach failed"
     detach_pci_device 1 $dom1 "" || exit_fail "Detach failed"
@@ -442,6 +455,8 @@ test_simple_double_attach() {
     # Negative test - simple_double_attach
     start_guest_without_pci_device $dom1 || \
         exit_fail "Failed to start without assigned PCI device"
+    # Restore /dev/random RNG source if in FIPS mode
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
     relabel_pci_device_files_for_domain $dom1
     attach_pci_device 1 $dom1 $dom1 $dom2 || exit_fail "Attach failed"
     attach_pci_device 2 $dom1 $dom1 $dom2 || exit_fail "We should fail"
@@ -453,6 +468,8 @@ test_simple_double_detach() {
     relabel_pci_device_files_for_domain $dom1
     start_guest_with_pci_device $dom1 || \
         exit_fail "Failed to start with assigned PCI $pci_device"
+    # Restore /dev/random RNG source if in FIPS mode
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
     detach_pci_device 1 $dom1 "" || exit_fail "Detach failed"
     detach_pci_device 2 $dom1 "" || exit_fail "We should fail"
     destroy_guest_domain $dom1
@@ -466,6 +483,8 @@ test_shared_attach_on_boot() {
     relabel_pci_device_files_for_domain $dom2
     start_guest_with_pci_device $dom2 && \
         exit_fail "We should fail"
+    # Restore /dev/random RNG source if in FIPS mode
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
     destroy_guest_domain $dom1
     destroy_guest_domain $dom2
 }
@@ -477,6 +496,8 @@ test_shared_attach_used() {
         exit_fail "Failed to start with assigned PCI"
     start_guest_without_pci_device $dom2 || \
         exit_fail "Failed to start guest without assigned PCI device"
+    # Restore /dev/random RNG source if in FIPS mode
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
     relabel_pci_device_files_for_domain $dom2
     attach_pci_device 3 $dom2 $dom1 $dom2 || exit_fail "Should fail to attach"
     destroy_guest_domain $dom1
@@ -490,6 +511,8 @@ test_shared_detach_used() {
         exit_fail "Failed to start with assigned PCI"
     start_guest_without_pci_device $dom2 || \
         exit_fail "Failed to start guest without assigned PCI device"
+    # Restore /dev/random RNG source if in FIPS mode
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
     relabel_pci_device_files_for_domain $dom2
     detach_pci_device 3 $dom2 $dom1 || exit_fail "We should fail to detach"
     destroy_guest_domain $dom1
@@ -505,6 +528,8 @@ test_dynamic_attach_on_boot() {
         exit_fail "Failed to start guest with assigned PCI"
     start_guest_without_pci_device $dom4 || \
         exit_fail "Failed to start guest domain $dom4"
+    # Restore /dev/random RNG source if in FIPS mode
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
     check_guests_labels $dom3 $dom4 || \
         exit_fail "Domains $dom3 and $dom4 have the same SELinux category"
     check_pci_device_dynamic $dom3 yes || \

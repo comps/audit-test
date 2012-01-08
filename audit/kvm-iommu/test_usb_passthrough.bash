@@ -26,6 +26,7 @@
 
 source testcase.bash || exit 2
 source usb_device.conf || exit 2
+source tp_luks_functions.bash || exit 2
 
 #
 # Global variables
@@ -68,6 +69,13 @@ dom1="guest1"
 dom2="guest1-dynamic"
 dom3="guest2-dynamic"
 img_path="/var/lib/libvirt/images"
+
+# in FIPS mode set gcrypt RNG source to /dev/urandom
+FIPS=$(cat /proc/sys/crypto/fips_enabled)
+if [ "x$FIPS" = "x1" ]; then
+	gcrypt_set_rng /dev/urandom
+    	append_cleanup "gcrypt_set_rng /dev/random"
+fi
 
 #
 # General helper functions

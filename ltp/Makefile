@@ -26,6 +26,10 @@
 #
 ##########################################################################
 
+TOPDIR		= .
+
+include $(TOPDIR)/rules.mk
+
 RUN_LOG = run.log
 ROLLUP_LOG = rollup.log
 
@@ -44,7 +48,7 @@ LTP_SOURCE = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20110915
 # this is because the default /tmp is mounted noexec in evaluated configuration
 LTP_TMPDIR = /opt/ltp/tmp
 
-# save allow_execmem 
+# save allow_execmem
 ORIG_BOOL = $(shell getsebool allow_execmem | cut -d\  -f3)
 
 # save kernel param msgmni
@@ -55,7 +59,7 @@ all:: download extract patch build
 run:: runtests report
 
 build::
-	echo "Makefile: build"
+	echo "Makefile: build (MODE=$$MODE)"
 	export TOP_SRCDIR=$(LTP_BASE_PATH)
 	@$(MAKE) -C $(LTP_BASE_PATH) autotools
 	cd $(LTP_BASE_PATH) && ./configure && cd -
@@ -101,7 +105,7 @@ runtests::
 	echo "Makefile: runtests"
 	# needed for sendfile tests
 	setsebool allow_execmem=on
-	# needed for msgctl11 to pass, see 
+	# needed for msgctl11 to pass, see
 	#  http://www.mail-archive.com/ltp-list@lists.sourceforge.net/msg12767.html
 	sysctl kernel.msgmni=2000
 	# run tests

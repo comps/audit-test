@@ -38,6 +38,10 @@ A working network configuration with examples of simple IPv4/IPv6 addresses
 is shown on the picture below. Please note that the interfaces can be connected
 directly via a cross-cable or connected to the same LAN via Ethernet switches.
 
+Please be aware that some network cards may be renamed by udev from the
+"traditional" eth* network interface name to em* or also some other. The em*
+renaming will be the default in RHEL7 for all network interfaces.
+
 
                                 +~~~~~~~~~~~+
                                 |  primary  |

@@ -1,20 +1,16 @@
-README.netfilter
+About netfilter tests
+---------------------
 
-ABOUT NETFILTER TESTS
 The netfilter tests reside in the sub-directories netfilter and netfilebt of
 the audit-test suite. The tests of the iptables and ip6tables reside in
 netfilter, and the bridge table filtering tests are in netfilebt. The use
-of a remote server running the lblnet_tst_server is required for these tests.
-
-The ebtables tests also require the creation of a bridge (logical) device on
-a secondary network to which the secondary network's ethernet (physical)
-device is enslaved. The bridge should be created prior to running the
-config-server.bash script is run
+of remote network server running the lblnet_tst_server is required for these
+tests.
 
 The iptables and ip6tables tests have a large number of the tests that run
 over the local loopback device to a locally running lblnet_tst_server.
-Some of the tests for iptables and ip6tables are run over the primary ethernet
-device against a remote server executing the lblnet_tst_server application.
+Some of the tests for iptables and ip6tables are run over the primary Ethernet
+device against the remote server executing the lblnet_tst_server application.
 The locally run lblnet_tst_server which the iptables and ip6tables tests
 utilize is automatically started and stopped in the run.conf file, however
 the lblnet_tst_server that runs on the remote server must be started before
@@ -23,7 +19,77 @@ start of any tests. If connectivity cannot be established the test will
 error out.
 
 You should read the README.netwk_svr for instructions on how to setup the
-remote network server (referred to as the netserver in netfilter documentation).
+remote network server.
+
+
+Network configuration
+---------------------
+
+To run the netfilter tests you need to configure two separate networks between
+TOE and remote network server (referred to as the netserver or NS in this
+documentation). These networks are in this documentation referred as primary
+and secondary network. The secondary network is required only by the ebtables
+tests which also require the creation of a bridge (logical) device on the TOE
+to which the secondary network's Ethernet (physical) device on this machine
+is enslaved. Please note that the both IPv4 and IPv6 needs to be properly
+configured on the devices.
+
+A working network configuration with examples of simple IPv4/IPv6 addresses
+is shown on the picture below. Please note that the interfaces can be connected
+directly via a cross-cable or connected to the same LAN via Ethernet switches.
+
+
+                                +~~~~~~~~~~~+
+                                |  primary  |
+                                |  network  |
+                                +~~~~~~~~~~~+
+         +----------------+    /             \    +----------------+
+         | TOE |          |   /               \   |           | NS |
+         |-----+          |  /                 \  |           +----|
+         |           eth3 |>>   NOTE:           <<| eth0           |
+         |  IPv4 10.0.0.2 |     Device eth4       | IPv4 10.0.0.1  |
+         |  IPv6  2600::2 |     is enslaved       | IPv6 2600::1   |
+         |                |     to bridge toebr   |                |
+         |                |     on machine TOE    |                |
+         |   toebr (eth4) |>>                   <<| eth1           |
+         | IPv4  10.0.1.2 |  \                 /  | IPv4 10.0.1.1  |
+         | IPv6 2600:1::2 |   \               /   | IPv6 2600:1::1 |
+         |                |    \             /    |                |
+         +----------------+     +~~~~~~~~~~~+     +----------------+
+                                | secondary |
+                                |  network  |
+                                +-----------+
+
+
+Please see section "Procedures for configuration" about details how to set
+up the network configuration.
+
+Important note:
+IPv6 addresses must have global scope for the tests to work.
+
+
+Testing strategy
+----------------
+
+The strategy of the testing is to provide a known and preferable empty
+chain in the tables prior to the start of the testing. Then a test message is
+run through the appropriate chain of the tables showing that it is not
+blocking or filtering on the test message. The rule is applied with the
+appropriate filter information and the test message is run through again.
+The result is checked for the expected result of either the dropping,
+acceptance, or rejection of the test message. Often the dropping of a message
+is verified through the timeout of a listen for the message or the timeout
+of a connect request. It is usually verified again via the action parameter
+for the message type NETFILTER in the audit log which is rotated before
+the start of each test. In the case of a chain policy drop rule the listen
+or connect timeout must suffice. This is because the only way to audit a
+dropped message is to insert a rule with a target of AUDIT_DROP, however
+by inserting such a rule it would not verify that the drop is caused by the
+policy change as opposed to the rule inserted to audit the drop.
+
+
+Environmental variables
+-----------------------
 
 There are a number of environmental variables required in order to provide
 the information needed to set the rules in iptables, ip6tables and ebtables.
@@ -31,8 +97,8 @@ Some of these environmental variables are also required by the network
 tests in the audit-test/network directory. These environmental variables
 may be set manually prior to running the tests but the process of setting them
 all is simplified by the config-server.bash script. This script will ask for
-the pertinent ipv4, ipv6, and mac addresses as well as device names to which
-these adresses are assigned. This allows considerable flexibility in
+the pertinent ipv4, ipv6, and MAC addresses as well as device names to which
+these addresses are assigned. This allows considerable flexibility in
 configuring systems with 2 or possibly several more network interfaces on
 both the TOE platform as well as the network server platform. The
 config-server.bash script will build a profile.<hostname> file in the
@@ -46,24 +112,6 @@ however use a profile.sample file in the same directory to provide a default
 answer which is primarily provided for the purpose of giving a sample of the
 format expected in the response.
 
-TESTING STRATEGY
-The strategy of the testing is to provide a known and preferable empty
-chain in the tables prior to the start of the testing. Then a test message is
-run throught the appropriate chain of the tables showing that it is not
-blocking or filtering on the test message. The rule is applied with the
-approriate filter information and the test message is run through again.
-The result is checked for the expected result of either the dropping,
-acceptance, or rejection of the test message. Often the dropping of a message
-is verified through the timeout of a listen for the message or the timeout
-of a connect request. It is usually verified again via the action parameter
-for the message type NETFILTER in the audit log which is rotated before
-the start of each test. In the case of a chain policy drop rule the listen
-or connect timeout must suffice. This is because the only way to audit a
-dropped message is to insert a rule with a target of AUDIT_DROP, however
-by inserting such a rule it would not verify that the drop is caused by the
-policy change as opposed to the rule inserted to audit the drop.
-
-ENVIRONMENTAL VARIABLES
 Below is a list of the environmental variables required to run all the tests
 as well as an explanation of what they are.
 
@@ -85,11 +133,11 @@ AUDITPATH      (Should be set to the audit-test suite directory on the TOE
                 the directory path should include audit-test. This would
                 normally be set to /usr/local/eal4_testing/audit-test)
 
-LOCAL_DEV      (primary ethernet device of the TOE for example "eth0")
+LOCAL_DEV      (primary Ethernet device of the TOE for example "eth0")
 
-LOCAL_SEC_DEV  (secondary ethernet device of the TOE for example "eth1")
+LOCAL_SEC_DEV  (secondary Ethernet device of the TOE for example "eth1")
 
-LOCAL_SEC_MAC  (MAC address of the secondary ethernet device on the TOE
+LOCAL_SEC_MAC  (MAC address of the secondary Ethernet device on the TOE
 
 LOCAL_IPV4     (IPv4 address of primary device on TOE)
 
@@ -138,17 +186,126 @@ BRIDGE_FILTER   (Name of the bridge created on TOE for the ebtables testing.
                  This bridge should have the secondary device enslaved to
                  it.
 
-IMPORTANT NOTE
 
-When using xinetd to handle the network server (lblnet_tst_server)
-request/response exchange, IPV6 addresses must be global in scope
-(or site local). xinetd will not handle the scope extensions to an
-address at this time. Therefor link local addresses will not work properly
-when utilizing xinetd. The netfilter and netfilebt tests may use link local
-addresses but only when the lblnet_tst_server is started manually on the network
-server and xinetd is not running on either the network server or the TOE.
+Example of all environment variables
+------------------------------------
 
-PROCEDURES FOR CONFIGURATION
+Example of all environment variables according to the configuration shown
+in the "Network configuration" section. Please note these are a superset
+of all configuration environment variables you need to successfully run
+the all tests in the suite. Also be aware you need to adjust correctly
+according to your configuration:
+
+export PASSWD="redhat"
+export RHOST="localhost"
+export RHOST6="::1"
+export LBLNET_SVR_IPV4="10.0.0.1"
+export LBLNET_SVR_IPV6="2600::1"
+export LBLNET_PREFIX_IPV6="2600::/64"
+export PATH="$PATH:."
+export MODE=64
+export PPROFILE=lspp
+export AUDITPATH=/usr/local/eal4_testing/audit-test
+export LOCAL_DEV="eth3"
+export LOCAL_SEC_DEV="eth4"
+export LOCAL_SEC_MAC="78:2B:CB:4B:EB:BC"
+export LOCAL_IPV4="10.0.0.2"
+export LOCAL_IPV6="2600::2"
+export LOCAL_SEC_IPV4="10.0.1.2"
+export LOCAL_SEC_IPV6="2600:1::2"
+export LBLNET_SVR_DEV="eth0"
+export LNET4MASK="255.255.255.0"
+export LNET6MASK="64"
+export SECNET_SVR_IPV4="10.0.1.1"
+export SECNET_SVR_IPV6="2600:1::1"
+export SECNET_SVR_DEV="eth1"
+export SECNET_SVR_MAC="00:04:23:B3:B5:83"
+export SNET4MASK="255.255.255.0"
+export SNET6MASK="64"
+export BRIDGE_FILTER="toebr"
+
+
+Procedures for configuration
+----------------------------
+
+Setting up configuration on the machines is possible two ways. You can manually
+configure the network interfaces via the ifcfg scripts and manually create
+the list of exported environment variables or use the config-server.bash
+script.
+
+Manual configuration
+====================
+
+This section lists the required ifcfg network configuration files on RHEL based
+systems that are needed to configure the network interfaces on TOE and NS
+according to the picture shown in section "Network configuration".
+
+Please note that in the example below all interfaces are configured via static
+network address assignment. You may use also DHCP for configuring your devices.
+
+For details on configuring the network interfaces in general refer to:
+https://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/s1-networkscripts-interfaces.html
+
+After configuring the interfaces you need to restart the networking for the
+changes to take effect:
+
+CAPP machine# service network restart
+LSPP machine# run_init service network restart
+
+=== TOE network interfaces configuration ===
+# cat /etc/sysconfig/network/ifcfg-eth3
+DEVICE="eth3"
+HWADDR="01:12:44:FE:A7:18"
+ONBOOT="yes"
+BOOTPROTO="static"
+IPADDR="10.0.0.2"
+NETMASK="255.255.255.0"
+IPV6INIT="yes"
+IPV6ADDR=2600::2
+TYPE="Ethernet"
+
+# cat /etc/sysconfig/network/ifcfg-eth4
+DEVICE="eth4"
+HWADDR="D8:D3:85:81:BE:04"
+ONBOOT="yes"
+TYPE="Ethernet"
+BRIDGE=toebr
+
+# cat /etc/sysconfig/network/ifcfg-toebr
+DEVICE="toebr"
+TYPE=bridge
+BOOTPROTO="static"
+IPADDR="10.0.1.2"
+NETMASK="255.255.255.0"
+IPV6INIT="yes"
+IPV6ADDR=2600:1::2
+
+=== NS network interfaces configuration ===
+# cat /etc/sysconfig/network/ifcfg-eth0
+DEVICE="eth0"
+HWADDR="0F:14:15:B8:A0:77"
+ONBOOT="yes"
+BOOTPROTO="static"
+IPADDR="10.0.0.1"
+NETMASK="255.255.255.0"
+IPV6INIT="yes"
+IPV6ADDR=2600::1
+TYPE="Ethernet"
+
+# cat /etc/sysconfig/network/ifcfg-eth1
+DEVICE="eth1"
+HWADDR="00:04:23:B3:B5:83"
+ONBOOT="yes"
+BOOTPROTO="static"
+IPADDR="10.0.1.1"
+NETMASK="255.255.255.0"
+IPV6INIT="yes"
+IPV6ADDR=2600:1::1
+TYPE="Ethernet"
+
+
+Using config-server.bash script
+===============================
 
 The config-server.bash script in the utils/netfilter directory of the audit-test
 suite should be run on each platform prior to running any of the netfilter
@@ -156,7 +313,7 @@ tests. The config-server.bash script must be executed on the TOE first. You
 will need to have the MAC, IPV4, and IPV6 addresses for the two interfaces on both
 the TOE and network server (netserver) handy as well as the device names.
 
-The config-server script will query the user for the adresses, device names,
+The config-server script will query the user for the addresses, device names,
 and network masks needed to properly configure the network, set routes in
 the routing table, and set up the chain rules in iptables, ip6tables, and
 ebtables. If you choose not to run the config-server.bash script you must set
@@ -169,7 +326,7 @@ bridge will be requested by the config-server.bash script. The bridge can be
 set up with the following commands:
 
 brctl addbr <bridge name>              -- This creates an instance of the
-                                          ethernet bridge
+                                          Ethernet bridge
 
 After executing this command it is a good time to modify the
 ifcfg-<ethernet interface> in the /etc/sysconfig/network-scripts directory
@@ -213,7 +370,7 @@ The setup of this bridge will be placed within the config-server.bash script
 at a later date.
 
 After the config-server script has been run there will be a file named
-profile.<hostname> int the utils/netfilter directory of the auidt-test suite
+profile.<hostname> int the utils/netfilter directory of the audit-test suite
 path. This file will contain all the export commands for the environmental
 variables listed above. It contains environmental variables that are needed on
 each of the 2 platforms. The file profile.<hostname> file needs to be copied

@@ -191,11 +191,11 @@ BRIDGE_FILTER   (Name of the bridge created on TOE for the ebtables testing.
                  it.
 
 
-Example of all environment variables
-------------------------------------
+Example of all needed environment variables for TOE
+---------------------------------------------------
 
-Example of all environment variables according to the configuration shown
-in the "Network configuration" section. Please note these are a superset
+Example of all environment variables for TOE according to the configuration
+shown in the "Network configuration" section. Please note these are a superset
 of all configuration environment variables you need to successfully run
 the all tests in the suite. Also be aware you need to adjust correctly
 according to your configuration:
@@ -257,7 +257,7 @@ CAPP machine# service network restart
 LSPP machine# run_init service network restart
 
 === TOE network interfaces configuration ===
-# cat /etc/sysconfig/network/ifcfg-eth3
+# cat /etc/sysconfig/network-scripts/ifcfg-eth3
 DEVICE="eth3"
 HWADDR="01:12:44:FE:A7:18"
 ONBOOT="yes"
@@ -268,14 +268,14 @@ IPV6INIT="yes"
 IPV6ADDR=2600::2
 TYPE="Ethernet"
 
-# cat /etc/sysconfig/network/ifcfg-eth4
+# cat /etc/sysconfig/network-scripts/ifcfg-eth4
 DEVICE="eth4"
 HWADDR="D8:D3:85:81:BE:04"
 ONBOOT="yes"
 TYPE="Ethernet"
 BRIDGE=toebr
 
-# cat /etc/sysconfig/network/ifcfg-toebr
+# cat /etc/sysconfig/network-scripts/ifcfg-toebr
 DEVICE="toebr"
 TYPE=bridge
 BOOTPROTO="static"
@@ -285,7 +285,7 @@ IPV6INIT="yes"
 IPV6ADDR=2600:1::2
 
 === NS network interfaces configuration ===
-# cat /etc/sysconfig/network/ifcfg-eth0
+# cat /etc/sysconfig/network-scripts/ifcfg-eth0
 DEVICE="eth0"
 HWADDR="0F:14:15:B8:A0:77"
 ONBOOT="yes"
@@ -296,7 +296,7 @@ IPV6INIT="yes"
 IPV6ADDR=2600::1
 TYPE="Ethernet"
 
-# cat /etc/sysconfig/network/ifcfg-eth1
+# cat /etc/sysconfig/network-scripts/ifcfg-eth1
 DEVICE="eth1"
 HWADDR="00:04:23:B3:B5:83"
 ONBOOT="yes"

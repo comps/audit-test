@@ -259,6 +259,10 @@ Note: The tests must be run from an interactive terminal; running the tests as
 a backgrounded task does not work, and will result in spurious test case
 failures.
 
+Note: When testing in FIPS mode all tests that use ipsec are expected to FAIL.
+Precisely these should be all the network tests and the ipsec* and ip_xfrm tests
+from trusteprograms.
+
 Run individual tests
 --------------------
 

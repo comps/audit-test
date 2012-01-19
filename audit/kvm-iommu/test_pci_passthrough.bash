@@ -181,7 +181,6 @@ get_guest_domain_pid() {
     done
 }
 
-
 #
 # Checks for VT-d and IOMMU prerequities. Currently only for Intel.
 #
@@ -404,6 +403,29 @@ check_guests_labels() {
 }
 
 #
+# If attached function is on a multifunction device
+# this function detaches all other functions from the host
+# Please note that this workaround was needed because of this
+# BZ#773667 with Broadcom NetExtreme II network card
+# This function does not end the testing if the detaching fails
+#
+
+detach_multifunction_devices() {
+    # check if the the pci function is on a multifunction PCI device
+    pcifunction=$(echo pci_${pci_device} | tr ':.' '_')
+    pcidevice=$(echo $pcifunction | sed 's/_[0-9]\+$//g')
+    if [ $(virsh nodedev-list | grep -c $pcidevice) -gt 1 ]; then
+        for dev in $(virsh nodedev-list | grep $pcidevice \
+            | grep -v $pcifunction); do
+            echo "Detaching PCI device $dev from host"
+            virsh nodedev-dettach $dev
+            [ $? -eq 0 ] && append_cleanup "virsh nodedev-reattach $dev"
+        done
+    fi
+}
+
+
+#
 # Test set functions
 #
 
@@ -412,7 +434,7 @@ test_sanity_attach_after_boot() {
     start_guest_without_pci_device $dom1 || \
         exit_fail "Failed to start guest without assigned PCI device"
     # Restore /dev/random RNG source if in FIPS mode
-    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random"
     relabel_pci_device_files_for_domain $dom1
     attach_pci_device 1 $dom1 $dom1 $dom2 || exit_fail "Attach failed"
     destroy_guest_domain $dom1
@@ -424,7 +446,7 @@ test_sanity_attach_on_boot() {
     start_guest_with_pci_device $dom1 || \
         exit_fail "Failed to start guest with assigned PCI $pci_device"
     # Restore /dev/random RNG source if in FIPS mode
-    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random"
     destroy_guest_domain $dom1
 }
 
@@ -434,7 +456,7 @@ test_sanity_detach_1() {
     start_guest_with_pci_device $dom1 || \
         exit_fail "Failed to start guest with assigned PCI $pci_device"
     # Restore /dev/random RNG source if in FIPS mode
-    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random"
     detach_pci_device 1 $dom1 "" || exit_fail "Detach failed"
     destroy_guest_domain $dom1
 }
@@ -444,7 +466,7 @@ test_sanity_detach_2() {
     start_guest_without_pci_device $dom1 || \
         exit_fail "Failed to start guest without assigned PCI device"
     # Restore /dev/random RNG source if in FIPS mode
-    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random"
     relabel_pci_device_files_for_domain $dom1
     attach_pci_device 1 $dom1 $dom1 $dom2 || exit_fail "Attach failed"
     detach_pci_device 1 $dom1 "" || exit_fail "Detach failed"
@@ -456,7 +478,7 @@ test_simple_double_attach() {
     start_guest_without_pci_device $dom1 || \
         exit_fail "Failed to start without assigned PCI device"
     # Restore /dev/random RNG source if in FIPS mode
-    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random"
     relabel_pci_device_files_for_domain $dom1
     attach_pci_device 1 $dom1 $dom1 $dom2 || exit_fail "Attach failed"
     attach_pci_device 2 $dom1 $dom1 $dom2 || exit_fail "We should fail"
@@ -469,7 +491,7 @@ test_simple_double_detach() {
     start_guest_with_pci_device $dom1 || \
         exit_fail "Failed to start with assigned PCI $pci_device"
     # Restore /dev/random RNG source if in FIPS mode
-    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random"
     detach_pci_device 1 $dom1 "" || exit_fail "Detach failed"
     detach_pci_device 2 $dom1 "" || exit_fail "We should fail"
     destroy_guest_domain $dom1
@@ -484,7 +506,7 @@ test_shared_attach_on_boot() {
     start_guest_with_pci_device $dom2 && \
         exit_fail "We should fail"
     # Restore /dev/random RNG source if in FIPS mode
-    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random"
     destroy_guest_domain $dom1
     destroy_guest_domain $dom2
 }
@@ -497,7 +519,7 @@ test_shared_attach_used() {
     start_guest_without_pci_device $dom2 || \
         exit_fail "Failed to start guest without assigned PCI device"
     # Restore /dev/random RNG source if in FIPS mode
-    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random"
     relabel_pci_device_files_for_domain $dom2
     attach_pci_device 3 $dom2 $dom1 $dom2 || exit_fail "Should fail to attach"
     destroy_guest_domain $dom1
@@ -512,7 +534,7 @@ test_shared_detach_used() {
     start_guest_without_pci_device $dom2 || \
         exit_fail "Failed to start guest without assigned PCI device"
     # Restore /dev/random RNG source if in FIPS mode
-    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random"
     relabel_pci_device_files_for_domain $dom2
     detach_pci_device 3 $dom2 $dom1 || exit_fail "We should fail to detach"
     destroy_guest_domain $dom1
@@ -529,7 +551,7 @@ test_dynamic_attach_on_boot() {
     start_guest_without_pci_device $dom4 || \
         exit_fail "Failed to start guest domain $dom4"
     # Restore /dev/random RNG source if in FIPS mode
-    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random" 
+    [ "x$FIPS" = "x1" ] && append_cleanup "gcrypt_set_rng /dev/random"
     check_guests_labels $dom3 $dom4 || \
         exit_fail "Domains $dom3 and $dom4 have the same SELinux category"
     check_pci_device_dynamic $dom3 yes || \
@@ -564,6 +586,8 @@ check_installed_packages $pkg_list || \
 
 prepare_guest_domains
 generate_pci_dev_file
+
+detach_multifunction_devices
 
 sestatus | grep mls && \
 append_cleanup "restorecon -RvvvF /sys/bus/pci/devices/$pci_device/config"

@@ -189,6 +189,10 @@ kvm-iommu PCI passthrough tests:
 * NetXtreme II BCM5706 Gigabit Ethernet / bnx2
 * Intel 82576 Gigabit Network Connection / igb
 
+Note: All devices on the bus with the tested PCI device should NOT be
+used by the host. The PCI tests will try to detach all other devices
+on the bus when using multifunction PCI device for testing.
+
 Configure the labeled networking tests
 --------------------------------------
 

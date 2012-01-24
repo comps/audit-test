@@ -101,7 +101,11 @@ function verify_fail_chcon_level {
 	declare log_mark
 	log_mark=$(stat -c %s $audit_log)
 	auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S setxattr
-	auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S newfstatat
+        if [[ $ARCH == PPC ]]; then
+           auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S fstatat
+        else
+	   auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S newfstatat
+        fi
 	runcon -t lspp_test_generic_t chcon -l $2 $3
 	[[ $? == 0 ]] && exit_fail "chcon successed unexpectedly"
 	# chcon causes a setxattr and only shows the old context

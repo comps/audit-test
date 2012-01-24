@@ -40,7 +40,12 @@ function trigger_daemon_disk_full_action {
     local test_msg=${1:-"`create_user_test_msg`"}
 
     # Fill the local filesystem hosting audit.log, leaving 5k available
-    fill_disk ${audit_log%/*} 5 || exit_error "fill_disk failed"
+    # compensate for 64k page size on power
+    if [[ $ARCH != "PPC" ]]; then
+       fill_disk ${audit_log%/*} 5 || exit_error "fill_disk failed"
+    else
+       fill_disk ${audit_log%/*} 70 || exit_error "fill_disk failed"
+    fi
 
     # each record is at least 80 bytes (based on empirical evidence), so writing
     # 65 records should always take us over (65 * 80 =~ 5k)

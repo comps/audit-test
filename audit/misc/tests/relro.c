@@ -33,4 +33,5 @@ void *const foo = &stdout;
 int main (void)
 {
   *(void **) &foo = &stderr;
+  return 0;
 }

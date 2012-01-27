@@ -231,6 +231,17 @@ function augrok_op_no_exit {
 	a0=$a0
 }
 
+# Used for execve which according to man page does not return on success
+# don't check the exit value because the sycall doesn't return
+function augrok_no_exit {
+
+    augrok --seek=$log_mark -m1 type==SYSCALL \
+        syscall=$syscall success=$success pid=$pid auid= $(</proc/self/loginuid) \
+        uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
+        gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid \
+        "$@"
+}
+
 function augrok_mls_label {
     augrok_default subj=$subj obj=$obj
 }

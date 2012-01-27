@@ -81,6 +81,7 @@ patch::
 	cp -fv $(PATCH_DIR)/mnt_syscalls $(LTP_BASE_PATH)/runtest/mnt_syscalls
 	cp -fv $(PATCH_DIR)/mount02.c $(LTP_BASE_PATH)/testcases/kernel/syscalls/mount/mount02.c
 	cp -fv $(PATCH_DIR)/mount03.c $(LTP_BASE_PATH)/testcases/kernel/syscalls/mount/mount03.c
+	cp -fv $(PATCH_DIR)/getrusage03_child.c $(LTP_BASE_PATH)/testcases/kernel/syscalls/getrusage/getrusage03_child.c
 
 clean::
 	echo "Makefile: clean"

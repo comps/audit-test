@@ -99,7 +99,8 @@ function normalize_addr {
     	addr=`echo $addr | sed 's/::/:0000::/g'`
     done
 
-    echo $addr | sed -e 's/:\([0-9a-f]\):/:000\1:/g' \
+    for ((loop_cnt=0; loop_cnt<8; loop_cnt++)); do
+        addr=$(echo $addr | sed -e 's/:\([0-9a-f]\):/:000\1:/g' \
 	-e 's/:\([0-9a-f][0-9a-f]\):/:00\1:/g' \
 	-e 's/:\([0-9a-f][0-9a-f][0-9a-f]\):/:0\1:/g' \
 	-e 's/:\([0-9a-f]\)$/:000\1/g' \
@@ -107,7 +108,9 @@ function normalize_addr {
 	-e 's/:\([0-9a-f][0-9a-f][0-9a-f]\)$/:0\1/g' \
 	-e 's/::/:0000:/g' \
 	-e 's/^:/0000:/g' \
-	-e 's/:$/:0000/g'
+	-e 's/:$/:0000/g')
+    done
+    echo $addr
 }
 
 #

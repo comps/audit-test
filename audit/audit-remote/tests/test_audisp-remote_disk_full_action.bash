@@ -49,7 +49,12 @@ function trigger_daemon_disk_full_action {
 
     # each record is at least 80 bytes (based on empirical evidence), so writing
     # 65 records should always take us over (65 * 80 =~ 5k)
-    write_local_records 65 || exit_error "write_local_records failed"
+    # if powerpc it will take 875 80 byte records to get to the 70K
+    if [[ $ARCH != "PPC" ]]; then
+       write_local_records 65 || exit_error "write_local_records failed"
+    else
+       write_local_records 875 || exit_error "write_local_records failed"
+    fi
 
     # Trigger action of the remote plugin so we can check for configured action.
     # Server should report full disk back to the plugin.

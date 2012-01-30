@@ -203,7 +203,16 @@ int do_msgsnd(int msqid, long msgtype, char *msg)
 
 int do_semctl(int semid, int cmd)
 {
-    struct semid_ds buf;
+   union semun
+   {
+     int val;
+     struct semid_ds *buf;
+     unsigned short int *array;
+     struct seminfo *__buf;
+   };
+
+    union semun sebuf;
+    struct semid_ds tmpbuf;
     int ret = -1;
 
     switch (cmd) {
@@ -211,9 +220,10 @@ int do_semctl(int semid, int cmd)
 	ret = semctl(semid, 1, cmd, NULL);
 	break;
     case IPC_SET:
-	memset(&buf, 0, sizeof(buf));
-	buf.sem_perm.uid = 0; /* use root's uid */
-	ret = semctl(semid, 1, cmd, &buf);
+	memset(&sebuf, 0, sizeof(sebuf));
+        sebuf.buf = &tmpbuf;
+	((struct semid_ds *)sebuf.buf)->sem_perm.uid = 0; /* use root's uid */
+	ret = semctl(semid, 1, cmd, sebuf);
 	break;
     }
     return ret;

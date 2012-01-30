@@ -60,6 +60,9 @@ NET_EXE		= do_accept \
 
 RT_EXE		= do_clock_settime
 
+ONLY32P_EXE	= do_mmap2 \
+		  do_uselib
+
 ONLY32_EXE	= do_chown32 \
 		  do_fchown32 \
 		  do_ioperm \
@@ -157,7 +160,11 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_utimes
 
 ifeq ($(MODE), 32)
+ifeq ($(MACHINE), ppc64)
+ALL_EXE		+= $(ONLY32P_EXE)
+else
 ALL_EXE		+= $(ONLY32_EXE)
+endif
 endif
 
 ifeq ($(MACHINE), ia64)

@@ -236,7 +236,7 @@ function augrok_op_no_exit {
 function augrok_no_exit {
 
     augrok --seek=$log_mark -m1 type==SYSCALL \
-        syscall=$syscall success=$success pid=$pid auid= $(</proc/self/loginuid) \
+        syscall=$syscall success=$success pid=$pid auid=$(</proc/self/loginuid) \
         uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
         gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid \
         "$@"

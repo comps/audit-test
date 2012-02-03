@@ -10,7 +10,6 @@ on RHEL6.2:
 audit-libs-devel
 expect
 libselinux-devel
-selinux-policy-devel
 perl-devel
 perl-Expect
 perl-IO-Tty
@@ -246,7 +245,7 @@ If the test suite was configured to run the netfilter
 tests, source the profile script that was created as part
 of the configuration.
 
-# . utils/netfilter/profile.<hostname>.bash
+# . utils/netfilter/profile.<hostname>
 
 Otherwise, make sure that the labeled networking tests have been configured
 according to the instructions in the previous section. Set the following

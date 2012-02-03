@@ -28,9 +28,9 @@ source testcase.bash || exit 2
 
 set -x
 
-append_cleanup "userdel -fr testuser1"
+append_cleanup "userdel -fr -Z testuser1"
 append_cleanup "groupdel testuser1"
-userdel -fr testuser1
+userdel -fr -Z testuser1
 groupdel testuser1
 useradd -Z staff_u testuser1 -G libvirt
 
@@ -38,9 +38,9 @@ if [[ $? -ne 0 ]]; then
 	exit_error
 fi
 
-append_cleanup "userdel -fr testuser2"
+append_cleanup "userdel -fr -Z testuser2"
 append_cleanup "groupdel testuser2"
-userdel -fr testuser2
+userdel -fr -Z testuser2
 groupdel testuser2
 useradd -Z staff_u testuser2
 

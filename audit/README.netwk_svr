@@ -1,67 +1,68 @@
-README.netwk_svr: Installing the Network Test Server
+Installing the Network Test Server
+----------------------------------
 
 Several of the networking tests require a remote host to either connect to or
-initiate a connection on the local test machine.  This remote machine is to
-be referred to as the "network test server" and should be installed and
+initiate a connection on the local test machine.  This remote machine is
+referred to as the "network test server" and should be installed and
 configured in a manner similar to the test machines.  The installation and
 configuration steps are described below:
 
-1. Install the network test server as if it were a test machine.
+Install the network test server as if it were a test machine.  This
+means that it should be in the evaluated configuration in LSPP/MLS
+mode.
 
-2. A new test user should be added to the system using the commands below:
+Install the audit-test suite, following the instructions in the README.run
+file, until the "Configure the network test server" step.
 
-  # useradd -m eal_test
-  # passwd eal_test
+Build and install the lblnet_tst_server daemon as shown below:
 
-3. After the standard test installation and setup is complete, build and
-install the lblnet_tst_server daemon as shown below:
+# make -C /usr/local/eal4_testing/audit-test/utils/network-server
+# make -C /usr/local/eal4_testing/audit-test/utils/network-server install
 
-  # make -C /usr/local/eal4_testing/audit-test/utils/network-server
-  # make -C /usr/local/eal4_testing/audit-test/utils/network-server install
+Configure the server with the client IP address information.
 
-4. Create a file,
+Create a file,
 '/usr/local/eal4_testing/audit-test/network/system/client_list.txt', hereafter
 referred to as the "client address file".  This file contains the IPv4 and
-IPv6 addresses of all the clients connecting to the network test server.  The
+IPv6 addresses of all the TOEs connecting to the network test server.  The
 hash symbol, "#", can be used as a comment delimiter. Example syntax is shown
 below:
 
-  # client_list.txt
-  #
-  # A file containing the IPv4|6 addresses of all the test machines
+# client_list.txt
+#
+# A file containing the IPv4|6 addresses of all the test machines
 
-  # foo.domain.com
-  1.2.3.4 1::2
-  # bar.domain.com
-  5.6.7.8 3::4
+# foo.domain.com
+10.0.0.2 2600::2
 
-5. Switch to the lspp_test_r role:
+# bar.domain.com
+10.0.0.3 2600::3
 
-  # newrole -r lspp_test_r
+Set the LBLNET_PREFIX_IPV6 environment variable to the IPV6 prefix to be
+used for testing.  An example variable value is "2600::/64".
 
-6. Set the LBLNET_PREFIX_IPV6 environment variable to the IPV6 prefix to be
-used for testing.  An example variable value is "fd7b:826d:00f2::/64".
+# export LBLNET_PREFIX_IPV6="<the IPV6 prefix to be used for testing>"
 
-  # export LBLNET_PREFIX_IPV6="<the IPV6 prefix to be used for testing>"
-
-7. Generate and install the system's labeled network configuration as shown
+Generate and install the system's labeled network configuration as shown
 below:
 
-  # make -C /usr/local/eal4_testing/audit-test/network/system install_server
+# make -C /usr/local/eal4_testing/audit-test/network/system install_server
 
-NOTE: This step, as well as step 8, should be repeated whenever the client
-address file changes.
+NOTE: The client address file must be updated and the above step
+must be ru-run whenever a TOE's IP address changes.
 
-8. Reboot the network test server or run the following commands:
-
-  # run_init service netlabel restart
-  # run_init service xinetd restart
-  # run_init /etc/rc.local
-
-9. Create a file /usr/local/eal4_testing/audit-test/profile.bash with
+Create a file /usr/local/eal4_testing/audit-test/profile.bash with
 exported PASSWD variable with password for administrative user (should
 match also a password for root). This is required for restarting auditd
 service by lblnet_tst_server over xinetd on NS for audit-remote tests, ie.:
 
-  # echo 'export PASSWD=<eal password>' > \
+# echo 'export PASSWD=<eal/root password>' > \
       /usr/local/eal4_testing/audit-test/profile.bash
+
+Reboot the network test server or run the following commands:
+
+# run_init service xinetd restart
+# run_init service mcstrans restart
+# run_init service netlabel restart
+# run_init service ipsec restart
+# run_init /etc/rc.local

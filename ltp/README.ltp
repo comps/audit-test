@@ -12,7 +12,7 @@ will be skipped if the sources are present. Note that a
 'make clean' will remove the LTP source file.
 
 Download link:
-https://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-full-20110915.bz2
+http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20110915/ltp-full-20110915.bz2
 
 Requirements
 ------------

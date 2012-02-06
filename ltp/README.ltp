@@ -8,26 +8,68 @@ for testing during the make phase.
 
 If you do not have internet connection, please place the
 LTP sources as ltp-full.tar.bz2 to this directory. The download
-will be skipped if the sources are present.
+will be skipped if the sources are present. Note that a
+'make clean' will remove the LTP source file.
 
 Download link:
 https://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-full-20110915.bz2
 
 Requirements
 ------------
-Be sure to have properly configured system according to the README.run
+Be sure to have properly configured the system according to the README.run
 from the audit-test suite.
+
+Log in as the eal user.
+
+If running on an LSPP/MLS system, change to the 'lspp_test_r' role.
+
+# newrole -r lspp_test_r
+
+For all configurations, 'su' to root.
+
+# /bin/su -
+
+The LTP tests require that the PASSWD environment variable be exported
+with root's password.
+
+# export PASSWD=<root passwd>
 
 Running
 -------
-Running required LTP tests is fully automatized.
+Running required LTP tests is fully automated.
 
 The LTP suite is built and installed during the make phase. The tests
 are executed during the make run phase.
 
-To run the LTP tests use the commands below.
+To run the LTP tests in the native mode for the platform (64-bit or
+32-bit) use the commands below.
 
 # make
 # make run
 
-The logs from testing are stored in run.log and rollup.log files.
+To run the LTP tests in 32-bit mode on a 64-bit platform, use the
+commands below.
+
+# make clean (see the note above regarding the LTP source file)
+# make MODE=32
+# make MODE=32 run
+
+The logs from each test run are stored in the run.log and rollup.log files.
+
+Expected test results
+---------------------
+
+When the tests are run in the native mode for the OS, all the
+tests should pass.  When the tests are run in 32-bit mode on
+a 64-bit OS, the following tests are expected to fail:
+
+syscalls.rollup.log:ftruncate04_64
+syscalls.rollup.log:lstat03_64
+syscalls.rollup.log:nftw6401
+syscalls.rollup.log:pwrite04_64
+syscalls.rollup.log:sendfile02_64
+syscalls.rollup.log:sendfile06_64
+syscalls.rollup.log:stat01_64
+syscalls.rollup.log:stat02_64
+syscalls.rollup.log:truncate01_64
+syscalls.rollup.log:truncate02_64

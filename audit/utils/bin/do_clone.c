@@ -36,7 +36,12 @@ int main(int argc, char **argv)
 
     /* use syscall() to force clone over clone2 */
     errno = 0;
+    /* On s390x, the param order is different for clone */
+#if defined (S390X)
+    pid = syscall(__NR_clone, 0, flags);
+#else
     pid = syscall(__NR_clone, flags, 0);
+#endif
 
     /* child */
     if (pid == 0)

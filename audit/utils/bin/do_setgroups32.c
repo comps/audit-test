@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     /* ensure specified groups fit in remaining array slots */
     if (argc - 1 > NGROUPS - nr_groups) {
 	fprintf(stderr, "Usage:\n%s you may not specify more than %d supplementary gids)\n",
-		argv[0], NGROUPS - nr_groups);
+		argv[0], (int) (NGROUPS - nr_groups));
 	return TEST_ERROR;
     }
 

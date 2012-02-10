@@ -108,7 +108,7 @@ runtests::
 	setsebool allow_execmem=on
 	# needed for msgctl11 to pass, see
 	#  http://www.mail-archive.com/ltp-list@lists.sourceforge.net/msg12767.html
-	sysctl kernel.msgmni=1024
+	sysctl kernel.msgmni=700
 	# run tests
 	echo "Running syscalls tests"
 	/opt/ltp/testscripts/syscalls.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/syscalls$(LTP_ROLLUP_LOG) 2>&1 | tee syscalls$(LTP_RUN_LOG)

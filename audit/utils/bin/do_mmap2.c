@@ -19,12 +19,32 @@
 #include <errno.h>
 #include <sys/mman.h>
 
+/*
+* s390 is not able to handle more than 5 syscall parameters
+* need to pass the parameters in a struct
+*/
+#if defined(S390X) || defined(S390)
+struct mmap_arg_struct {
+    unsigned long addr;
+    unsigned long len;
+    unsigned long prot;
+    unsigned long flags;
+    unsigned long fd;
+    unsigned long offset;
+};
+#endif
+
 int main(int argc, char **argv)
 {
     void *addr;
     int fd, rc;
     int result = TEST_SUCCESS;
     char filename[80];
+#if defined(S390X) || defined(S390)
+    struct mmap_arg_struct mmap_arg_struct;
+    int prot = PROT_WRITE;
+    int flags = MAP_SHARED;
+#endif
 
     if (argc != 2) {
 	fprintf(stderr, "Usage:\n%s <flags>\n", argv[0]);
@@ -57,7 +77,17 @@ int main(int argc, char **argv)
 
     errno = 0;
 
+#if defined(S390X) || defined(S390)
+    mmap_arg_struct.addr = 0;
+    mmap_arg_struct.len = 10;
+    mmap_arg_struct.prot = prot;
+    mmap_arg_struct.flags = flags;
+    mmap_arg_struct.fd = fd;
+    mmap_arg_struct.offset = 0;
+    addr = (void*)syscall(__NR_mmap2, &mmap_arg_struct);
+#else
     addr = (void*)syscall(__NR_mmap2, NULL, 10, PROT_READ, MAP_PRIVATE, fd, 0);
+#endif
 
     if (addr == MAP_FAILED) {
     	result = TEST_FAIL;

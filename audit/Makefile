@@ -31,13 +31,17 @@ RUN_DIRS       += fail-safe \
 ifneq ($(DISTRO), SUSE)
 RUN_DIRS       += trustedprograms \
 		  netfilter \
-		  netfilebt \
 		  crypto \
-		  kvm \
-		  kvm-cgroups \
-		  kvm-iommu \
 		  audit-remote \
 		  misc
+ifneq ($(MACHINE), ppc64)
+ifneq ($(MACHINE), s390x)
+RUN_DIRS       += netfilebt \
+		  kvm \
+		  kvm-cgroups \
+		  kvm-iommu
+endif
+endif
 endif
 endif
 

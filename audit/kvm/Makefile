@@ -22,4 +22,11 @@ TOPDIR		= ..
 include $(TOPDIR)/rules.mk
 
 clean:
-	for machine in $$(virsh list --all 2>&1 | grep KVM-Guest- | awk '{print $$2}'); do virsh destroy $$machine; virsh undefine $$machine; done
+	for machine in $$(virsh list --all 2>&1 \
+				| grep KVM-Guest- | awk '{print $$2}'); \
+		do virsh destroy $$machine; virsh undefine $$machine; \
+	done
+	for machine in $$(virsh net-list --all 2>&1 \
+				| grep KVM-Guest- | awk '{print $$1}'); \
+		do virsh net-destroy $$machine; virsh net-undefine $$machine; \
+	done

@@ -14,7 +14,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
-# 
+#
 # PURPOSE:
 # Use semanage to change the level range of a user
 # Start with the sample test user, and change their level range from the
@@ -37,12 +37,12 @@ if [ $? -ne 0 ]; then
   exit_error "semange returned an error"
 fi
 
-msg_1="op=modify selinux user mapping acct=\"*$user\"* old-seuser=$seuser old-role=\? old-range=s0 new-seuser=$seuser new-role=\? new-range=$range exe=/usr/sbin/semanage.*res=success.*"
+msg_1="op=login-range acct=\"$user\" old-seuser=$seuser old-role=auditadm_r,staff_r,lspp_test_r,secadm_r,sysadm_r old-range=s0-s15:c0.c1023 new-seuser=$seuser new-role=auditadm_r,staff_r,lspp_test_r,secadm_r,sysadm_r new-range=$range exe=/usr/sbin/semanage.*res=success.*"
 
-augrok -q type=USER_ROLE_CHANGE auid=$auid \
-  msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
+augrok -q type=ROLE_ASSIGN auid=$auid msg_1=~"$msg_1" \
+	|| exit_fail "ROLE_ASSIGN event missing: \"$msg_1\""
 
-# cleanup 
+# cleanup
 # deluser handled by tp_auth_functions
 
 exit_pass

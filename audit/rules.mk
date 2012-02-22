@@ -87,6 +87,9 @@ endif
 ifeq (s390x, $(findstring s390x, $(MACHINE)))
 CFLAGS +=-DS390X
 endif
+ifeq (ppc64, $(findstring ppc64, $(MACHINE)))
+CFLAGS +=-DPPC64
+endif
 ##########################################################################
 # Common rules
 ##########################################################################

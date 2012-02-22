@@ -96,12 +96,20 @@ our $singleton;
 
 sub new {
     my ($class) = @_;
+    my $arch = `uname -m`;
 
     unless (defined $singleton) {
         $singleton = {};
         bless $singleton, $class;
 
-        my $m32 = (defined $opt{'mode'} and $opt{'mode'} == 32) ? '-m32' : '';
+        my $m32 = '';
+        if (defined $opt{'mode'} and $opt{'mode'} == 32) {
+            if ($arch =~ /s390x/) {
+                $m32 = '-m31';
+            } else {
+                $m32 = '-m32';
+            }
+        }
         open(S, "gcc $m32 -E -dM /usr/include/syscall.h |") or die;
         my $line;
         while (defined($line = <S>)) {

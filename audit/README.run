@@ -170,6 +170,9 @@ drive or the iso image file.
 Configure the KVM iommu tests
 -----------------------------
 
+Note: All PCI PT tests are disabled for RHEL6.2 - please skip PCI device
+configuration
+
 Edit the file
 '/usr/local/eal4_testing/audit-test/kvm-iommu/pci_device.conf'
 and select a PCI device to use for PCI passthrough testing.

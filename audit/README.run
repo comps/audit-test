@@ -124,6 +124,12 @@ If running on an LSPP/MLS system, install the test policy and change to the
 # make policy
 # newrole -r lspp_test_r
 
+If running on a PPC system, set the ARCH environment variable:
+# export ARCH=PPC
+
+If running on a s390x system, set the ARCH environment variable:
+# export ARCH=s390x
+
 Build the tests.
 
 # make

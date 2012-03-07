@@ -63,6 +63,21 @@ RT_EXE		= do_clock_settime
 ONLY32P_EXE	= do_mmap2 \
 		  do_uselib
 
+ONLY32Z_EXE	= do_chown32 \
+		  do_fchown32 \
+		  do_lchown32 \
+		  do_mmap2 \
+		  do_setfsgid32 \
+		  do_setfsuid32 \
+		  do_setgid32 \
+		  do_setgroups32 \
+		  do_setregid32 \
+		  do_setresgid32 \
+		  do_setresuid32 \
+		  do_setreuid32 \
+		  do_setuid32 \
+		  do_uselib
+
 ONLY32_EXE	= do_chown32 \
 		  do_fchown32 \
 		  do_ioperm \
@@ -163,7 +178,11 @@ ifeq ($(MODE), 32)
 ifeq ($(MACHINE), ppc64)
 ALL_EXE		+= $(ONLY32P_EXE)
 else
+ifeq ($(MACHINE), s390x)
+ALL_EXE		+= $(ONLY32Z_EXE)
+else
 ALL_EXE		+= $(ONLY32_EXE)
+endif
 endif
 endif
 

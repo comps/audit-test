@@ -208,8 +208,10 @@ static inline long syncfilerange(int fd, off64_t offset, off64_t nbytes,
 {
 
 #if (defined(__S390) || defined(__S390X))
+#if (__WORDSIZE == 32)
 	return syscall(__NR_sync_file_range, fd, (int)(offset >> 32),
 		       (int)offset, (int)(nbytes >> 32), (int)nbytes, flags);
+#endif
 #endif
 
 #if (defined(__arm__) || defined(__powerpc__) || defined(__powerpc64__))

@@ -73,3 +73,8 @@ syscalls.rollup.log:stat01_64
 syscalls.rollup.log:stat02_64
 syscalls.rollup.log:truncate01_64
 syscalls.rollup.log:truncate02_64
+
+On s390x the posix_fadvise03 and posixfadvise03_64 tests are expected
+to fail.  The test expects the test to fail due to an invalid advise value.
+Since more advise values are defined on s390, the syscall unexpectedly passes.
+

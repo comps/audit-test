@@ -63,6 +63,16 @@ When the tests are run in the native mode for the OS, all the
 tests should pass.  When the tests are run in 32-bit mode on
 a 64-bit OS, the following tests are expected to fail:
 
+syscalls.rollup.log:fcntl11_64
+syscalls.rollup.log:fcntl14_64
+syscalls.rollup.log:fcntl17_64
+syscalls.rollup.log:fcntl19_64
+syscalls.rollup.log:fcntl20_64
+syscalls.rollup.log:fcntl21_64
+syscalls.rollup.log:fstat02_64
+syscalls.rollup.log:fstat04_64
+syscalls.rollup.log:ftruncate01_64
+syscalls.rollup.log:ftruncate02_64
 syscalls.rollup.log:ftruncate04_64
 syscalls.rollup.log:lstat03_64
 syscalls.rollup.log:nftw6401

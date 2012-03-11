@@ -179,14 +179,12 @@ check_installed_packages() {
 }
 
 check_kvm_modules() {
-    # TODO: AMD check
-    /sbin/lsmod | /bin/grep kvm_intel
+    /sbin/lsmod | /bin/grep 'kvm_intel\|kvm_amd'
     return $?
 }
 
 check_virt_extensions() {
-    # For AMD we would checkfor svm
-    /bin/grep vmx /proc/cpuinfo
+    /bin/grep 'vmx\|svm' /proc/cpuinfo
     return $?
 }
 

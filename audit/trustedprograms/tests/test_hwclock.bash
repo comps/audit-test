@@ -18,7 +18,7 @@
 # PURPOSE:
 # Verify audit of changes to system time.
 
-HWCLOCK="/sbin/hwclock"
+HWCLOCK_UTILITY="/sbin/hwclock"
 AUDIT_LOG="/var/log/audit/audit.log"
 
 # Fetch the UTC setting from the system clock configuration
@@ -39,11 +39,11 @@ AUDIT_SEEK=$(wc -c < $AUDIT_LOG)
 
 # Alter the hardware clock
 echo "$(hwclock) -- original hardware clock"
-$HWCLOCK --set --date "1/1/2000 00:00:00"
+$HWCLOCK_UTILITY --set --date "1/1/2000 00:00:00"
 echo "$(hwclock) -- altered hardware clock"
 
 # Restore the hwclock
-$HWCLOCK $UTCFLAG --systohc
+$HWCLOCK_UTILITY $UTCFLAG --systohc
 echo "$(hwclock) -- restored hardware clock"
 
 # Check for the records

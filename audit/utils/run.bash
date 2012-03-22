@@ -199,10 +199,10 @@ function cleanup_hook {
 # startup runs after parsing run.conf, before running tests
 function startup {
     export TEST_USER=testuser
-    export TEST_USER_PASSWD='2manySecre+S'
+    export TEST_USER_PASSWD="2manySecre+S-$RANDOM"
 
     export TEST_ADMIN=testadmin
-    export TEST_ADMIN_PASSWD='3manySecre+S'
+    export TEST_ADMIN_PASSWD="3manySecre+S-$RANDOM"
 
     dmsg "Starting up"
 

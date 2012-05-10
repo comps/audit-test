@@ -23,11 +23,16 @@ source tp_ssh_functions.bash || exit 2
 disable_ssh_strong_rng
 
 # test
-expect -c '
-    spawn ssh $env(TEST_USER)@localhost
-    expect -nocase {Are you sure you want to continue} {send "yes\r"}
-    expect -nocase {password: $} {send "badpassword\r"}
-    expect -nocase {permission denied} {close; wait}'
+expect -c "
+    spawn ssh $TEST_USER@localhost
+    expect {
+       {continue} {send yes\r; exp_continue}
+       {assword} {send badpassword\r}
+    }
+    expect {
+        {permission denied} {close; wait}
+        {assword} {close; wait}
+    }"
 
 msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./usr/sbin/sshd.*terminal=ssh res=failed.*"
 augrok -q type=USER_AUTH msg_1=~"PAM: *authentication $msg_1" || exit_fail

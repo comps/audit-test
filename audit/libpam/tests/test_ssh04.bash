@@ -32,15 +32,18 @@ disable_ssh_strong_rng
 
 RUSER="root"
 
-expect -c '
-         spawn ssh root@localhost
-	 expect -nocase {Are you sure you want to continue} {send "yes\r"}
-         expect -nocase {password: $} {
-		send "$env(PASSWD)\r"
-	        send "PS1=:\\::\r"
-	 }
-
-	expect {:::$} {close; wait}'
+expect -c "
+    spawn ssh root@localhost
+	expect {
+        {continue} {send yes\r; exp_continue}
+        {assword} { send $PASSWD\r }
+	}
+	expect {
+        eof { exit 0 }
+        {assword} { exit 1 }
+        {root} { exit 2 }
+    }
+    "
 
 msg_1="acct=\"*$RUSER\"*[ :]* exe=./usr/sbin/sshd.*terminal=ssh res=failed.*"
 augrok -q type=USER_AUTH  msg_1=~"PAM:authentication $msg_1"  || exit_fail

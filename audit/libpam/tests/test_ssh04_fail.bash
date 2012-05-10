@@ -29,11 +29,16 @@
 source testcase.bash || exit 2
 RUSER="root"
 
-expect -c '
-         spawn ssh root@localhost
-	 expect -nocase {Are you sure you want to continue} {send "yes\r"}
-         expect -nocase {password: $} {send "badpassword\r"}
-         expect -nocase {permission denied} {close; wait}'
+expect -c "
+    spawn ssh root@localhost
+	expect {
+        {continue} {send yes\r; exp_continue}
+        {assword} {send badpassword\r}
+    }
+    expect {
+        {permission denied} {close; wait}
+        {assword} {close; wait}
+    }"
 
 msg_1="acct=\"*$RUSER\"*[ :]* exe=./usr/sbin/sshd.*terminal=ssh res=failed.*"
 augrok -q type=USER_AUTH  msg_1=~"PAM:authentication $msg_1"  || exit_fail

@@ -70,5 +70,5 @@ augrok -q type=USER_AUTH msg_1=~"PAM:authentication $msg_1" || exit_fail
 augrok -q type=USER_ACCT msg_1=~"PAM:accounting $msg_1" || exit_fail
 augrok -q type=USER_START msg_1=~"PAM:session_open $msg_1" auid=$auid \
 	subj=$login_context || exit_fail
-augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$sel_context: exe=./bin/login.* res=success.*" auid=$auid || exit_fail
+augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$sel_context.*exe=./bin/login.* res=success.*" auid=$auid || exit_fail
 exit_pass

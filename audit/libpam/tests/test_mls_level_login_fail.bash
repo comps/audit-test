@@ -58,5 +58,5 @@ backup /var/run/utmp
 msg_1="acct=\"*$TEST_USER\"* exe=./bin/login.* res=failed.*"
 augrok -q type=USER_START msg_1=~"PAM:session_open $msg_1" auid=$auid \
 	subj=$login_context || exit_fail
-augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$sel_context: exe=./bin/login.* res=failed.*" auid=$auid || exit_fail
+augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$sel_context.*exe=./bin/login.* res=failed.*" auid=$auid || exit_fail
 exit_pass

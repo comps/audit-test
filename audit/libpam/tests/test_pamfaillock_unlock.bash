@@ -33,29 +33,37 @@ disable_ssh_strong_rng
 
 expect -c '
     spawn ssh $env(TEST_USER)@localhost
-    expect -nocase {Are you sure you want to continue} {send "yes\r"}
-    expect -nocase {password: $} {send "badpassword\r"}
-    expect -nocase {permission denied}
-    expect -nocase {password: $} {send "badpassword\r"}
-    expect -nocase {permission denied}
-    expect -nocase {password: $} {send "badpassword\r"}
-    expect -nocase {permission denied} {close; wait}'
+    expect {
+        {continue} { send "yes\r"; exp_continue }
+	{assword} { send "badpassword\r" }
+    }
+    expect {
+        {denied} { exp_continue }
+        {assword} { send "badpassword\r" }
+    }
+    expect {
+        {denied} { exp_continue }
+        {assword} { send "badpassword\r" }
+    }
+    expect -nocase {denied} { close; wait }'
 
 # test
 /sbin/faillock --user $TEST_USER --reset > /dev/null || exit_error
 
-msg_1="faillock reset uid=$tuid: exe=./sbin/faillock.*res=success.*"
+msg_1="faillock reset uid=$tuid.*exe=./sbin/faillock.*res=success.*"
 augrok -q type=USER_ACCT msg_1=~"$msg_1" || exit_fail
 
 # verify the account is unlocked
 expect -c '
     spawn ssh $env(TEST_USER)@localhost
-    expect -nocase {Are you sure you want to continue} {send "yes\r"}
-    expect -nocase {password: $} {
-        send "$env(TEST_USER_PASSWD)\r"
-        send "PS1=:\\::\r"
+    expect {
+        {continue} { send "yes\r"; exp_continue }
+        {assword} {
+            send "$env(TEST_USER_PASSWD)\r"
+            send "PS1=:\\::\r"
+        }
     }
-    expect {:::$} {close; wait}'
+    expect {:::$} { close; wait }'
 
 msg_2="acct=\"$TEST_USER\" exe=./usr/sbin/sshd.*terminal=ssh res=success.*"
 augrok -q type=CRED_ACQ msg_1=~"PAM:setcred $msg_2" || exit_fail

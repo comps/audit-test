@@ -23,14 +23,15 @@ source tp_ssh_functions.bash || exit 2
 disable_ssh_strong_rng
 
 # test
-expect -c '
-    spawn ssh $env(TEST_USER)@localhost
-    expect -nocase {Are you sure you want to continue} {send "yes\r"}
-    expect -nocase {password: $} {
-        send "$env(TEST_USER_PASSWD)\r"
-        send "PS1=:\\::\r"
+expect -c "
+    spawn ssh ${TEST_USER}@localhost
+    expect {
+        {continue} {send yes\r; exp_continue}
+        {assword} {send ${TEST_USER_PASSWD}\r}
     }
-    expect {:::$} {close; wait}'
+    expect {$TEST_USER} {send exit\r}
+    expect eof
+    exit 0"
 
 msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./usr/sbin/sshd.*terminal=ssh res=success.*"
 augrok -q type=CRED_REFR msg_1=~"PAM: setcred $msg_1" || \

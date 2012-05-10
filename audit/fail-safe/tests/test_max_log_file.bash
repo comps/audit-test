@@ -30,14 +30,17 @@ write_config -s "$auditd_conf" \
     max_log_file=$max_log_file \
     max_log_file_action=$action || exit 2
 
-restart_auditd || exit 2
-
 # Prepopulate log with max_log_file minus 5k
 write_file "$audit_log" $((max_log_file * 1024 - 5)) || exit 2
+
+restart_auditd || exit 2
+
+echo "audit.log size before: $(stat -c %s $audit_log)"
 
 # each record is at least 80 bytes (based on empirical evidence), so writing
 # 200 records should always take us over (200 * 80 =~ 15k)
 write_records 200 || exit 2
+echo "audit.log size after: $(stat -c %s $audit_log)"
 
 case $action in
     email)

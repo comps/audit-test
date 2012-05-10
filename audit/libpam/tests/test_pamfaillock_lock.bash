@@ -21,6 +21,9 @@
 source pam_functions.bash || exit 2
 source tp_ssh_functions.bash || exit 2
 
+# make sure faillock is reset for TEST_USER
+/sbin/faillock --user $TEST_USER --reset > /dev/null || exit_error
+
 # setup
 tuid=$(id -u $TEST_USER)
 grep -q pam_faillock /etc/pam.d/sshd || grep -q pam_faillock /etc/pam.d/password-auth || exit_error
@@ -33,16 +36,22 @@ disable_ssh_strong_rng
 
 expect -c '
     spawn ssh $env(TEST_USER)@localhost
-    expect -nocase {Are you sure you want to continue} {send "yes\r"}
-    expect -nocase {password: $} {send "badpassword\r"}
-    expect -nocase {permission denied}
-    expect -nocase {password: $} {send "badpassword\r"}
-    expect -nocase {permission denied}
-    expect -nocase {password: $} {send "badpassword\r"}
-    expect -nocase {permission denied} {close; wait}'
+    expect {
+        {continue} { send "yes\r"; exp_continue }
+    {assword} { send "badpassword\r" }
+    }
+    expect {
+        {denied} { exp_continue }
+        {assword} { send "badpassword\r" }
+    }
+    expect {
+        {denied} { exp_continue }
+        {assword} { send "badpassword\r" }
+    }
+    expect -nocase {denied} { close; wait }'
 
 # test
-msg_1="pam_faillock uid=$tuid : exe=./usr/sbin/sshd.*res=success.*"
+msg_1="pam_faillock uid=$tuid.*exe=./usr/sbin/sshd.*res=success.*"
 augrok -q type=ANOM_LOGIN_FAILURES msg_1=~"$msg_1" || exit_fail
 augrok -q type=RESP_ACCT_LOCK msg_1=~"$msg_1" || exit_fail
 

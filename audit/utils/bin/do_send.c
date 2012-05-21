@@ -24,10 +24,9 @@ int main(int argc, char **argv)
   struct addrinfo *host = NULL;
   struct addrinfo addr_hints;
   int sock;
-  int tnum;
 
-  if (argc != 5) {
-    fprintf(stderr, "Usage:\n%s <host> tcp|udp <port> <tnum>\n", argv[0]);
+  if (argc < 4) {
+    fprintf(stderr, "Usage:\n%s <host> tcp|udp <port>\n", argv[0]);
     return TEST_ERROR;
   }
 
@@ -40,7 +39,6 @@ int main(int argc, char **argv)
     addr_hints.ai_protocol = IPPROTO_UDP;
   } else
     return TEST_ERROR;
-  tnum = *argv[4];
   rc = getaddrinfo(argv[1], argv[3], &addr_hints, &host);
   if (rc < 0)
     return TEST_ERROR;

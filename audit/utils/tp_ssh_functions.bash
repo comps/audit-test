@@ -49,18 +49,21 @@ function ssh_remove_strong_rng_env {
 }
 
 # Remove SSH_USE_STRONG_RNG exporting from give file
+# Does nothing if given file does not exist
+# $1 - file
 function ssh_remove_strong_rng {
     [ "x$1" = "x" ] && exit_error "No file given for $FUNCNAME"
-    [ -f $1 ] || exit_error "$FUNCNAME: No file $1 found"
+    [ -f $1 ] || return
 
     sed -i "s/.*SSH_USE_STRONG_RNG.*//g" $1
 }
 
 # Remove sleep calls from given file
+# Does nothing if given file does not exist
 # $1 - file
 function ssh_remove_screen {
     [ "x$1" = "x" ] && exit_error "No file given for $FUNCNAME"
-    [ -f $1 ] || exit_error "$FUNCNAME: No file $1 found"
+    [ -f $1 ] || return
 
     sed -i "s/.*sleep [0-9]\+.*//g; s/.*exec.*SCREENEXEC.*//g" $1
 }
@@ -360,9 +363,9 @@ function disable_ssh_strong_rng {
     CCCONF="/etc/profile.d/cc-configuration.sh"
 
     # backup global profile and remove sleep
-    backup $MPROFILE
-    backup $SSHDCONF
-    backup $CCCONF
+    [ -e $MPROFILE ] && backup $MPROFILE
+    [ -e $SSHDCONF ] && backup $SSHDCONF
+    [ -e $CCCONF ] && backup $CCCONF
 
     ssh_remove_screen $MPROFILE
 

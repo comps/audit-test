@@ -33,6 +33,9 @@ write_config -s "$auditd_conf" \
 # Prepopulate log with max_log_file minus 5k
 write_file "$audit_log" $((max_log_file * 1024 - 5)) || exit 2
 
+# chmod new audit log file to 600 - auditd requirement
+chmod 600 $audit_log
+
 restart_auditd || exit 2
 
 echo "audit.log size before: $(stat -c %s $audit_log)"

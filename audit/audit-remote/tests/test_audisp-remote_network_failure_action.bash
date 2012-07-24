@@ -53,7 +53,7 @@ function trigger_daemon_network_failure_action {
     # Give it some time to send few messages and then simulate remote ending
     sleep 2
     prepend_cleanup "iptables  -D INPUT -t filter --protocol tcp --sport 61 --dport 60 -j DROP"
-    iptables  -A INPUT -t filter --protocol tcp --sport 61 --dport 60 -j DROP
+    iptables  -I INPUT -t filter --protocol tcp --sport 61 --dport 60 -j DROP
     wait $pid_audisp_remote
     iptables  -D INPUT -t filter --protocol tcp --sport 61 --dport 60 -j DROP
 }

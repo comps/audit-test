@@ -199,6 +199,7 @@ configure_local_audisp_remote() {
 
 create_user_test_msg() {
     /sbin/auditctl -m "audisp-remote test message"
+    sleep 2
     msg="`tail $audit_log | grep 'type=USER.*audisp-remote test message'`"
     [ -z "$msg" ] && exit_error "Failed to create USER test message"
     echo "$msg"

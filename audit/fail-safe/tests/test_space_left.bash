@@ -35,7 +35,12 @@ fill_disk ${audit_log%/*} $((2048 + 5)) || exit 2
 
 # each record is at least 80 bytes (based on empirical evidence), so writing
 # 200 records should always take us over (200 * 80 =~ 15k)
-write_records 200 || exit 2
+# On PPC architecture use more records to reliably hit the action
+if [ "$ARCH" = "PPC" ]; then
+    write_records 500 || exit 2
+else
+    write_records 200 || exit 2
+fi
 
 case $action in
     email)

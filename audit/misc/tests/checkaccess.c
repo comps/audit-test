@@ -12,7 +12,7 @@ int g_rc = 0;
 /*
  * Do not include . or .. in directory list.
  */
-int file_select (struct direct *entry)
+int file_select (const struct direct *entry)
 {
   if ((strcmp (entry->d_name, ".") == 0)
       || (strcmp (entry->d_name, "..") == 0))
@@ -79,6 +79,12 @@ int check_access (char *pathname)
 	goto EXIT;
       }
     } else {
+      // ignore symlinks
+      rc = lstat(entry, &statbuf);
+      if(rc == 0 && S_ISLNK(statbuf.st_mode) == 1) {
+    printf("INFO: %s/%s. Skipping symlink\n", pathname, entries[i]->d_name);
+    continue;
+      }
       if ((rc = stat(entry, &statbuf)) == -1) {
 	printf("FAIL: %s. Could not obtain file status\n", entry);
 	g_rc = -1;

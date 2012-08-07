@@ -65,22 +65,28 @@ testlogin() {
 #             1. Verify user can not log in if tty is not in /etc/securetty.
 
 (
-	# Add tty1 to /etc/securetty
-	grep -q "^tty1$" /etc/securetty || echo "tty1" >> /etc/securetty
+	# find a usable tty
+	TTY=$(ps ax | grep tty[0-9].*getty | grep -o tty[0-9] | head -1)
+	if [ "$TTY" = "" ]; then
+		exit_error "No suitable TTY found for test"
+	fi
+
+	# Add $TTY to /etc/securetty
+	grep -q "^$TTY$" /etc/securetty || echo "$TTY" >> /etc/securetty
 
 	# Verify that root login succeeds
-	testlogin /dev/tty1 root $PASSWD
+	testlogin /dev/$TTY root $PASSWD
 	if [ "$?" -ne "0" ]; then
 		echo "ERROR - login attempt failed when it should have succeeded."
 		exit_fail
 	fi
 
-	# Remove tty1 from /etc/securetty
-	grep -v "^tty1$" /etc/securetty > /etc/securetty.new
+	# Remove $TTY from /etc/securetty
+	grep -v "^$TTY$" /etc/securetty > /etc/securetty.new
 	mv -f /etc/securetty.new /etc/securetty
 
 	# Verify that root login fails
-	testlogin /dev/tty1 root $PASSWD
+	testlogin /dev/$TTY  root $PASSWD
 	if [ "$?" -eq "0" ]; then
 		echo "ERROR - login attempt succeeded when it should have failed."
 		exit_fail

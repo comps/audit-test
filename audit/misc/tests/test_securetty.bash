@@ -74,7 +74,7 @@ testlogin() {
 		TTY=$DTTY # need to set this for rest of script
 		which initctl
 		if [ $? -eq 0 ]; then
-		initctl start tty /dev/$DTTY
+		initctl start tty TTY=/dev/$DTTY
 		else
 			systemctl start getty@$DTTY.service
 		fi

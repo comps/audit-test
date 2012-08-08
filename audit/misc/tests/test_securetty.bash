@@ -32,6 +32,9 @@ backup /var/run/utmp
 # We will be modifying /etc/securetty, so back we it up.
 backup /etc/securetty
 
+# preferred TTY
+DTTY="tty3"
+
 # $1: full tty name
 # $2: user name
 # $3: password
@@ -63,12 +66,20 @@ testlogin() {
 #  Test case: Verification of the correct operation of /etc/securetty.
 #             1. Verify user can log in if tty is in /etc/securetty.
 #             1. Verify user can not log in if tty is not in /etc/securetty.
-
 (
-	# find a usable tty
+	# find a usable tty, and if none found spawn a new one
 	TTY=$(ps ax | grep tty[0-9].*getty | grep -o tty[0-9] | head -1)
 	if [ "$TTY" = "" ]; then
-		exit_error "No suitable TTY found for test"
+		# if tty not found spawn tty3
+		TTY=$DTTY # need to set this for rest of script
+		which initctl
+		if [ $? -eq 0 ]; then
+		initctl start tty /dev/$DTTY
+		else
+			systemctl start getty@$DTTY.service
+		fi
+		prepend_cleanup "initctl stop tty TTY=/dev/$DTTY"
+		sleep 5
 	fi
 
 	# Add $TTY to /etc/securetty

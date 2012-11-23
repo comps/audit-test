@@ -51,10 +51,10 @@ run 'make dist' from the top of the git tree:
 The tar file will be audit-<commit>.tar.gz
 
 Alternatively, you can create a tar file for just the audit-test
-suite by running 'make dist' from the 'audit' directory at the top of
+suite by running 'make dist' from the 'audit-test' directory at the top of
 the git tree:
 
-# cd audit-test.git/audit
+# cd audit-test.git/audit-test
 # make dist
 
 The tar file will be ../audit-test-<commit>.tar.gz

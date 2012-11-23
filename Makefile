@@ -34,8 +34,6 @@ TOPDIR		= .
 
 include $(TOPDIR)/rules.mk
 
-DIRS        = audit ltp
-
 SUB_DIRS        = audit-test ltp
 
 LOG		= run.log
@@ -76,7 +74,7 @@ dist:
 	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \
 	tmpdir=$$(mktemp -d) && \
 	into=$$(pwd) && \
-	for DIR in $(DIRS); do make -C "$$DIR" dist; done && \
+	for DIR in $(SUB_DIRS); do make -C "$$DIR" dist; done && \
 	mv "ltp-$$rev.tar.gz" "audit-test-$$rev.tar.gz" "$$tmpdir" && \
 	cp "Makefile" "rules.mk" "$$tmpdir" && \
 	cd "$$tmpdir" && \

@@ -32,9 +32,9 @@ function create_luks {
 	expect -c "
 		set timeout $TIMEOUT
 		spawn cryptsetup luksFormat $LOOPDEV
-		expect {Are you sure} {send \"YES\r\"}
-		expect {Enter} {send \"$1\r\"}
-		expect {Verify} {send \"$1\r\"}
+		expect {Are you sure} {send YES\r}
+		expect {Enter} {sleep 1; send \"$1\r\"}
+		expect {Verify} {sleep 1; send \"$1\r\"}
 		expect eof
 	"
 }
@@ -83,9 +83,9 @@ function addkey_luks {
 	expect -c "
 		set timeout $TIMEOUT
 		spawn cryptsetup luksAddKey $LOOPDEV
-		expect {Enter any} {send \"$1\r\"}
-		expect {Enter new} {send \"$2\r\"}
-		expect {Verify} {send \"$2\r\"}
+		expect {Enter any} {sleep 1; send \"$1\r\"}
+		expect {Enter new} {sleep 1; send \"$2\r\"}
+		expect {Verify} {sleep 1; send \"$2\r\"}
 		expect eof
 	"
 }
@@ -105,8 +105,11 @@ function open_luks {
 	expect -c "
 		set timeout $TIMEOUT
 		spawn cryptsetup luksOpen $LOOPDEV $1
-		expect {Enter passphrase} {send \"$2\r\"}
-		expect eof { exit 0 }
+		expect {Enter passphrase} {sleep 1; send \"$2\r\"}
+		expect {
+            eof { exit 0 }
+            {No key available} { exit 1 }
+        }
 		exit 1
 	"
 

@@ -126,7 +126,7 @@ function ssh_create_key {
         spawn ssh $1@localhost \"ssh-keygen -t $3 -b $4 -N '$5' -f \\\$(pwd)/.ssh/id_$3\"
         expect {
             {yes/no} { send -- \"yes\r\"; exp_continue }
-            {Password} { send -- \"$2\r\" }
+            {assword:} { send -- \"$2\r\" }
             default { exit 1 }
         }
         expect {randomart} { exit 0 }
@@ -166,7 +166,7 @@ function ssh_cmd {
         spawn ssh $1@localhost \"$3\"
         expect {
             {yes/no} { send -- yes\r; exp_continue }
-            {Password} { send -- $2\r }
+            {assword:} { send -- $2\r }
         }
         expect eof { exit 0 }
         exit 1"
@@ -261,13 +261,13 @@ function ssh_copy_key {
         spawn ssh $1@localhost
         expect {
             {yes/no} { send -- yes\r; exp_continue }
-            {Password} { send -- $2\r }
+            {assword:} { send -- $2\r }
         }
         expect {$1}
         send -- \"ssh-copy-id -i $PRIVKEY $3@localhost\r\"
         expect {
             {yes/no} { send -- yes\r; exp_continue }
-            {Password} { send -- $4\r }
+            {assword:} { send -- $4\r }
             default { exit 1 }
         }
         expect {try logging}
@@ -294,14 +294,14 @@ function ssh_connect_nopass {
         spawn ssh $1@localhost
         expect {
             {yes/no} { send -- yes\r; exp_continue }
-            {Password} { send -- $2\r }
+            {assword:} { send -- $2\r }
         }
         expect {$1}
         send -- \"ssh $3@localhost whoami\r\"
         expect {
             {yes/no} { exit 1 }
             {$3} { exit 0 }
-            {Password} { exit 2 }
+            {assword:} { exit 2 }
             {passphrase} { send -- $4; exp_continue }
             default { exit 3 }
         }
@@ -329,18 +329,18 @@ function ssh_connect_pass {
         spawn ssh $1@localhost
         expect {
             {yes/no} { send -- yes\r; exp_continue }
-            {Password} { send -- $2\r }
+            {assword:} { send -- $2\r }
         }
         expect {$1}
         send -- \"ssh $5 $3@localhost whoami\r\"
         expect {
             {yes/no} { send -- yes\r; exp_continue }
-            {Password} { send -- $4\r }
+            {assword:} { send -- $4\r }
             {passphrase} { send -- INCORRECTPASS\r; exp_continue }
             default { exit 1 }
         }
         expect {
-            {Password} { send -- $4\r; exp_continue }
+            {assword:} { send -- $4\r; exp_continue }
             {Permission denied} { exit 2 }
             {$3} { exit 0 }
         }

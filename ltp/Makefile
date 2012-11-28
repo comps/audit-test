@@ -43,7 +43,7 @@ LTP_SOURCE = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20140422
 LTP_TMPDIR = /opt/ltp/tmp
 
 # save allow_execmem
-ORIG_BOOL = $(shell getsebool allow_execmem | cut -d\  -f3)
+ORIG_BOOL = $(shell getsebool deny_execmem | cut -d\  -f3)
 
 # save kernel param msgmni
 ORIG_KPARAM = $(shell sysctl -n kernel.msgmni)
@@ -107,7 +107,7 @@ rerun::
 runtests::
 	echo "Makefile: runtests"
 	# needed for sendfile tests
-	setsebool allow_execmem=on
+	setsebool deny_execmem=off
 	# needed for msgctl11 to pass, see
 	#  http://www.mail-archive.com/ltp-list@lists.sourceforge.net/msg12767.html
 	sysctl kernel.msgmni=700
@@ -119,7 +119,7 @@ runtests::
 	echo "Running mnt_syscalls tests"
 	/opt/ltp/testscripts/mnt_syscalls.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/mnt_syscalls.rollup.log 2>&1 | tee mnt_syscalls.run.log
 	# cleanup
-	setsebool allow_execmem=$(ORIG_BOOL)
+	setsebool deny_execmem=$(ORIG_BOOL)
 	sysctl kernel.msgmni=$(ORIG_KPARAM)
 
 report::

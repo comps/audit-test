@@ -68,9 +68,8 @@ fi
 
 grep -q $modified aide.log || exit_fail "Modified file not found in aide.log"
 
-msg1="added=0 removed=0 changed=1: exe=./usr/sbin/aide.*res=failed"
+msg1="added=0 removed=0 changed=1[:]{0,1} exe=./usr/sbin/aide.*res=failed"
 augrok -q type=ANOM_RBAC_INTEGRITY_FAIL msg_1=~"${msg1}" || \
   exit_fail "unable to find audit record containing $msg1"
 
 exit_pass
-

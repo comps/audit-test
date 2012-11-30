@@ -33,7 +33,7 @@
 #   Segmentation fault (core dumped)
 #
 # Test without RELRO should pass:
-#   $ gcc -pie -fPIE -g -o no-relro relro.c
+#   $ gcc -pie -fPIE -g  -Wl,-z,norelro -o no-relro relro.c
 #   $ ./no-relro
 #
 
@@ -55,7 +55,7 @@ set -x
 [ ! $? -eq 139 ] && exit_fail "Test is expected to crash with segmentation fault"
 
 # Bad case
-/usr/bin/gcc -pie -fPIE -g -o no-relro relro.c || \
+/usr/bin/gcc -pie -fPIE -g  -Wl,-z,norelro -o no-relro relro.c || \
     exit_error "Failed to build test program"
 ./no-relro || exit_fail "Test is expected to pass without RELRO"
 

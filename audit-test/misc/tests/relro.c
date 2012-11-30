@@ -20,7 +20,7 @@
  *   Segmentation fault (core dumped)
  *
  * Test without RELRO should pass:
- *   $ gcc -pie -fPIE -g -o no-relro relro.c
+ *   $ gcc -pie -fPIE -g  -Wl,-z,norelro -o no-relro relro.c
  *   $ ./no-relro
  *
 **/

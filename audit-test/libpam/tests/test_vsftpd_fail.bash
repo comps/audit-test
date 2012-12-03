@@ -21,12 +21,12 @@
 source pam_functions.bash || exit 2
 
 # setup
-prepend_cleanup "initcall $vsftpd_init restart 63>/dev/null"
+prepend_cleanup "service vsftpd restart 63>/dev/null"
 backup "$vsftpd_conf"
 write_config \
       "$vsftpd_conf" \
       local_enable=YES
-initcall $vsftpd_init restart 63>/dev/null
+service vsftpd restart 63>/dev/null
 
 # test
 expect -c '

@@ -23,7 +23,7 @@ source pam_functions.bash || exit 2
 # setup
 setsebool -P ftp_home_dir=1
 # XXX: fd 63 is left open by something, causing the tests to hang
-prepend_cleanup "initcall $vsftpd_init restart 63>/dev/null"
+prepend_cleanup "service vsftpd restart 63>/dev/null"
 prepend_cleanup "setsebool -P ftp_home_dir=0"
 backup "$vsftpd_conf"
 write_config \
@@ -31,7 +31,7 @@ write_config \
 	local_enable=YES
 
 # XXX: fd 63 is left open by something, causing the tests to hang
-initcall $vsftpd_init restart 63>/dev/null
+service vsftpd restart 63>/dev/null
 
 echo Made it this far
 

@@ -248,13 +248,7 @@ on the TOE and re-running the NS setup procedure described in README.netwk_svr.
 After configuring the interfaces you need to restart the networking for the
 changes to take effect.
 
-On a CAPP machine, perform the following:
-
 # service network restart
-
-On an LSPP machine, perform:
-
-# run_init service network restart
 
 After restarting the network on the TOE and NS, verify the
 configuration by examining the results of 'ifconfig' on each

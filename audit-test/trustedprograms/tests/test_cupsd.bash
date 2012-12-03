@@ -34,12 +34,7 @@ sed -ie "s/.*ClassifyOverride.*/ClassifyOverride yes/" /etc/cups/cupsd.conf
 sed -ie "s/.*PerPageLabels.*/PerPageLabels no/" /etc/cups/cupsd.conf
 
 # test
-expect -c "
-    spawn /usr/sbin/run_init /etc/init.d/cups restart
-    expect {
-        -nocase \"password: \" {send \"$PASSWD\\r\"; exp_continue}
-        eof
-    }"
+/sbin/service cups restart
 
 # verify
 augrok -q type=LABEL_LEVEL_CHANGE msg_1=~".Config. Classification=mls.*" || exit_fail

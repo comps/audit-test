@@ -347,7 +347,7 @@ workaround if you experience these failures.
 2. Login as eal
 3. Use 'newrole -r lspp_test_r' to change to root/lspp_test_r
 4. Use '/bin/su -' to change to root
-5. Run 'run_init /etc/rc.local' to re-initialize the IPsec subsystem
+5. Run '/etc/rc.local' to re-initialize the IPsec subsystem
 6. Run the following commands:
    # export PASSWD=<password>
    # export PPROFILE=lspp
@@ -478,13 +478,9 @@ If not running RHEL6, make sure vsftpd is available on the system and
 configured to start in runlevel 3.  If it is not, configure vsftpd with
 the following commands:
 
-On a CAPP/base machine (except RHEL6):
+On a RHEL machine (except RHEL6 or greater):
 # chkconfig vsftpd on
 # service vsftpd start
-
-On an LSPP/MLS machine (except RHEL6):
-# chkconfig vsftpd on
-# run_init /etc/init.d/vsftpd start
 
 On a SuSE system:
 # echo audit >> /etc/pwdutils/logging

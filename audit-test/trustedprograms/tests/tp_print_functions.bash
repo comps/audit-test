@@ -109,22 +109,12 @@ function setup_cupsd {
     fi
 
     backup /etc/cups/cupsd.conf
-    prepend_cleanup 'expect -c "spawn /usr/sbin/run_init /etc/init.d/cups restart \
-      expect { \
-        -nocase \"password: \" {send \"$PASSWD\\r\"; exp_continue} \
-        eof \
-      }"'
+    /sbin/service cups restart
 
     sed -ie "s/Classification.*/Classification mls/" /etc/cups/cupsd.conf
     sed -ie "s/.*PerPageLabels.*/PerPageLabels no/" /etc/cups/cupsd.conf
 
-    expect -c "
-      spawn /usr/sbin/run_init /etc/init.d/cups restart
-      expect {
-        -nocase \"password: \" {send \"$PASSWD\\r\"; exp_continue}
-        eof
-      }"
-
+    /sbin/service cups restart
     /sbin/service cups status || exit_error "cupsd is not running"
 
 }

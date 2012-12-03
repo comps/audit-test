@@ -35,10 +35,6 @@ export PATH=$PATH:$TOPDIR
 export PATH=$PATH:$TOPDIR/audit-remote/tests/
 export PATH=$PATH:$TOPDIR/utils/
 
-# We need to source profile with defined global variable PASSWD,
-# this is expected to reside in $TOPDIR
-source profile.bash
-logger "Using PASSWD=$PASSWD as run_init password"
 source audisp-remote_functions.bash || exit 2
 
 action="$1"
@@ -112,7 +108,6 @@ write_client_configs() {
 # Debugging call, it is not used in the test suite at all
 call_ns_connection_check() {
     echo "NS call values: action=$action, mode=$mode, caller_ipv4=$caller_ipv4"
-    echo "NS profile values: PASSWD=$PASSWD"
     logger "call_ns_connection(): success on NS side"
 }
 

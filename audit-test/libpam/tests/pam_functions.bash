@@ -29,8 +29,6 @@ if [[ "$DISTRO" != "RHEL" ]] ; then
     else
         exit_error "Unable to find vsftpd.conf"
     fi
-
-    vsftpd_init=/etc/init.d/vsftpd
 fi
 
 # XXX should determine this from policy

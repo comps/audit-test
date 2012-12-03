@@ -87,45 +87,25 @@ remote_client_test_string="Client record for audit remote logging test"
 # Auditd service handling
 
 ns_service_auditd_stop() {
-    expect -c "
-    spawn /usr/sbin/run_init /sbin/service auditd stop
-    expect {
-        -nocase \"password: \" {send \"$PASSWD\\r\"; exp_continue}
-        eof
-    }"
+    /sbin/service auditd stop
     /sbin/service auditd status && rc=1
     return ${rc:-0}
 }
 
 ns_service_auditd_start() {
-    expect -c "
-    spawn /usr/sbin/run_init /sbin/service auditd start
-    expect {
-        -nocase \"password: \" {send \"$PASSWD\\r\"; exp_continue}
-        eof
-    }"
+    /sbin/service auditd start
     /sbin/service auditd status
     return $?
 }
 
 ns_service_auditd_restart() {
-    expect -c "
-    spawn /usr/sbin/run_init /sbin/service auditd restart
-    expect {
-        -nocase \"password: \" {send \"$PASSWD\\r\"; exp_continue}
-        eof
-    }"
+    /sbin/service auditd restart
     /sbin/service auditd status
     return $?
 }
 
 ns_service_auditd_rotate() {
-    expect -c "
-    spawn /usr/sbin/run_init /sbin/service auditd rotate
-    expect {
-        -nocase \"password: \" {send \"$PASSWD\\r\"; exp_continue}
-        eof
-    }"
+    /sbin/service auditd rotate
     /sbin/service auditd status
     return $?
 }

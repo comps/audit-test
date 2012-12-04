@@ -263,7 +263,7 @@ function startup {
         chcon system_u:object_r:auditd_etc_t:s15:c0.c1023 $auditd_conf
     fi
 
-    start_auditd >/dev/null || die
+    start_service auditd >/dev/null || die
     killall -HUP auditd	# reload config when auditd was already running
 
     # Add the test user which is used for unprivileged tests

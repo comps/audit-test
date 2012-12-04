@@ -187,76 +187,111 @@ function parse_named {
 }
 
 ######################################################################
-# auditd functions
+# service functions
 ######################################################################
 
-function start_auditd {
+function start_service {
     declare i
-    local log_file=${1:-"/var/log/audit/audit.log"}
+    local i_max=100
 
-    if ! pidof auditd &>/dev/null; then
+    if ! pgrep -f  sbin/$1 &>/dev/null; then
 	if [ "$DISTRO" = "SUSE" ]; then
-	    rcauditd start || return 2
-	    auditctl -e 1 || return 2
+	    rc${1} start || return 2
 	else
 	    # XXX: fd 63 is left open by something, causing the tests to hang
-	    service auditd start 63>/dev/null || return 2
+	    service $1 start 63>/dev/null || return 2
 	fi
     fi
 
-    # auditd daemonizes before it is ready to receive records from the kernel.
-    # make sure it's receiving before continuing.
-    echo -n "start_auditd: Waiting for auditd to start"
-    for ((i = 0; i < 100; i++)); do
-	auditctl -r 0 >/dev/null
-	if tail -n10 $log_file | grep -Fq audit_rate_limit=0; then
+    # Busy waiting.
+    echo -n "start_service: Waiting for $1 to start"
+    for (( i=0; i < i_max; i++ )) do
+	if pgrep -f  sbin/${1} &>/dev/null; then
 	    echo
-	    return 0
+	    break
 	fi
 	echo -n .
 	sleep 0.1
     done
+    if [ $i -eq $i_max ]; then
+	echo
+	echo "start_service: timed out, could not start $1" >&2
+	return 2
+    fi
 
-    echo
-    echo "start_auditd: auditd slow starting, giving up" >&2
+    # Services specifics.
+    case $1 in
+	"auditd" )
+	    [ "$DISTRO" = "SUSE" ] && ( auditctl -e 1 || return 2 )
 
-    return 2
+	    local log_file=${2:-"$audit_log"}
+
+            # auditd daemonizes before it is ready to receive records from the kernel.
+            # make sure it's receiving before continuing.
+	    for (( i=0; i < i_max; i++ )) do
+		auditctl -r 0 >/dev/null
+		if tail -n10 $log_file | grep -Fq audit_rate_limit=0; then
+		    echo
+		    break
+		fi
+		echo -n .
+		sleep 0.1
+	    done
+	    if [ $i -eq $i_max ]; then
+		echo
+		echo "start_service: auditd slow starting, giving up" >&2
+		return 2
+	    fi
+	    ;;
+    esac
+
+    return 0
 }
 
-function stop_auditd {
+function stop_service {
     declare i
+    local i_max=100
 
-    auditctl -D &>/dev/null
+    # Services specifics.
+    case $1 in
+	"auditd" ) auditctl -D &>/dev/null ;;
+    esac
+
     if [ "$DISTRO" = "SUSE" ]; then
-	rcauditd stop || killall auditd
+	rc${1} stop || killall $1
     else
-	service auditd stop || killall auditd
+	service $1 stop || killall $1
     fi
-    pidof auditd &>/dev/null || return 0
 
-    echo -n "stop_auditd: Waiting for auditd to stop"
-    for ((i = 0; i < 100; i++)); do
-	if ! pidof auditd &>/dev/null; then
+    # Busy waiting.
+    echo -n "stop_service: Waiting for $1 to stop"
+    sleep 1
+    for (( i=0; i < i_max; i++ )) do
+	if ! pgrep -f  sbin/${1} &>/dev/null; then
 	    echo
-	    return 0
+	    break
 	fi
 	echo -n .
 	sleep 0.1
     done
+    if [ $i -eq $i_max ]; then
+	echo
+	echo "stop_service: timed out, could not stop $1" >&2
+	return 2
+    fi
 
-    echo
-    echo "stop_auditd: timed out, could not stop auditd" >&2
-
-    return 2
+    return 0
 }
 
-function restart_auditd {
-    # ignore the return status and messages from stop_auditd() as the
-    # audit daemon may not be started yet but we don't consider that a
-    # failure
-    stop_auditd >& /dev/null
-    start_auditd
+function restart_service {
+    stop_service $1
+    systemctl reset-failed $1
+    start_service $1
 }
+
+######################################################################
+# auditd functions
+######################################################################
 
 function rotate_audit_logs {
     declare tmp num_logs
@@ -276,7 +311,7 @@ function rotate_audit_logs {
         # If rotation didn't work, do it manually.
         if [[ audit.log -ef $tmp ]]; then
 	    echo "rotate_audit_logs: Seems that USR1 is not supported"
-            stop_auditd
+            stop_service auditd
             num_logs=$(awk '$1=="num_logs"{print $3;exit}' $auditd_conf)
             while ((--num_logs > 0)); do
                 if ((num_logs == 1)); then
@@ -292,7 +327,7 @@ function rotate_audit_logs {
         popd >/dev/null
     fi
 
-    pidof auditd &>/dev/null || start_auditd
+    pidof auditd &>/dev/null || start_service auditd
 }
 
 ######################################################################

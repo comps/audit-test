@@ -55,11 +55,11 @@ check_received_test_msg
 
 # Modify storage location and check arrived records
 new_log="/var/log/audit/new-audit.log"
-stop_auditd
+stop_service auditd
 append_cleanup rm -f $new_log
 write_config -s $auditd_conf log_file=$new_log
 cat $auditd_conf
-start_auditd $new_log || exit_error "Failed to start auditd service"
+start_service auditd $new_log || exit_error "Failed to start auditd service"
 send_audisp_remote_test_msg $test_msg
 check_received_test_msg $new_log
 

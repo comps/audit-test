@@ -30,7 +30,7 @@ write_config -s "$auditd_conf" \
     # fake a disk error by preloading fprintf to fail on USER messages
     export LD_PRELOAD="$PWD/fprintf.so $LD_PRELOAD"
     echo "Preloading $LD_PRELOAD"
-    # don't use start_auditd because it will send USER messages
+    # don't use start_service auditd because it will send USER messages
     auditd || { auditd -f; exit 2; }
     sleep 2
 ) || exit $?

@@ -99,7 +99,7 @@ else
     configure_local_plugin_disk_low_action
 fi
 
-restart_auditd || exit_error "Failed to restart auditd"
+restart_service auditd || exit_error "Failed to restart auditd"
 
 
 #

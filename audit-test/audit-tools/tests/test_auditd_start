@@ -20,13 +20,13 @@
 #
 # =============================================================================
 
-if service auditd status | grep -q "running"; then
-	service auditd stop 63>/dev/null
-fi
+source testcase.bash || exit 2
+
+stop_service auditd
 
 export AUDIT_SEEK=`stat -c %s /var/log/audit/audit.log`
 
-service auditd start 63>/dev/null || return 2
+start_service auditd || return 2
 
 npid=$(pidof auditd)
 

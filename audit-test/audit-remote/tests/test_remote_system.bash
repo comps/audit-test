@@ -66,7 +66,7 @@ ping_netsrv_and_backup_configs() {
     # Make sure server is there waiting for us and backup audit configs
     /bin/ping -c 3 $LBLNET_SVR_IPV4 || \
         exit_error "Network server not reachable"
-    append_cleanup restart_auditd
+    append_cleanup "restart_service auditd"
 
     backup $auditd_conf
     backup $audisp_remote_conf
@@ -77,7 +77,7 @@ ping_netsrv_and_backup_configs() {
 # TOE is a client and netserver is acting as a server in this case
 configure_toe_client() {
     ping_netsrv_and_backup_configs
-    stop_auditd || exit_error "stop_auditd"
+    stop_service auditd || exit_error "stop_service auditd"
 
     # Configure to act as a client
     write_config -r "$auditd_conf" tcp_listen_port
@@ -99,7 +99,7 @@ configure_toe_client() {
     write_config -s "$au_remote_conf" \
         active=yes
 
-    start_auditd || exit_error "start_auditd"
+    start_service auditd || exit_error "start_service auditd"
 }
 
 configure_toe_client_disk_action() {
@@ -117,7 +117,7 @@ configure_toe_client_disk_action() {
     esac
 
     ping_netsrv_and_backup_configs
-    stop_auditd || exit_error "stop_auditd"
+    stop_service auditd || exit_error "stop_service auditd"
 
     # Netserver is a server and TOE is a client for remote audit logging
     write_config -r "$auditd_conf" tcp_listen_port
@@ -148,7 +148,7 @@ configure_toe_client_disk_action() {
     write_config -s "$au_remote_conf" \
         active=yes
 
-    start_auditd || exit_error "start_auditd"
+    start_service auditd || exit_error "start_service auditd"
 }
 
 
@@ -157,7 +157,7 @@ configure_toe_server() {
     local msg
 
     ping_netsrv_and_backup_configs
-    stop_auditd || exit_error "stop_auditd"
+    stop_service auditd || exit_error "stop_service auditd"
 
     # Configure to act as a server
     write_config -s "$au_remote_conf" \
@@ -173,7 +173,7 @@ configure_toe_server() {
         name_format=user \
         name=REMOTE_LOGGING_SERVER
 
-    start_auditd || exit_error "start_auditd"
+    start_service auditd || exit_error "start_service auditd"
 
     # Make sure we are good to start testing
     msg="`create_user_test_msg`"
@@ -224,7 +224,7 @@ check_server_accepted() {
     search_syslog " audisp-remote: Connected to $LBLNET_SVR_IPV4"
 }
 
-check_server_service_stop() {
+check_server_stop_service() {
     local msg="audisp-remote: remote logging disconnected due to remote server"
     msg+=" is going down, will attempt reconnection"
     # Note: The $msg above will be there only if we have emote_ending_action
@@ -346,7 +346,7 @@ test_client_basic(){
 
     call_remote_function stop_remote_auditd
     sleep 2
-    check_server_service_stop || exit_fail "check_server_service_stop"
+    check_server_stop_service || exit_fail "check_server_stop_service"
 }
 
 test_client_disk_full() {

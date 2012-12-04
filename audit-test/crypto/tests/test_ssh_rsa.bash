@@ -62,7 +62,7 @@ ssh_remove_strong_rng_env
 # remove SSH_USE_STRONG_RNG from files
 ssh_remove_strong_rng $SSHDCONF
 ssh_remove_strong_rng $CCCONF
-service sshd restart
+restart_service sshd
 
 # cleanup .ssh folders
 prepend_cleanup "ssh_cleanup_home $TEST_USER $TEST_USER_PASSWD"

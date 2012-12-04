@@ -311,7 +311,7 @@ chcon system_u:object_r:auditd_log_t:s0 /var/log/audit
 
 prepend_cleanup '
     umount -l /var/log/audit
-    restart_auditd'
+    restart_service auditd'
 backup "$auditd_conf"	# restore done via prepend_cleanup
 
 # default config ignores all problems

@@ -87,27 +87,27 @@ remote_client_test_string="Client record for audit remote logging test"
 # Auditd service handling
 
 ns_service_auditd_stop() {
-    /sbin/service auditd stop
-    /sbin/service auditd status && rc=1
-    return ${rc:-0}
+    stop_service auditd && rc=0
+    /sbin/service auditd status
+    return ${rc:-1}
 }
 
 ns_service_auditd_start() {
-    /sbin/service auditd start
+    start_service auditd && rc=0
     /sbin/service auditd status
-    return $?
+    return ${rc:-1}
 }
 
 ns_service_auditd_restart() {
-    /sbin/service auditd restart
+    restart_service auditd && rc=0
     /sbin/service auditd status
-    return $?
+    return ${rc:-1}
 }
 
 ns_service_auditd_rotate() {
-    /sbin/service auditd rotate
+    /sbin/service auditd rotate && rc=0
     /sbin/service auditd status
-    return $?
+    return ${rc:-1}
 }
 
 
@@ -124,7 +124,7 @@ configure_audit_client() {
 }
 
 configure_audit_server() {
-    stop_auditd
+    stop_service auditd
 
     # Update the config to accept connections
     write_config -s $auditd_conf tcp_listen_port=60
@@ -137,7 +137,7 @@ configure_audit_server() {
         write_config -r $auditd_conf "dispatcher"
     fi
 
-    start_auditd || exit_error "Failed to start auditd service"
+    start_service auditd || exit_error "Failed to start auditd service"
 }
 
 
@@ -147,7 +147,7 @@ configure_audit_server() {
 # before calling this function.
 
 configure_local_audit_server() {
-    stop_auditd
+    stop_service auditd
 
     # Update the config to accept connections
     write_config -s $auditd_conf tcp_listen_port=60
@@ -160,7 +160,7 @@ configure_local_audit_server() {
         write_config -r $auditd_conf "dispatcher"
     fi
 
-    start_auditd || exit_error "Failed to start auditd service"
+    start_service auditd || exit_error "Failed to start auditd service"
 }
 
 configure_local_audisp_remote() {
@@ -610,7 +610,7 @@ common_server_startup() {
 
     prepend_cleanup '
         umount -l /var/log/audit
-        restart_auditd'
+        restart_service auditd'
 
     backup $auditd_conf
     backup $audisp_remote_conf

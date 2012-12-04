@@ -215,19 +215,7 @@ function ipsec_cleanup {
     # flush xfrm state
     ip xfrm state flush
     # reload default xfrm policy
-    if [ "$PASSWD" ]; then
-         expect -c "
-            spawn bash
-            expect {
-                \"]#\" { send -- \"run_init service ipsec restart\r\" }
-            }
-            expect {
-                -nocase password: { send -- \"$PASSWD\r\"; exp_continue }
-                \"]#\" { send -- \"exit\r\" }
-            }"
-    else
-        echo "warning: PASSWD not set, not reloading xfrm policy"
-    fi
+    restart_service ipsec
 }
 append_cleanup 'ipsec_cleanup'
 

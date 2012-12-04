@@ -32,18 +32,18 @@ action=$1
 auditd_active=$(pidof auditd)
 
 # setup
-# make sure pam_loginuid is configured with require_auditd
-if grep "pam_loginuid.so" /etc/pam.d/sshd | grep -qv "require_auditd"; then
+# make sure pam_loginuid is configured with require_service auditd
+if grep "pam_loginuid.so" /etc/pam.d/sshd | grep -qv "require_service auditd"; then
     backup /etc/pam.d/sshd  # restored automatically
-    sed -i '/pam_loginuid\.so/s/$/ require_auditd/' /etc/pam.d/sshd || \
+    sed -i '/pam_loginuid\.so/s/$/ require_service auditd/' /etc/pam.d/sshd || \
 	exit_error
 
 fi
 # make sure auditd is running after test
-prepend_cleanup 'start_auditd'
+prepend_cleanup 'start_service auditd'
 
 if [[ $action == "fail" && -n $auditd_active ]]; then
-    stop_auditd || exit_error
+    stop_service auditd || exit_error
 fi
 
 disable_ssh_strong_rng
@@ -70,5 +70,5 @@ case $?:$action in
 esac
 
 if [[ $action == "fail" && -n $auditd_active ]]; then
-    start_auditd
+    start_service auditd
 fi

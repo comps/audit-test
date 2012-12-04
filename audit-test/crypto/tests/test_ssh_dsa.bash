@@ -56,7 +56,7 @@ ssh_remove_strong_rng_env
 # remove SSH_USE_STRONG_RNG from files
 ssh_remove_strong_rng $SSHDCONF
 ssh_remove_strong_rng $CCCONF
-service sshd restart
+restart_service sshd
 
 # run for both test users
 original_params=("$@")

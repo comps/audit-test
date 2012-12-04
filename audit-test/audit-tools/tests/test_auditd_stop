@@ -20,9 +20,11 @@
 #
 # =============================================================================
 
+source testcase.bash || exit 2
+
 AUDIT_SEEK=`stat -c %s /var/log/audit/audit.log`
 
-service auditd stop 63>/dev/null || return 2
+stop_service auditd || return 2
 auid=$(</proc/$$/loginuid)
 
 augrok --seek=$AUDIT_SEEK type=DAEMON_END auid=$auid

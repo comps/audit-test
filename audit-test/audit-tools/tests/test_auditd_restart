@@ -20,9 +20,11 @@
 #
 # =============================================================================
 
+source testcase.bash || exit 2
+
 export AUDIT_SEEK=`stat -c %s /var/log/audit/audit.log`
 
-service auditd restart 63>/dev/null || return 2
+restart_service auditd || return 2
 npid=$(pidof auditd)
 
 auid=$(</proc/$$/loginuid)

@@ -109,12 +109,12 @@ function setup_cupsd {
     fi
 
     backup /etc/cups/cupsd.conf
-    /sbin/service cups restart
+    restart_service cups
 
     sed -ie "s/Classification.*/Classification mls/" /etc/cups/cupsd.conf
     sed -ie "s/.*PerPageLabels.*/PerPageLabels no/" /etc/cups/cupsd.conf
 
-    /sbin/service cups restart
+    restart_service cups
     /sbin/service cups status || exit_error "cupsd is not running"
 
 }

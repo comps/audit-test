@@ -54,11 +54,11 @@ function trigger_daemon_remote_ending_action {
     ( tail --pid $pid_sleep -n50 -f /var/log/audit/audit.log | audisp-remote ) &
     # Give it some time to send few messages and then simulate remote ending
     sleep 2
-    prepend_cleanup "start_auditd"
-    stop_auditd
+    prepend_cleanup "start_service auditd"
+    stop_service auditd
     sleep 3
     tc qdisc del dev lo root
-    start_auditd
+    start_service auditd
     sleep 2
     # Final sanity check after we restored the correct behaviour
     send_audisp_remote_test_msg $test_msg
@@ -115,7 +115,7 @@ configure_local_audisp_remote
 configure_local_auditd_remote_ending_action
 configure_local_plugin_remote_ending_action
 
-restart_auditd || exit_error "Failed to restart auditd"
+restart_service auditd || exit_error "Failed to restart auditd"
 
 # Make sure remote logging part works
 test_msg="`create_user_test_msg`"

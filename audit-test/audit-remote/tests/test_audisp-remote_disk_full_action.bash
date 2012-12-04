@@ -106,7 +106,7 @@ configure_local_audisp_remote
 configure_local_auditd_disk_full_action IGNORE
 configure_local_plugin_disk_full_action
 
-restart_auditd || exit_error "Failed to restart auditd"
+restart_service auditd || exit_error "Failed to restart auditd"
 
 # Make sure remote logging part works
 test_msg="`create_user_test_msg`"

@@ -38,8 +38,8 @@ source tp_mount_functions.bash || exit 2
 source tp_context_functions.bash || exit 2
 
 # stop mcstrans service (the mcstrans is by default started during testing)
-service mcstrans stop
-prepend_cleanup 'service mcstrans start'
+stop_service mcstrans
+prepend_cleanup 'start_service mcstrans'
 
 # create a loopback VFAT filesystem
 dd if=/dev/zero of=$tmp1 count=100k bs=1024 || exit_error "dd failed"

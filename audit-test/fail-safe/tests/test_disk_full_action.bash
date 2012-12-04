@@ -26,7 +26,7 @@ source auditd_common.bash || exit 2
 write_config -s "$auditd_conf" \
     disk_full_action=$action || exit 2
 
-restart_auditd || exit 2
+restart_service auditd || exit 2
 
 # Fill the filesystem hosting audit.log, leaving 5k available
 # On power systems the page size is 64k so leave slightly more than that

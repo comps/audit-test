@@ -28,7 +28,7 @@ write_config -s "$auditd_conf" \
     space_left_action=$action \
     admin_space_left=1 || exit 2
 
-restart_auditd || exit 2
+restart_service auditd || exit 2
 
 # Fill the filesystem hosting audit.log, leaving 2MB + 5KB available
 fill_disk ${audit_log%/*} $((2048 + 5)) || exit 2

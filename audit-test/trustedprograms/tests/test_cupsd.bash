@@ -34,7 +34,7 @@ sed -ie "s/.*ClassifyOverride.*/ClassifyOverride yes/" /etc/cups/cupsd.conf
 sed -ie "s/.*PerPageLabels.*/PerPageLabels no/" /etc/cups/cupsd.conf
 
 # test
-/sbin/service cups restart
+restart_service cups
 
 # verify
 augrok -q type=LABEL_LEVEL_CHANGE msg_1=~".Config. Classification=mls.*" || exit_fail

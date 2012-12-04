@@ -359,7 +359,7 @@ function disable_ssh_strong_rng {
     ssh_remove_screen $MPROFILE
 
     # restart sshd to get default state with SSH_USE_STRONG_RNG enabled
-    service sshd restart
+    restart_service sshd
 
     # remove SSH_USE_STRONG_RNG from environment
     ssh_remove_strong_rng_env
@@ -368,5 +368,5 @@ function disable_ssh_strong_rng {
     ssh_remove_strong_rng $SSHDCONF
     ssh_remove_strong_rng $CCCONF
 
-    service sshd restart
+    restart_service sshd
 }

@@ -307,7 +307,7 @@ mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit
 # fix permissions for temporary audit logs
 # FIXME: chcon should be conditionalized based on the presence of selinux
 chmod 750 /var/log/audit
-chcon system_u:object_r:auditd_log_t /var/log/audit
+chcon system_u:object_r:auditd_log_t:s0 /var/log/audit
 
 prepend_cleanup '
     umount -l /var/log/audit

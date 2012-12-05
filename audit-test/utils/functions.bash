@@ -95,6 +95,38 @@ function exit_error {
     exit $status
 }
 
+# xtables_empty - based on xtables-save input, makes a clean ruleset, ready
+#                 to be used with xtables-restore
+#
+# INPUT:  xtables-save format, preferably unmodified
+# OUTPUT: xtables-restore format, ready to be used
+#
+# DESCRIPTION:
+#   The problem with xtables -F ; xtables -X ; xtables -P ... ACCEPT is that
+#   they're related only to the `filter' table by default - they would need to
+#   be called a lot more times to clean other used tables like `raw', `mangle',
+#   `nat' and `security', finding out somehow whether any of them is used first.
+#
+#   A simple xtables-restore solution, restoring empty ruleset, is also not easy
+#   - if you specify ie. only the `filter' table, no other table gets touched.
+#   If you specify all possible tables, all modules related to those tables get
+#   loaded, even if they weren't originally loaded (ie. iptable_* modules).
+#
+#   The solution is therefore to parse xtables-save output to find out which
+#   tables are used and generate empty ruleset to zero them.
+#   This solution can be generic enough to work for iptables, ip6tables,
+#   ebtables, arptables and any other tables there might be.
+function xtables_empty {
+    # grep:
+    #   - currently loaded table names
+    #   - only predefined chains (no user chains)
+    #   - include COMMIT statements for each table
+    # sed:
+    #   - replace DROP default policies by ACCEPT
+    #   - zero packet and byte counters
+    grep -e '^\*' -e '^:[^ ]* [^-]' -e '^COMMIT$' | sed 's/DROP/ACCEPT/ ; s/\[[0-9]*:[0-9]*\]/\[0:0\]/'
+}
+
 # parse_named - Parse key=value test arguments
 #
 # INPUT

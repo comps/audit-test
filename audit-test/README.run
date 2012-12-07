@@ -347,7 +347,7 @@ workaround if you experience these failures.
 2. Login as eal
 3. Use 'newrole -r lspp_test_r' to change to root/lspp_test_r
 4. Use '/bin/su -' to change to root
-5. Run '/etc/rc.local' to re-initialize the IPsec subsystem
+5. Run '/etc/rc.d/rc.local' to re-initialize the IPsec subsystem
 6. Run the following commands:
    # export PASSWD=<password>
    # export PPROFILE=lspp

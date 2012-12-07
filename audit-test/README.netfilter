@@ -262,5 +262,5 @@ timer number of seconds.  The following command is recommended.
 
 # brctl setageing <bridge name> 3600
 
-This command can be placed in /etc/rc.local to be run automatically
+This command can be placed in /etc/rc.d/rc.local to be run automatically
 upon each boot.

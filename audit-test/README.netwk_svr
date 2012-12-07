@@ -67,4 +67,4 @@ Reboot the network test server or run the following commands:
 # service mcstrans restart
 # service netlabel restart
 # service ipsec restart
-# /etc/rc.local
+# /etc/rc.d/rc.local

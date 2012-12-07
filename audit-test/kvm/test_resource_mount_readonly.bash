@@ -38,7 +38,8 @@ for i in $(seq $first $last); do
 	losetup -d $LOOPDEV
 
 	eval "losetup $LOOPDEV \$kvm_guest_${i}_resource"
-	kpartx -a $LOOPDEV
+	# use sync mode for kpartx to wait until partitions are created
+	kpartx -v -s -a $LOOPDEV
 	mount -o ro /dev/mapper/$(basename $LOOPDEV)p1 /mnt
 
 	touch /mnt/testfile

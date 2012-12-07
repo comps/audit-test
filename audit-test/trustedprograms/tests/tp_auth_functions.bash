@@ -82,8 +82,8 @@ function user_cleanup {
 read group gid <<<"$(generate_unique_group)"
 read user uid <<<"$(generate_unique_user)"
 
+prepend_cleanup "grep -q '^$user:' /etc/passwd && { killall -9 -u '$user' ; userdel -r '$user'; }"
 prepend_cleanup "grep -q '^$group:' /etc/group && groupdel '$group'"
-prepend_cleanup "grep -q '^$user:' /etc/passwd && userdel -r '$user'"
 
 set -x
 

@@ -50,7 +50,7 @@ expect -c '
 # test
 /sbin/faillock --user $TEST_USER --reset > /dev/null || exit_error
 
-msg_1="faillock reset uid=$tuid.*exe=./sbin/faillock.*res=success.*"
+msg_1="faillock reset uid=$tuid.*exe=./usr/sbin/faillock. .* res=success.*"
 augrok -q type=USER_ACCT msg_1=~"$msg_1" || exit_fail
 
 # verify the account is unlocked

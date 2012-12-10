@@ -28,8 +28,8 @@ if [[ $EUID == 0 ]]; then
     WHEEL_GID=$(grep wheel /etc/group | cut -d: -f3) \
     perl -MPOSIX -e 'setgid $ENV{WHEEL_GID}; setuid $ENV{TEST_EUID}; system $ENV{zero}'
 
-    msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./bin/su.*res=failed.*"
-    augrok -q type=USER_AUTH msg_1=~"PAM: *authentication $msg_1" || exit_fail
+    msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./usr/bin/su. .* res=failed.*"
+    augrok -q type=USER_AUTH msg_1=~"op=PAM:.*authentication $msg_1" || exit_fail
 
     exit_pass
 fi

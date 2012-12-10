@@ -245,6 +245,7 @@ function startup {
     dmsg "Adding user $TEST_USER"
     useradd -g "$TEST_USER" -G wheel -m "$TEST_USER" || die
     echo "$TEST_USER_PASSWD" | passwd --stdin $TEST_USER
+    faillock --user "$TEST_USER" --reset
 
     # Add the test user which is in sysadm_r
     userdel -r "$TEST_ADMIN" &>/dev/null
@@ -258,6 +259,7 @@ function startup {
         useradd -g "$TEST_ADMIN" -G wheel -m "$TEST_ADMIN" || die
     fi
     echo "$TEST_ADMIN_PASSWD" | passwd --stdin $TEST_ADMIN
+    faillock --user "$TEST_ADMIN" --reset
 
     startup_hook
 }

@@ -36,23 +36,13 @@ su $TEST_USER -c "
         puts \$pidfile [exp_pid]'"
 pid=$(<$tmp1)
 
-if grep "release 5" /etc/redhat-release ; then
-    msg_1="PAM: chauthtok acct=\"*$TEST_USER\"* : exe=./usr/bin/passwd.*res=failed.*"
+for msg in "op=PAM:chauthtok acct=\"$TEST_USER\" exe=\"/usr/bin/passwd\".*res=failed" \
+    "op=change password id=$test_user_uid exe=\"/usr/bin/passwd\".*res=failed" ; do
     augrok -q type=USER_CHAUTHTOK \
-            user_pid=$pid \
-            uid=$test_user_uid \
-            auid=$(</proc/self/loginuid) \
-            msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""
-else
-
-    for msg in "op=PAM:chauthtok acct=\"$TEST_USER\" exe=\"/usr/bin/passwd\".*res=failed" \
-        "op=change password id=$test_user_uid exe=\"/usr/bin/passwd\".*res=failed" ; do
-        augrok -q type=USER_CHAUTHTOK \
-            user_pid=$pid \
-            uid=$test_user_uid \
-            auid=$(</proc/self/loginuid) \
-            msg_1=~"$msg" || exit_fail "missing: \"$msg\""
-    done
-fi
+        pid=$pid \
+        uid=$test_user_uid \
+        auid=$(</proc/self/loginuid) \
+        msg_1=~"$msg" || exit_fail "missing: \"$msg\""
+done
 
 exit_pass

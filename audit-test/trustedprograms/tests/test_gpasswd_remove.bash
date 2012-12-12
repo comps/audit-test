@@ -26,12 +26,10 @@ groupadd -g $gid $group || exit_error "groupadd failed"
 # test
 setpid gpasswd -r $group || exit_error "gpasswd failed"
 
-op="deleting group password"
-grep "release 6" /etc/redhat-release && \
-    op="password of group testuser1 removed by root"
+op="password of group testuser1 removed by root"
 msg_1="op=$op acct=\"$group\" exe=\"/usr/bin/gpasswd.*res=success"
 augrok -q type=USER_CHAUTHTOK \
-    user_pid=$pid \
+    pid=$pid \
     uid=$EUID \
     auid=$(</proc/self/loginuid) \
     msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""

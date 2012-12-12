@@ -21,12 +21,13 @@
 HWCLOCK_UTILITY="/sbin/hwclock"
 AUDIT_LOG="/var/log/audit/audit.log"
 
-# Fetch the UTC setting from the system clock configuration
-source /etc/sysconfig/clock
-case $UTC in
-    true|yes) UTCFLAG=--utc ;;
-    *) unset UTCFLAG ;;
-esac
+# Check if UTC timezone used
+readlink /etc/localtime | grep -q UTC$
+if [ $? -eq 0 ]; then
+    UTCFLAG=--utc
+else
+    unset UTCFLAG
+fi
 
 ## Test 1
 #
@@ -48,7 +49,7 @@ echo "$(hwclock) -- restored hardware clock"
 
 # Check for the records
 count=$(augrok --count --seek $AUDIT_SEEK type==USYS_CONFIG \
-    msg_1=~"changing system time.*exe=./sbin/hwclock.*res=success.*")
+    msg_1=~"changing system time.*exe=./usr/sbin/hwclock.*res=success.*")
 if [[ $count == 2 ]]; then
     echo "pass: augrok found 2 hwclock records"
     exit 0

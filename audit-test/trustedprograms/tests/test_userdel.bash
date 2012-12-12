@@ -28,7 +28,6 @@ useradd -n -m -u $uid $user || exit_error "useradd failed"
 setpid userdel -r $user || exit_error "userdel failed"
 
 msg_type=DEL_USER
-grep "release 5" /etc/redhat-release &&  msg_type=USER_CHAUTHTOK
 
 for msg_1 in \
     "op=deleting user entries id=$uid exe=\"*\.*/usr/sbin/userdel\"*.*res=success.*" \
@@ -36,7 +35,7 @@ for msg_1 in \
     "op=deleting home directory id=$uid exe=\"*\.*/usr/sbin/userdel\"*.*res=success.*"
 do
     augrok -q type=$msg_type \
-            user_pid=$pid \
+            pid=$pid \
             uid=$EUID \
             auid=$(</proc/self/loginuid) \
             msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""

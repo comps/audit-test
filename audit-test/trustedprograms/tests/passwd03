@@ -47,8 +47,8 @@ my $initial_encrypted_password2 = '$6$mdf9vvfz$2hQcpjsaKz21PUmjoVfLT23XZb/HbFEKm
 
 my @test = (
 #           [ exit_code, description_of_test, command_to_execute ]
-            [255, "chsh change shell of self to non-existant shell", "chsh -s /null", "/null"],          # 7
-            [255, "chsh change shell of self to dev-null shell", "chsh -s /dev/null", "/dev/null"],          # 8
+            [1, "chsh change shell of self to non-existant shell", "chsh -s /null", "/null"],          # 7
+            [1, "chsh change shell of self to dev-null shell", "chsh -s /dev/null", "/dev/null"],          # 8
             [0, "chsh change shell of self to valid shell", "chsh -s /bin/bash", "/bin/bash"]              # 9
            );
 my @result;

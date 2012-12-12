@@ -31,7 +31,7 @@ for msg_1 in \
     "op=adding user to shadow group acct=\"*$user\"* exe=\"*\.*/usr/sbin/usermod\"*.*res=success.*"
 do
     augrok -q type=USER_CHAUTHTOK \
-            user_pid=$pid \
+            pid=$pid \
             uid=$EUID \
             auid=$(</proc/self/loginuid) \
             msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""

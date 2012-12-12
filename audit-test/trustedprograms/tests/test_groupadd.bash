@@ -23,23 +23,14 @@ source tp_auth_functions.bash || exit 2
 # test
 setpid groupadd -g $gid $group || exit_error "groupadd failed"
 
-if grep "release 5" /etc/redhat-release ; then
-    augrok -q type=USER_CHAUTHTOK \
-        user_pid=$pid \
+for msg in "op=adding group to /etc/group id=$gid exe=\"/usr/sbin/groupadd\".*res=success" \
+    "op=adding group to /etc/gshadow id=$gid exe=\"/usr/sbin/groupadd\".*res=success" \
+    "op= id=$gid exe=\"/usr/sbin/groupadd\".*res=success" ; do
+    augrok -q type=ADD_GROUP \
+        pid=$pid \
         uid=$EUID \
         auid=$(</proc/self/loginuid) \
-        msg_1=~"op=adding group id=$gid exe=./usr/sbin/groupadd.*res=success.*" || \
-        exit_fail "failed to find audit.log entry"
-else
-    for msg in "op=adding group to /etc/group id=$gid exe=\"/usr/sbin/groupadd\".*res=success" \
-      "op=adding group to /etc/gshadow id=$gid exe=\"/usr/sbin/groupadd\".*res=success" \
-      "op= id=$gid exe=\"/usr/sbin/groupadd\".*res=success" ; do
-        augrok -q type=ADD_GROUP \
-            user_pid=$pid \
-            uid=$EUID \
-            auid=$(</proc/self/loginuid) \
-            msg_1=~"$msg" || exit_fail "missing: \"$msg\""
-    done
-fi
+        msg_1=~"$msg" || exit_fail "missing: \"$msg\""
+done
 
 exit_pass

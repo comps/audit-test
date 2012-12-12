@@ -31,12 +31,8 @@ setpid useradd -D -g games -b /tmp -e 2038-01-18 -f 42 -s /bin/true \
 
 msg_type=USYS_CONFIG
 msg_1='op=changing useradd defaults id=.* exe=\"/usr/sbin/useradd\".*res=success'
-if grep "release 5" /etc/redhat-release ; then
-    msg_type=USER_CHAUTHTOK
-    msg_1='^op=changing user defaults id=.* exe=./usr/sbin/useradd.*res=success.*'
-fi
 augrok -q type=$msg_type \
-    user_pid=$pid \
+    pid=$pid \
     uid=$EUID \
     auid=$(</proc/self/loginuid) \
     msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""

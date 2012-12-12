@@ -37,13 +37,11 @@ su $TEST_USER -c "
         puts \$pidfile [exp_pid]'"
 pid=$(<$tmp1)
 
-op="password of group testuser1 changed by root"
-grep "release 6" /etc/redhat-release && \
-    op="testuser failed to change password of group testuser1: Permission denied"
+op="testuser failed to change password of group testuser1: Permission denied"
 msg_1="op=$op acct=\"$group\" exe=\"/usr/bin/gpasswd.*res=failed"
 
 augrok -q type=USER_CHAUTHTOK \
-    user_pid=$pid \
+    pid=$pid \
     uid=$(id -u $TEST_USER) \
     auid=$(</proc/self/loginuid) \
     msg_1=~"$msg_1" || exit_fail "missing: \"$msg_1\""

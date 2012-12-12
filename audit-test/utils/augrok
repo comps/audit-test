@@ -198,7 +198,7 @@ sub new {
         my $config;
         open(C, "sestatus|") or goto out;
         while (<C>) {
-            /^Policy from config file:\s*(\S+)/ || next;
+            /^Loaded policy name:\s*(\S+)/ || next;
             $config = "/etc/selinux/$1/setrans.conf";
             last;
         }

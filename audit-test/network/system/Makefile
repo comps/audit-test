@@ -65,7 +65,7 @@ install_setrans:
 	 echo "s1:c1.c3=NetIncomp1"; \
 	 echo "s1:c4.c6=NetIncomp2"; \
 	 echo "s0:c0=NetLowIncomp") >> /etc/selinux/mls/setrans.conf
-	chkconfig mcstrans on
+	chkconfig mcstransd on
 
 install_netlabel:
 	install -o root -g root -m 640 --backup=t netlabel.rules /etc

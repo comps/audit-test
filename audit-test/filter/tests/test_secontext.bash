@@ -34,8 +34,8 @@ augrok --seek=$log_mark "name==$tmp1" "auid==$user_auid" \
     && exit_error "Unexpected record found."
 
 # Need untranslated labels
-stop_service mcstrans
-prepend_cleanup "start_service mcstrans"
+stop_service mcstransd
+prepend_cleanup "start_service mcstransd"
 
 declare subj_level obj_level user_role target
 declare aurule grok

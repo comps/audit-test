@@ -68,7 +68,7 @@ NOTE: Whenever TOE's IP address changes, the steps above need to be re-done
 Reboot the network test server or run the following commands:
 
 # service xinetd restart
-# service mcstrans restart
+# service mcstransd restart
 # service netlabel restart
 # service ipsec restart
 # /etc/rc.d/rc.local

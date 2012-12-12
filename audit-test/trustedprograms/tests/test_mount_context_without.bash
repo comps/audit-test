@@ -31,15 +31,15 @@
 # * mount point and files are labeled correctly after mount operation
 #
 # Note:
-# The test needs to have mcstrans service stopped during the testing
+# The test needs to have mcstransd service stopped during the testing
 #
 
 source tp_mount_functions.bash || exit 2
 source tp_context_functions.bash || exit 2
 
-# stop mcstrans service (the mcstrans is by default started during testing)
-stop_service mcstrans
-prepend_cleanup 'start_service mcstrans'
+# stop mcstransd service (the mcstransd is by default started during testing)
+stop_service mcstransd
+prepend_cleanup 'start_service mcstransd'
 
 # create a loopback VFAT filesystem
 dd if=/dev/zero of=$tmp1 count=100k bs=1024 || exit_error "dd failed"

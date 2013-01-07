@@ -72,25 +72,6 @@ unset sad_add_cmd sad_del_cmd
 # helper functions
 ######################################################################
 
-#
-# get_ipv4_addr - Get the local system's glboal IPv4 address
-#
-# INPUT
-# none
-#
-# OUTPUT
-# Writes the first global IPv4 address on the local system to stdout
-#
-# DESCRIPTION
-# This function queries the local system, through the "ip" command, for a list
-# of global IPv4 addresses, it then selects the first address in the list and
-# writes it to stdout.
-#
-function get_ipv4_addr {
-    ip -o -f inet addr show scope global | head -n 1 | \
-    awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }'
-}
-
 ######################################################################
 # functions
 ######################################################################
@@ -233,7 +214,7 @@ ip xfrm policy flush || exit_error
 
 # setup the global variables
 ctx=$(secon -RP)
-ip_src=$(get_ipv4_addr)
+ip_src=$LOCAL_IPV4
 ip_dst=$LBLNET_SVR_IPV4
 spd_entry="src $ip_src dst $ip_dst proto icmp ctx $ctx dir out"
 spd_entry_detail="tmpl proto ah mode transport level required"

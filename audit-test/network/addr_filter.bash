@@ -22,23 +22,6 @@ set -x
 
 ####
 # 
-# helper functions
-#
-
-function get_ipv6_iface {
-    echo "$LOCAL_DEV"
-}
-
-function get_ipv4_addr {
-    echo "$LOCAL_IPV4"
-}
-
-function get_ipv6_addr {
-    echo "$LOCAL_IPV6"
-}
-
-####
-# 
 # main
 #
 
@@ -54,7 +37,7 @@ unset address address_raw
 # get ipv4 addresses
 #
 
-local_ipv4="$(get_ipv4_addr)"
+local_ipv4="$LOCAL_IPV4"
 remote_ipv4="$LBLNET_SVR_IPV4"
 address_ipv4="$ADDRESS_IPV4"
 
@@ -63,10 +46,10 @@ address_ipv4="$ADDRESS_IPV4"
 #
 
 # interface/scope
-local_ipv6_if="$(get_ipv6_iface)"
+local_ipv6_if="$LOCAL_DEV"
 
 # raw addresses
-local_ipv6_raw="$(get_ipv6_addr)"
+local_ipv6_raw="$LOCAL_IPV6"
 remote_ipv6_raw="$LBLNET_SVR_IPV6"
 address_ipv6_raw="$ADDRESS_IPV6"
 

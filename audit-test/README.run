@@ -401,11 +401,9 @@ Audit-remote tests
   FIX: Follow related steps in README.run or reinstall if nothing helps :)
 
 5) TOE or NS unable to reach each other when using virt guests. This is
-  probably due to what `get_ipv4_addr` gives you for local_audit_server_ip.
-  FIX: Set local_audit_server_ip manually in audisp-remote_functions.bash to
-  local IPv4 address of global scope (if there are more of them, try them all
-  iteratively). Notice that you have to do this for both TOE and NS (they have
-  different setting for this variable!).
+  probably due to incorrectly set LOCAL_IPV4 environment variable.
+  Use only unicast addresses of global scope (if there are more of them, try
+  them all iteratively).
 
 6) NS fails to run init script via run_init due to bad password.
   FIX: Make sure you have correctly set password in profile.bash, which should

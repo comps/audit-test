@@ -54,32 +54,6 @@ unset cmd_nc
 ######################################################################
 
 #
-# get_ip_addr - Get the local system's glboal IPv4 or IPv6 address
-#
-# INPUT
-# X - 4 for IPv4 or 6 for IPv6
-#
-# OUTPUT
-# Writes the first global IPvX address on the local system to stdout
-#
-# DESCRIPTION
-# This function queries the local system, through the "ip" command, for a list
-# of global IPvX addresses, it then selects the first address in the list and
-# writes it to stdout.
-#
-function get_ip_addr {
-    if [ $1 == "4" ]; then
-	ip -o -f inet addr show scope global | head -n 1 | \
-	    awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }'
-    elif [ $1 == "6" ]; then
-	ip -o -f inet6 addr show scope global to $LBLNET_PREFIX_IPV6 | head -n 1 | \
-	    awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }'
-    else
-        die "error: expected parameter 4 | 6 not given"
-    fi
-}
-
-#
 # normalize_addr - Add leading zeros to a comparessed IPv6 address
 #
 # INPUT
@@ -266,17 +240,17 @@ function ipsec_remove_verify {
 
 set -x
 
-if [ $1 == "6" ]; then
+if [ "$1" == "6" ]; then
     [[ -n $(eval echo \$LBLNET_SVR_IPV6) ]] || exit_error
 
     # setup the global variables
-    ip_src=$(normalize_addr $(get_ip_addr $1))
+    ip_src=$(normalize_addr $(eval echo \$LOCAL_IPV6))
     ip_dst=$(normalize_addr $(eval echo \$LBLNET_SVR_IPV6))
-elif [ $1 == "4" ]; then
+elif [ "$1" == "4" ]; then
     [[ -n $(eval echo \$LBLNET_SVR_IPV4) ]] || exit_error
 
     # setup the global variables
-    ip_src=$(get_ip_addr $1)
+    ip_src=$LOCAL_IPV4
     ip_dst=$LBLNET_SVR_IPV4
 else
         die "error: expected parameter 4 | 6 not given"

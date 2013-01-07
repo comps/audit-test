@@ -33,11 +33,6 @@
 
 source testcase.bash || exit 2
 
-function get_ipv4_addr {
-    ip -o -f inet addr show scope global | head -n 1 | \
-    awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }'
-}
-
 #
 # Global variables
 #
@@ -60,7 +55,7 @@ total_written=0
 
 # Variables used by basic connection for TOE acting as server and client
 
-local_audit_server_ip=$(get_ipv4_addr)
+local_audit_server_ip="$LOCAL_IPV4"
 ping $local_audit_server_ip -c 1 || exit_error "Unable to ping audit server"
 
 auditd_conf="/etc/audit/auditd.conf"

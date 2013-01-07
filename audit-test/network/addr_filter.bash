@@ -26,18 +26,15 @@ set -x
 #
 
 function get_ipv6_iface {
-    ip -o -f inet6 addr show scope global to $LBLNET_PREFIX_IPV6 | \
-    head -n 1 | awk '{ print $2 }'
+    echo "$LOCAL_DEV"
 }
 
 function get_ipv4_addr {
-    ip -o -f inet addr show scope global | head -n 1 | \
-    awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }'
+    echo "$LOCAL_IPV4"
 }
 
 function get_ipv6_addr {
-    ip -o -f inet6 addr show scope global to $LBLNET_PREFIX_IPV6 | \
-    head -n 1 | awk 'BEGIN { FS = "[ \t]*|[ \t\\/]+" } { print $4 }'
+    echo "$LOCAL_IPV6"
 }
 
 ####

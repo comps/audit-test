@@ -61,11 +61,6 @@ install_check:
 	@[[ -n $$LBLNET_SVR_IPV6 ]] || \
 		(echo "error: variable LBLNET_SVR_IPV6 is not set"; /bin/false)
 
-install_check_server:
-	@[[ -n $$LBLNET_PREFIX_IPV6 ]] || \
-		(echo "error: variable LBLNET_PREFIX_IPV6 is not set"; \
-		 /bin/false)
-
 install_setrans:
 	grep -q "# labeled networking" /etc/selinux/mls/setrans.conf || \
 	(echo ""; \
@@ -86,7 +81,7 @@ install_ipsec_client: install_check
 	install -o root -g root -m 600 ipsec.conf /etc/ipsec.conf
 	install -o root -g root -m 600 ipsec.secrets /etc/ipsec.secrets
 
-install_ipsec_server: install_check_server
+install_ipsec_server:
 	if [[ ! -f client_list.txt ]]; then \
 		echo "error: file client_list.txt does not exist"; \
 		exit 1; \

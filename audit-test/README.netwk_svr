@@ -38,11 +38,6 @@ below:
 # bar.domain.com
 10.0.0.3 2600::3
 
-Set the LBLNET_PREFIX_IPV6 environment variable to the IPV6 prefix to be
-used for testing.  An example variable value is "2600::/64".
-
-# export LBLNET_PREFIX_IPV6="<the IPV6 prefix to be used for testing>"
-
 Generate and install the system's labeled network configuration as shown
 below:
 

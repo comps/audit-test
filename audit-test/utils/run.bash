@@ -272,6 +272,8 @@ function cleanup {
     # XXX use prepend_cleanup in startup
     if [[ -n $TEST_USER ]]; then
 	# Remove the test user
+	dmsg "Killing all processes for $TEST_USER"
+	killall -9 -u "$TEST_USER"
 	dmsg "Removing user $TEST_USER"
 	userdel -r "$TEST_USER" &>/dev/null
 	dmsg "Removing group $TEST_USER"
@@ -282,6 +284,8 @@ function cleanup {
     # XXX use prepend_cleanup in startup
     if [[ -n $TEST_ADMIN ]]; then
         # Remove the test user
+        dmsg "Killing all processes for $TEST_ADMIN"
+        killall -9 -u "$TEST_ADMIN"
         dmsg "Removing user $TEST_ADMIN"
         userdel -r "$TEST_ADMIN" &>/dev/null
         dmsg "Removing group $TEST_ADMIN"

@@ -207,7 +207,7 @@ check_client_disconnected() {
 check_message_arrived() {
     local rc=0
     /sbin/ausearch -n "REMOTE_LOGGING_CLIENT" -m "USER" \
-        -ts $test_time_start | grep -e "type=USER .*${1}" || { rc=1 ;
+        -ts $test_time_start | egrep "type=USER .*${1}" || { rc=1 ;
         echo "Missing USER record from remote client" ; }
 
     #if [ $rc == 1 ] ; then
@@ -309,7 +309,7 @@ test_server_msg_sequence() {
     sleep 5
     for i in `seq 1 $max_audit_log_dump_seq` ; do
         #echo -n "[$i]"  >> /tmp/seq.l g #  Uncomment for easier debugging
-        check_message_arrived  "$remote_client_test_string SEQ_NUM=$i:" || \
+        check_message_arrived  "$remote_client_test_string SEQ_NUM=$i:?" || \
         ((missing_count+=1))
     done
     [ $missing_count -gt 0 ] && exit_error \

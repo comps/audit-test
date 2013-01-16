@@ -19,8 +19,8 @@
 
 #   test_selinux_trans_to_svirt.bash
 #
-#   Assert only processes executing with unconfined_t or virtd_t SELinux types
-#   are allowed to transition to svirt_t.
+#   Assert that only processes executing with allowed SELinux types can perform
+#   transition to svirt_t.
 
 
 source testcase.bash || exit 2
@@ -38,7 +38,7 @@ if [[ $allowed_count -eq 0 ]]; then
 fi
 
 for type in $allowed; do
-	if [[ ! "$type" =~ unconfined_t|unconfined_execmem_t|virtd_t ]]; then
+	if [[ ! "$type" =~ unconfined_t|virtd_t|staff_t|user_t ]]; then
 		exit_fail "$type is not allowed to transition to svirt_t"
 	fi
 done

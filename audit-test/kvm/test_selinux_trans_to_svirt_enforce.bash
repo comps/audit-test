@@ -57,7 +57,7 @@ for type in $types; do
 	runcon -t $type -- runcon -t svirt_t -- /tmp/true
 
 	if [[ $? -eq 0 ]]; then
-		if [[ ! "$type" =~ unconfined_t|virtd_t ]]; then
+		if [[ ! "$type" =~ unconfined_t|virtd_t|staff_t|user_t ]]; then
 			exit_fail
 		fi
 	fi

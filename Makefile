@@ -44,7 +44,7 @@ run:
 	done
 	make report
 
-.PHONE: report
+.PHONY: report
 report: systeminfo summary
 	@tarball="logs-$$(date +'%m%d%Y_%H%M').tar.gz"; \
 	tar zcvf logs-$$(date +"%m%d%Y_%H%M").tar.gz $$(find . -name "*.log"); \

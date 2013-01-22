@@ -47,10 +47,6 @@ for i in $(seq $first $last); do
 	if [[ $? -eq 0 ]]; then
 		exit_fail
 	fi
-
-	umount /mnt
-	kpartx -d $LOOPDEV
-	losetup -d $LOOPDEV
 done
 
 exit_pass

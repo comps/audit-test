@@ -27,10 +27,13 @@ source testcase.bash || exit 2
 
 set -x
 
-append_cleanup "/etc/init.d/iptables stop &> /dev/null"
+# clean all iptables rules at the end of the testing
+append_cleanup "iptables-save | xtables_empty | iptables-restore"
 
 for i in $(seq $first $last); do
-	/etc/init.d/iptables stop &> /dev/null
+
+	# clean all iptables rules
+	iptables-save | xtables_empty | iptables-restore
 
 	#   Check the host IP address of the virtual network associated with the
 	#   virtual machine environment.
@@ -65,19 +68,19 @@ for i in $(seq $first $last); do
 	eval "ping -c 5 -I \$kvm_guest_${i}_hostaddr \$kvm_guest_${i}_hostaddr"
 
 	if [[ $? -ne 0 ]]; then
-		exit_fail
+		exit_fail "Cannot ping guest host address"
 	fi
 
 	eval "ping -c 5 -I \$kvm_guest_${i}_hostaddr \$kvm_guest_${i}_addr"
 
 	if [[ $? -eq 0 ]]; then
-		exit_fail
+		exit_fail "Cannot ping guest address"
 	fi
 
 	log_count=$(eval "grep -c -E \"$log_prefix: .* SRC=\$kvm_guest_${i}_addr\" /var/log/messages")
 
 	if [[ $log_count -eq 0 ]]; then
-		exit_fail
+		exit_fail "log count is 0"
 	fi
 done
 

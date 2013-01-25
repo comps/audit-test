@@ -75,7 +75,7 @@ ssh_remove_strong_rng_env
 # remove SSH_USE_STRONG_RNG from files
 ssh_remove_strong_rng $SSHDCONF
 ssh_remove_strong_rng $CCCONF
-ssh_restart_daemon
+service sshd restart
 
 # Try all key sizes
 for CRYPTO in 3des-cbc aes192-cbc aes256-cbc aes128-ctr \

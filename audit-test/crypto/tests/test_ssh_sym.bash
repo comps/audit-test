@@ -62,7 +62,7 @@ rngd -r /dev/urandom
 prepend_cleanup "killall rngd"
 
 # restart sshd to get default state with SSH_USE_STRONG_RNG enabled
-ssh_restart_daemon
+service sshd restart
 
 # get the pid of sshd process running on port 22
 SSHDPID=$(ss -4 -ltnp | grep sshd | sed 's/.*sshd",\([0-9]\+\),.*/\1/')
@@ -88,7 +88,7 @@ ssh_remove_strong_rng_env
 # remove SSH_USE_STRONG_RNG from files
 ssh_remove_strong_rng $SSHDCONF
 ssh_remove_strong_rng $CCCONF
-ssh_restart_daemon
+service sshd restart
 
 # connect using all ciphers with password authentication
 for CIPHER in $CIPHERS; do

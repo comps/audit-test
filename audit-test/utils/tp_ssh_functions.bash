@@ -31,11 +31,6 @@ RND=$RANDOM
 # default expect timeout 10 minutes - in case of not enough entropy
 TIMEOUT=600
 
-# Restart ssh daemon
-function ssh_restart_daemon {
-    service sshd restart
-}
-
 # Remove SSH_USE_STRONG_RNG from environment
 function ssh_remove_strong_rng_env {
     export -n SSH_USE_STRONG_RNG
@@ -364,7 +359,7 @@ function disable_ssh_strong_rng {
     ssh_remove_screen $MPROFILE
 
     # restart sshd to get default state with SSH_USE_STRONG_RNG enabled
-    ssh_restart_daemon
+    service sshd restart
 
     # remove SSH_USE_STRONG_RNG from environment
     ssh_remove_strong_rng_env
@@ -373,5 +368,5 @@ function disable_ssh_strong_rng {
     ssh_remove_strong_rng $SSHDCONF
     ssh_remove_strong_rng $CCCONF
 
-    ssh_restart_daemon
+    service sshd restart
 }

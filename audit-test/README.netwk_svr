@@ -33,10 +33,10 @@ below:
 # A file containing the IPv4|6 addresses of all the test machines
 
 # foo.domain.com
-10.0.0.2 2600::2
+10.0.0.2 fd00::2
 
 # bar.domain.com
-10.0.0.3 2600::3
+10.0.0.3 fd00::3
 
 Generate and install the system's labeled network configuration as shown
 below:

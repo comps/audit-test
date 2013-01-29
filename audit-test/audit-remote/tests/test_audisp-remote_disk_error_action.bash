@@ -86,7 +86,7 @@ function check_plugin_disk_error_action {
 # Configure
 #
 
-selinuxenabled && grep 1 /selinux/enforce || exit_error "SELinux not in Enforcing"
+selinuxenabled && [ "$(getenforce)" = "Enforcing" ] || exit_error "SELinux not in Enforcing"
 
 common_server_startup || exit_error "common_server_startup"
 configure_local_audit_server

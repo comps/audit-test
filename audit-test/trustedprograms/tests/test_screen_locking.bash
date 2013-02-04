@@ -54,6 +54,10 @@ PROFILE="/etc/profile"
 # be verbose
 set -x
 
+# make sure TEST_USER and TEST_ADMIN leave no trace in the system
+append_cleanup "kill -9 $(lsof | egrep "($TEST_USER|$TEST_ADMIN)" | \
+    awk '{print $2}' | sort | uniq)"
+
 # check permissions of global configuration
 screen_check_global_config
 
@@ -70,26 +74,26 @@ su - -c "echo 'idle 2 lockscreen' > ~/.screenrc" $TEST_USER || \
 # + screen asking for password
 # + unlock successful using the correct password
 screen_check_lock $TEST_USER $TEST_USER_PASSWD 2 || \
-    exit_fail "screen for $TEST_USER did not lock after 2s"
+    exit_fail "screen for $TEST_USER did not lock after 2s ($?)"
 
 # check if
 # + unlock using a incorrect password fails
 # + screen asks again for the password if attempt failed
 screen_check_badpass $TEST_USER $TEST_USER_PASSWD 2 || exit_fail \
-    "screen unlock with incorrect password failed unexpectedly"
+    "screen unlock with incorrect password failed unexpectedly ($?)"
 
 # check if
 # + escape sequence for clearing the screen sent if screen locked
 # + kernel boot options contain "no-scroll" and "fbcon=scrollback:0"
 screen_check_clear $TEST_USER $TEST_USER_PASSWD 2 || exit_fail \
-    "screen clear before locking failed"
+    "screen clear before locking failed ($?)"
 
 # checks if
 # + screen locking via "CTRL-A x" works
 # + control sequences (CTRL-C, CTRL-D, CTRL-A d)
 #   do not work when screen locked
 screen_check_sequences $TEST_USER $TEST_USER_PASSWD || exit_fail \
-    "locked screen reacts on escape sequences"
+    "locked screen reacts on escape sequences ($?)"
 
 # all tests successful
 exit_pass

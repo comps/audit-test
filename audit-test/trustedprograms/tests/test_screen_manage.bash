@@ -49,6 +49,10 @@ PROFILE="/etc/profile"
 # be verbose
 set -x
 
+# make sure TEST_USER and TEST_ADMIN leave no trace in the system
+append_cleanup "kill -9 $(lsof | egrep "($TEST_USER|$TEST_ADMIN)" | \
+    awk '{print $2}' | sort | uniq)"
+
 # check permissions
 screen_check_global_config
 

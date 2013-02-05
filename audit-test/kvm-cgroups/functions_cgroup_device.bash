@@ -17,11 +17,33 @@
 #   Boston, MA 02110-1301, USA.
 ###############################################################################
 #
-# AUTHOR: Eduard Benes <ebenes@redhat.com>
+# AUTHORS: Eduard Benes <ebenes@redhat.com>, Miroslav Vadkerti <mvadkert@redhat.com>
 # DESCRIPTION: Helper functions for cgroup device tests for SRF FDP_ACF.1(VIRT)
+# DOCUMENTATION: http://libvirt.org/cgroups.html
 #
 
 source testcase.bash || exit 2
+
+#
+# Checks for any required kernel modules
+#
+check_kernel_modules() {
+    for module in $@; do
+        lsmod | grep -q $module || {
+            echo $module
+            return 1
+        }
+    done
+    return 0
+}
+
+#
+# Setup ram disks if needed - by default disabled in RHEL7
+#
+check_kernel_modules brd || {
+    modprobe brd
+    prepend_cleanup "rmmod brd"
+}
 
 #
 # Global variables
@@ -42,6 +64,8 @@ cgroup_char_device_list_entry="c $cgroup_char_device_major_minor rwm"
 
 mnt_test_point="/mnt/block_device_test"
 
+# Cgroups root folder
+cgroup_root="/sys/fs/cgroup"
 
 #
 # General helper functions
@@ -81,11 +105,6 @@ create_guest_domain() {
     return $?
 }
 
-destroy_guest_domain() {
-    /usr/bin/virsh destroy $1 || exit_error "Failed to destroy domain"
-    sleep 2
-}
-
 get_guest_domain_pid() {
     local pid
     for pid in `pgrep qemu-kvm` ; do
@@ -103,15 +122,31 @@ check_installed_packages() {
     return $?
 }
 
+#
+# Check the default libvirtd layout for the created VM
+# http://libvirt.org/cgroups.html#currentLayout
+#
+
 check_cgroup_hierarchy() {
-    [ -d "/cgroup/cpu/libvirt/qemu/$1" ] && \
-    [ -d "/cgroup/devices/libvirt/qemu/$1" ] && \
-    [ -d "/cgroup/cpuacct/libvirt/qemu/$1" ] && \
-    [ -d "/cgroup/memory/libvirt/qemu/$1" ] && \
-    [ -d "/cgroup/blkio/libvirt/qemu/$1" ] && \
-    [ -d "/cgroup/freezer/libvirt/qemu/$1" ] && \
-    [ -d "/cgroup/cpuset/libvirt/qemu/$1" ]
-    return $?
+    if [ -z "$1" ]; then
+        [ -d "$cgroup_root/cpuset" ] && \
+        [ -d "$cgroup_root/cpu,cpuacct" ] && \
+        [ -d "$cgroup_root/memory" ] && \
+        [ -d "$cgroup_root/blkio" ] && \
+        [ -d "$cgroup_root/devices" ] && \
+        [ -d "$cgroup_root/systemd/system.slice/libvirtd.service" ] && \
+        return $?
+    else
+        [ -d "$cgroup_root/cpuset/machine.slice/machine-qemu\\x2d${1}.scope" ] && \
+        [ -d "$cgroup_root/cpu,cpuacct/machine.slice/machine-qemu\\x2d${1}.scope" ] && \
+        [ -d "$cgroup_root/memory/machine.slice/machine-qemu\\x2d${1}.scope" ] && \
+        [ -d "$cgroup_root/blkio/machine.slice/machine-qemu\\x2d${1}.scope" ] && \
+        [ -d "$cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope" ] && \
+        [ -d "$cgroup_root/freezer/machine.slice/machine-qemu\\x2d${1}.scope" ] && \
+        [ -d "$cgroup_root/net_cls/machine.slice/machine-qemu\\x2d${1}.scope" ] && \
+        [ -d "$cgroup_root/perf_event/machine.slice/machine-qemu\\x2d${1}.scope" ] && \
+        return $?
+    fi
 }
 
 check_cgroups_availability() {
@@ -127,32 +162,46 @@ check_cgroups_availability() {
 
 # check_cgroup_tasks
 check_cgroup_tasks() {
-    local cgroup_dir="/cgroup/devices/libvirt/qemu/$2"
+    local cgroup_dir="$cgroup_root/devices/machine.slice/machine-qemu\\x2d${2}.scope/$3"
     /bin/grep "$1" $cgroup_dir/tasks
     return $?
 }
 
 check_cgroup_procs() {
-    local cgroup_dir="/cgroup/devices/libvirt/qemu/$2"
+    local cgroup_dir="$cgroup_root/devices/machine.slice/machine-qemu\\x2d${2}.scope/$3"
     /bin/grep "$1" $cgroup_dir/cgroup.procs
     return $?
 }
 
 check_cgroup_devices_list() {
-    local cgroup_dir="/cgroup/devices/libvirt/qemu/$1"
-    /bin/grep "$2" $cgroup_dir/devices.list
-    return $?
+    [ $# -eq 2 ] && {
+        local cgroup_dir="$cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope"
+        /bin/grep "$2" $cgroup_dir/devices.list
+        return $?
+    }
+    [ $# -eq 3 ] && {
+        local cgroup_dir="$cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope/$2"
+        /bin/grep "$3" $cgroup_dir/devices.list
+        return $?
+    }
 }
 
 add_to_devices_file() {
-    local cgroup_dir="/cgroup/devices/libvirt/qemu/$1"
-    echo "$2" > $cgroup_dir/devices.$3
-    return $?
+    [ $# -eq 3 ] && {
+        local cgroup_dir="$cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope"
+        echo "$2" > $cgroup_dir/devices.$3
+        return $?
+    }
+    [ $# -eq 4 ] && {
+        local cgroup_dir="$cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope/$2"
+        echo "$3" > $cgroup_dir/devices.$4
+        return $?
+    }
 }
 
 # cmd proc# where#
 add_proc_to_tasks() {
-    local cgroup_dir="/cgroup/devices/libvirt/qemu/$2"
+    local cgroup_dir="$cgroup_root/devices/machine.slice/machine-qemu\\x2d${2}.scope/$3"
     echo $1 > $cgroup_dir/tasks
     return $?
 }
@@ -170,7 +219,7 @@ start_guest() {
     check_cgroup_tasks $dom_pid $dom1 || exit_fail "cgroup.tasks"
     check_cgroup_procs $dom_pid $dom1 || exit_fail "cgroup.procs"
     # We have only RW permissions after creation of a guest domain,
-    # therefore we don't use $cgroup_*_device_list_entry gloval variable here.
+    # therefore we don't use $cgroup_*_device_list_entry global variable here.
     check_cgroup_devices_list $dom1 "b $cgroup_block_device_major_minor rw" || \
         exit_fail "block devices.list"
     check_cgroup_devices_list $dom1 "c $cgroup_char_device_major_minor rw" || \
@@ -178,14 +227,14 @@ start_guest() {
 }
 
 create_devices_test_subgroup() {
-    /bin/mkdir /cgroup/devices/libvirt/qemu/$1
+    /bin/mkdir $cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope/${2}
     sleep 1
-    [ -e "/cgroup/devices/libvirt/qemu/$1/cgroup.procs" ] && \
-    [ -e "/cgroup/devices/libvirt/qemu/$1/devices.allow" ] && \
-    [ -e "/cgroup/devices/libvirt/qemu/$1/devices.deny" ] && \
-    [ -e "/cgroup/devices/libvirt/qemu/$1/devices.list" ] && \
-    [ -e "/cgroup/devices/libvirt/qemu/$1/notify_on_release" ] && \
-    [ -e "/cgroup/devices/libvirt/qemu/$1/tasks" ]
+    [ -e "$cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope/${2}/cgroup.procs" ] && \
+    [ -e "$cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope/${2}/devices.allow" ] && \
+    [ -e "$cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope/${2}/devices.deny" ] && \
+    [ -e "$cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope/${2}/devices.list" ] && \
+    [ -e "$cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope/${2}/notify_on_release" ] && \
+    [ -e "$cgroup_root/devices/machine.slice/machine-qemu\\x2d${1}.scope/${2}/tasks" ]
     return $?
 }
 

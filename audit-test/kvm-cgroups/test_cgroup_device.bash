@@ -31,8 +31,10 @@ source functions_cgroup_device.bash || exit 2
 scenario=$1
 
 # List of some virt specific packages required for our testing
-pkg_list="qemu-kvm libvirt libvirt-client libcgroup"
+pkg_list="qemu-kvm libvirt libvirt-client libcgroup systemd"
 
+# List of required kernel modules
+kmod_list="brd kvm"
 
 #
 # Test set functions
@@ -41,7 +43,6 @@ pkg_list="qemu-kvm libvirt libvirt-client libcgroup"
 # Basic sanity tests
 test_basic_sanity() {
     start_guest $dom1
-    destroy_guest_domain $dom1
 }
 
 # Test whether it is possible to controll device whitelists
@@ -55,14 +56,12 @@ test_devices_controller() {
     add_to_devices_file $dom1 "$cgroup_block_device_list_entry" allow
     check_cgroup_devices_list $dom1 "$cgroup_block_device_list_entry" || \
         exit_fail "device not listed"
-
-    destroy_guest_domain $dom1
 }
 
 # Positive tests on a subgroup for a guest domain with llowed task and device
 test_devices_subgroup_devices_allow_task() {
     start_guest $dom1
-    create_devices_test_subgroup $dom1/test || exit_error "subgroup"
+    create_devices_test_subgroup $dom1 test || exit_error "subgroup"
 
     # First we need to allow the mknod for parent control group
     add_to_devices_file $dom1 "$cgroup_block_device_list_entry" allow
@@ -74,12 +73,12 @@ test_devices_subgroup_devices_allow_task() {
         exit_fail "char device not listed"
 
     # Now we can allow it for child subgroup for mknod test
-    add_to_devices_file $dom1/test "$cgroup_block_device_list_entry" allow
-    check_cgroup_devices_list $dom1/test "$cgroup_block_device_list_entry" || \
+    add_to_devices_file $dom1 test "$cgroup_block_device_list_entry" allow
+    check_cgroup_devices_list $dom1 test "$cgroup_block_device_list_entry" || \
         exit_fail "block device not listed"
 
-    add_to_devices_file $dom1/test "$cgroup_char_device_list_entry" allow
-    check_cgroup_devices_list $dom1/test "$cgroup_char_device_list_entry" || \
+    add_to_devices_file $dom1 test "$cgroup_char_device_list_entry" allow
+    check_cgroup_devices_list $dom1 test "$cgroup_char_device_list_entry" || \
         exit_fail "char device not listed"
 
     export dom1
@@ -88,9 +87,9 @@ test_devices_subgroup_devices_allow_task() {
     rc=0
     # Add current process to the cgroup tasks
     my_pid=`get_my_pid`
-    add_proc_to_tasks $my_pid $dom1/test  || let rc+=1
-    check_cgroup_tasks $my_pid $dom1/test || let rc+=2
-    check_cgroup_procs $my_pid $dom1/test || let rc+=4
+    add_proc_to_tasks $my_pid $dom1 test  || let rc+=1
+    check_cgroup_tasks $my_pid $dom1 test || let rc+=2
+    check_cgroup_procs $my_pid $dom1 test || let rc+=4
 
     # These should pass
     open_block_device_test || let rc+=8
@@ -100,22 +99,20 @@ test_devices_subgroup_devices_allow_task() {
     echo rc=$rc
     exit $rc
     ' || exit_fail "positive test - block/char device"
-
-    destroy_guest_domain $dom1
 }
 
 # Negative tests on a subgroup for a guest domain - allowed task, denied device
 
 test_devices_subgroup_devices_deny_task() {
     start_guest $dom1
-    create_devices_test_subgroup $dom1/test || exit_error "subgroup"
+    create_devices_test_subgroup $dom1 test || exit_error "subgroup"
 
-    add_to_devices_file $dom1/test "$cgroup_block_device_list_entry" deny
-    check_cgroup_devices_list $dom1/test "$cgroup_block_device_list_entry" && \
+    add_to_devices_file $dom1 test "$cgroup_block_device_list_entry" deny
+    check_cgroup_devices_list $dom1 test "$cgroup_block_device_list_entry" && \
         exit_fail "block device listed"
 
-    add_to_devices_file $dom1/test "$cgroup_char_device_list_entry" deny
-    check_cgroup_devices_list $dom1/test "$cgroup_char_device_list_entry" && \
+    add_to_devices_file $dom1 test "$cgroup_char_device_list_entry" deny
+    check_cgroup_devices_list $dom1 test "$cgroup_char_device_list_entry" && \
         exit_fail "char device listed"
 
     export dom1
@@ -124,9 +121,9 @@ test_devices_subgroup_devices_deny_task() {
     rc=0
     # Add current process to the cgroup tasks
     my_pid=`get_my_pid`
-    add_proc_to_tasks $my_pid $dom1/test  || let rc+=1
-    check_cgroup_tasks $my_pid $dom1/test || let rc+=2
-    check_cgroup_procs $my_pid $dom1/test || let rc+=4
+    add_proc_to_tasks $my_pid $dom1 test  || let rc+=1
+    check_cgroup_tasks $my_pid $dom1 test || let rc+=2
+    check_cgroup_procs $my_pid $dom1 test || let rc+=4
 
     # Should fail
     open_block_device_test && let rc+=8
@@ -135,8 +132,6 @@ test_devices_subgroup_devices_deny_task() {
     echo rc=$rc
     exit $rc
     ' || exit_fail "negative test - block/char device"
-
-    destroy_guest_domain $dom1
 }
 
 test_devices_subgroup_devices_deny_parent() {
@@ -152,7 +147,7 @@ test_devices_subgroup_devices_deny_parent() {
     check_cgroup_devices_list $dom1 "$cgroup_char_device_list_entry" && \
         exit_fail "char device listed"
 
-    create_devices_test_subgroup $dom1/test || exit_error "subgroup"
+    create_devices_test_subgroup $dom1 test || exit_error "subgroup"
 
     export dom1
     bash -c '
@@ -160,9 +155,9 @@ test_devices_subgroup_devices_deny_parent() {
     rc=0
     # Make sure we are not in the tasks/procs
     my_pid=`get_my_pid`
-    add_proc_to_tasks $my_pid $dom1/test  || let rc+=1
-    check_cgroup_tasks $my_pid $dom1/test || let rc+=2
-    check_cgroup_procs $my_pid $dom1/test || let rc+=4
+    add_proc_to_tasks $my_pid $dom1 test  || let rc+=1
+    check_cgroup_tasks $my_pid $dom1 test || let rc+=2
+    check_cgroup_procs $my_pid $dom1 test || let rc+=4
 
     # Should fail
     open_block_device_test && let rc+=8
@@ -171,10 +166,7 @@ test_devices_subgroup_devices_deny_parent() {
     echo rc=$rc
     exit $rc
     ' || exit_fail "negative test - block/char"
-
-    destroy_guest_domain $dom1
 }
-
 
 #
 # Check common prerequisities and prepare test environment
@@ -186,6 +178,7 @@ if [ -z "$scenario" ] ; then
 fi
 
 check_installed_packages $pkg_list || exit_error "Missing required packages"
+mmod=$(check_kernel_modules $kmod_list) || exit_error "Missing required kernel module ($mmod)"
 check_cgroups_availability || exit_error "Congrol groups not ready"
 
 generate_block_dev_file

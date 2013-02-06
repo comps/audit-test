@@ -37,9 +37,9 @@ source tp_luks_functions.bash || exit 2
 ### defaults
 DMCRYPT="cryptfs"
 DMCRYPTDEV="/dev/mapper/$DMCRYPT"
-LUKSPASS="7k+paSs"
-LUKSPASSND="2nd7k+paSs!!!"
-LUKSPASSRD="paSs!!1444b_"
+LUKSPASS="kc3%a9?cF]X"
+LUKSPASSND="2nd7k+meSs!!!"
+LUKSPASSRD="meSs!!1444b_"
 MOUNT="/mnt/crypt"
 
 ### functions

@@ -190,9 +190,22 @@ function parse_named {
 # service functions
 ######################################################################
 
+function _busy_wait {
+    # busy wait for $1 to complete in $i centiseconds (exit with 0)
+    # or return 1 if the command fails even after that
+    local i_max=100  #10sec
+    local i
+
+    for (( i=0; i<i_max; i++ )); do
+        eval "$1" && break
+        echo -n "."
+        sleep 0.1
+    done;
+    echo
+    [ $i -eq $i_max ] && return 1 || return 0
+}
+
 function start_service {
-    declare i
-    local i_max=100
 
     if ! pgrep -f  sbin/$1 &>/dev/null; then
 	if [ "$DISTRO" = "SUSE" ]; then
@@ -205,16 +218,7 @@ function start_service {
 
     # Busy waiting.
     echo -n "start_service: Waiting for $1 to start"
-    for (( i=0; i < i_max; i++ )) do
-	if pgrep -f  sbin/${1} &>/dev/null; then
-	    echo
-	    break
-	fi
-	echo -n .
-	sleep 0.1
-    done
-    if [ $i -eq $i_max ]; then
-	echo
+    if ! _busy_wait "pgrep -f  sbin/${1} &>/dev/null"; then
 	echo "start_service: timed out, could not start $1" >&2
 	return 2
     fi
@@ -228,17 +232,7 @@ function start_service {
 
             # auditd daemonizes before it is ready to receive records from the kernel.
             # make sure it's receiving before continuing.
-	    for (( i=0; i < i_max; i++ )) do
-		auditctl -r 0 >/dev/null
-		if tail -n10 $log_file | grep -Fq audit_rate_limit=0; then
-		    echo
-		    break
-		fi
-		echo -n .
-		sleep 0.1
-	    done
-	    if [ $i -eq $i_max ]; then
-		echo
+            if ! _busy_wait "auditctl -r 0 >/dev/null; tail -n10 $log_file | grep -Fq audit_rate_limit=0"; then
 		echo "start_service: auditd slow starting, giving up" >&2
 		return 2
 	    fi
@@ -249,8 +243,6 @@ function start_service {
 }
 
 function stop_service {
-    declare i
-    local i_max=100
 
     # Services specifics.
     case $1 in
@@ -265,19 +257,9 @@ function stop_service {
 
     # Busy waiting.
     echo -n "stop_service: Waiting for $1 to stop"
-    sleep 1
-    for (( i=0; i < i_max; i++ )) do
-	if ! pgrep -f  sbin/${1} &>/dev/null; then
-	    echo
-	    break
-	fi
-	echo -n .
-	sleep 0.1
-    done
-    if [ $i -eq $i_max ]; then
-	echo
-	echo "stop_service: timed out, could not stop $1" >&2
-	return 2
+    if ! _busy_wait "! pgrep -f  sbin/${1} &>/dev/null"; then
+        echo "start_service: timed out, could not stop $1" >&2
+        return 2
     fi
 
     return 0

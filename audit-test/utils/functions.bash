@@ -237,6 +237,19 @@ function start_service {
 		return 2
 	    fi
 	    ;;
+
+        "sshd")
+            # make sure sshd is listening
+            if ! _busy_wait "[ \"\$(ss -tnlp | grep sshd)\" ]"; then
+                echo "start_service: cannot start sshd" >&2
+                return 2
+            fi
+            # make sure a TCP client can connect to it
+            local ssh_port=$(ss -4 -tnlp | grep sshd | awk -F" " '{print $4}' | head -n 1 | sed -r 's/.+://')
+            if ! _busy_wait "echo -ne \'\\\004\' | nc -w 3 127.0.0.1 \"$ssh_port\" 1>/dev/null"; then
+                echo "start_service: sshd still refuses connection requests" >&2
+                return 2
+            fi
     esac
 
     return 0

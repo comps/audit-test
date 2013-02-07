@@ -131,6 +131,7 @@ function screen_check_badpass {
     cat > $EXPSCRIPT << EOT
 set timeout $(($3+1))
 spawn screen $4
+sleep 1
 expect {
     {Password} { send -- BADPASS\r }
     default { exit 1 }
@@ -240,6 +241,7 @@ function screen_check_sequences {
     cat > $EXPSCRIPT << EOT
 set timeout 3
 spawn screen
+sleep 1
 expect {
     {$1} { send -- \\x01x }
     default { exit 1 }

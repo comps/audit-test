@@ -58,7 +58,7 @@ function check_luks {
 
 	# Check for correct parameters
 	egrep "Cipher name.*aes" $TMP || exit_fail "Failed check on cipher name"
-	egrep "Cipher mode.*cbc-essiv:sha256" $TMP || \
+	egrep "Cipher mode.*(cbc-essiv:sha256|xts-plain64)" $TMP || \
 		exit_fail "Failed check on cipher mode"
 	egrep "Hash spec.*sha1" $TMP || exit_fail "Failed check on hash spec"
 

@@ -3,6 +3,7 @@ policy_module(cron_test, 1.1)
 
 require{
  type crond_t, sysadm_t;
+ role sysadm_r;
 }
 
 # needed by "crontab -e"

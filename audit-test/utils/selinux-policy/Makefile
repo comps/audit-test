@@ -117,8 +117,8 @@ uninstall:
 	if [ -n "$$role" ]; then \
 		echo "Removing role/type from the default_types file"; \
 		sed -i -e '/$(MODULE_ROLE)/d' $(SELINUX_POLICY_DEFTYPEFILE); \
-		echo -n "Removing role \"$$role\" from user \"$(SELINUX_USER)\" ... "; \
-		semanage user -d -R $$role $(SELINUX_USER) &> /dev/null && \
+		echo -n "Removing local customizations from user \"$(SELINUX_USER)\" ... "; \
+		semanage user -d $(SELINUX_USER) &> /dev/null && \
 			echo "ok" || echo "failed"; \
 	fi; \
 	echo -n "Unloading $(MODULE_NAME) module ... "; \

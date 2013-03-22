@@ -408,7 +408,10 @@ function get_fsobj_context {
 function get_tmpfile_type {
     declare ftype
 
-    ftype=$(sesearch --type --class file --source $1 --target $2 | awk '{print $6}')
+    # get only first line (6th column) after "Found N semantic te rules" header
+    ftype=$(sesearch --type --class file --source $1 --target $2 | \
+        awk '/Found [0-9]* semantic te rules:/ { next } { print $6; exit 0 }')
+
     echo ${ftype%;}
 }
 

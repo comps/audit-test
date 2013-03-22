@@ -60,8 +60,8 @@ ssh_remove_screen $MPROFILE
 ssh_restart_daemon
 
 # get the pid of sshd process running on port 22
-SSHDPID=$(netstat -putna | grep ":22" | grep -m1 LISTEN | \
-    sed 's/.*\(\b[0-9]\+\)\/sshd\b.*/\1/')
+SSHDPID=$(ss -4 -ltnp | grep sshd | sed 's/.*sshd",\([0-9]\+\),.*/\1/')
+[ -z "$SSHDPID" ] && exit_error "could not find sshd process pid"
 
 # check if SSH_USE_STRONG_RNG set in environemnt of the sshd process
 grep "SSH_USE_STRONG_RNG" /proc/$SSHDPID/environ

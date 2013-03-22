@@ -82,6 +82,7 @@ dist:
 	ls -l audit-test-$$rev.tar.gz
 
 .PHONY: report
+ALL_LOGS	+= audit.run.log audit.rollup.log
 report:
 	@# tty output has color, generated logs don't, so collect them
 	@# instead of redirecting output of the above loop.

@@ -37,7 +37,7 @@ TEST_BASEDIR := /usr/local/eal4_testing
 #
 # targets
 #
-.PHONY: verifyme verify install uninstall relabel
+.PHONY: verifyme verify distclean
 
 # base SELinux module targets
 include $(SELINUX_DEV_BASEDIR)/Makefile
@@ -60,3 +60,13 @@ verify:
 		echo "not installed"; \
 	fi;
 
+# remove only generated files
+distclean:
+	$(MAKE) clean
+	@ shopt -s nullglob; \
+	for file in *.fc; do \
+		[ -z "$$(cat $$file)" ] && rm -vf "$$file"; \
+	done; \
+	for file in *.if; do \
+		[ -z "$$(grep -v '<summary></summary>' < $$file)" ] && rm -vf "$$file"; \
+	done;

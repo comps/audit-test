@@ -37,3 +37,8 @@ chmod_utils:
 
 README.augrok: augrok
 	pod2text augrok > $@
+
+.PHONY: README.augrok_clean
+distclean: README.augrok_clean
+README.augrok_clean:
+	$(RM) README.augrok

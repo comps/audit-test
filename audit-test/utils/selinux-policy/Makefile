@@ -43,7 +43,7 @@ MODULE_ROLE := lspp_test_r:lspp_harness_t
 # targets
 #
 
-.PHONY: verify install uninstall relabel
+.PHONY: verify install uninstall relabel distclean
 
 # base SELinux module targets
 include $(SELINUX_DEV_BASEDIR)/Makefile
@@ -137,3 +137,13 @@ relabel:
 	@echo "Relabeling LSPP tests in $(TEST_BASEDIR)"
 	@restorecon -r $(TEST_BASEDIR)
 
+# remove only generated files
+distclean:
+	$(MAKE) clean
+	@ shopt -s nullglob; \
+	for file in *.fc; do \
+		[ -z "$$(cat $$file)" ] && rm -vf "$$file"; \
+	done; \
+	for file in *.if; do \
+		[ -z "$$(grep -v '<summary></summary>' < $$file)" ] && rm -vf "$$file"; \
+	done;

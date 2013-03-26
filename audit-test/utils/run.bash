@@ -52,6 +52,7 @@ source functions.bash || exit 2
 unset logging
 unset opt_verbose opt_debug opt_config opt_list opt_log opt_rollup opt_timeout opt_width
 logging=false
+opt_avc=false
 opt_verbose=false
 opt_debug=false
 opt_quiet=false
@@ -350,6 +351,7 @@ Run a set of test cases, reporting pass/fail and tallying results.
 Output modes:
     (default)         Pass/fail/error status only
        --list         List the available tests
+    -a --avc          Print AVCs after testexecution and audit2allow rules
     -v --verbose      Copious output on fail or error
     -d --debug        Copious output always
     -q --quiet        Suppress error/fail message
@@ -362,13 +364,14 @@ function parse_cmdline {
     declare args conf x
 
     # Use /usr/bin/getopt which supports GNU-style long options
-    args=$(getopt -o df:hl:qr:vw: \
-        --long config:,debug,help,header,list,log:,quiet,rollup:,nocolor,verbose,width: \
+    args=$(getopt -o adf:hl:qr:vw: \
+        --long config:,avc,debug,help,header,list,log:,quiet,rollup:,nocolor,verbose,width: \
         -n "$0" -- "$@") || die
     eval set -- "$args"
 
     while true; do
         case $1 in
+            -a|--avc) opt_avc=true; shift ;;
             -d|--debug) opt_debug=true; opt_verbose=true; shift ;;
             -f|--config) opt_config=$2; shift 2 ;;
             -h|--help) usage; exit 0 ;;
@@ -514,6 +517,8 @@ function run_tests {
 	    show_test "$@"
 	fi
 
+	# get current time
+	stime=$(date +'%H:%M:%S')
 	output=$(
 # note that putting run_test in the background results in no tty for pam tests
 	    ( exec > >(tee $hee) 2>&1; run_test "$@"; ) # &
@@ -528,6 +533,7 @@ function run_tests {
 #	    wait $pid
 	) 2>&1
 	status=$?
+	etime=$(date +'%H:%M:%S')
 
 	if $opt_debug; then
 	    nolog msg "$end_output"
@@ -572,6 +578,14 @@ function run_tests {
 		vmsg "$end_output"
 		vmsg
 	    fi
+	fi
+
+	# print AVCs if requested
+	if $opt_avc; then
+	    msg "<blue>-- Test execution AVC records ----------------------------------------------"
+	    msg "$(ausearch -ts $stime -te $etime -m avc)"
+	    msg "<blue>-- audit2allow -------------------------------------------------------------"
+	    msg "$(ausearch -ts $stime -te $etime -m avc | audit2allow)"
 	fi
     done
 

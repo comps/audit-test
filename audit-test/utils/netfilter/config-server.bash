@@ -91,15 +91,6 @@ PASSWD="$(ask "Superuser passwword")"
 echo "export PASSWD=$PASSWD" >> ./profile.$hostext
 echo ""
 
-echo "The directory path to audit-test requested below is for the toe"
-echo "the directory path to audit-test on the netserver should be the same"
-echo "If the path on the netserver is different you will need to manually"
-echo "edit the AUDITPATH environmental variable in the /tmp/profile file"
-echo "on the netserver after the profile is copied to the netserver's /tmp"
-echo "directory to reflect the correct path to the audit-tests directory"
-echo ""
-
-AUDITPATH="$(ask "Directory path of audit-test (include audit-test)" "$AUDITPATH")"
 LOCAL_DEV="$(ask "Primary network device name of TOE" "$LOCAL_DEV")"
 LOCAL_SEC_DEV="$(ask "Secondary network device name of TOE" "$LOCAL_SEC_DEV")"
 LOCAL_SEC_MAC="$(ask "Secondary device mac address of TOE (mac/mask)" "$LOCAL_SEC_MAC")"
@@ -108,7 +99,6 @@ LOCAL_IPV6="$(ask "IPV6 address of TOE primary device" "$LOCAL_IPV6")"
 LOCAL_SEC_IPV4="$(ask "IPV4 address of TOE secondary device" "$LOCAL_SEC_IPV4")"
 LOCAL_SEC_IPV6="$(ask "IPV6 address of TOE secondary device" "$LOCAL_SEC_IPV6")"
 
-echo "export AUDITPATH=\"$AUDITPATH\"" >> ./profile.$hostext
 echo "export LOCAL_DEV=\"$LOCAL_DEV\"" >> ./profile.$hostext
 echo "export LOCAL_SEC_DEV=\"$LOCAL_SEC_DEV\"" >> ./profile.$hostext
 echo "export LOCAL_SEC_MAC=\"$LOCAL_SEC_MAC\"" >> ./profile.$hostext

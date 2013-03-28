@@ -141,9 +141,6 @@ PASSWD         		The root/eal password for the TOE
 
 PATH			"$PATH:." The PATH should include the local directory
 
-AUDITPATH      		Usually "/usr/local/eal4_testing/audit-test", the
-			recommended location for installing the test suite
-
 LOCAL_DEV      		Device for the TOE primary network, such as "eth3"
 
 LOCAL_SEC_DEV  		Device for the TOE secondary network, such as "eth4"
@@ -206,7 +203,6 @@ export MODE=64
 export PPROFILE=lspp
 export PATH="$PATH:."
 export PASSWD="redhat"
-export AUDITPATH=/usr/local/eal4_testing/audit-test
 export LOCAL_DEV="eth3"
 export LOCAL_SEC_DEV="eth4"
 export LOCAL_SEC_MAC="78:2B:CB:4B:EB:BC"

@@ -6,7 +6,6 @@ export MODE=64
 export PPROFILE=lspp
 export PATH="$PATH:."
 export PASSWD="redhat"
-export AUDITPATH="/usr/local/eal4_testing/audit-test"
 export LOCAL_DEV="eth3"
 export LOCAL_SEC_DEV="eth4"
 export LOCAL_SEC_MAC="78:2B:CB:4B:EB:BC"

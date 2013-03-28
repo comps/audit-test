@@ -171,8 +171,6 @@ SECNET_SVR_DEV  	Device for the NS secondary interface, such as "eth1"
 
 SECNET_SVR_MAC  	MAC address of the secondary device on the NS
 
-SECNET_IPV4     	IPV4 address for the secondary network on NS
-
 SNET4MASK       	Network mask for the secondary IPv4 network, such as
 			"255.255.255.0"
 

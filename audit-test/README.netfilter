@@ -100,27 +100,7 @@ There are a number of environmental variables required in order to provide
 the information needed to set the rules in iptables, ip6tables and ebtables.
 Some of these environmental variables are also required by the network
 tests in the audit-test/network directory. These environmental variables
-may be set manually prior to running the tests but the process of setting them
-all is simplified by the config-server.bash script. This script will ask for
-the pertinent ipv4, ipv6, and MAC addresses as well as device names to which
-these addresses are assigned. This allows considerable flexibility in
-configuring systems with 2 or possibly several more network interfaces on
-both the TOE platform as well as the network server platform.
-
-The config-server.bash script will build a profile.<hostname> file in the
-utils/netfilter directory in the audit-test suite path. This file
-should be sourced prior to running the tests. It is important to pay
-attention to the format and correctness of the answers. While the
-config-server.bash script will echo your response to the questions and allow
-you the opportunity to change your responses, it currently does no format
-checking and cannot verify if an address or device name is accurate. It does
-however use a profile.sample file in the same directory to provide a default
-answer which is primarily provided for the purpose of giving a sample of the
-format expected in the response.
-
-Alternatively, the profile.sample may be used as a template
-for the profile.<hostname> file and manually edited with the
-required information.
+must be set manually prior to running the tests, see README.run.
 
 Below is a list of the environmental variables required to run all the tests
 as well as an explanation of what they are.

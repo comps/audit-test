@@ -248,10 +248,10 @@ Change directory to the audit test suite.
 # cd /usr/local/eal4_testing/audit-test
 
 If the test suite was configured to run the netfilter
-tests, source the profile script that was created as part
-of the configuration.
+tests, create a file with variables according to README.netfilter
+and source it.
 
-# . utils/netfilter/profile.<hostname>
+# . profile.bash
 
 Otherwise, make sure that the labeled networking tests have been configured
 according to the instructions in the previous section. Set the following

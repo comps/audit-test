@@ -127,10 +127,6 @@ as well as an explanation of what they are.
 
 Variable		Description
 --------		--------------------------------------------------
-RHOST			Always "localhost", the loopback for IPv4
-
-RHOST6			Always "::1", the loopback for IPv6
-
 MODE           		Usually 64 but could be 32 if the TOE is running
 			a 32-bit OS
 
@@ -197,8 +193,6 @@ of all configuration environment variables you need to successfully run
 the all tests in the suite. Also be aware you need to adjust correctly
 according to your configuration:
 
-export RHOST="localhost"
-export RHOST6="::1"
 export MODE=64
 export PPROFILE=lspp
 export PATH="$PATH:."

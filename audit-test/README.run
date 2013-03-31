@@ -206,8 +206,6 @@ On the test machine:
 From the /usr/local/eal4_testing/audit-test directory, perform the following
 commands to setup the required configuration for the labeled networking tests:
 
-# export RHOST="localhost"
-# export RHOST6="::1"
 # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
 # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
 # export PATH="$PATH:."
@@ -259,8 +257,6 @@ Otherwise, make sure that the labeled networking tests have been configured
 according to the instructions in the previous section. Set the following
 environment variables:
 
-# export RHOST="localhost"
-# export RHOST6="::1"
 # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
 # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
 # export PATH="$PATH:."
@@ -331,8 +327,6 @@ workaround if you experience these failures.
    # export PASSWD=<password>
    # export PPROFILE=lspp
    # export MODE=<whatever you want (64|32), but set it to something>
-   # export RHOST="localhost"
-   # export RHOST6="::1"
    # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
    # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
    # export PATH="$PATH:."

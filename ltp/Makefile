@@ -19,7 +19,7 @@
 #
 #  PURPOSE: Downloads and runs syscalls and cc_ospp tests from LTP suite
 #
-#  REQUIRENTS: Exported RHOST and PASSWD env variables
+#  REQUIRENTS: Exported PASSWD env variable
 #
 #  HISTORY:
 #    11/11 originated by Miroslav Vadkerti <mvadkert@redhat.com>

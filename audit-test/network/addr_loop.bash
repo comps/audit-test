@@ -33,15 +33,11 @@ function trim_input {
 # main
 #
 
-unset addr_tmpl inet_tmpl
+unset inet_tmpl
 
 # get the parameters
-while getopts "A:L:" arg_param; do
+while getopts "L:" arg_param; do
     case $arg_param in
-	A)
-	    addr_tmpl=$OPTARG
-	    break
-	    ;;
 	L)
 	    inet_tmpl=$OPTARG
 	    ;;
@@ -51,18 +47,12 @@ done
 # loop on the addresses
 
 for addr_iter in $(trim_input); do
-    export ADDRESS_IPV4=""
     export LBLNET_SVR_IPV4=""
-    export ADDRESS_IPV6=""
     export LBLNET_SVR_IPV6=""
 
-    if [[ -n $addr_tmpl ]]; then
-	export ADDRESS_IPV4=`echo $addr_iter | cut -d '-' -f 1`
-	export ADDRESS_IPV6=`echo $addr_iter | cut -d '-' -f 2`
-    elif [[ -n $inet_tmpl ]]; then
+    if [[ -n $inet_tmpl ]]; then
 	export LBLNET_SVR_IPV4=`echo $addr_iter | cut -d '-' -f 1`
 	export LBLNET_SVR_IPV6=`echo $addr_iter | cut -d '-' -f 2`
     fi
-    [[ -n $addr_tmpl ]] && cat $addr_tmpl | ../addr_filter.bash
     [[ -n $inet_tmpl ]] && cat $inet_tmpl | ../addr_filter.bash
 done

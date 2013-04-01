@@ -30,11 +30,11 @@ install: install_client
 
 # helper target to get local addresses
 getaddress: install_check
-	@echo "Local IPv4 address -> %LOCAL_IPV4%" | ../addr_filter.bash
-	@echo "Local IPv6 address -> %LOCAL_IPV6_RAW%" | ../addr_filter.bash
+	@echo "Local IPv4 address -> %LOCAL_IPV4%" | ./addr_filter.bash
+	@echo "Local IPv6 address -> %LOCAL_IPV6_RAW%" | ./addr_filter.bash
 
 install_client: install_setrans install_ipsec_client install_netlabel
-	cat rc.local.client | ../addr_filter.bash > rc.local
+	cat rc.local.client | ./addr_filter.bash > rc.local
 	install -o root -g root -m 755 rc.local /etc/rc.d
 	if [[ ! -L /etc/rc3.d/S99local ]]; then \
 		(cd /etc/rc3.d; ln -s ../rc.local S99local); \
@@ -47,7 +47,7 @@ install_server: install_setrans install_ipsec_server install_netlabel
 		exit 1; \
 	fi
 	cat rc.local.server.in_header > rc.local
-	cat client_list.txt | ../addr_loop.bash -L rc.local.server.in_body >> rc.local
+	cat client_list.txt | ./addr_loop.bash -L rc.local.server.in_body >> rc.local
 	cat rc.local.server.in_footer >> rc.local
 	install -o root -g root -m 755 rc.local /etc/rc.d
 	if [[ ! -L /etc/rc3.d/S99local ]]; then \
@@ -77,7 +77,7 @@ install_netlabel:
 	chkconfig netlabel on
 
 install_ipsec_client: install_check
-	cat ipsec.conf.client | ../addr_filter.bash > ipsec.conf
+	cat ipsec.conf.client | ./addr_filter.bash > ipsec.conf
 	install -o root -g root -m 600 ipsec.conf /etc/ipsec.conf
 	install -o root -g root -m 600 ipsec.secrets /etc/ipsec.secrets
 
@@ -87,6 +87,6 @@ install_ipsec_server:
 		exit 1; \
 	fi
 	cat ipsec.conf.server.in_header > ipsec.conf
-	cat client_list.txt | ../addr_loop.bash -L ipsec.conf.server.in_body >> ipsec.conf
+	cat client_list.txt | ./addr_loop.bash -L ipsec.conf.server.in_body >> ipsec.conf
 	install -o root -g root -m 600 ipsec.conf /etc/ipsec.conf
 	install -o root -g root -m 600 ipsec.secrets /etc/ipsec.secrets

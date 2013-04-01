@@ -21,14 +21,10 @@ Build and install the lblnet_tst_server daemon as shown below:
 
 
 Create a file /usr/local/eal4_testing/audit-test/profile.bash with
-exported PASSWD variable with password for administrative user (should
-match also a password for root). This is required for restarting auditd
-service by lblnet_tst_server over xinetd on NS for audit-remote tests,
-and LBLNET_SVR_IPV4, LBLNET_SVR_IPV6 variables with IP addresses that
+exported LBLNET_SVR_IPV4 and LBLNET_SVR_IPV6 variables with IP addresses that
 should be used on NS, ie.:
 
 # cat > /usr/local/eal4_testing/audit-test/profile.bash <<EOF
-export PASSWD=<eal/root password>
 export LBLNET_SVR_IPV4=10.0.0.1
 export LBLNET_SVR_IPV6=fd00::1
 EOF

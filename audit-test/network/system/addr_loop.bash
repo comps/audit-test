@@ -19,40 +19,11 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 
-####
-#
-# helper functions
-#
+[ $# -lt 1 -o -z "$1" ] && exit 1
+template="$1"
 
-function trim_input {
-    sed -e 's/[ \t]*#.*//;/^$/d' -e 's/ /-/g'
-}
-
-####
-#
-# main
-#
-
-unset inet_tmpl
-
-# get the parameters
-while getopts "L:" arg_param; do
-    case $arg_param in
-	L)
-	    inet_tmpl=$OPTARG
-	    ;;
-    esac
-done
-
-# loop on the addresses
-
-for addr_iter in $(trim_input); do
-    export LOCAL_IPV4=""
-    export LOCAL_IPV6=""
-
-    if [[ -n $inet_tmpl ]]; then
-	export LOCAL_IPV4=`echo $addr_iter | cut -d '-' -f 1`
-	export LOCAL_IPV6=`echo $addr_iter | cut -d '-' -f 2`
-    fi
-    [[ -n $inet_tmpl ]] && cat $inet_tmpl | ./addr_filter.bash
+for addr_iter in $(sed 's/[ \t]*#.*//;/^$/d;s/ /-/'); do
+    export LOCAL_IPV4=`echo $addr_iter | cut -d '-' -f 1`
+    export LOCAL_IPV6=`echo $addr_iter | cut -d '-' -f 2`
+    cat "$template" | ./addr_filter.bash
 done

@@ -47,7 +47,7 @@ install_server: install_setrans install_ipsec_server install_netlabel
 		exit 1; \
 	fi
 	cat rc.local.server.in_header > rc.local
-	cat client_list.txt | ./addr_loop.bash -L rc.local.server.in_body >> rc.local
+	cat client_list.txt | ./addr_loop.bash rc.local.server.in_body >> rc.local
 	cat rc.local.server.in_footer >> rc.local
 	install -o root -g root -m 755 rc.local /etc/rc.d
 	if [[ ! -L /etc/rc3.d/S99local ]]; then \
@@ -87,6 +87,6 @@ install_ipsec_server:
 		exit 1; \
 	fi
 	cat ipsec.conf.server.in_header > ipsec.conf
-	cat client_list.txt | ./addr_loop.bash -L ipsec.conf.server.in_body >> ipsec.conf
+	cat client_list.txt | ./addr_loop.bash ipsec.conf.server.in_body >> ipsec.conf
 	install -o root -g root -m 600 ipsec.conf /etc/ipsec.conf
 	install -o root -g root -m 600 ipsec.secrets /etc/ipsec.secrets

@@ -25,45 +25,28 @@ set -x
 # main
 #
 
+unset local_if
 unset local_ipv4 remote_ipv4
-
-unset local_ipv6_if
-unset local_ipv6 remote_ipv6
 unset local_ipv6_raw remote_ipv6_raw
+unset local_ipv6 remote_ipv6
 
-#
-# get ipv4 addresses
-#
+local_if="$LOCAL_DEV"
 
 local_ipv4="$LOCAL_IPV4"
 remote_ipv4="$LBLNET_SVR_IPV4"
 
-#
-# get ipv6 addresses
-#
-
-# interface/scope
-local_ipv6_if="$LOCAL_DEV"
-
-# raw addresses
 local_ipv6_raw="$LOCAL_IPV6"
 remote_ipv6_raw="$LBLNET_SVR_IPV6"
 
-# adjust link-local addresses
-if [[ ${local_ipv6_raw/:*/} == "fe80" ]]; then
-    # link-local address, add a scope
-    local_ipv6="$local_ipv6_raw%$local_ipv6_if"
-else
-    # non link-local, assume global address and just use it
-    local_ipv6="$local_ipv6_raw"
-fi
-if [[ ${remote_ipv6_raw/:*/} == "fe80" ]]; then
-    # link-local address, add a scope
-    remote_ipv6="$remote_ipv6_raw%$local_ipv6_if"
-else
-    # non link-local, assume global address and just use it
-    remote_ipv6="$remote_ipv6_raw"
-fi
+local_ipv6="$local_ipv6_raw"
+remote_ipv6="$remote_ipv6_raw"
+
+# link-local ipv6 addresses
+for i in local_ipv6 remote_ipv6; do
+    prefix=$(eval echo \$$i | head -c 4)
+    [[ "$prefix" == "fe80" ]] && eval $i=\$$i%$local_if
+    unset prefix
+done;
 
 #
 # do the replacement

@@ -47,12 +47,12 @@ done
 # loop on the addresses
 
 for addr_iter in $(trim_input); do
-    export LBLNET_SVR_IPV4=""
-    export LBLNET_SVR_IPV6=""
+    export LOCAL_IPV4=""
+    export LOCAL_IPV6=""
 
     if [[ -n $inet_tmpl ]]; then
-	export LBLNET_SVR_IPV4=`echo $addr_iter | cut -d '-' -f 1`
-	export LBLNET_SVR_IPV6=`echo $addr_iter | cut -d '-' -f 2`
+	export LOCAL_IPV4=`echo $addr_iter | cut -d '-' -f 1`
+	export LOCAL_IPV6=`echo $addr_iter | cut -d '-' -f 2`
     fi
     [[ -n $inet_tmpl ]] && cat $inet_tmpl | ./addr_filter.bash
 done

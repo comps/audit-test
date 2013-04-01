@@ -52,6 +52,11 @@ done;
 # do the replacement
 #
 
+#
+# %LOCAL_*% = always the test machine (TOE)
+# %REMOTE_*% = always the network server (NS)
+#
+
 sed "s/%LOCAL_IPV4%/$local_ipv4/g; \
     s/%REMOTE_IPV4%/$remote_ipv4/g; \
     s/%LOCAL_IPV6%/$local_ipv6/g; \

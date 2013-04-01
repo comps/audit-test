@@ -1,10 +1,10 @@
-conn test2-1-%REMOTE_IPV4%
+conn test2-1-%LOCAL_IPV4%
 	auto=route
 	rekey=no
 	authby=secret
 	type=transport
-	left=%REMOTE_IPV4%
-	right=%LOCAL_IPV4%
+	left=%LOCAL_IPV4%
+	right=%REMOTE_IPV4%
 	ike=3des-sha1
 	phase2=ah
 	phase2alg=sha1
@@ -13,13 +13,13 @@ conn test2-1-%REMOTE_IPV4%
 	leftprotoport=tcp
 	rightprotoport=tcp/4300
 
-conn test2-2-%REMOTE_IPV4%
+conn test2-2-%LOCAL_IPV4%
 	auto=route
 	rekey=no
 	authby=secret
 	type=transport
-	left=%REMOTE_IPV4%
-	right=%LOCAL_IPV4%
+	left=%LOCAL_IPV4%
+	right=%REMOTE_IPV4%
 	ike=3des-sha1
 	phase2=ah
 	phase2alg=sha1
@@ -28,14 +28,14 @@ conn test2-2-%REMOTE_IPV4%
 	leftprotoport=tcp/4300
 	rightprotoport=tcp
 
-conn test2-1-%REMOTE_IPV6%
+conn test2-1-%LOCAL_IPV6%
 	auto=route
 	rekey=no
 	connaddrfamily=ipv6
 	authby=secret
 	type=transport
-	left=%REMOTE_IPV6%
-	right=%LOCAL_IPV6%
+	left=%LOCAL_IPV6%
+	right=%REMOTE_IPV6%
 	ike=3des-sha1
 	phase2=ah
 	phase2alg=sha1
@@ -44,14 +44,14 @@ conn test2-1-%REMOTE_IPV6%
 	leftprotoport=tcp/4300
 	rightprotoport=tcp
 
-conn test2-2-%REMOTE_IPV6%
+conn test2-2-%LOCAL_IPV6%
 	auto=route
 	rekey=no
 	connaddrfamily=ipv6
 	authby=secret
 	type=transport
-	left=%REMOTE_IPV6%
-	right=%LOCAL_IPV6%
+	left=%LOCAL_IPV6%
+	right=%REMOTE_IPV6%
 	ike=3des-sha1
 	phase2=ah
 	phase2alg=sha1
@@ -60,13 +60,13 @@ conn test2-2-%REMOTE_IPV6%
 	leftprotoport=tcp
 	rightprotoport=tcp/4300
 
-conn test4-1-%REMOTE_IPV4%
+conn test4-1-%LOCAL_IPV4%
 	auto=route
 	rekey=no
 	authby=secret
 	type=transport
-	left=%REMOTE_IPV4%
-	right=%LOCAL_IPV4%
+	left=%LOCAL_IPV4%
+	right=%REMOTE_IPV4%
 	ike=3des-sha1
 	phase2=ah
 	phase2alg=sha1
@@ -75,13 +75,13 @@ conn test4-1-%REMOTE_IPV4%
 	leftprotoport=udp
 	rightprotoport=udp/4300
 
-conn test4-2-%REMOTE_IPV4%
+conn test4-2-%LOCAL_IPV4%
 	auto=route
 	rekey=no
 	authby=secret
 	type=transport
-	left=%REMOTE_IPV4%
-	right=%LOCAL_IPV4%
+	left=%LOCAL_IPV4%
+	right=%REMOTE_IPV4%
 	ike=3des-sha1
 	phase2=ah
 	phase2alg=sha1
@@ -90,14 +90,14 @@ conn test4-2-%REMOTE_IPV4%
 	leftprotoport=udp/4300
 	rightprotoport=udp
 
-conn test4-1-%REMOTE_IPV6%
+conn test4-1-%LOCAL_IPV6%
 	auto=route
 	rekey=no
 	connaddrfamily=ipv6
 	authby=secret
 	type=transport
-	left=%REMOTE_IPV6%
-	right=%LOCAL_IPV6%
+	left=%LOCAL_IPV6%
+	right=%REMOTE_IPV6%
 	ike=3des-sha1
 	phase2=ah
 	phase2alg=sha1
@@ -106,14 +106,14 @@ conn test4-1-%REMOTE_IPV6%
 	leftprotoport=udp
 	rightprotoport=udp/4300
 
-conn test4-2-%REMOTE_IPV6%
+conn test4-2-%LOCAL_IPV6%
 	auto=route
 	rekey=no
 	connaddrfamily=ipv6
 	authby=secret
 	type=transport
-	left=%REMOTE_IPV6%
-	right=%LOCAL_IPV6%
+	left=%LOCAL_IPV6%
+	right=%REMOTE_IPV6%
 	ike=3des-sha1
 	phase2=ah
 	phase2alg=sha1

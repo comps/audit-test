@@ -208,7 +208,6 @@ commands to setup the required configuration for the labeled networking tests:
 
 # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
 # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
-# export PATH="$PATH:."
 
 # make netconfig
 
@@ -259,7 +258,6 @@ environment variables:
 
 # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
 # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
-# export PATH="$PATH:."
 # export PASSWD=<root/admin user password>
 
 Verify that the time on the test system is synchronized with the time
@@ -329,7 +327,6 @@ workaround if you experience these failures.
    # export MODE=<whatever you want (64|32), but set it to something>
    # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
    # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
-   # export PATH="$PATH:."
 7. Change to the '/usr/local/eal4_testing/audit-test/network' directory
 8. Type './run.bash host=remote*type=ipsec'. There may be a few failures;
 rerun the command until all of the tests pass. At most, this should be two

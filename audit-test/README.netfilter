@@ -115,8 +115,6 @@ PPROFILE       		"capp" if the TOE is configured in 'base' mode or
 
 PASSWD         		The root/eal password for the TOE
 
-PATH			"$PATH:." The PATH should include the local directory
-
 LOCAL_DEV      		Device for the TOE primary network, such as "eth3"
 
 LOCAL_SEC_DEV  		Device for the TOE secondary network, such as "eth4"
@@ -157,7 +155,6 @@ according to your configuration:
 
 export MODE=64
 export PPROFILE=lspp
-export PATH="$PATH:."
 export PASSWD="redhat"
 export LOCAL_DEV="eth3"
 export LOCAL_SEC_DEV="eth4"

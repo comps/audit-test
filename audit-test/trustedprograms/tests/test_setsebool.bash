@@ -79,7 +79,7 @@ setup_bool
 # test boolean
 setsebool $bool $value
 case $bool in
-    user_ping)
+    selinuxuser_ping)
         # we use rolecall with the user_t domain instead of runcon
         # with a test domain to avoid having to add policy which would
         # allow the ping_t domain to write to the terminal

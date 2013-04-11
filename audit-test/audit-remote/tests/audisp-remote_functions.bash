@@ -55,8 +55,8 @@ total_written=0
 
 # Variables used by basic connection for TOE acting as server and client
 
+# used only on the test machine for local auditd
 local_audit_server_ip="$LOCAL_IPV4"
-ping $local_audit_server_ip -c 1 || exit_error "Unable to ping audit server"
 
 auditd_conf="/etc/audit/auditd.conf"
 audisp_remote_conf="/etc/audisp/audisp-remote.conf"

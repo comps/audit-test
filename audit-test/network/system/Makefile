@@ -31,7 +31,7 @@ install: install_client
 # helper target to get local addresses
 getaddress: install_check
 	@echo "Local IPv4 address -> %LOCAL_IPV4%" | ./addr_filter.bash
-	@echo "Local IPv6 address -> %LOCAL_IPV6_RAW%" | ./addr_filter.bash
+	@echo "Local IPv6 address -> %LOCAL_IPV6%" | ./addr_filter.bash
 
 install_client: install_setrans install_ipsec_client install_netlabel
 	cat rc.local.client | ./addr_filter.bash > rc.local

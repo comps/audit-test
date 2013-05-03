@@ -524,17 +524,6 @@ void ctl_sendrand(int sock, struct sockaddr_storage *peer_addr, char *param)
 	}
 	bytes = atoi(bytes_str);
 
-	/* if the peer is using ipv6 link-local addressing then copy the scope-id
-	* from the peer's control socket to the new data socket */
-	if (host->ai_family == AF_INET6 &&
-	    IN6_IS_ADDR_LINKLOCAL(
-		         &((struct sockaddr_in6 *)host->ai_addr)->sin6_addr)) {
-		((struct sockaddr_in6 *)host->ai_addr)->sin6_scope_id =	\
-		((struct sockaddr_in6 *)peer_addr)->sin6_scope_id;
-		SMSG(SMSG_NOTICE,
-		     fprintf(log_fd, "notice(sendrand): adjusted scope-id\n"));
-	}
-
 	/* connect to the remote host */
 	data_sock = socket(host->ai_family, host->ai_socktype, host->ai_protocol);
 	if (data_sock < 0) {

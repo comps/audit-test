@@ -206,8 +206,10 @@ On the test machine:
 From the /usr/local/eal4_testing/audit-test directory, perform the following
 commands to setup the required configuration for the labeled networking tests:
 
-# export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
-# export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
+# export LOCAL_IPV4="<testing machine IPV4 address on the primary network>"
+# export LOCAL_IPV6="<testing machine IPV6 address on the primary network>"
+# export LBLNET_SVR_IPV4="<network server IPV4 address on the primary network>"
+# export LBLNET_SVR_IPV6="<network server IPV6 address on the primary network>"
 
 # make netconfig
 

@@ -85,7 +85,7 @@ screen_check_badpass $TEST_USER $TEST_USER_PASSWD 2 || exit_fail \
 # check if
 # + escape sequence for clearing the screen sent if screen locked
 # + kernel boot options contain "no-scroll" and "fbcon=scrollback:0"
-screen_check_clear $TEST_USER $TEST_USER_PASSWD 2 || exit_fail \
+screen_check_clear $TEST_USER $TEST_USER_PASSWD 5 || exit_fail \
     "screen clear before locking failed ($?)"
 
 # checks if

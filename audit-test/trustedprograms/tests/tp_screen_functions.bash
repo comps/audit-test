@@ -182,13 +182,13 @@ function screen_check_clear {
     # To check you terminal type use the command
     # echo $TERM
     #
+    prepend_cleanup "rm -f $EXPSCRIPT"
     cat > $EXPSCRIPT << EOT
 set timeout $(($3+1))
 spawn screen $4
-expect {
-    -re ".*\\x1b\\x5c\\x5b\\x48\\x1b\\x5c\\x5b\\x4a.*" { send -- $2\r }
-    -re ".*\\x1b\\x5c\\x5b\\x48\\x1b\\x5c\\x5b\\x32\\x4a.*" { send -- $2\r }
-    default { exit 1 }
+expect {$1} {
+    sleep 4
+    send { send -- $2\r }
 }
 expect {
     {$1} { send -- exit\r }
@@ -200,16 +200,20 @@ EOT
 
     # run the expect script as user
     chown ${1}:$1 $EXPSCRIPT
-    /bin/su - -c "expect $EXPSCRIPT" $1
-    RET=$?
+    EXPOUT=$(mktemp)
+    prepend_cleanup "rm -f $EXPOUT"
+    /bin/su - -c "expect $EXPSCRIPT" $1 &> $EXPOUT
+    hexdump -C $EXPOUT
+    # count the number of lines with clear screen
+    # screen should clear the screen 2 times after running
+    # and once after locking the screen
+    CLRCNT=$(cat $EXPOUT | xxd -p | tr -d '\n' | grep -o "$(clear | xxd -p)" | wc -l)
+    [ "$CLRCNT" -eq 3 ] && RET=0 || RET=1
 
     # check if kernel cmdline contains required options for
     # disabling framebuffer scrolling
-    grep "no-scroll" /proc/cmdline || RET=4
-    grep "fbcon=scrollback:0" /proc/cmdline || RET=5
-
-    # remove the expect script
-    rm -f $EXPSCRIPT
+    grep "no-scroll" /proc/cmdline || RET=2
+    grep "fbcon=scrollback:0" /proc/cmdline || RET=3
 
     return $RET
 }

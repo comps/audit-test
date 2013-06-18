@@ -5,12 +5,12 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
@@ -56,7 +56,7 @@ ifneq ($(MODE), $(NATIVE))
 	    ifneq (,$(findstring $(MACHINE), $(Z64)))
 		    CFLAGS += -m31
 		    LDFLAGS += -m31
-	    else 
+	    else
 		    ifneq (,$(findstring $(MACHINE), $(X86_64)))
 			    CFLAGS += -m32 -malign-double
 			    LDFLAGS += -m32
@@ -117,14 +117,14 @@ check_set_PPROFILE = \
 	      export PPROFILE=lspp ; \
 	    fi \
 	  fi \
-	fi 
+	fi
 
 check_set_PASSWD = \
 	while [[ -z $$PASSWD ]]; do \
 	    trap 'stty echo; exit' 1 2; \
 	    read -sp "Login user password: " PASSWD; echo; export PASSWD; \
 	    trap - 1 2; \
-	done 
+	done
 
 ifeq (, $(findstring network, $(RUN_DIRS)))
 check_set_LBLNET_SVR_IPV4 = true
@@ -191,7 +191,7 @@ _clean:
 
 clean: _clean
 
-ALL_LOGS += run.log rollup.log
+ALL_LOGS += run.log rollup.log $(SYSTEMINFO)
 _distclean: clean
 	@if [[ "$(MAKECMDGOALS)" == distclean ]]; then \
 	    for x in $(SUB_DIRS); do \
@@ -223,7 +223,7 @@ RPMS		= binutils \
                   make \
 		  audit-libs-devel
 ifneq ($(findstring $(MACHINE),$(IP)),)
-RPMS		+= gcc-64bit 
+RPMS		+= gcc-64bit
 endif
 
 # This can be augmented per directory to check things other than the default

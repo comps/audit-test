@@ -32,7 +32,7 @@
 
 TOPDIR		= .
 
-include $(TOPDIR)/rules.mk
+include $(TOPDIR)/audit-test/rules.mk
 
 SUB_DIRS        = audit-test ltp
 
@@ -77,11 +77,11 @@ dist:
 	into=$$(pwd) && \
 	for DIR in $(SUB_DIRS); do make -C "$$DIR" dist; done && \
 	mv "ltp-$$rev.tar.gz" "audit-test-$$rev.tar.gz" "$$tmpdir" && \
-	cp "Makefile" "rules.mk" "$$tmpdir" && \
+	cp "Makefile" "$$tmpdir" && \
 	cd "$$tmpdir" && \
 	tar xpzvf "ltp-$$rev.tar.gz" && \
 	tar xpzvf "audit-test-$$rev.tar.gz" && \
-	tar czf "$$into/audit-$$rev.tar.gz" "Makefile" "rules.mk" "ltp" "audit-test" && \
+	tar czf "$$into/audit-$$rev.tar.gz" "Makefile" "ltp" "audit-test" && \
 	echo "$$into" && \
 	cd "$$into" && \
 	rm -rf "$$tmpdir" && \

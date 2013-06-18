@@ -40,7 +40,6 @@ Z		= s390
 Z64		= s390x
 X86_64		= x86_64
 IA		= ia64
-SYSTEMINFO      = systeminfo.run.log
 CFLAGS          += -g -O2 -Wall -Werror -D_GNU_SOURCE -fno-strict-aliasing
 LDFLAGS         +=
 
@@ -191,7 +190,7 @@ _clean:
 
 clean: _clean
 
-ALL_LOGS += run.log rollup.log $(SYSTEMINFO)
+ALL_LOGS += run.log rollup.log
 _distclean: clean
 	@if [[ "$(MAKECMDGOALS)" == distclean ]]; then \
 	    for x in $(SUB_DIRS); do \
@@ -303,22 +302,6 @@ subdirs_quiet:
 ##########################################################################
 # Command framework execution rules
 ##########################################################################
-
-systeminfo::
-	echo "==> date <==" > $(SYSTEMINFO)
-	date >> $(SYSTEMINFO)
-	echo "" >> $(SYSTEMINFO)
-	echo "==> uname -a <==" >> $(SYSTEMINFO)
-	uname -a >> $(SYSTEMINFO)
-	echo "" >> $(SYSTEMINFO)
-	echo "==> uptime <==" >> $(SYSTEMINFO)
-	uptime >> $(SYSTEMINFO)
-	echo "" >> $(SYSTEMINFO)
-	echo "==> cat /proc/cpuinfo <==" >> $(SYSTEMINFO)
-	cat /proc/cpuinfo >> $(SYSTEMINFO)
-	echo "" >> $(SYSTEMINFO)
-	echo "==> rpm -qai <==" >> $(SYSTEMINFO)
-	rpm -qai >> $(SYSTEMINFO)
 
 ifneq ($(DEBUG),)
 DEBUG_ARG	= -d $(DEBUG)

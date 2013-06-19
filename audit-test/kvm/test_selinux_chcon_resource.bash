@@ -64,7 +64,8 @@ for i in $(seq $first $last); do
 		exit_fail
 	fi
 
-	expression="type==AVC and extra_text=~denied and comm==runcon and scontext=~qemu_t"
+	# We need to check for svirt_t starting from RHEL7 too because qemu_t became an alias to it
+	expression="type==AVC and extra_text=~denied and comm==runcon and scontext=~(qemu_t|svirt_t)"
 
 	if [[ $(augrok -c --seek $offset $expression) -eq 0 ]]; then
 		exit_fail

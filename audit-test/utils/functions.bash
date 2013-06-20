@@ -194,7 +194,7 @@ function start_auditd {
     local log_file=${1:-"/var/log/audit/audit.log"}
 
     if ! pidof auditd &>/dev/null; then
-	if [ $DISTRO = "SUSE" ]; then
+	if [ "$DISTRO" = "SUSE" ]; then
 	    rcauditd start || return 2
 	    auditctl -e 1 || return 2
 	else
@@ -226,7 +226,7 @@ function stop_auditd {
     declare i
 
     auditctl -D &>/dev/null
-    if [ $DISTRO = "SUSE" ]; then
+    if [ "$DISTRO" = "SUSE" ]; then
 	rcauditd stop || killall auditd
     else
 	service auditd stop || killall auditd

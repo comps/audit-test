@@ -113,6 +113,7 @@ generate_usb_dev_file() {
         <source>
             <vendor id='0x$usb_vendor'/>
             <product id='0x$usb_product'/>
+            <address bus='$usb_bus' device='$usb_device'/>
         </source>
     </hostdev>
 EOX

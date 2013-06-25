@@ -1,0 +1,422 @@
+#!/bin/bash
+###############################################################################
+#   Copyright (c) 2013 Red Hat, Inc. All rights reserved.
+#
+#   This copyrighted material is made available to anyone wishing
+#   to use, modify, copy, or redistribute it subject to the terms
+#   and conditions of the GNU General Public License version 2.
+#
+#   This program is distributed in the hope that it will be
+#   useful, but WITHOUT ANY WARRANTY; without even the implied
+#   warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+#   PURPOSE. See the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public
+#   License along with this program; if not, write to the Free
+#   Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+#   Boston, MA 02110-1301, USA.
+###############################################################################
+#
+# AUTHOR: Jiri Jaburek <jjaburek@redhat.com>
+#
+# This script checks whether the environment on TOE and NS has all
+# the prerequisities for audit-test suite run met.
+# This ranges from initial environment variable checking to ensuring proper
+# routing between TOE and NS.
+
+## COLORS
+#
+# attributes:
+# 0=none, 1=bold, 4=underscore, 5=blink, 7=reverse, 8=concealed
+#
+# text/foreground:
+# 30=black, 31=red, 32=green, 33=yellow, 34=blue, 35=magenta, 36=cyan, 37=white
+#
+# background:
+# 40=black, 41=red, 42=green, 43=yellow, 44=blue, 45=magenta, 46=cyan, 47=white
+#
+# format:
+#   \e[<code>[;<code2>]m
+# ie.:
+#   echo -e '\e[1;4;31;43mred bold underlined text on yellow background\e[0m'
+##
+
+# run a given command to verify/check something
+# $1 = command with arguments
+# $2 = expected exit code (leave empty if irrelevant)
+# $3 = optional cmd text to show instead of $1
+# returns the command's exit code
+# and sets CHECK_FAILED var to nonempty value upon fail
+check()
+{
+    [ $# -lt 1 ] && return 1
+    [ $# -ge 2 ] && cmpret="$2" || cmpret=0
+    [ $# -ge 3 ] && msg="$3" || msg=
+
+    # echo initial msg
+    if [ "$msg" ]; then
+        echo -ne "\e[1m$msg\e[0m ..."
+    else
+        echo -ne "> \e[1m$1\e[0m ..."
+    fi
+
+    # run cmd, capture stderr
+    out=$(eval "$1" 2>&1)
+
+    # show result
+    ret=$?
+    if [ -z "$cmpret" ]; then
+        # ignored
+        echo -e "\e[1;34mignored\e[0m"
+    elif [ "$cmpret" -eq $ret ]; then
+        # pass
+        echo -e "\e[1;32mpassed\e[0m"
+    else
+        if [ "$WARNONLY" ]; then
+            # warn
+            echo -e "\e[1;33mwarn\e[0m"
+            [ "$out" ] && echo "$out"
+        else
+            # fail
+            echo -e "\e[1;31mfailed\e[0m"
+            [ "$out" ] && echo "$out"
+            CHECK_FAILED=1
+        fi
+    fi
+
+    return $ret
+}
+
+
+### EXAMPLE
+#check "sleep 2"                  # pass
+#WARNONLY=1 check "sleep 0.5"     # pass
+#WARNONLY=1 check "sleep 0,5"     # warn
+#check "sleep abcd" 0 "running sleep abcd"  # fail with msg
+#check "sleep -2" ''              # ignored result
+
+
+AUDITDIR="/usr/local/eal4_testing"
+
+
+### VARIABLES
+check_variables() {
+    local CHECK_FAILED
+    local vars
+
+    # basic variables
+    vars="DISTRO MODE PPROFILE PASSWD"
+    #vars="PASSWD"
+
+    for i in $vars; do
+        check "env | grep \"^$i=\"" 0 "Var $i is present in environment"
+    done;
+
+    # sanity PPROFILE check
+    check "[ \"$PPROFILE\" = \"capp\" -o \"$PPROFILE\" = \"lspp\" ]" 0 \
+        "Var PPROFILE is either capp or lspp"
+
+    [ -z "$CHECK_FAILED" ] && check_variables_ok_nonet=1
+
+    # networking variables
+    vars="LOCAL_DEV LOCAL_IPV4 LOCAL_IPV6"
+    vars="$vars LOCAL_SEC_MAC LOCAL_SEC_IPV4 LOCAL_SEC_IPV6 BRIDGE_FILTER"
+    vars="$vars LBLNET_SVR_IPV4 LBLNET_SVR_IPV6"
+    vars="$vars SECNET_SVR_MAC SECNET_SVR_IPV4 SECNET_SVR_IPV6"
+
+    for i in $vars; do
+        check "env | grep \"^$i=\"" 0 "Var $i is present in environment"
+    done;
+
+    # s390x / ppc64 check? (ARCH variable)
+
+    if [ "$CHECK_FAILED" ]; then
+        echo
+        echo "Variable checking failed, please make sure to export all required"
+        echo "environment variables specified in README.run."
+        echo "Also make sure the networking variables are set according"
+        echo "to README.netfilter."
+        return 1
+    else
+        check_variables_ok=1
+    fi
+}
+
+
+### USER SESSION
+check_user_session() {
+    local CHECK_FAILED
+
+    # requires for this check
+    [ "$check_variables_ok_nonet" ] || return 2
+
+    check "[ \"$(whoami)\" = \"root\" ]" 0 \
+        "Logged in as root"
+    check "[ -z \"$(faillock | grep -v '^\([^ ]*:\|When\)')\" ]" 0 \
+        "Faillock is empty"
+    check "[ ! -e \"$HOME/.ssh/id_rsa\" ]" 0 \
+        "~/.ssh/id_rsa doesn't exist (testsuite reasons)"
+
+    [ "$PPROFILE" = "lspp" ] && \
+        check "[ \"$(id -Z)\" = \"staff_u:lspp_test_r:lspp_harness_t:SystemLow-SystemHigh\" ]" 0 \
+            "id -Z is staff_u:lspp_test_r:lspp_harness_t:SystemLow-SystemHigh"
+
+    check "[ \"$(pwd)\" = \"/usr/local/eal4_testing/audit-test\" ]" 0 \
+        "\$(pwd) is /usr/local/eal4_testing/audit-test"
+
+    if [ "$CHECK_FAILED" ]; then
+        echo
+        echo "User session checking failed, please make sure the system"
+        echo "is in evaluated configuration, double check whether all steps"
+        echo "required by README.run have been performed."
+        return 1
+    else
+        check_user_session_ok=1
+    fi
+}
+
+
+### SUITE LOCATION
+check_suite_loc() {
+    local CHECK_FAILED
+
+    # requires for this check
+    [ "$AUDITDIR" ] || return 2
+
+    check "[ -d \"$AUDITDIR\" ]"
+    check "[ -d \"$AUDITDIR/audit-test\" ]"
+    check "[ -d \"$AUDITDIR/ltp\" ]"
+
+    [ -d "$AUDITDIR" ] && \
+        check "[ \"$(stat --format=%a "$AUDITDIR")\" = \"755\" ]" 0 "$AUDITDIR has mode 755"
+
+    if [ "$CHECK_FAILED" ]; then
+        echo
+        echo "Audit-test suite not found or incorrectly installed in $AUDITDIR."
+        echo "This is important because of the hardcoded paths in the testing policy."
+        echo "Please install/extract the suite according to README.run."
+        return 1
+    else
+        check_suite_loc_ok=1
+    fi
+}
+
+
+### NETWORKING - interfaces
+check_networking_if() {
+    local CHECK_FAILED
+
+    # requires for this check
+    [ "$check_variables_ok" ] || return 2
+
+    # interface checks
+    check "ip -o link show dev $LOCAL_DEV" 0 \
+        "Device $LOCAL_DEV exists"
+    check "ip -o link show dev $LOCAL_SEC_DEV" 0 \
+        "Device $LOCAL_SEC_DEV exists"
+    check "ip -o link show dev $BRIDGE_FILTER" 0 \
+        "Device $BRIDGE_FILTER exists"
+    check "brctl show $BRIDGE_FILTER | grep $LOCAL_SEC_DEV" 0 \
+        "Device $LOCAL_SEC_DEV is enslaved in bridge $BRIDGE_FILTER"
+
+    check "ip -o -4 addr show dev $LOCAL_DEV | grep \"$LOCAL_IPV4\"" 0 \
+        "Device $LOCAL_DEV has IPv4 address: $LOCAL_IPV4"
+    check "ip -o -6 addr show dev $LOCAL_DEV | grep \"$LOCAL_IPV6\"" 0 \
+        "Device $LOCAL_DEV has IPv6 address: $LOCAL_IPV6"
+    check "ip -o link show dev $BRIDGE_FILTER | grep \"$(sed 's/\(.*\)/\L\1/' <<<$LOCAL_SEC_MAC)\"" 0 \
+        "Device $BRIDGE_FILTER has MAC address: $LOCAL_SEC_MAC"
+    check "ip -o -4 addr show dev $BRIDGE_FILTER | grep \"$LOCAL_SEC_IPV4\"" 0 \
+        "Device $BRIDGE_FILTER has IPv4 address: $LOCAL_SEC_IPV4"
+    check "ip -o -6 addr show dev $BRIDGE_FILTER | grep \"$LOCAL_SEC_IPV6\"" 0 \
+        "Device $BRIDGE_FILTER has IPv6 address: $LOCAL_SEC_IPV6"
+
+    check "ip -o -6 addr show dev $LOCAL_DEV | grep \"$LOCAL_IPV6\" | grep -v deprecated" 0 \
+        "IPv6 address $LOCAL_IPV6 on $LOCAL_DEV is not deprecated"
+    check "ip -o -6 addr show dev $BRIDGE_FILTER | grep \"$LOCAL_SEC_IPV6\" | grep -v deprecated" 0 \
+        "IPv6 address $LOCAL_SEC_IPV6 on $BRIDGE_FILTER is not deprecated"
+
+    if [ "$CHECK_FAILED" ]; then
+        echo
+        echo "Network interfaces are not configured correctly."
+        echo "Make sure the networking is set up according to README.netfilter"
+        echo "(including the bridge) and that all addresses assigned to"
+        echo "network interfaces match those exported in env variables."
+        return 1
+    else
+        check_networking_if_ok=1
+    fi
+}
+
+
+### NETWORKING - probe
+check_networking_probe() {
+    local CHECK_FAILED
+
+    # requires for this check
+    [ "$check_variables_ok" -a "$check_networking_if_ok" ] || return 2
+
+    check "ping -I lo -q -c1 127.0.0.1" 0 \
+        "127.0.0.1 reachable via lo"
+    check "ping6 -I lo -q -c1 ::1" 0 \
+        "::1 reachable via lo"
+    check "ping -I $LOCAL_DEV -q -c1 $LBLNET_SVR_IPV4" 0 \
+        "$LBLNET_SVR_IPV4 reachable via $LOCAL_DEV"
+    check "ping6 -I $LOCAL_DEV -q -c1 $LBLNET_SVR_IPV6" 0 \
+        "$LBLNET_SVR_IPV6 reachable via $LOCAL_DEV"
+    check "ping -I $BRIDGE_FILTER -q -c1 $SECNET_SVR_IPV4" 0 \
+        "$SECNET_SVR_IPV4 reachable via $BRIDGE_FILTER"
+    check "ping6 -I $BRIDGE_FILTER -q -c1 $SECNET_SVR_IPV6" 0 \
+        "$SECNET_SVR_IPV6 reachable via $BRIDGE_FILTER"
+
+    check "nc $LOCAL_IPV4 4000 <<<\"echo:testme;\" | grep -a testme" 0 \
+        "lblnet_tst_server on TOE responds over unlabeled IPv4"
+    check "nc $LOCAL_IPV6 4000 <<<\"echo:testme;\" | grep -a testme" 0 \
+        "lblnet_tst_server on TOE responds over unlabeled IPv6"
+    check "nc $LBLNET_SVR_IPV4 4000 <<<\"echo:testme;\" | grep -a testme" 0 \
+        "lblnet_tst_server on NS responds over unlabeled IPv4"
+    check "nc $LBLNET_SVR_IPV6 4000 <<<\"echo:testme;\" | grep -a testme" 0 \
+        "lblnet_tst_server on NS responds over unlabeled IPv6"
+
+    if [ "$CHECK_FAILED" ]; then
+        echo
+        echo "Some services on the NS are not reachable."
+        echo "Make sure the NS is configured correctly and reachable"
+        echo "via the interfaces and addresses exported as env variables."
+        return 1
+    else
+        check_networking_probe_ok=1
+    fi
+}
+
+
+### SERVICES
+check_services() {
+    local CHECK_FAILED
+
+    # requires for this check
+    [ "$check_variables_ok" ] || return 2
+
+    local daem daems
+    daems="auditd rsyslogd mcstransd"
+    [ "$PPROFILE" = "lspp" ] && daems="$daems xinetd pluto"
+    for daem in $daems; do
+        check "pidof \"$daem\"" 0 \
+            "Daemon \"$daem\" is running"
+    done;
+
+    if [ "$PPROFILE" = "lspp" ]; then
+        check "[ \"$(cat /proc/sys/net/ipv4/conf/lo/disable_xfrm)\" = \"0\" ]" 0 \
+            "ipsec: XFRM is not disabled on loopback"
+        check "[ \"$(cat /proc/sys/net/ipv4/conf/lo/disable_policy)\" = \"0\" ]" 0 \
+            "ipsec: XFRM policy is not disabled on loopback"
+
+        check "[ \"$(ip xfrm policy list)\" ]" 0 \
+            "ipsec: XFRM policy is not empty"
+        check "[ -z \"$(ip xfrm state list)\" ]" 0 \
+            "ipsec: XFRM state / association database is empty"
+
+        local addr
+        for addr in "$LOCAL_IPV4" "$LOCAL_IPV6" "127.0.0.1" "::1"; do
+            check "grep \"left=$addr\" /etc/ipsec.conf" 0 \
+                "ipsec.conf contains left=$addr"
+        done;
+        for addr in "$LBLNET_SVR_IPV4" "$LBLNET_SVR_IPV6" "127.0.0.1" "::1"; do
+            check "grep \"right=$addr\" /etc/ipsec.conf" 0 \
+                "ipsec.conf contains right=$addr"
+        done;
+        check "egrep -n \"(right|left)=[ \t]*$\" /etc/ipsec.conf" 1 \
+            "ipsec.conf doesn't contain empty left= or right="
+
+        check "netlabelctl map list | grep \"lspp_test_netlabel_t\"" 0 \
+            "netlabel: lspp_test_netlabel_t mapping present"
+    fi
+
+    if [ "$CHECK_FAILED" ]; then
+        echo
+        echo "Services check failed - either one or more essential daemons are"
+        echo "not running or service-related files are not set up correctly."
+        echo "Please make sure you have gone through all required steps"
+        echo "described in README.run."
+        return 1
+    else
+        check_services_ok=1
+    fi
+
+}
+
+
+### KVM
+check_kvm() {
+    local CHECK_FAILED
+
+    # requires for this check
+    [ "$AUDITDIR" -a "$check_suite_loc_ok" ] || return 2
+    [ "$(uname -m)" = "x86_64" ] || {
+        echo "KVM tests not supported on $(uname -m) architecture"
+        return 2
+    }
+
+    check "[ -d \"$AUDITDIR/audit-test/kvm\" ]"
+    check "[ -f \"$AUDITDIR/audit-test/kvm/config.bash\" ]"
+    check "grep '^install_media' \"$AUDITDIR/audit-test/kvm/config.bash\"" 0 \
+        "install_media specified in kvm config"
+    check "grep '\(vmx\|svm\)' /proc/cpuinfo" 0 \
+        "Host cpu has HW virt support"
+
+    check "grep '^usb_device_id' \"$AUDITDIR/audit-test/kvm-iommu/usb_device.conf\" | grep -v XXXX:XXXX" 0 \
+        "usb_device_id specified in kvm-iommu/usb_device.conf"
+    check "grep '^pci_device_id' \"$AUDITDIR/audit-test/kvm-iommu/pci_device.conf\" | grep -v XXXX:XX:XX.X" '' \
+        "pci_device_id specified in kvm-iommu/pci_device.conf"
+
+    if [ "$CHECK_FAILED" ]; then
+        echo
+        echo "KVM sanity check failed - make sure you have hardware with"
+        echo "HW virtualization support and that you have configured the kvm"
+        echo "test bucket in kvm/config.bash (install_media at least)."
+        echo "Also make sure to configure kvm usb tests, as per README.run."
+        return 1
+    else
+        check_kvm_ok=1
+    fi
+}
+
+### END
+
+# checks to be run, ordering is important
+CHECKS="
+check_variables
+check_user_session
+check_suite_loc
+check_networking_if
+check_networking_probe
+check_services
+check_kvm
+"
+
+fails=0
+skips=0
+for check in $CHECKS; do
+    echo "::::::::::::::::::::::::::::::::::::::::::"
+    echo -e "::: \e[1m$check\e[0m"
+    echo "::::::::::::::::::::::::::::::::::::::::::"
+    "$check"
+    case "$?" in
+        1)  fails=$((fails+1)) ;;
+        2)  echo "SKIPPED due to unmet dependencies"; skips=$((skips+1)) ;;
+        *)  ;;
+    esac
+    echo
+done;
+
+echo "=========================================="
+echo -n "OVERALL: "
+[ $fails -eq 0 ] && \
+    echo -ne "\e[1;32mPASSED\e[0m" || \
+    echo -ne "\e[1;31mFAILED\e[0m ($fails checks failed)"
+[ $skips -eq 0 ] && \
+    echo ||
+    echo " ($skips checks skipped)"
+
+exit 0
+
+# vim: sts=4 sw=4 et :

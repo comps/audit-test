@@ -124,3 +124,9 @@ policy:
 netconfig:
 	cd network/system && $(MAKE) install
 	cd utils/network-server && $(MAKE) install
+
+.PHONY: envcheck
+envcheck:
+	@$(check_set_PPROFILE); \
+	$(check_set_PASSWD);
+	@utils/envcheck

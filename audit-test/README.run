@@ -265,6 +265,12 @@ environment variables:
 Verify that the time on the test system is synchronized with the time
 on the network test server.
 
+As an additional sanity check, you can run:
+
+# make envcheck
+or
+# make envcheck | less -R
+
 Run the tests
 -------------
 

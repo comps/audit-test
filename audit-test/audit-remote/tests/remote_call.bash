@@ -58,7 +58,7 @@ conf_backup="/tmp/audit_conf_backup.tgz"
 # Configuration related functions
 
 remote_audit_backup() {
-    tar -cvz --xattr -f $conf_backup $audit_files
+    tar -cvz --xattrs -f $conf_backup $audit_files
 }
 
 # Configure NS to act as a server

@@ -194,14 +194,14 @@ _clean:
 
 clean: _clean
 
-ALL_LOGS += run.log rollup.log
+ALL_LOGS += run.log rollup.log logs
 _distclean: clean
 	@if [[ "$(MAKECMDGOALS)" == distclean ]]; then \
 	    for x in $(SUB_DIRS); do \
 		make -C $$x distclean; \
 	    done; \
 	fi
-	$(RM) $(ALL_LOGS)
+	$(RM) -r $(ALL_LOGS)
 	if [[ -L run.bash ]]; then $(RM) run.bash; fi
 
 distclean: _distclean

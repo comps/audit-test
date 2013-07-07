@@ -51,6 +51,7 @@ source functions.bash || exit 2
 
 unset logging
 unset opt_verbose opt_debug opt_config opt_list opt_log opt_rollup opt_timeout opt_width
+echoing=true
 logging=false
 opt_avc=false
 opt_verbose=false
@@ -59,6 +60,7 @@ opt_quiet=false
 opt_config=run.conf
 opt_list=false
 opt_log=run.log
+opt_logdir=logs
 opt_rollup=rollup.log
 opt_timeout=30
 opt_width=$(stty size 2>/dev/null | cut -d' ' -f2)
@@ -140,9 +142,8 @@ function dmsg {
 }
 
 function prf {
-    printf "$(colorize "$1")" "${@:2}"
-    $logging || return
-    printf "$(monoize "$1")" "${@:2}" | tee -a "$opt_rollup" >>"$opt_log"
+    $echoing && printf "$(colorize "$1")" "${@:2}"
+    $logging && printf "$(monoize "$1")" "${@:2}" | tee -a "$opt_rollup" >>"$opt_log"
 }
 
 #----------------------------------------------------------------------
@@ -217,6 +218,11 @@ function startup {
 	    trap 'stty echo; exit' 1 2;
 	    read -sp "Login user password: " PASSWD; echo; export PASSWD;
 	    trap - 1 2;
+    fi
+
+    # Create log directory if needed
+    if [[ ! -d "$opt_logdir" ]]; then
+        mkdir "$opt_logdir"
     fi
 
     # Initialize audit configuration and make sure auditd is running
@@ -341,10 +347,12 @@ Usage: ${0##*/} [OPTION]...
 Run a set of test cases, reporting pass/fail and tallying results.
 
     -f --config=FILE  Use a config file other than run.conf
+    -g --generate     Generate run.log and rollup.log from $opt_logdir
        --header       Don't run anything, just output the log header
     -l --log=FILE     Output to a log other than run.log
     -r --rollup=FILE  Output to a rollup other than rollup.log
     -t --timeout=SEC  Seconds to wait for a test to timeout, default 30
+    -o --logdir=DIR   Output directory of per test logs
     -w --width=COLS   Set COLS output width instead of auto-detect
     -h --help         Show this help
 
@@ -364,8 +372,8 @@ function parse_cmdline {
     declare args conf x
 
     # Use /usr/bin/getopt which supports GNU-style long options
-    args=$(getopt -o adf:hl:qr:vw: \
-        --long config:,avc,debug,help,header,list,log:,quiet,rollup:,nocolor,verbose,width: \
+    args=$(getopt -o adf:ghl:qr:o:vw: \
+        --long config:,avc,debug,generate,help,header,list,log:,logdir:,quiet,rollup:,nocolor,verbose,width: \
         -n "$0" -- "$@") || die
     eval set -- "$args"
 
@@ -374,6 +382,7 @@ function parse_cmdline {
             -a|--avc) opt_avc=true; shift ;;
             -d|--debug) opt_debug=true; opt_verbose=true; shift ;;
             -f|--config) opt_config=$2; shift 2 ;;
+            -g|--generate) logging=true; generate_logs; exit 0 ;;
             -h|--help) usage; exit 0 ;;
 	    --header) show_header; exit 0 ;;
             --list) opt_list=true; shift ;;
@@ -381,6 +390,7 @@ function parse_cmdline {
 	    -q|--quiet) opt_quiet=true; shift ;;
             -r|--rollup) opt_rollup=$2; shift 2 ;;
             -t|--timeout) opt_timeout=$2; shift 2 ;;
+            -o|--logdir) opt_logdir=$2; shift 2 ;;
             --nocolor) colorize() { monoize "$@"; }; shift ;;
             -v|--verbose) opt_verbose=true; shift ;;
 	    -w|--width) opt_width=$2; shift 2 ;;
@@ -388,9 +398,6 @@ function parse_cmdline {
             *) die "failed to process cmdline args" ;;
         esac
     done
-
-    # Open the logs now that opt_log and opt_rollup are set
-    open_log
 
     # Load the config
     dmsg "Loading config from $opt_config"
@@ -413,8 +420,10 @@ function parse_cmdline {
 		done
 	    else
 		# add by number
-		dmsg "  [$1] ${TESTS[$1]}"
-		TNUMS[$1]=$1
+		if [ $1 -lt ${#TESTS[@]} ]; then
+		    dmsg "  [$1] ${TESTS[$1]}"
+		    TNUMS[$1]=$1
+		fi
 	    fi
 	    shift
 	done
@@ -435,21 +444,24 @@ function parse_cmdline {
 	done
 	exit 0
     fi
+
+    # Open the logs before running the tests
+    open_log
 }
 
 function show_header {
-    prf "\n"
-    prf "%-32s %s\n" Started: "$(date)"
-    prf "%-32s %s\n" Kernel: "$(uname -r)"
-    prf "%-32s %s\n" Architecture: "$(uname -m)"
-    prf "%-32s %s\n" Mode: "${MODE:-(native)}"
-    prf "%-32s %s\n" Hostname: "$(uname -n)"
-    prf "%-32s %s\n" Profile: "$PPROFILE"
-    prf "%-32s %s\n" "selinux-policy version:" "$(rpm -q selinux-policy)"
+    nolog prf "\n"
+    nolog prf "%-32s %s\n" Started: "$(date)"
+    nolog prf "%-32s %s\n" Kernel: "$(uname -r)"
+    nolog prf "%-32s %s\n" Architecture: "$(uname -m)"
+    nolog prf "%-32s %s\n" Mode: "${MODE:-(native)}"
+    nolog prf "%-32s %s\n" Hostname: "$(uname -n)"
+    nolog prf "%-32s %s\n" Profile: "$PPROFILE"
+    nolog prf "%-32s %s\n" "selinux-policy version:" "$(rpm -q selinux-policy)"
     if [[ $PPROFILE == lspp ]] ; then
-      prf "%-32s %s\n" "lspp_test policy version:" "$(semodule -l | grep lspp_test | awk '{print $2}')"
+      nolog prf "%-32s %s\n" "lspp_test policy version:" "$(semodule -l | grep lspp_test | awk '{print $2}')"
     fi
-    prf "\n%s\n" "$(sestatus)"
+    nolog prf "\n%s\n" "$(sestatus)"
 }
 
 function fmt_test {
@@ -485,20 +497,55 @@ function show_test {
     fmt_test "[$TESTNUM]" "$@"
 }
 
+function noecho {
+    declare echoing=false
+    "$@"
+}
+
 function nolog {
     declare logging=false
     "$@"
 }
 
+function generate_logs {
+    declare pass fail error
+
+    # clear run and rollup logs
+    echo -n > $opt_log
+    echo -n > $opt_rollup
+
+    # create total run log
+    for log in $(ls $opt_logdir/$opt_log.* | sed 's/\(.*\)\.\(.*\)/\1 \2/g' | sort -k2 -n | tr ' ' '.'); do
+        cat $log >> $opt_log
+        echo >> $opt_log
+    done
+
+    # create total rollup log
+    for log in $(ls $opt_logdir/$opt_rollup.* | sed 's/\(.*\)\.\(.*\)/\1 \2/g' | sort -k2 -n | tr ' ' '.'); do
+        cat $log | sed '1,/--------/d' >> $opt_rollup
+    done
+
+    pass=$(grep "PASS" $opt_rollup | wc -l)
+    fail=$(grep "FAIL" $opt_rollup | wc -l)
+    error=$(grep "ERROR" $opt_rollup | wc -l)
+    (( total = pass + fail + error ))
+    llmsg
+    prf "%4d pass (%d%%)\n" $pass $((pass * 100 / total))
+    prf "%4d fail (%d%%)\n" $fail $((fail * 100 / total))
+    prf "%4d error (%d%%)\n" $error $((error * 100 / total))
+    prf "%s\n" "------------------"
+    prf "%4d total\n" $total
+}
+
 function run_tests {
-    declare TESTNUM output status hee s
+    declare TESTNUM output status hee s log stats header
     declare begin_output="<blue>--- begin output -----------------------------------------------------------"
     declare end_output="<blue>--- end output -------------------------------------------------------------"
 
     show_header
-    msg
-    prf "%-$((opt_width-7))s %s\n" "Testcase" "Result"
-    prf "%-$((opt_width-7))s %s\n" "--------" "------"
+    nolog msg
+    nolog prf "%-$((opt_width-7))s %s\n" "Testcase" "Result"
+    nolog prf "%-$((opt_width-7))s %s\n" "--------" "------"
 
     if $opt_debug; then
 	hee=/dev/stderr
@@ -507,6 +554,11 @@ function run_tests {
     fi
 
     for TESTNUM in "${TNUMS[@]}"; do
+	noecho prf "$(show_header)\n" ""
+	llmsg
+	noecho prf "%-$((opt_width-7))s %s\n" "Testcase" "Result"
+	noecho prf "%-$((opt_width-7))s %s\n" "--------" "------"
+
 	eval "set -- ${TESTS[TESTNUM]}"
 
 	if $opt_debug; then
@@ -587,15 +639,35 @@ function run_tests {
 	    msg "<blue>-- audit2allow -------------------------------------------------------------"
 	    msg "$(ausearch -ts $stime -te $etime -m avc | audit2allow)"
 	fi
+
+	# copy header to run and rollup log
+	echo "$header" >> $opt_logdir/$opt_log.$TESTNUM
+	echo >> $opt_logdir/$opt_log.$TESTNUM
+	echo "$header" >> $opt_logdir/$opt_rollup.$TESTNUM
+	echo >> $opt_logdir/$opt_rollup.$TESTNUM
+
+	# copy test output to own log file
+	cp -f $opt_log $opt_logdir/$opt_log.$TESTNUM
+	sed -i '/./,$!d' $opt_logdir/$opt_log.$TESTNUM
+	cp -f $opt_rollup $opt_logdir/$opt_rollup.$TESTNUM
+	sed -i '/./,$!d' $opt_logdir/$opt_rollup.$TESTNUM
+
+	# clear log and rollup
+	echo -n > $opt_log
+	echo -n > $opt_rollup
     done
 
+    # create current stats
     (( total = pass + fail + error ))
-    msg
-    prf "%4d pass (%d%%)\n" $pass $((pass * 100 / total))
-    prf "%4d fail (%d%%)\n" $fail $((fail * 100 / total))
-    prf "%4d error (%d%%)\n" $error $((error * 100 / total))
-    prf "%s\n" "------------------"
-    prf "%4d total\n" $total
+    nolog msg
+    nolog prf "%4d pass (%d%%)\n" $pass $((pass * 100 / total))
+    nolog prf "%4d fail (%d%%)\n" $fail $((fail * 100 / total))
+    nolog prf "%4d error (%d%%)\n" $error $((error * 100 / total))
+    nolog prf "%s\n" "------------------"
+    nolog prf "%4d total\n" $total
+
+    # create silently run and rollup logs
+    noecho generate_logs
 
     return 0
 }

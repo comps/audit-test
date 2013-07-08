@@ -36,12 +36,12 @@ case $op in
     *) exit_fail "unknown test operation" ;;
 esac
 
-auditctl -a exit,always -F arch=b64 -S $op -F path=$name
-auditctl -a exit,always -F arch=b64 -S $opat -F path=$name
+auditctl -a exit,always -F arch=b$MODE -S $op -F path=$name
+auditctl -a exit,always -F arch=b$MODE -S $opat -F path=$name
 
 prepend_cleanup "
-    auditctl -d exit,always -F arch=b64 -S $op -F path=$name
-    auditctl -d exit,always -F arch=b64 -S $opat -F path=$name
+    auditctl -d exit,always -F arch=b$MODE -S $op -F path=$name
+    auditctl -d exit,always -F arch=b$MODE -S $opat -F path=$name
     rm -rf $tmpd"
 
 log_mark=$(stat -c %s $audit_log)

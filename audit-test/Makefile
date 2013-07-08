@@ -36,10 +36,12 @@ RUN_DIRS       += trustedprograms \
 		  misc
 ifneq ($(MACHINE), ppc64)
 ifneq ($(MACHINE), s390x)
-RUN_DIRS       += netfilebt \
-		  kvm \
+RUN_DIRS       += netfilebt
+ifneq ($(MACHINE), i686)
+RUN_DIRS       += kvm \
 		  kvm-cgroups \
 		  kvm-iommu
+endif
 endif
 endif
 endif

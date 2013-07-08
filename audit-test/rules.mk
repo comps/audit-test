@@ -89,6 +89,10 @@ endif
 ifeq (ppc64, $(findstring ppc64, $(MACHINE)))
 CFLAGS +=-DPPC64
 endif
+ifeq (i686, $(findstring i686, $(MACHINE)))
+CFLAGS +=-DI686
+endif
+
 ##########################################################################
 # Common rules
 ##########################################################################

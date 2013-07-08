@@ -28,12 +28,12 @@ tmpd=$(mktemp -d) || exit_fail "create tempdir failed"
 watch="$tmpd"
 name="$tmpd/foo"
 
-auditctl -a exit,always -F arch=b64 -S $op -F path=$watch
-auditctl -a exit,always -F arch=b64 -S $opat -F path=$watch
+auditctl -a exit,always -F arch=b$MODE -S $op -F path=$watch
+auditctl -a exit,always -F arch=b$MODE -S $opat -F path=$watch
 
 prepend_cleanup "
-    auditctl -d exit,always -F arch=b64 -S $op -F path=$watch
-    auditctl -d exit,always -F arch=b64 -S $opat -F path=$watch
+    auditctl -d exit,always -F arch=b$MODE -S $op -F path=$watch
+    auditctl -d exit,always -F arch=b$MODE -S $opat -F path=$watch
     rm -rf $tmpd"
 
 case $op in

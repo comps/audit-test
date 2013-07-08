@@ -139,12 +139,12 @@ checkperm() {
 
 #  Test case: Verification of the correct operation of mingetty. The following
 #             functionality is checked for each TTY out of /dev/tty1 through 6:
-#             1. Permissions of TTY root:root 600
+#             1. Permissions of TTY root:tty 620
 #             2. Log in with eal user
 #             3. Check that bash is spawned for eal user
 #             4. Permission of TTY eal:tty 620 (or more restrictive)
 #             5. Logout
-#             6. Permissions of TTY root:root 600
+#             6. Permissions of TTY root:tty 620
 #  Execute (with root privileges): make
 #  Cleanup: make clean
 
@@ -155,7 +155,7 @@ checkperm() {
 			echo "TTY /dev/tty$i is not owned by mingetty, skipping mingetty test"
 			continue
 		fi
-		checkperm /dev/tty$i root root 600
+		checkperm /dev/tty$i root tty 620
 		if [ "$?" -ne "0" ]; then
 			echo "Checking permissions of TTY $1: user $2, group $3, permission $4: FAILED"		
 			exit_fail
@@ -165,7 +165,7 @@ checkperm() {
 		if [ "$?" -ne "0" ]; then
 			exit_fail
 		fi
-		checkperm /dev/tty$i root root 600
+		checkperm /dev/tty$i root tty 620
 		if [ "$?" -ne "0" ]; then
 			echo "Checking permissions of TTY $1: user $2, group $3, permission $4: FAILED"		
 			exit_fail

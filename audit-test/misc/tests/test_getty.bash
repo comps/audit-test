@@ -17,7 +17,7 @@
 ###############################################################################
 # 
 # PURPOSE:
-# To verify mingetty
+# To verify getty
 
 source misc_functions.bash || exit 2
 
@@ -70,10 +70,10 @@ testlogin() {
 	./do_tty $1 exit\\n
 	sleep 2
 
-	ret=$(ps -efa | grep $ttyname | grep root | grep -q mingetty)
+	ret=$(ps -efa | grep $ttyname | grep root | grep -q getty)
 	if [ "$?" -ne "0" ]; then
 		echo
-		echo "ERROR - mingetty not found after logout attempt"
+		echo "ERROR - getty not found after logout attempt"
 		ps -efa | grep $ttyname | grep $2
 		let err=$err+1
 	fi
@@ -89,7 +89,7 @@ testlogin() {
 
 # $1: full tty name
 testgetty() {
-	echo "Testing mingetty listening on TTY $1: "
+	echo "Testing getty listening on TTY $1: "
 	ret=$(lsof | grep $1 | grep getty | wc -l)
 	if [ "$ret" -ne "3" ]; then
 		echo "FAIL"
@@ -137,7 +137,7 @@ checkperm() {
 }
 
 
-#  Test case: Verification of the correct operation of mingetty. The following
+#  Test case: Verification of the correct operation of getty. The following
 #             functionality is checked for each TTY out of /dev/tty1 through 6:
 #             1. Permissions of TTY root:tty 620
 #             2. Log in with eal user
@@ -152,7 +152,7 @@ checkperm() {
 	for i in 1 2 3 4 5 6; do
 		testgetty /dev/tty$i
 		if [ "$?" -ne "0" ]; then
-			echo "TTY /dev/tty$i is not owned by mingetty, skipping mingetty test"
+			echo "TTY /dev/tty$i is not owned by getty, skipping getty test"
 			continue
 		fi
 		checkperm /dev/tty$i root tty 620

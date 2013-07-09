@@ -33,7 +33,7 @@ function create_luks {
 		set timeout $TIMEOUT
 		spawn cryptsetup luksFormat $LOOPDEV
 		expect {Are you sure} {send \"YES\r\"}
-		expect {Enter LUKS} {send \"$1\r\"}
+		expect {Enter} {send \"$1\r\"}
 		expect {Verify} {send \"$1\r\"}
 		expect eof
 	"

@@ -30,8 +30,8 @@
 #   parameter is provided, immediate will be used by default for audisp-remote.
 #
 
-
 source testcase.bash || exit 2
+source tp_ssh_functions.bash || exit 2
 
 #
 # Global variables
@@ -603,14 +603,29 @@ common_server_startup() {
     local rc=0
 
     # use 8MB tmpfs for audit logs
-    mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit || ((rc+=1))
+    if [ "$PPROFILE" = "lspp" ]; then
+        # disable seeding from /dev/random
+        disable_ssh_strong_rng
+        # In RHEL7 the concept of PAM namespaces was introduced with the / mount point
+        # being mounted as private by default CC evaluated configuration. This way any
+        # mount point mounted by an user X cannot be seen by the other users (the only
+        # exception is when X is appropriately excluded in PAM namespace configuration).
+        # Therefore we have to make sure that /var/log/audit is mounted by eal so that
+        # eal user is excluded from PAM namespace during the test and the exclusion is
+        # removed afterwards.
+        sed -i 's/root,adm/root,adm,eal/g' /etc/security/namespace.conf
+        ssh_mls_cmd "mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit" || ((rc+=1))
+        prepend_cleanup 'restart_service auditd'
+        prepend_cleanup 'sed -i "s/root,adm,eal/root,adm/g" /etc/security/namespace.conf'
+        prepend_cleanup 'ssh_mls_cmd "umount -l /var/log/audit"'
+    else
+        mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit || ((rc+=1))
+        append_cleanup 'umount -l /var/log/audit'
+        append_cleanup 'restart_service auditd'
+    fi
 
     chmod 750 /var/log/audit || ((rc+=2))
     selinuxenabled && chcon system_u:object_r:auditd_log_t:s0 /var/log/audit
-
-    prepend_cleanup '
-        umount -l /var/log/audit
-        restart_service auditd'
 
     backup $auditd_conf
     backup $audisp_remote_conf

@@ -18,6 +18,7 @@
 # =============================================================================
 
 source testcase.bash || exit 2
+source tp_ssh_functions.bash || exit 2
 
 ######################################################################
 # global variables
@@ -303,15 +304,21 @@ if [[ -z $action ]]; then
 fi
 
 # use 8MB tmpfs for audit logs
-mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit
-# fix permissions for temporary audit logs
-# FIXME: chcon should be conditionalized based on the presence of selinux
+if [ "$PPROFILE" = "lspp" ]; then
+    sed -i 's/root,adm/root,adm,eal/g' /etc/security/namespace.conf
+    ssh_mls_cmd "mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit"
+    append_cleanup 'ssh_mls_cmd "umount -l /var/log/audit"'
+    append_cleanup 'sed -i "s/root,adm,eal/root,adm/g" /etc/security/namespace.conf'
+else
+    mount -t tmpfs -o size=$((1024 * 1024 * 8)) none /var/log/audit
+    append_cleanup 'umount -l /var/log/audit'
+fi
+
 chmod 750 /var/log/audit
 chcon system_u:object_r:auditd_log_t:s0 /var/log/audit
 
-prepend_cleanup '
-    umount -l /var/log/audit
-    restart_service auditd'
+append_cleanup 'restart_service auditd'
+
 backup "$auditd_conf"	# restore done via prepend_cleanup
 
 # default config ignores all problems

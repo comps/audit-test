@@ -174,6 +174,45 @@ function ssh_cmd {
     [ $? -ne 0 ] && exit_fail "Failed to run $3 as $1"
 }
 
+# Run command via ssh as root in mls mode.
+# $1 - cmd
+function ssh_mls_cmd {
+
+    # check if required params specified
+    [ "x$1" = "x" ] && exit_error "Error: no comamnd for $FUNCNAME"
+
+    local M="${RANDOM}${RANDOM}${RANDOM}"
+
+    expect -c "set timeout $TIMEOUT
+      spawn ssh eal@localhost
+      expect {
+        {yes/no} { send -- yes\r; exp_continue }
+        {assword} { send -- $PASSWD\r }
+        default { exit 1 }
+      }
+      expect {
+        {get default type} { exit 1 }
+        {eal} { send -- \"newrole -r lspp_test_r\n\"; exp_continue }
+        {assword} { send -- \"$PASSWD\r\" }
+        default { exit 1 }
+      }
+      expect {
+        {eal} { send -- \"/bin/su -\r\"; exp_continue }
+        {assword} { send -- \"$PASSWD\r\" }
+        default { exit 1 }
+      }
+      expect {root} { send -- \"$1 && (echo -n $M && echo PASS) || (echo -n &M && echo FAIL)\r\" }
+      expect {
+        {${M}PASS} { exit 0 }
+        {${M}FAIL} { exit 1 }
+      }
+      exit 2"
+
+    [ $? -ne 0 ] && exit_fail "Failed to run $1 as root in mls mode" && return 1
+
+    return 0
+}
+
 # Check permissions and selinux context of the .ssh directory and the
 # underlying public and private key
 # $1 - user

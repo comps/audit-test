@@ -230,19 +230,6 @@ check_usb_device_dynamic() {
     return $rc
 }
 
-# Check if USB device has the owner and SELinux label
-# set to the host system and no guest
-check_usb_device() {
-    local owner label
-    owner=$(stat -c "%U:%G" /dev/bus/usb/$usb_bus/$usb_device)
-    [ $owner != "qemu:qemu" ] && ((rc+=1))
-
-    label=$(stat -c "%C" /dev/bus/usb/$usb_bus/$usb_device)
-    echo $label | grep "svirt_image_t:s0:c50,c70" || ((rc+=1))
-
-    return $rc
-}
-
 # Check if USB device cannot be accessed by an rogue VM
 # This test expects
 rogue_usb_device_access() {

@@ -93,14 +93,6 @@ reload_kvm_module_for_unsafe_interrupts() {
     /sbin/modprobe kvm_intel
 }
 
-set_selinux_booleans() {
-    # Be nice and preserve configured boolean value at exit
-    /usr/sbin/getsebool virt_use_sysfs | grep off && \
-        append_cleanup "/usr/sbin/setsebool virt_use_sysfs 0"
-
-    /usr/sbin/setsebool virt_use_sysfs 1
-}
-
 # Under MLS we need to call this before passing a device to a domain
 relabel_pci_device_files_for_domain() {
     # We don't care about chcons in targeted policy thus will skip the relabel
@@ -196,11 +188,6 @@ check_kernel_boot_cmdline() {
 check_kvm_modules() {
     # Not sure about AMD here
     /sbin/lsmod | /bin/grep kvm_intel
-    return $?
-}
-
-check_selinux_booleans() {
-    /bin/grep "1 1" /selinux/booleans/virt_use_sysfs
     return $?
 }
 
@@ -571,8 +558,6 @@ check_kernel_boot_cmdline || exit_error "intel_iommu=on is missing"
 check_enabled_iommu || \
     exit_error "IOMMU not found in dmesg (please check /var/log/messages)"
 check_virt_extensions || exit_error "Missing vmx CPU flag"
-check_selinux_booleans || \
-    exit_error "Please enable virt_use_sysfs SELinux boolean"
 check_kvm_modules || exit_error "Missing kvm_intel module"
 check_installed_packages $pkg_list || \
     exit_error "Please install all required packages"

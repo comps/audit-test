@@ -29,8 +29,8 @@ source filter_functions.bash || exit 2
 user_auid=$(cat /proc/self/loginuid)
 
 # setup auditctl
-auditctl -a exit,always -S open -F auid=$user_auid
-prepend_cleanup "auditctl -d exit,always -S open -F auid=$user_auid"
+auditctl -a exit,always -F arch=b$MODE -S open -F auid=$user_auid
+prepend_cleanup "auditctl -d exit,always -F arch=b$MODE -S open -F auid=$user_auid"
 
 # audit log marker
 log_mark=$(stat -c %s $audit_log)

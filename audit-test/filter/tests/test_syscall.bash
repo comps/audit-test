@@ -27,7 +27,7 @@ syscall_num=$(augrok --resolve $syscall_name) \
 
 op=$1
 case $op in
-    name)   filter_rule="exit,always -S open" ;;
+    name)   filter_rule="exit,always -F arch=b$MODE -S open" ;;
     number) filter_rule="exit,always -S $syscall_num";;
     *) exit_fail "unknown test operation" ;;
 esac

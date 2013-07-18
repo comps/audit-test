@@ -37,7 +37,7 @@ case $op in
         ;;
     *) exit_fail "unknown test operation" ;;
 esac
-filter_rule="exit,always -S open"
+filter_rule="exit,always -F arch=b$MODE -S open"
 
 auditctl -a $filter_rule $filter_field
 prepend_cleanup "auditctl -d $filter_rule $filter_field"

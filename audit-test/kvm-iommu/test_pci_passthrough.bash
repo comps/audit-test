@@ -62,6 +62,14 @@ pci_bus="$(echo $pci_device | cut -d: -f2)"
 pci_slot="$(echo $pci_device | cut -d: -f3 | sed 's/\..*//')"
 pci_function="$(echo $pci_device | cut -d. -f2)"
 
+# Check for CPU vendor (virt extension reasons)
+cpu_vendor=$(grep 'vendor_id' /proc/cpuinfo | sed 's/^.*: //' | head -n 1)
+case "$cpu_vendor" in
+    'GenuineIntel')  cpu_vendor=intel ;;
+    'AuthenticAMD')  cpu_vendor=amd   ;;
+    *)               exit_error "unsupported CPU vendor: $cpu_vendor" ;;
+esac
+
 # Check if the default device driver
 # XXX: this test is skipped because of BZ#736437 that is not fixed in RHEL6.2
 # pci_driver="$(basename `readlink /sys/bus/pci/devices/${pci_device}/driver`)"
@@ -87,10 +95,10 @@ reload_kvm_module_for_unsafe_interrupts() {
     # There should be no running guest domain or we will fail
     /usr/bin/virsh list | grep running && exit_error "running guest found"
     # See bug 603039, comment 11
-    /sbin/modprobe -r kvm_intel
+    /sbin/modprobe -r kvm_${cpu_vendor}
     /sbin/modprobe -r kvm
     /sbin/modprobe kvm allow_unsafe_assigned_interrupts=1
-    /sbin/modprobe kvm_intel
+    /sbin/modprobe kvm_${cpu_vendor}
 }
 
 # Under MLS we need to call this before passing a device to a domain
@@ -172,7 +180,7 @@ get_guest_domain_pid() {
 }
 
 #
-# Checks for VT-d and IOMMU prerequities. Currently only for Intel.
+# Checks for VT-d and IOMMU prerequities.
 #
 
 check_installed_packages() {
@@ -181,20 +189,24 @@ check_installed_packages() {
 }
 
 check_kernel_boot_cmdline() {
-    /bin/grep intel_iommu=on /proc/cmdline
-    return $?
+    case "$cpu_vendor" in
+        intel)  grep 'intel_iommu=on' /proc/cmdline; return $? ;;
+        amd)    return 0 ;;  # no explicit options needed
+    esac
+    return 1
 }
 
 check_kvm_modules() {
-    # Not sure about AMD here
-    /sbin/lsmod | /bin/grep kvm_intel
+    lsmod | grep kvm_${cpu_vendor}
     return $?
 }
 
 check_virt_extensions() {
-    # For AMD we would checkfor svm
-    /bin/grep vmx /proc/cpuinfo
-    return $?
+    case "$cpu_vendor" in
+        intel)  grep vmx /proc/cpuinfo; return $? ;;
+        amd)    grep svm /proc/cpuinfo; return $? ;;
+    esac
+    return 1
 }
 
 check_enabled_iommu() {
@@ -554,11 +566,12 @@ fi
 set_selinux_booleans
 reload_kvm_module_for_unsafe_interrupts
 
-check_kernel_boot_cmdline || exit_error "intel_iommu=on is missing"
+check_kernel_boot_cmdline || \
+    exit_error "kernel cmdline is missing one or more IOMMU-related options"
 check_enabled_iommu || \
     exit_error "IOMMU not found in dmesg (please check /var/log/messages)"
-check_virt_extensions || exit_error "Missing vmx CPU flag"
-check_kvm_modules || exit_error "Missing kvm_intel module"
+check_virt_extensions || exit_error "CPU virt extensions not available"
+check_kvm_modules || exit_error "Missing vendor-specific kvm kernel module"
 check_installed_packages $pkg_list || \
     exit_error "Please install all required packages"
 

@@ -27,10 +27,13 @@ export AUDIT_SEEK=`stat -c %s /var/log/audit/audit.log`
 restart_service auditd || return 2
 npid=$(pidof auditd)
 
-auid=$(</proc/$$/loginuid)
+eal_auid=$(</proc/$$/loginuid)
 
-if augrok --seek=$AUDIT_SEEK type=DAEMON_END auid=$auid; then
-	augrok --seek=$AUDIT_SEEK type=DAEMON_START auid=$auid pid=$npid
+# systemd auid is -1 represented by unsigned int
+systemd_auid=$(getconf UINT_MAX)
+
+if augrok --seek=$AUDIT_SEEK type=DAEMON_END auid=$eal_auid; then
+        augrok --seek=$AUDIT_SEEK type=DAEMON_START auid=$systemd_auid pid=$npid
 else
-	exit 1
+        exit 1
 fi

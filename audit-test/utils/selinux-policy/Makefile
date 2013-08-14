@@ -94,10 +94,11 @@ install: $(MODULE_NAME).pp
 		semodule -i $(MODULE_NAME).pp &> /dev/null && echo "ok" || \
 			echo "failed"; \
 		role=$$(echo $(MODULE_ROLE) | cut -d':' -f 1); \
+		range='s0-s15:c0.c1023'; \
 		existing_roles=$$(semanage user -l | grep "^$(SELINUX_USER)" | awk 'sub("^.*[ \t]"$$5,$$5)'); \
 		if [ -n "$$role" -a -n "$$existing_roles" ]; then \
 			echo -n "Adding additional role \"$$role\" to user \"$(SELINUX_USER)\" ... "; \
-			semanage user -m -R "$$existing_roles $$role" $(SELINUX_USER) &> /dev/null && \
+			semanage user -m -r "$$range" -R "$$existing_roles $$role" $(SELINUX_USER) &> /dev/null && \
 				echo "ok" || \
 				echo "failed (check the SELinux user)"; \
 			echo "Adding role/type to the default_types file"; \

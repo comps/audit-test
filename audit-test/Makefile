@@ -62,8 +62,11 @@ run:
 	$(check_set_LBLNET_SVR_IPV6); \
 	$(check_TTY); \
 	$(MAKE) all && \
-	for x in $(RUN_DIRS); do make -C $$x run; done
+	for x in $(RUN_DIRS); do make -C $$x $(MAKECMDGOALS); done
 	$(MAKE) report
+
+.PHONY: rerun
+rerun: run
 
 .PHONY: dist
 dist:

@@ -61,6 +61,7 @@ opt_config=run.conf
 opt_list=false
 opt_log=run.log
 opt_logdir=logs
+opt_rerun=false
 opt_rollup=rollup.log
 opt_timeout=30
 opt_width=$(stty size 2>/dev/null | cut -d' ' -f2)
@@ -351,7 +352,8 @@ Run a set of test cases, reporting pass/fail and tallying results.
     -g --generate     Generate run.log and rollup.log from $opt_logdir
        --header       Don't run anything, just create and output the log header
     -l --log=FILE     Output to a log other than run.log
-    -r --rollup=FILE  Output to a rollup other than rollup.log
+    -r --rerun        Run only those tests that did not pass
+       --rollup=FILE  Output to a rollup other than rollup.log
     -t --timeout=SEC  Seconds to wait for a test to timeout, default 30
     -o --logdir=DIR   Output directory of per test logs
     -w --width=COLS   Set COLS output width instead of auto-detect
@@ -373,8 +375,8 @@ function parse_cmdline {
     declare args conf x
 
     # Use /usr/bin/getopt which supports GNU-style long options
-    args=$(getopt -o adf:ghl:qr:o:vw: \
-        --long config:,avc,debug,generate,help,header,list,log:,logdir:,quiet,rollup:,nocolor,verbose,width: \
+    args=$(getopt -o adf:ghl:qro:vw: \
+        --long config:,avc,debug,generate,help,header,list,log:,logdir:,quiet,rerun,rollup:,nocolor,verbose,width: \
         -n "$0" -- "$@") || die
     eval set -- "$args"
 
@@ -389,7 +391,8 @@ function parse_cmdline {
             --list) opt_list=true; shift ;;
             -l|--log) opt_log=$2; shift 2 ;;
 	    -q|--quiet) opt_quiet=true; shift ;;
-            -r|--rollup) opt_rollup=$2; shift 2 ;;
+            --rollup) opt_rollup=$2; shift 2 ;;
+            -r|--rerun) opt_rerun=true; shift ;;
             -t|--timeout) opt_timeout=$2; shift 2 ;;
             -o|--logdir) opt_logdir=$2; shift 2 ;;
             --nocolor) colorize() { monoize "$@"; }; shift ;;
@@ -414,14 +417,14 @@ function parse_cmdline {
 		# add by string
 		for ((x = 0; x < ${#TESTS[@]}; x++)); do
 		    # match on "words", allow globbing within a word
-		    if [[ " ${TESTS[x]} " == *[\ =]$1" "* ]]; then
+		    if [[ " ${TESTS[x]} " == *[\ =]$1" "* ]] && rerun_test $x; then
 			dmsg "  $1 matches [$x] ${TESTS[x]}"
 			TNUMS[x]=$x
 		    fi
 		done
 	    else
 		# add by number
-		if [ $1 -lt ${#TESTS[@]} ]; then
+		if [ $1 -lt ${#TESTS[@]} ] && rerun_test $1; then
 		    dmsg "  [$1] ${TESTS[$1]}"
 		    TNUMS[$1]=$1
 		fi
@@ -432,13 +435,17 @@ function parse_cmdline {
 	TNUMS=( ${TNUMS[@]} )
     else
 	# Run all the tests
-	TNUMS=( $(seq 0 $((${#TESTS[@]} - 1))) )
+	for ((x = 0; x < ${#TESTS[@]}; x++)); do
+	    # match on "words", allow globbing within a word
+	    rerun_test $x && TNUMS[$x]=$x
+	done
     fi
     [[ ${#TNUMS[@]} -gt 0 ]] || die "no matching tests"
 
     if $opt_list; then
 	declare TESTNUM
 	for TESTNUM in "${TNUMS[@]}"; do
+	rerun_test $TESTNUM || continue
 	    eval "set -- ${TESTS[TESTNUM]}"
 	    nolog show_test "$@"
 	    echo
@@ -548,6 +555,19 @@ function generate_logs {
     prf "%4d error (%d%%)\n" $error $((error * 100 / total))
     prf "%s\n" "------------------"
     prf "%4d total\n" $total
+}
+
+function rerun_test {
+    # if not in rerun mode - always run
+    $opt_rerun || return 0
+
+    # run test if it did not run yet
+    [ ! -f "$opt_logdir/rollup.log.$1" ] && return 0
+
+    # if test passed do not run
+    grep -q "\[[0-9]\+\].*PASS[[:space:]]*$" $opt_logdir/rollup.log.$1 && return 1
+
+    return 0
 }
 
 function run_tests {

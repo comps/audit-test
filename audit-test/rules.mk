@@ -106,6 +106,8 @@ all: deps subdirs $(ALL_AR) $(ALL_EXE) $(ALL_SO)
 
 run:
 
+rerun:
+
 # Re-used in toplevel Makefile
 check_set_PPROFILE = \
 	if [[ ! -x /usr/sbin/getenforce ]]; then \
@@ -182,6 +184,11 @@ run: all
 	$(check_set_PASSWD); \
 	./run.bash --header; \
 	./run.bash
+
+rerun: all
+	@$(check_set_PPROFILE); \
+	$(check_set_PASSWD); \
+	./run.bash --rerun
 endif
 
 _clean:

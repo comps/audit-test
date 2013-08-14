@@ -115,7 +115,6 @@ check_cgroup_hierarchy() {
 }
 
 check_cgroups_availability() {
-    /sbin/service cgconfig status && \
     /bin/cat /proc/cgroups && \
     check_cgroup_hierarchy ""
     return $?

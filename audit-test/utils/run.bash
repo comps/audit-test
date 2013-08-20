@@ -169,8 +169,7 @@ function + {
 # startup/cleanup
 #----------------------------------------------------------------------
 
-trap 'cleanup &>/dev/null; close_log; exit' 0
-trap 'cleanup; close_log; exit' 1 2 3 15
+trap 'cleanup; close_log; exit' 0 1 2 3 15
 
 # early_startup runs before parsing cmdline and run.conf
 function early_startup {
@@ -277,32 +276,26 @@ function cleanup {
 
     cleanup_hook
 
-    # Remove the test user
-    # XXX use prepend_cleanup in startup
-    if [[ -n $TEST_USER ]]; then
-	# Remove the test user
-	dmsg "Killing all processes for $TEST_USER"
-	killall -9 -u "$TEST_USER"
-	dmsg "Removing user $TEST_USER"
-	userdel -r "$TEST_USER" &>/dev/null
-	dmsg "Removing group $TEST_USER"
-	groupdel "$TEST_USER" &>/dev/null
+    # Find polyinstantiated home root if using LSPP profile
+    if [[ $PPROFILE == lspp ]]; then
+        LSPP_HOME=$(grep \$HOME /etc/security/namespace.conf | awk '{print $2}')
     fi
 
-    # Remove the test admin user
-    # XXX use prepend_cleanup in startup
-    if [[ -n $TEST_ADMIN ]]; then
+    # Remove all test users
+    for RUSER in $TEST_USER $TEST_ADMIN; do
+        # Kill all processes of the user
+        dmsg "Killing all processes for $RUSER"
+        killall -9 -u "$RUSER"
         # Remove the test user
-        dmsg "Killing all processes for $TEST_ADMIN"
-        killall -9 -u "$TEST_ADMIN"
-        dmsg "Removing user $TEST_ADMIN"
-        userdel -r "$TEST_ADMIN" &>/dev/null
-        dmsg "Removing group $TEST_ADMIN"
-        groupdel "$TEST_ADMIN" &>/dev/null
+        dmsg "Removing user $RUSER"
+        userdel -Z -r "$RUSER" &>/dev/null
+        dmsg "Removing group $RUSER"
+        groupdel "$RUSER" &>/dev/null
+        # Cleanup polyinstantiated home directory
         if [[ $PPROFILE == lspp ]] ; then
-            semanage login -d "$TEST_ADMIN"
+            [ -d "$LSPP_HOME" ] && rm -rf "$LSPP_HOME"/*"$RUSER"
         fi
-    fi
+    done
 
     # Restore the original auditd configuration
     # XXX use prepend_cleanup in startup

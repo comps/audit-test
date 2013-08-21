@@ -52,7 +52,7 @@ gen_require(`
 	# Needed for login
 	type staff_t;
 	# more objects needed for strace
-	type staff_t, namespace_init_t, ssh_t, user_t, setfiles_t, hostname_t;
+	type staff_t, namespace_init_t, ssh_t, user_t, setfiles_t, hostname_t, sshd_net_t;
 	# more objects needed for dmcrypt and cryptsetup
 	type lvm_t, fsadm_t, udev_t;
 	# more objects needed for cupsd and lpr
@@ -370,6 +370,7 @@ allow sshd_t lspp_harness_t:process sigchld;
 allow staff_t lspp_harness_t:process sigchld;
 allow user_t lspp_harness_t:process sigchld;
 allow ssh_t lspp_harness_t:process sigchld;
+allow sshd_net_t lspp_harness_t:process sigchld;
 allow hostname_t lspp_harness_t:process sigchld;
 
 # needed for crypto/ssh tests

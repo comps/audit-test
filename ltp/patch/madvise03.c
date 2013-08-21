@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 	sprintf(filename, "%s-out.%d", progname, getpid());
 
 	for (lc = 0; TEST_LOOPING(lc); lc++) {
-		Tst_count = 0;
+		tst_count = 0;
 
 		if ((fd = open(filename, O_RDWR | O_CREAT, 0664)) < 0)
 			tst_brkm(TBROK, cleanup, "open failed");

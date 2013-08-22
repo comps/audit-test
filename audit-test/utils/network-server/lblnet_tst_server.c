@@ -115,13 +115,16 @@ void hlp_usage(char *name)
  *
  * Description:
  * Uses select() to wait for data on a socket.  Returns the return value from
- * select() or 1 if the value in net_timeout_sec is 0 (no timeout);
+ * select(), 1 if the value in net_timeout_sec is 0 (no timeout) or -1 on error.
  *
  */
 int net_hlp_timeout_rcv(int sock)
 {
 	struct timeval timeout;
 	fd_set sock_fdset;
+
+	if (sock < 0)
+		return -1;
 
 	if (net_timeout_sec == 0)
 		return 1;
@@ -145,7 +148,7 @@ int net_hlp_timeout_rcv(int sock)
  */
 void net_hlp_socket_close(int *sock)
 {
-	if (sock < 0)
+	if (*sock < 0)
 		return;
 
 	shutdown(*sock, SHUT_RDWR);
@@ -164,9 +167,16 @@ void net_hlp_socket_close(int *sock)
  */
 void ctl_hlp_sendrc(int sock, int rc)
 {
-	FILE *fp = fdopen(sock, "a");
+	int tmpfd;
+	FILE *fp;
+
+	if (sock < 0)
+		return;
+
+	tmpfd = dup(sock);
+	fp = fdopen(tmpfd, "a");
 	fprintf(fp, "%d", rc);
-	fflush(fp);
+	fclose(fp);
 }
 
 /**
@@ -180,9 +190,16 @@ void ctl_hlp_sendrc(int sock, int rc)
  */
 void ctl_hlp_sendstr(int sock, const char *str)
 {
-	FILE *fp = fdopen(sock, "a");
+	int tmpfd;
+	FILE *fp;
+
+	if (sock < 0)
+		return;
+
+	tmpfd = dup(sock);
+	fp = fdopen(tmpfd, "a");
 	fprintf(fp, "%s", str);
-	fflush(fp);
+	fclose(fp);
 }
 
 /**
@@ -201,13 +218,7 @@ void ctl_hlp_sendstr(int sock, const char *str)
  */
 void ctl_echo(int sock, char *param)
 {
-	int rc = write(sock, param, strlen(param) + 1);
-	if (rc < 0)
-		SMSG(SMSG_WARN,
-		     fprintf(log_fd,
-			       "warning(echo): "
-			       "failed to write to the socket (%d)\n",
-			       errno));
+	ctl_hlp_sendstr(sock, param);
 }
 
 /**
@@ -976,7 +987,7 @@ int main(int argc, char *argv[])
 	int arg_iter;
 	int run_loop = 1;
 	unsigned short ctl_port = CTL_SOCK_PORT_DEFAULT;
-	int ctl_sock;
+	int ctl_sock = -1;
 	int rem_sock = -1;
 	struct sockaddr_in6 ctl_sockaddr;
 	struct sockaddr_storage peer_addr;
@@ -1087,20 +1098,26 @@ int main(int argc, char *argv[])
 
 	/* loop on incoming messages */
 	while (run_loop) {
-		if (rem_sock < 0 && !inetd_flag) {
-			/* get a new connection and don't honor the timeout here, if we are not
-			* running in [x]inetd mode assume we are running as a daemon */
-			peer_addr_len = sizeof(peer_addr);
-			rem_sock = accept(ctl_sock,
-					  (struct sockaddr *)&peer_addr,
-					  &peer_addr_len);
-			if (rem_sock < 0) {
-				SMSG(SMSG_WARN,
-				     fprintf(log_fd,
-					     "warning: failed to accept new "
-					     "control connection (%d)\n",
-					     errno));
-				continue;
+		if (rem_sock < 0) {
+			if (!inetd_flag) {
+				/* get a new connection and don't honor the timeout
+				 * here, assume we are running as a daemon */
+				peer_addr_len = sizeof(peer_addr);
+				rem_sock = accept(ctl_sock,
+						  (struct sockaddr *)&peer_addr,
+						  &peer_addr_len);
+				if (rem_sock < 0) {
+					SMSG(SMSG_WARN,
+					     fprintf(log_fd,
+						     "warning: failed to accept new "
+						     "control connection (%d)\n",
+						     errno));
+					continue;
+				}
+			} else {
+				/* running via [x]inetd and the only client conn
+				 * got closed, exit */
+				break;
 			}
 		}
 
@@ -1198,6 +1215,8 @@ int main(int argc, char *argv[])
 			if (ctl_cmd != NULL) {
 				if (strcasecmp(ctl_cmd, "exit") == 0) {
 					run_loop = 0;
+				} else if (strcasecmp(ctl_cmd, "detach") == 0) {
+					net_hlp_socket_close(&rem_sock);
 				} else if (strcasecmp(ctl_cmd, "echo") == 0) {
 					ctl_echo(rem_sock, ctl_param);
 				} else if (strcasecmp(ctl_cmd, "sleep") == 0) {
@@ -1240,3 +1259,5 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
+
+/* vim: set ts=8 sts=8 sw=8 noet: */

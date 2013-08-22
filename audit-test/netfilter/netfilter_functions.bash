@@ -147,20 +147,20 @@ function do_nc {
    declare rc
    declare data_str="This string simply provides data to send over netcat"
    case $ipv_arg in
+        # for tnum 47,48 - listening is set up by setup_default on port 4100
+        # for tnum 45,46 - lblnet_tst_server on port 4000 is used
         ipv4)
             if [[ $tnum == 47 ]]; then
-               nc -l $port &
-               rc="$(nc -w 1 "$1" "$port" <<< $data_str)"
+               rc="$(nc -w 3 "$1" "$port" <<< $data_str)"
             else
-               rc="$(nc -w 1 "$1" "$port")"
+               rc="$(nc -w 3 "$1" "$port")"
             fi
             ;;
         ipv6)
             if [[ $tnum == 48 ]]; then
-               nc -l $port &
-               rc="$(nc -6 -w 1 "$1" "$port" <<< $data_str)"
+               rc="$(nc -6 -w 3 "$1" "$port" <<< $data_str)"
             else
-               rc="$(nc -6 -w 1 "$1" "$port")"
+               rc="$(nc -6 -w 3 "$1" "$port")"
             fi
             ;;
            *)

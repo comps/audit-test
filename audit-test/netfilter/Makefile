@@ -22,4 +22,4 @@ include $(TOPDIR)/rules.mk
 
 unlock:
 	[[ -n $$LBLNET_SVR_IPV6 ]] && \
-		(echo "lock:release;" | nc -w 1 $$LBLNET_SVR_IPV6 4000)
+		(echo "lock:release;" | nc -w 3 $$LBLNET_SVR_IPV6 4000)

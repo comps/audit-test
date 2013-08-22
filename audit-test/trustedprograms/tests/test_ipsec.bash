@@ -108,7 +108,7 @@ function normalize_addr {
 #
 function remote_ipsec_flush {
     declare str="ipsec:flush;"
-    $cmd_nc -w 1  $1 4000 <<< $str
+    $cmd_nc -w 3 $1 4000 <<< $str
 }
 
 
@@ -144,10 +144,10 @@ function ipsec_add {
     # do the setup
     if [ $1 == "6" ]; then
 	runcon -t lspp_test_netlabel_t -l SystemLow -- \
-	    $cmd_nc $ip_dst 4000 <<< "recv:ipv6,tcp,4300,0;" &
+	    $cmd_nc $ip_dst 4000 <<< "detach;recv:ipv6,tcp,4300,0;"
     elif [ $1 == "4" ]; then
 	runcon -t lspp_test_netlabel_t -l SystemLow -- \
-	    $cmd_nc $ip_dst 4001 <<< "recv:ipv4,tcp,4300,0;" &
+	    $cmd_nc $ip_dst 4001 <<< "detach;recv:ipv4,tcp,4300,0;"
     else
         die "error: expected parameter 4 | 6 not given"
     fi

@@ -41,7 +41,7 @@ for {set i $first} {$i <= $env(last)} {incr i 1} {
 	#   virtual machine environment network sshd service to start.
 
 	for {set j 1} {$j <= $env(kvm_guest_timeout)} {incr j 1} {
-		set rc [catch { exec nc -s $env(kvm_guest_${i}_hostaddr) -w 1 $env(kvm_guest_${i}_addr) 22 } results]
+		set rc [catch { exec echo -ne \004 | nc -s $env(kvm_guest_${i}_hostaddr) -w 3 $env(kvm_guest_${i}_addr) 22 } results]
 
 		if { $rc eq 0 } {
 			break

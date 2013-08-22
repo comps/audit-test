@@ -75,9 +75,9 @@ function xinetd_test {
 
     # determine the netcat variant
     if which nc6 >& /dev/null; then
-        cmd_nc="nc6 ----idle-timeout=1 -w 1 "
+        cmd_nc="nc6 --idle-timeout=1 -w 3 "
     elif which nc >& /dev/null; then
-        cmd_nc="nc -w 1 "
+        cmd_nc="nc -w 3 "
     else
         die "error: netcat not installed"
     fi

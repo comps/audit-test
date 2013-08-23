@@ -65,6 +65,7 @@ opt_rollup=rollup.log
 opt_timeout=30
 opt_width=$(stty size 2>/dev/null | cut -d' ' -f2)
 [[ -n $opt_width ]] || opt_width=80
+header_log="run.info"
 
 unset TESTS TNUMS
 unset pass fail error total
@@ -348,7 +349,7 @@ Run a set of test cases, reporting pass/fail and tallying results.
 
     -f --config=FILE  Use a config file other than run.conf
     -g --generate     Generate run.log and rollup.log from $opt_logdir
-       --header       Don't run anything, just output the log header
+       --header       Don't run anything, just create and output the log header
     -l --log=FILE     Output to a log other than run.log
     -r --rollup=FILE  Output to a rollup other than rollup.log
     -t --timeout=SEC  Seconds to wait for a test to timeout, default 30
@@ -450,18 +451,27 @@ function parse_cmdline {
 }
 
 function show_header {
-    nolog prf "\n"
-    nolog prf "%-32s %s\n" Started: "$(date)"
-    nolog prf "%-32s %s\n" Kernel: "$(uname -r)"
-    nolog prf "%-32s %s\n" Architecture: "$(uname -m)"
-    nolog prf "%-32s %s\n" Mode: "${MODE:-(native)}"
-    nolog prf "%-32s %s\n" Hostname: "$(uname -n)"
-    nolog prf "%-32s %s\n" Profile: "$PPROFILE"
-    nolog prf "%-32s %s\n" "selinux-policy version:" "$(rpm -q selinux-policy)"
-    if [[ $PPROFILE == lspp ]] ; then
-      nolog prf "%-32s %s\n" "lspp_test policy version:" "$(semodule -l | grep lspp_test | awk '{print $2}')"
+    # Create log directory if needed
+    if [[ ! -d "$opt_logdir" ]]; then
+        mkdir "$opt_logdir"
     fi
-    nolog prf "\n%s\n" "$(sestatus)"
+
+    # Create header file
+    {
+        echo
+        printf "%-32s %s\n" Started: "$(date)"
+        printf "%-32s %s\n" Kernel: "$(uname -r)"
+        printf "%-32s %s\n" Architecture: "$(uname -m)"
+        printf "%-32s %s\n" Mode: "${MODE:-(native)}"
+        printf "%-32s %s\n" Hostname: "$(uname -n)"
+        printf "%-32s %s\n" Profile: "$PPROFILE"
+        printf "%-32s %s\n" "selinux-policy version:" "$(rpm -q selinux-policy)"
+        if [[ $PPROFILE == lspp ]] ; then
+          printf "%-32s %s\n" "lspp_test policy version:" "$(semodule -l | grep lspp_test | awk '{print $2}')"
+        fi
+        printf "\n%s\n" "$(sestatus)"
+        echo
+    } | tee $opt_logdir/$header_log
 }
 
 function fmt_test {
@@ -514,6 +524,9 @@ function generate_logs {
     echo -n > $opt_log
     echo -n > $opt_rollup
 
+    # add header to run log if exists
+    [ -f $opt_logdir/$header_log ] && cat $opt_logdir/$header_log > $opt_log
+
     # create total run log
     for log in $(ls $opt_logdir/$opt_log.* | sed 's/\(.*\)\.\(.*\)/\1 \2/g' | sort -k2 -n | tr ' ' '.'); do
         cat $log >> $opt_log
@@ -542,8 +555,6 @@ function run_tests {
     declare begin_output="<blue>--- begin output -----------------------------------------------------------"
     declare end_output="<blue>--- end output -------------------------------------------------------------"
 
-    show_header
-    nolog msg
     nolog prf "%-$((opt_width-7))s %s\n" "Testcase" "Result"
     nolog prf "%-$((opt_width-7))s %s\n" "--------" "------"
 
@@ -554,8 +565,6 @@ function run_tests {
     fi
 
     for TESTNUM in "${TNUMS[@]}"; do
-	noecho prf "$(show_header)\n" ""
-	llmsg
 	noecho prf "%-$((opt_width-7))s %s\n" "Testcase" "Result"
 	noecho prf "%-$((opt_width-7))s %s\n" "--------" "------"
 

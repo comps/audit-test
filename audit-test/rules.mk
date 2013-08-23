@@ -180,6 +180,7 @@ run.bash:
 run: all
 	@$(check_set_PPROFILE); \
 	$(check_set_PASSWD); \
+	./run.bash --header; \
 	./run.bash
 endif
 

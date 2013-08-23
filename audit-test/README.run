@@ -67,6 +67,15 @@ require a network test server as well as the target system.
 Verify that the target system and the network test server have the same time,
 the best way is to use ntpd for such a synchronization.
 
+To greatly speed up networking-related test buckets, you can decrease
+the number of TCP retries, to make fail (timeout) verification faster.
+Assuming the testing machine is close to the network server (local network)
+and uses a mostly-reliable link layer (Ethernet), the following should
+be safe to do:
+
+# echo "net.ipv4.tcp_syn_retries = 2" >> /etc/sysctl.conf
+# sysctl -p
+
 Verify that each ext4 filesystem in /etc/fstab has the 'user_xattr' option.
 
 If you do not have an administrative eal user other than the root user, log

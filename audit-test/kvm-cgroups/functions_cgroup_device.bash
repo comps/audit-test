@@ -77,7 +77,7 @@ create_guest_domain() {
     append_cleanup "/bin/rm -f ${1}.xml"
     prepend_cleanup "/usr/bin/virsh destroy $1"
 
-    /usr/bin/virsh create ${1}.xml && sleep 3
+    /usr/bin/virsh create ${1}.xml
     return $?
 }
 

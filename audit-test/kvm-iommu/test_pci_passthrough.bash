@@ -91,7 +91,6 @@ reload_kvm_module_for_unsafe_interrupts() {
     /sbin/modprobe -r kvm
     /sbin/modprobe kvm allow_unsafe_assigned_interrupts=1
     /sbin/modprobe kvm_intel
-    sleep 2
 }
 
 set_selinux_booleans() {
@@ -160,14 +159,13 @@ create_guest_domain() {
     prepend_cleanup "/usr/bin/virsh destroy $1"
     append_cleanup  "/usr/bin/virsh nodedev-reattach $pci_device_name"
 
-    /usr/bin/virsh create ${1}.xml && sleep 10
+    /usr/bin/virsh create ${1}.xml
     return $?
 }
 
 destroy_guest_domain() {
     local rc=0
     /usr/bin/virsh destroy $1 || ((rc+=1))
-    sleep 1
     /usr/bin/virsh nodedev-reattach $pci_device_name || ((rc+=2))
     return $rc
 }
@@ -310,11 +308,9 @@ attach_pci_device() {
     case $1 in
     1) # Good case - attached correctly
         /usr/bin/virsh attach-device $2 pci_dev.xml || ((rc+=1))
-        sleep 3
     ;;
     2|3) # Bad case - double attach
         /usr/bin/virsh attach-device $2 pci_dev.xml && ((rc+=1))
-        sleep 3
     ;;
     *) exit_error "Unknown attach scenario"
     ;;
@@ -340,7 +336,6 @@ detach_pci_device() {
     case $1 in
     1) # Good case - detached correctly
         /usr/bin/virsh detach-device $2 pci_dev.xml || ((rc+=1))
-        sleep 3
         check_device_driver $pci_driver || ((rc+=2))
         # Look for NOT mapped PCI dev mem regions
         pid_nomaps="`get_guest_domain_pid $2`"
@@ -348,7 +343,6 @@ detach_pci_device() {
     ;;
     2) # Bad case - double detach
         /usr/bin/virsh detach-device $2 pci_dev.xml && ((rc+=1))
-        sleep 3
         check_device_driver $pci_driver || ((rc+=2))
         # Look for NOT mapped PCI dev mem regions
         pid_nomaps="`get_guest_domain_pid $2`"
@@ -356,7 +350,6 @@ detach_pci_device() {
     ;;
     3) # Bad case - already in use by other VM
         /usr/bin/virsh detach-device $2 pci_dev.xml && ((rc+=1))
-        sleep 3
         check_device_driver "pci-stub" || ((rc+=2))
         # Look for mapped PCI dev mem regions
         pid_maps="`get_guest_domain_pid $3`"

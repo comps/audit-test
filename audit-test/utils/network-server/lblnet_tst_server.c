@@ -104,9 +104,28 @@ void hlp_usage(char *name)
 {
 	SMSG(SMSG_ERR,
 	      fprintf(log_fd,
-		       "usage: %s [-i] [-l <log_file>] [-p <port>] [-q] [-t <secs>] [-v]\n",
+		       "usage: %s [-i] [-l <log_file>] [-p <port>] [-f <pid_file>] [-q] [-t <secs>] [-v]\n",
 		       (name != NULL ? name : "?")));
 		       exit(1);
+}
+
+/**
+ * write_pid - Write pid of the current process into a file
+ * @filename - pidfile name / path
+ *
+ */
+int write_pid(char *filename)
+{
+	FILE *pfile;
+
+	pfile = fopen(filename, "w");
+	if (pfile == NULL)
+		return -1;
+
+	fprintf(pfile, "%d\n", getpid());
+	fclose(pfile);
+
+	return 0;
 }
 
 /**
@@ -1006,7 +1025,7 @@ int main(int argc, char *argv[])
 
 	/* command line arguments */
 	do {
-		arg_iter = getopt(argc, argv, "ip:qt:vl:");
+		arg_iter = getopt(argc, argv, "ip:f:qt:vl:");
 		switch (arg_iter) {
 			case 'i':
 				/* [x]inetd flag */
@@ -1015,6 +1034,13 @@ int main(int argc, char *argv[])
 			case 'p':
 				/* control message port */
 				ctl_port = atoi(optarg);
+				break;
+			case 'f':
+				/* pid file */
+				if (write_pid(optarg) < 0) {
+				  fprintf(stderr,
+					  "error: failed to create pidfile %s\n", optarg);
+				}
 				break;
 			case 'q':
 				/* quiet */

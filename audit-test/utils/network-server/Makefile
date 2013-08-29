@@ -20,7 +20,7 @@ CPPFLAGS	+= -I$(UTILSDIR)/include
 
 SRVR_EXE        = lblnet_tst_server
 
-ALL_EXE		= $(SRVR_EXE)
+ALL_EXE		= $(SRVR_EXE) pidfile_kill
 
 include $(TOPDIR)/rules.mk
 

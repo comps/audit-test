@@ -127,6 +127,16 @@ function xtables_empty {
     grep -e '^\*' -e '^:[^ ]* [^-]' -e '^COMMIT$' | sed 's/DROP/ACCEPT/ ; s/\[[0-9]*:[0-9]*\]/\[0:0\]/'
 }
 
+# tstsvr_cleanup - cleanup the network server at a specified host
+#
+# DESCRIPTION:
+#   This script can be executed after each networking test as a sanity cleanup,
+#   to either kill any unfinished lblnet_tst_server instances spawned by xinetd,
+#   or to ensure that no remaining instances are frozen even when expres=success.
+function tstsvr_cleanup {
+    nc -w 3 "$1" 4009 </dev/null
+}
+
 # parse_named - Parse key=value test arguments
 #
 # INPUT

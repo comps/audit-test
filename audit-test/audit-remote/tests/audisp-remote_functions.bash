@@ -203,7 +203,7 @@ create_user_test_msg() {
 send_audisp_remote_test_msg() {
     [ -z "$*" ] && exit_error \
         "send_audisp_remote_test_msg: no message to send"
-    echo "$*" | /sbin/audisp-remote
+    ( echo "$*" ; sleep 10 ) | /sbin/audisp-remote
 }
 
 check_received_test_msg() {

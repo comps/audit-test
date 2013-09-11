@@ -33,6 +33,7 @@
 SHELL := /bin/bash
 
 MACHINE		= $(strip $(shell uname -m))
+VIRT_TYPE	= $(shell virt-what)
 X		= i486 i586 i686 ix86
 P		= ppc powerpc
 IP		= ppc64 powerpc64

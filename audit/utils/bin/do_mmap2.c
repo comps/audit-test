@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     	result = TEST_FAIL;
         printf("%d %d %d\n", result, errno, getpid());
     } else {
-#if defined(PPC64)
+#if defined(PPC64) || defined(I686)
         printf("%d %d %d\n", result, (int) addr, getpid());
 #else
         printf("%d %lu %d\n", result, (unsigned long) addr, getpid());

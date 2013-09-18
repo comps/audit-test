@@ -18,7 +18,7 @@ service lblnet_tst_unlabeled_ipv6
 	port		= 4000
 
 	server		= /usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server
-	server_args	= -i -t 10 -l /var/log/lblnet_tst_server.log -f /var/run/lblnet_tst_server6.pid -vv
+	server_args	= -i -l /var/log/lblnet_tst_server.log -f /var/run/lblnet_tst_server6.pid -vv
 }
 
 service lblnet_tst_labeled_ipv4
@@ -37,7 +37,7 @@ service lblnet_tst_labeled_ipv4
 	port		= 4001
 
 	server		= /usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server
-	server_args	= -i -t 10 -l /var/log/lblnet_tst_server.log -f /var/run/lblnet_tst_server4.pid -vv
+	server_args	= -i -l /var/log/lblnet_tst_server.log -f /var/run/lblnet_tst_server4.pid -vv
 }
 
 service lblnet_tst_cleanup

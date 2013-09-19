@@ -234,6 +234,26 @@ function ipsec_remove_verify {
 	exit_fail "missing audit record"
 }
 
+#
+# ipsec_cleanup - Clean up / restore test-related environment
+#
+# INPUT
+# none
+#
+# OUTPUT
+# none
+
+function ipsec_cleanup {
+    # flush xfrm state
+    ip xfrm state flush
+    # flush remote xfrm state
+    if [ "$ip_dst" ]; then
+        tstsvr_cleanup "$ip_dst"
+        remote_ipsec_flush "$ip_dst"
+    fi
+}
+append_cleanup 'ipsec_cleanup'
+
 ######################################################################
 # main
 ######################################################################

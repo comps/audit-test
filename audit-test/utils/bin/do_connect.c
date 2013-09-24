@@ -21,6 +21,7 @@ int main(int argc, char **argv)
   struct addrinfo *host = NULL;
   struct addrinfo addr_hints;
   int sock;
+  struct linger so_linger = { .l_onoff = 1, .l_linger = INT_MAX };
 
   if (argc != 4) {
     fprintf(stderr, "Usage:\n%s <host> tcp|udp <port>\n", argv[0]);
@@ -43,10 +44,15 @@ int main(int argc, char **argv)
   if (sock < 0)
     return TEST_ERROR;
 
+  setsockopt(sock, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
+
   errno = 0;
   rc = connect(sock, host->ai_addr, host->ai_addrlen);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 
   printf("%d %d %d\n", result, result ? errno : rc, getpid());
+
+  shutdown(sock, SHUT_RDWR);
+  close(sock);
   return result;
 }

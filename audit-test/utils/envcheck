@@ -355,13 +355,15 @@ check_kvm() {
         echo "KVM tests not supported on $(uname -m) architecture"
         return 2
     }
+    [ "$(egrep '(vmx|svm)' /proc/cpuinfo)" ] || {
+        echo "x86 HW virtualization support not available, skipping KVM"
+        return 2
+    }
 
     check "[ -d \"$AUDITDIR/audit-test/kvm\" ]"
     check "[ -f \"$AUDITDIR/audit-test/kvm/config.bash\" ]"
     check "grep '^install_media' \"$AUDITDIR/audit-test/kvm/config.bash\"" 0 \
         "install_media specified in kvm config"
-    check "grep '\(vmx\|svm\)' /proc/cpuinfo" 0 \
-        "Host cpu has HW virt support"
 
     check "grep '^usb_device_id' \"$AUDITDIR/audit-test/kvm-iommu/usb_device.conf\" | grep -v XXXX:XXXX" 0 \
         "usb_device_id specified in kvm-iommu/usb_device.conf"

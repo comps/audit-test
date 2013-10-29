@@ -36,7 +36,7 @@ PATCH_DIR = $(CURDIR)/patch
 MDIR = $(CURDIR)
 
 LTP_FULL = ltp-full.tar.bz2
-LTP_SOURCE = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20110915/ltp-full-20110915.bz2/download
+LTP_SOURCE = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20140422/ltp-full-20140422.tar.bz2/download
 
 # set temporary directory to /opt/tmp for tests
 # this is because the default /tmp is mounted noexec in evaluated configuration

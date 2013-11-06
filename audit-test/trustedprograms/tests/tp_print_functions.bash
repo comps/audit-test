@@ -118,3 +118,25 @@ function setup_cupsd {
     /sbin/service cups status || exit_error "cupsd is not running"
 
 }
+
+# Set next job id to a value
+# This makes printing output predictable
+function set_next_jobid {
+    local JOBCACHE=/var/cache/cups/job.cache
+
+    if [ -z $1 ]; then
+        echo "Error: missing printer to delete"
+    fi
+
+    # need to stop cups daemon before modifying job cache
+    service cups stop
+
+    # restore original job cache after test
+    backup $JOBCACHE
+    prepend_cleanup "service cups stop"
+    append_cleanup "service cups start"
+
+    # modify the job cache and start cups
+    sed -i "s/^NextJobId.*/NextJobId $1/" $JOBCACHE
+    service cups start
+}

@@ -48,39 +48,6 @@ if [[ $? -ne 0 ]]; then
 fi
 
 for i in $(seq $first $last); do
-	#   Assert processes executing with qemu_t SELinux are not allowed to
-	#   change virtual machine resource category labels.
-
-    offset=$(stat -c '%s' /var/log/audit/audit.log)
-
-    if [[ $PPROFILE == lspp ]]; then
-	    eval "runcon -t qemu_t -- chcon -l s0:c1,c3 \$kvm_guest_${i}_resource"
-    else
-        eval "runcon -u system_u -r system_r -t initrc_t -- runcon -t virtd_t -- \
-        runcon -t qemu_t -- chcon -l s0:c1,c3 /var/lib/libvirt/images/KVM-Guest-1.img"
-    fi
-
-	if [[ $? -eq 0 ]]; then
-		exit_fail
-	fi
-
-	# We need to check for svirt_t starting from RHEL7 too because qemu_t became an alias to it
-	expression="type==AVC and extra_text=~denied and comm==runcon and scontext=~(qemu_t|svirt_t)"
-
-	if [[ $(augrok -c --seek $offset $expression) -eq 0 ]]; then
-		exit_fail
-	fi
-
-    if [[ $PPROFILE == lspp ]]; then
-	    expression="type==SYSCALL syscall==59 and success==no and comm==runcon and subj=~lspp_harness_t"
-    else
-	    expression="type==SYSCALL syscall==59 and success==no and comm==runcon and subj=~virtd_t"
-    fi
-
-	if [[ $(augrok -c --seek $offset $expression) -eq 0 ]]; then
-		exit_fail
-	fi
-
 	#   Assert processes executing with svirt_t SELinux are not allowed to
 	#   change virtual machine resource category labels.
 

@@ -20,7 +20,7 @@
 #   test_selinux_attr_virt_image_type.bash
 #
 #   Assert virt_image_type attribute has virt_content_t, svirt_image_t,
-#   virt_image_t and qemu_image_t as its associated types only.
+#   virt_image_t and xen_image_t as its associated types only.
 
 
 source testcase.bash || exit 2
@@ -36,7 +36,7 @@ if [[ $types_count -eq 0 ]]; then
 fi
 
 for type in $types; do
-	if [[ ! "$type" =~ virt_content_t|svirt_image_t|virt_image_t|qemu_image_t ]]; then
+	if [[ ! "$type" =~ virt_content_t|svirt_image_t|virt_image_t|xen_image_t ]]; then
 		exit_fail
 	fi
 done

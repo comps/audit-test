@@ -19,7 +19,7 @@
 
 #   test_selinux_attr_virt_domain.bash
 #
-#   Assert virt_domain attribute has qemu_t and svirt_t as its associated
+#   Assert virt_domain attribute has svirt_t and svirt_tcg_t as its associated
 #   types only.
 
 
@@ -36,7 +36,7 @@ if [[ $types_count -eq 0 ]]; then
 fi
 
 for type in $types; do
-	if [[ ! "$type" =~ qemu_t|svirt_t ]]; then
+	if [[ ! "$type" =~ svirt_t|svirt_tcg_t ]]; then
 		exit_fail
 	fi
 done

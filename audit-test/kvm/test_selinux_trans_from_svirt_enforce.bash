@@ -49,7 +49,7 @@ for type in $types; do
 	runcon -t svirt_t -- runcon -t $type -- /tmp/true
 
 	if [[ $? -eq 0 ]]; then
-		if [[ ! "$type" =~ ptchown_t|abrt_helper_t ]]; then
+		if [[ ! "$type" =~ ptchown_t|abrt_helper_t|virt_bridgehelper_t ]]; then
 			exit_fail
 		fi
 	fi

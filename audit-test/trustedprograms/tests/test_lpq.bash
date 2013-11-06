@@ -51,6 +51,14 @@ backup /var/run/utmp
 semanage login -a -s staff_u -r SystemLow-SystemHigh $TEST_USER || \
   exit_error "unable to set $TEST_USER to staff_u"
 
+# In RHEL7 the pam_loginuid fails if loginuid already set
+# i.e. the login via login command below fails because
+# it is called from already existing user session.
+# For the purpose of this test we disable it temporarily
+# as we do not rely on the auid value here.
+backup /etc/pam.d/login
+sed -i 's/\(^session.*pam_loginuid.*$\)/\#\1/' /etc/pam.d/login
+
 # test
 prepend_cleanup rm -f $CON1OUT $CON2OUT
 runcon $LPQ1CON lpq -P $printer > $CON1OUT

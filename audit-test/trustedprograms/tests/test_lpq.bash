@@ -51,6 +51,11 @@ backup /var/run/utmp
 semanage login -a -s staff_u -r SystemLow-SystemHigh $TEST_USER || \
   exit_error "unable to set $TEST_USER to staff_u"
 
+# make sure test user is in sys group so he can see job name
+# See https://bugzilla.redhat.com/show_bug.cgi?id=1027205 for details
+backup /etc/group
+usermod -a -G sys $TEST_USER
+
 # In RHEL7 the pam_loginuid fails if loginuid already set
 # i.e. the login via login command below fails because
 # it is called from already existing user session.

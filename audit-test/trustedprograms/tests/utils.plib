@@ -17,7 +17,7 @@ sub create_user($) {
   `userdel -rf '$username' 2>/dev/null`;
   `useradd -m -g users '$username'`;
   if ($? != 0) {
-    die("ERROR $?: Cannot create user $username");
+    print("ERROR $?: Cannot create user $username\n");
   }
   return $?;
 }
@@ -31,7 +31,7 @@ sub delete_user($) {
   `killall -9 -u '$username'`;
   `userdel -rf '$username'`;
   if ($? != 0) {
-    die("ERROR $?: Cannot delete user $username");
+    print("ERROR $?: Cannot delete user $username\n");
   }
   return $?;
 }
@@ -61,7 +61,7 @@ sub set_encrypted_password($$) {
   my $encrypted_password = shift;
   `usermod -p '$encrypted_password' '$username'`;
   if ($? != 0) {
-    die("ERROR $?: Cannot set encrypted password");
+    print("ERROR $?: Cannot set encrypted password\n");
   }
   return $?;
 }

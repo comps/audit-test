@@ -5,7 +5,7 @@ Dependencies
 ------------
 
 The audit-test suite requires the following packages in order to run
-on RHEL6.2:
+on RHEL7:
 
 binutils
 cpp
@@ -24,6 +24,7 @@ libselinux-devel
 perl-devel
 perl-Expect
 perl-IO-Tty
+selinux-policy-devel
 
 The perl-IO-Tty package is available for RHEL6 in the optional channel that
 is not available in the RHEL6 installation media. You should be able to download

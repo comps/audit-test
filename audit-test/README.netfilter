@@ -157,10 +157,10 @@ export MODE=64
 export PPROFILE=lspp
 export PASSWD="redhat"
 export LOCAL_DEV="eth3"
-export LOCAL_SEC_DEV="eth4"
-export LOCAL_SEC_MAC="78:2B:CB:4B:EB:BC"
 export LOCAL_IPV4="10.0.0.2"
 export LOCAL_IPV6="fd00::2"
+export LOCAL_SEC_DEV="eth4"
+export LOCAL_SEC_MAC="78:2B:CB:4B:EB:BC"
 export LOCAL_SEC_IPV4="10.0.1.2"
 export LOCAL_SEC_IPV6="fd00:1::2"
 export LBLNET_SVR_IPV4="10.0.0.1"
@@ -182,57 +182,63 @@ according to the picture shown in section "Network configuration".
 
 # cat /etc/sysconfig/network-scripts/ifcfg-eth3
 DEVICE="eth3"
+TYPE="Ethernet"
 HWADDR="01:12:44:FE:A7:18"
-ONBOOT="yes"
 BOOTPROTO="static"
 IPADDR="10.0.0.2"
 NETMASK="255.255.255.0"
 IPV6INIT="yes"
-IPV6ADDR=fd00::2
-TYPE="Ethernet"
+IPV6ADDR="fd00::2"
+IPV6_AUTOCONF="no"
+ONBOOT="yes"
 
 # cat /etc/sysconfig/network-scripts/ifcfg-eth4
 DEVICE="eth4"
-HWADDR="D8:D3:85:81:BE:04"
-ONBOOT="yes"
 TYPE="Ethernet"
-BRIDGE=toebr
+HWADDR="D8:D3:85:81:BE:04"
+BRIDGE="toebr"
+ONBOOT="yes"
 
 # cat /etc/sysconfig/network-scripts/ifcfg-toebr
 DEVICE="toebr"
-TYPE=bridge
+TYPE="Bridge"
 BOOTPROTO="static"
 IPADDR="10.0.1.2"
 NETMASK="255.255.255.0"
 IPV6INIT="yes"
-IPV6ADDR=fd00:1::2
+IPV6ADDR="fd00:1::2"
+IPV6_AUTOCONF="no"
+ONBOOT="yes"
 
 === NS network interfaces configuration ===
 
 # cat /etc/sysconfig/network-scripts/ifcfg-eth0
 DEVICE="eth0"
+TYPE="Ethernet"
 HWADDR="0F:14:15:B8:A0:77"
-ONBOOT="yes"
 BOOTPROTO="static"
 IPADDR="10.0.0.1"
 NETMASK="255.255.255.0"
 IPV6INIT="yes"
 IPV6ADDR=fd00::1
-TYPE="Ethernet"
+IPV6_AUTOCONF="no"
+ONBOOT="yes"
 
 # cat /etc/sysconfig/network-scripts/ifcfg-eth1
 DEVICE="eth1"
+TYPE="Ethernet"
 HWADDR="00:04:23:B3:B5:83"
-ONBOOT="yes"
 BOOTPROTO="static"
 IPADDR="10.0.1.1"
 NETMASK="255.255.255.0"
 IPV6INIT="yes"
-IPV6ADDR=fd00:1::1
-TYPE="Ethernet"
+IPV6ADDR="fd00:1::1"
+IPV6_AUTOCONF="no"
+ONBOOT="yes"
 
-For details on configuring the network interfaces in general refer to:
+For details on configuring the network interfaces in general refer to
 https://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/s1-networkscripts-interfaces.html
+and /usr/share/doc/initscripts-*/sysconfig.txt .
 
 Please note that in the examples above, all interfaces are configured via static
 network address assignment. You may use also DHCP for configuring your devices
@@ -254,13 +260,3 @@ After restarting the network on the TOE and NS, verify the
 configuration by examining the results of 'ifconfig' on each
 system.  On the TOE, verify the bridge configuration with the
 'brctl show' command.
-
-Setting the aging timer to a high value is helpful to the testing as
-it prevents the learned mac addresses in the bridge's forwarding database
-from being deleted when it hasn't seen a frame from that mac address in the
-timer number of seconds.  The following command is recommended.
-
-# brctl setageing <bridge name> 3600
-
-This command can be placed in /etc/rc.d/rc.local to be run automatically
-upon each boot.

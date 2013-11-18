@@ -10,9 +10,14 @@ on RHEL6.2:
 audit-libs-devel
 expect
 libselinux-devel
+nc
 perl-devel
 perl-Expect
 perl-IO-Tty
+
+The nc package is available for RHEL6 in the base channel. It is not installed
+automatically with the certification kickstart. You should be able to install
+it from the installation DVD or via RHN.
 
 The perl-IO-Tty package is available for RHEL6 in the optional channel that
 is not available in the RHEL6 installation media. You should be able to download

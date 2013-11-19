@@ -14,7 +14,7 @@
 #
 #   You should have received a copy of the GNU General Public License
 #   along with this program;  if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 #
 #  FILE   : ssh
 #
@@ -39,8 +39,10 @@ do_setup()
     export TEST_USER_HOMEDIR="/home/$TEST_USER"
 
     # erase user if he/she already exists, so we can have a clean env
+    TCtmp=/home/$TEST_USER
 
-    rm -Rf /home/$TEST_USER
+    rm -Rf $TCtmp
+
     tst_setup
 
     exists expect ssh ssh03_s1 useradd userdel

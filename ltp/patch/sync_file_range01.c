@@ -18,7 +18,7 @@
 /*									    */
 /* You should have received a copy of the GNU General Public License	  */
 /* along with this program;  if not, write to the Free Software	       */
-/* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA    */
+/* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA    */
 /*									    */
 /******************************************************************************/
 
@@ -81,7 +81,6 @@
  ******************************************************************************/
 #define _GNU_SOURCE
 
-/* Standard Include Files */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
@@ -92,7 +91,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-/* Harness Specific Include Files. */
 #include "test.h"
 #include "usctest.h"
 #include "linux_syscall_numbers.h"
@@ -105,10 +103,7 @@
 
 #define SYNC_FILE_RANGE_INVALID 8
 
-/* Extern Global Variables */
-
-/* Global Variables */
-char *TCID = "sync_file_range01";	/* test program identifier.	  */
+char *TCID = "sync_file_range01";
 char filename[255];		/* file used for testing */
 char spl_file[] = "/dev/null";
 int filed, sfd;			/* normal and special fds */
@@ -121,11 +116,12 @@ struct test_data_t {
 	unsigned int flags;
 	int error;
 } test_data[] = {
-	{ &bfd, 0, 1, SYNC_FILE_RANGE_WRITE, EBADF},
-	{ &sfd, 0, 1, SYNC_FILE_RANGE_WAIT_AFTER, ESPIPE},
-	{ &filed, -1, 1, SYNC_FILE_RANGE_WAIT_BEFORE, EINVAL},
-	{ &filed, 0, -1, SYNC_FILE_RANGE_WRITE, EINVAL},
-	{ &filed, 0, 1, SYNC_FILE_RANGE_INVALID, EINVAL}
+	{
+	&bfd, 0, 1, SYNC_FILE_RANGE_WRITE, EBADF}, {
+	&sfd, 0, 1, SYNC_FILE_RANGE_WAIT_AFTER, ESPIPE}, {
+	&filed, -1, 1, SYNC_FILE_RANGE_WAIT_BEFORE, EINVAL}, {
+	&filed, 0, -1, SYNC_FILE_RANGE_WRITE, EINVAL}, {
+	&filed, 0, 1, SYNC_FILE_RANGE_INVALID, EINVAL}
 };
 
 int TST_TOTAL = sizeof(test_data) / sizeof(test_data[0]);
@@ -158,7 +154,7 @@ extern void cleanup()
 
 	/* close the file we have open */
 	if (close(filed) == -1) {
-		tst_resm(TWARN|TERRNO, "close(%s) failed", filename);
+		tst_resm(TWARN | TERRNO, "close(%s) failed", filename);
 	}
 
 	tst_rmdir();
@@ -193,11 +189,11 @@ void setup()
 
 	sprintf(filename, "tmpfile_%d", getpid());
 	if ((filed = open(filename, O_RDWR | O_CREAT, 0700)) == -1) {
-		tst_brkm(TBROK|TERRNO, cleanup,
+		tst_brkm(TBROK | TERRNO, cleanup,
 			 "open(%s, O_RDWR|O_CREAT,0700) failed", filename);
 	}
 
-	sfd = open(spl_file, O_RDWR|O_CREAT, 0700);
+	sfd = open(spl_file, O_RDWR | O_CREAT, 0700);
 }
 
 /*****************************************************************************
@@ -209,25 +205,26 @@ static inline long syncfilerange(int fd, off64_t offset, off64_t nbytes,
 
 #if (defined(__S390) || defined(__S390X))
 #if (__WORDSIZE == 32)
-	return syscall(__NR_sync_file_range, fd, (int)(offset >> 32),
-		       (int)offset, (int)(nbytes >> 32), (int)nbytes, flags);
+	return ltp_syscall(__NR_sync_file_range, fd, (int)(offset >> 32),
+		(int)offset, (int)(nbytes >> 32), (int)nbytes, flags);
 #endif
 #endif
 
 #if (defined(__arm__) || defined(__powerpc__) || defined(__powerpc64__))
 #if (__WORDSIZE == 32)
 #if __BYTE_ORDER == __BIG_ENDIAN
-	return syscall(__NR_sync_file_range2, fd, flags, (int)(offset >> 32),
-		       (int)offset, (int)(nbytes >> 32), (int)nbytes);
+	return ltp_syscall(__NR_sync_file_range2, fd, flags,
+		(int)(offset >> 32), (int)offset, (int)(nbytes >> 32),
+		(int)nbytes);
 #elif __BYTE_ORDER == __LITTLE_ENDIAN
-	return syscall(__NR_sync_file_range2, fd, flags, (int)offset,
+	return ltp_syscall(__NR_sync_file_range2, fd, flags, (int)offset,
 		       (int)(offset >> 32), nbytes, (int)(nbytes >> 32));
 #endif
 #else
-	return syscall(__NR_sync_file_range2, fd, flags, offset, nbytes);
+	return ltp_syscall(__NR_sync_file_range2, fd, flags, offset, nbytes);
 #endif
 #else
-	return syscall(__NR_sync_file_range, fd, offset, nbytes, flags);
+	return ltp_syscall(__NR_sync_file_range, fd, offset, nbytes, flags);
 #endif
 
 }
@@ -262,13 +259,15 @@ int main(int ac, char **av)
 
 #if defined(__powerpc__) || defined(__powerpc64__)	/* for PPC, kernel version > 2.6.21 needed */
 	if (tst_kvercmp(2, 16, 22) < 0) {
-		tst_brkm(TCONF, NULL, "System doesn't support execution of the test");
+		tst_brkm(TCONF, NULL,
+			 "System doesn't support execution of the test");
 	}
 #else
 	/* For other archs, need kernel version > 2.6.16 */
 
 	if (tst_kvercmp(2, 6, 17) < 0) {
-		tst_brkm(TCONF, NULL, "System doesn't support execution of the test");
+		tst_brkm(TCONF, NULL,
+			 "System doesn't support execution of the test");
 	}
 #endif
 
@@ -283,19 +282,18 @@ int main(int ac, char **av)
 
 		if (TEST_RETURN != -1) {
 			tst_resm(TFAIL,
-				"call succeeded unexpectedly (%ld != -1)",
-				TEST_RETURN);
+				 "call succeeded unexpectedly (%ld != -1)",
+				 TEST_RETURN);
 			continue;
 		}
 
 		TEST_ERROR_LOG(TEST_ERRNO);
 
 		if (TEST_ERRNO == test_data[test_index].error) {
-			tst_resm(TPASS|TTERRNO, "got expected error");
+			tst_resm(TPASS | TTERRNO, "got expected error");
 		} else {
-			tst_resm(TFAIL|TTERRNO, "got unexpected error; "
-				 "expected %d",
-				 test_data[test_index].error);
+			tst_resm(TFAIL | TTERRNO, "got unexpected error; "
+				 "expected %d", test_data[test_index].error);
 		}
 
 	}

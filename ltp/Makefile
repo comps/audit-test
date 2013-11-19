@@ -69,15 +69,10 @@ patch::
 	echo "Makefile: patch"
 	cp -fv $(PATCH_DIR)/cc_commands $(LTP_BASE_PATH)/runtest/cc_commands
 	cp -fv $(PATCH_DIR)/cc_ospp.sh $(LTP_BASE_PATH)/testscripts/cc_ospp.sh
-	cp -fv $(PATCH_DIR)/ssh03 $(LTP_BASE_PATH)/testcases/network/tcp_cmds/ssh/ssh03
-	cp -fv $(PATCH_DIR)/su01 $(LTP_BASE_PATH)/testcases/commands/su/su01
 	cp -fv $(PATCH_DIR)/mnt_syscalls.sh $(LTP_BASE_PATH)/testscripts/mnt_syscalls.sh
 	cp -fv $(PATCH_DIR)/mnt_syscalls $(LTP_BASE_PATH)/runtest/mnt_syscalls
-	cp -fv $(PATCH_DIR)/mount02.c $(LTP_BASE_PATH)/testcases/kernel/syscalls/mount/mount02.c
-	cp -fv $(PATCH_DIR)/mount03.c $(LTP_BASE_PATH)/testcases/kernel/syscalls/mount/mount03.c
-	cp -fv $(PATCH_DIR)/getrusage03_child.c $(LTP_BASE_PATH)/testcases/kernel/syscalls/getrusage/getrusage03_child.c
+	cp -fv $(PATCH_DIR)/su01 $(LTP_BASE_PATH)/testcases/commands/su/su01
 	cp -fv $(PATCH_DIR)/sync_file_range01.c $(LTP_BASE_PATH)/testcases/kernel/syscalls/sync_file_range/sync_file_range01.c
-	cp -fv $(PATCH_DIR)/madvise03.c $(LTP_BASE_PATH)/testcases/kernel/syscalls/madvise/madvise03.c
 
 clean::
 	echo "Makefile: clean"

@@ -541,6 +541,10 @@ pre_halt() {
 #!/bin/bash -x
 if [[ \$1 == $mask_runlevel ]]; then
     logger "audisp-remote_testing: $$ runlevel=\$1"
+
+    # Since /sbin/init might be executed many times, we should
+    # kill audisp-remote to avoid unpleasant chain-reaction
+    killall -q audisp-remote
 else
     exec /sbin/init.audisp-remote_testing "\$@"
 fi

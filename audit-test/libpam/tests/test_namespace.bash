@@ -59,6 +59,11 @@ backup /var/run/utmp
 backup /etc/security/namespace.conf
 echo "/tmp /tmp-parent/tmp-inst/ level root,adm" > /etc/security/namespace.conf
 
+# In RHEL7 the pam_loginuid fails if loginuid already set
+# for the purpose of this test we disable it temporarily
+backup /etc/pam.d/login
+sed -i 's/\(^session.*pam_loginuid.*$\)/\#\1/' /etc/pam.d/login
+
 tmpinstdir=/tmp-parent/tmp-inst/
 tmpnewfile=/tmp/newfile
 
@@ -87,7 +92,7 @@ auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S open -F uid=$auid || \
 )
 # Check the path and context in the audit record.
 augrok type==SYSCALL \
-	subj=$s0_context auid=$auid success=yes \
+    subj=$s0_context success=yes \
 	name=$tmpnewfile obj=$s0_obj\
 	|| exit_fail "missing audit record"
 
@@ -110,7 +115,7 @@ log_mark=$(stat -c %s $audit_log)
 
 # Check the path and context in the audit record.
 augrok --seek=$log_mark type==SYSCALL \
-	subj=$s2_context auid=$auid success=yes \
+    subj=$s2_context success=yes \
 	name=$tmpnewfile obj=$s2_obj\
 	|| exit_fail "missing audit record"
 

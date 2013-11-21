@@ -42,6 +42,11 @@ fi
 # use backup (and automatic restore) to work around this
 backup /var/run/utmp
 
+# In RHEL7 the pam_loginuid fails if loginuid already set
+# for the purpose of this test we disable it temporarily
+backup /etc/pam.d/login
+sed -i 's/\(^session.*pam_loginuid.*$\)/\#\1/' /etc/pam.d/login
+
 # test
 (
     export localtmp
@@ -68,7 +73,7 @@ fi
 msg_1="acct=\"*$TEST_USER\"* exe=.(/usr)?/bin/login.* res=success.*"
 augrok -q type=USER_AUTH msg_1=~"PAM:authentication $msg_1" || exit_fail
 augrok -q type=USER_ACCT msg_1=~"PAM:accounting $msg_1" || exit_fail
-augrok -q type=USER_START msg_1=~"PAM:session_open $msg_1" auid=$auid \
+augrok -q type=USER_START msg_1=~"PAM:session_open $msg_1" \
 	subj=$login_context || exit_fail
-augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$sel_context.*exe=.(/usr)?/bin/login.* res=success.*" auid=$auid || exit_fail
+augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$sel_context.*exe=.(/usr)?/bin/login.* res=success.*" || exit_fail
 exit_pass

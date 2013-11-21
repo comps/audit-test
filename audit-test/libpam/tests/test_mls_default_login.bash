@@ -44,6 +44,11 @@ fi
 # use backup (and automatic restore) to work around this
 backup /var/run/utmp
 
+# In RHEL7 the pam_loginuid fails if loginuid already set
+# for the purpose of this test we disable it temporarily
+backup /etc/pam.d/login
+sed -i 's/\(^session.*pam_loginuid.*$\)/\#\1/' /etc/pam.d/login
+
 # test
 (
     export localtmp
@@ -63,11 +68,11 @@ pts=${pts##*/}
 msg_1="acct=\"*$TEST_USER\"* exe=.(/usr)?/bin/login.* terminal=pts/$pts res=success.*"
 augrok -q type=USER_AUTH msg_1=~"PAM:authentication $msg_1" || exit_fail
 augrok -q type=USER_ACCT msg_1=~"PAM:accounting $msg_1" || exit_fail
-augrok -q type=USER_START msg_1=~"PAM:session_open $msg_1" auid=$auid \
+augrok -q type=USER_START msg_1=~"PAM:session_open $msg_1" \
 	subj=$login_context || exit_fail
 # Check for ROLE_ASSIGN event for testuser
 augrok -q type=ROLE_ASSIGN msg_1=~"op=login-sename,role,range acct=\"$TEST_USER\" old-seuser=user_u old-role=user_r old-range=s0 new-seuser=staff_u new-role=auditadm_r,staff_r,lspp_test_r,secadm_r,sysadm_r,system_r new-range=$def_range" || exit_fail "ROLE_ASSIGN event does not match"
 # Check for USER_ROLE_CHANGE for login command
-augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$def_context.*exe=.(/usr)?/bin/login.* terminal=pts/$pts res=success.*" auid=$auid || exit_fail "USER_ROLE_CHANGE does not match"
+augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$def_context.*exe=.(/usr)?/bin/login.* terminal=pts/$pts res=success.*" || exit_fail "USER_ROLE_CHANGE does not match"
 
 exit_pass

@@ -39,6 +39,11 @@ fi
 # use backup (and automatic restore) to work around this
 backup /var/run/utmp
 
+# In RHEL7 the pam_loginuid fails if loginuid already set
+# for the purpose of this test we disable it temporarily
+backup /etc/pam.d/login
+sed -i 's/\(^session.*pam_loginuid.*$\)/\#\1/' /etc/pam.d/login
+
 # test
 (
     export localtmp

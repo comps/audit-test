@@ -25,6 +25,9 @@
 
 source tp_print_functions.bash || exit 2
 
+# make test verbose
+set -x
+
 # setup
 setup_cupsd
 backup /etc/cups/cupsd.conf
@@ -33,13 +36,16 @@ sed -ie "s/Classification.*/Classification mls/" /etc/cups/cupsd.conf
 sed -ie "s/.*ClassifyOverride.*/ClassifyOverride yes/" /etc/cups/cupsd.conf
 sed -ie "s/.*PerPageLabels.*/PerPageLabels no/" /etc/cups/cupsd.conf
 
+# get audit mark
+AUDIT_MARK=$(get_audit_mark)
+
 # test
 restart_service cups
 
 # verify
-augrok -q type=LABEL_LEVEL_CHANGE msg_1=~".Config. Classification=mls.*" || exit_fail
-augrok -q type=USYS_CONFIG msg_1=~".Config. ClassifyOverride=enabled.*" || exit_fail
-augrok -q type=USYS_CONFIG msg_1=~".Config. PerPageLabels=disabled.*" || exit_fail
+augrok --seek=$AUDIT_MARK -q type=LABEL_LEVEL_CHANGE msg_1=~".Config. Classification=mls.*" || exit_fail
+augrok --seek=$AUDIT_MARK -q type=USYS_CONFIG msg_1=~".Config. ClassifyOverride=enabled.*" || exit_fail
+augrok --seek=$AUDIT_MARK -q type=USYS_CONFIG msg_1=~".Config. PerPageLabels=disabled.*" || exit_fail
 
 # cleanup
 

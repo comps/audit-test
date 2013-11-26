@@ -250,6 +250,14 @@ function start_service {
                 echo "start_service: sshd still refuses connection requests" >&2
                 return 2
             fi
+            ;;
+        "cups")
+            # make sure cups is listening on socket
+            if ! _busy_wait "lsof -c cupsd -a /var/run/cups/cups.sock &>/dev/null"; then
+                echo "start_service: cannot start cups" >&2
+                return 2
+            fi
+            ;;
     esac
 
     return 0

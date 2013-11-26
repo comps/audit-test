@@ -401,6 +401,11 @@ function rotate_audit_logs {
     pidof auditd &>/dev/null || start_service auditd
 }
 
+# print block size of audit log (used for augrok --seek)
+function get_audit_mark {
+    echo "$(stat -c %s $audit_log)"
+}
+
 ######################################################################
 # role-based utilities
 ######################################################################

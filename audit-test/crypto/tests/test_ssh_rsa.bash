@@ -34,7 +34,6 @@
 
 source testcase.bash || exit 2
 source tp_ssh_functions.bash || exit 2
-source tp_selinux_functions.bash || exit 2
 
 #### main ####
 

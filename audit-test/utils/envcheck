@@ -143,6 +143,36 @@ check_variables() {
 }
 
 
+### RPM DEPENDENCIES
+check_rpm_deps() {
+    local CHECK_FAILED
+
+    # requires for this check
+    which rpm &>/dev/null || {
+        echo "rpm binary not available, skipping rpm dependency checks"
+        return 2
+    }
+
+    # from README.run
+    local rpms="audit-libs-devel expect libselinux-devel perl-devel \
+                perl-Expect perl-IO-Tty"
+
+    for rpm in $rpms; do
+        check "rpm -q \"$rpm\"" 0 "rpm package $rpm is installed"
+    done;
+
+    if [ "$CHECK_FAILED" ]; then
+        echo
+        echo "RPM dependency checking failed."
+        echo "Please make sure you have installed all necessary suite"
+        echo "requires / dependencies specified at the top of README.run."
+        return 1
+    else
+        check_rpm_deps=1
+    fi
+}
+
+
 ### USER SESSION
 check_user_session() {
     local CHECK_FAILED
@@ -396,6 +426,7 @@ check_kvm() {
 # checks to be run, ordering is important
 CHECKS="
 check_variables
+check_rpm_deps
 check_user_session
 check_suite
 check_networking_if

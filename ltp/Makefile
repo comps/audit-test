@@ -73,6 +73,7 @@ patch::
 	cp -fv $(PATCH_DIR)/mnt_syscalls $(LTP_BASE_PATH)/runtest/mnt_syscalls
 	cp -fv $(PATCH_DIR)/su01 $(LTP_BASE_PATH)/testcases/commands/su/su01
 	cp -fv $(PATCH_DIR)/sync_file_range01.c $(LTP_BASE_PATH)/testcases/kernel/syscalls/sync_file_range/sync_file_range01.c
+	cp -fv $(PATCH_DIR)/test_containers.sh $(LTP_BASE_PATH)/testscripts/test_containers.sh
 
 clean::
 	echo "Makefile: clean"
@@ -80,7 +81,7 @@ clean::
 	rm -rf /opt/ltp
 	# remove logs
 	for logtype in rollup run; do \
-		for testset in syscalls cc_ospp mnt_syscalls; do \
+		for testset in syscalls cc_ospp mnt_syscalls containers; do \
 			rm -f "$$testset.$$logtype.log"; \
 		done; \
 	done; \
@@ -113,6 +114,8 @@ runtests::
 	/opt/ltp/testscripts/cc_ospp.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/cc_ospp.rollup.log 2>&1 | tee cc_ospp.run.log
 	echo "Running mnt_syscalls tests"
 	/opt/ltp/testscripts/mnt_syscalls.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/mnt_syscalls.rollup.log 2>&1 | tee mnt_syscalls.run.log
+	echo "Running container tests"
+	/opt/ltp/testscripts/test_containers.sh
 	# cleanup
 	setsebool deny_execmem=$(ORIG_BOOL)
 	sysctl kernel.msgmni=$(ORIG_KPARAM)
@@ -120,7 +123,7 @@ runtests::
 report::
 	echo "Makefile: report"
 	@for logtype in rollup run; do \
-		for testset in syscalls cc_ospp mnt_syscalls; do \
+		for testset in syscalls cc_ospp mnt_syscalls containers; do \
 			echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
 			printf "::: %-52s :::\n" "$$testset"; \
 			echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \

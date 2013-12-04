@@ -524,8 +524,11 @@ function generate_logs {
     echo -n > $opt_log
     echo -n > $opt_rollup
 
-    # add header to run log if exists
-    [ -f $opt_logdir/$header_log ] && cat $opt_logdir/$header_log > $opt_log
+    # add header to run and rollup log if exists
+    if [ -f $opt_logdir/$header_log ]; then
+        cat $opt_logdir/$header_log > $opt_rollup
+        cat $opt_logdir/$header_log > $opt_log
+    fi
 
     # create total run log
     for log in $(ls $opt_logdir/$opt_log.* | sed 's/\(.*\)\.\(.*\)/\1 \2/g' | sort -k2 -n | tr ' ' '.'); do

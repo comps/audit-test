@@ -163,10 +163,6 @@ Confirm that the
 the network test server contains both the IPv4 and IPv6 addresses of the test
 machine.
 
-NOTE: If you need to determine the test machine's IP addresses to add to the
-client_list.txt file, run the following commands on the test machine:
-# make -C network/system getaddress
-
 Configure the KVM tests
 -----------------------
 

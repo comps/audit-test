@@ -20,18 +20,13 @@ include $(TOPDIR)/rules.mk
 
 # XXX - all this stuff for the config files is a kludge and needs cleanup
 
-.PHONY: install getaddress \
+.PHONY: install \
 	install_client install_server \
 	install_check install_setrans install_netlabel \
 	install_ipsec_client install_ipsec_server
 
 # perform the client install by default
 install: install_client
-
-# helper target to get local addresses
-getaddress: install_check
-	@echo "Local IPv4 address -> %LOCAL_IPV4%" | ./addr_filter.bash
-	@echo "Local IPv6 address -> %LOCAL_IPV6%" | ./addr_filter.bash
 
 install_client: install_setrans install_ipsec_client install_netlabel
 	cat rc.local.client | ./addr_filter.bash > rc.local

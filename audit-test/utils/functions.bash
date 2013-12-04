@@ -270,7 +270,7 @@ function restart_auditd {
 function rotate_audit_logs {
     declare tmp num_logs
 
-    if [[ -f /var/log/audit/audit.log ]]; then
+    if [[ -f "$audit_log" ]]; then
         pushd /var/log/audit >/dev/null
         tmp=$(mktemp $PWD/rotating.XXXXXX) || return 2
         ln -f audit.log "$tmp" || return 2

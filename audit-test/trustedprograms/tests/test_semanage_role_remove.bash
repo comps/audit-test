@@ -49,14 +49,18 @@ if [ $? -eq 0 ]; then
   exit_fail "semange login -l still shows SELinux login record"
 fi
 
-# check for ROLE_ASSIGN audit record
-msg_1="op=login-sename,role,range acct=\"$user\" old-seuser=user_u old-role=user_r old-range=s0 new-seuser=staff_u new-role=auditadm_r,staff_r,lspp_test_r,secadm_r,sysadm_r new-range=$def_range exe=/usr/sbin/semanage.*res=success.*"
+# find out the default roles for $seuser role
+role=$(semanage user -l | awk "/$seuser/ {for(i=5; i<NF; i++) { printf \"%s,\", \$i } printf \"%s\", \$NF}")
+[ -z "$role" ] && exit_error "Cannot determine $seuser roles"
+
+# check for correct ROLE_ASSIGN audit record
+msg_1="op=login-sename,role,range acct=\"$user\" old-seuser=user_u old-role=user_r old-range=s0 new-seuser=staff_u new-role=$role new-range=$def_range exe=/usr/sbin/semanage.*res=success.*"
 
 augrok -q type=ROLE_ASSIGN auid=$auid msg_1=~"$msg_1" \
 	|| exit_fail "ROLE_ASSIGN event missing: \"$msg_1\""
 
 # check for ROLE_REMOVE audit record
-msg_1="op=login acct=\"$user\" old-seuser=$seuser old-role=auditadm_r,staff_r,lspp_test_r,secadm_r,sysadm_r old-range=$def_range new-seuser=user_u new-role=user_r new-range=s0 exe=/usr/sbin/semanage.*res=success.*"
+msg_1="op=login acct=\"$user\" old-seuser=$seuser old-role=$role old-range=$def_range new-seuser=user_u new-role=user_r new-range=s0 exe=/usr/sbin/semanage.*res=success.*"
 
 augrok -q type=ROLE_REMOVE auid=$auid msg_1=~"$msg_1" \
 	|| exit_fail "ROLE_REMOVE event missing: \"$msg_1\""

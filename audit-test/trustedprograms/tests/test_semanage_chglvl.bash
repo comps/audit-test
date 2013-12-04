@@ -37,7 +37,12 @@ if [ $? -ne 0 ]; then
   exit_error "semange returned an error"
 fi
 
-msg_1="op=login-range acct=\"$user\" old-seuser=$seuser old-role=auditadm_r,staff_r,lspp_test_r,secadm_r,sysadm_r old-range=s0-s15:c0.c1023 new-seuser=$seuser new-role=auditadm_r,staff_r,lspp_test_r,secadm_r,sysadm_r new-range=$range exe=/usr/sbin/semanage.*res=success.*"
+# find out the default roles for $seuser role
+role=$(semanage user -l | awk "/$seuser/ {for(i=5; i<NF; i++) { printf \"%s,\", \$i } printf \"%s\", \$NF}")
+[ -z "$role" ] && exit_error "Cannot determine $seuser role(s)"
+
+# check for correct ROLE_ASSIGN audit record
+msg_1="op=login-range acct=\"$user\" old-seuser=$seuser old-role=$role old-range=s0-s15:c0.c1023 new-seuser=$seuser new-role=$role new-range=$range exe=/usr/sbin/semanage.*res=success.*"
 
 augrok -q type=ROLE_ASSIGN auid=$auid msg_1=~"$msg_1" \
 	|| exit_fail "ROLE_ASSIGN event missing: \"$msg_1\""

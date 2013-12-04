@@ -94,7 +94,6 @@ report:
 	@# tty output has color, generated logs don't, so collect them
 	@# instead of redirecting output of the above loop.
 	@for l in run rollup; do \
-	  ( utils/run.bash --header; echo ) &> audit.$$l.log; \
 	  for x in $(RUN_DIRS); do \
 	    echo; \
 	    echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \

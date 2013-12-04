@@ -169,8 +169,6 @@ function + {
 # startup/cleanup
 #----------------------------------------------------------------------
 
-trap 'cleanup; close_log; exit' 0 1 2 3 15
-
 # early_startup runs before parsing cmdline and run.conf
 function early_startup {
     # If we're running the mls policy, check that we're in the lspp_test_r role
@@ -225,6 +223,9 @@ function startup {
     if [[ ! -d "$opt_logdir" ]]; then
         mkdir "$opt_logdir"
     fi
+
+    # Open the logs before running the tests
+    open_log
 
     # Initialize audit configuration and make sure auditd is running
     auditd_orig=$(mktemp $auditd_conf.XXXXXX) || return 2
@@ -445,9 +446,6 @@ function parse_cmdline {
 	done
 	exit 0
     fi
-
-    # Open the logs before running the tests
-    open_log
 }
 
 function show_header {
@@ -699,6 +697,7 @@ function run_tests {
 
 early_startup
 parse_cmdline "$@"
+trap 'cleanup; close_log; exit' 0 1 2 3 15
 startup || die "startup failed"
 run_tests
 exit $?

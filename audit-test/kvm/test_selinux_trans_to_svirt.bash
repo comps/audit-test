@@ -38,8 +38,8 @@ if [[ $allowed_count -eq 0 ]]; then
 fi
 
 for type in $allowed; do
-	if [[ ! "$type" =~ unconfined_t|virtd_t ]]; then
-		exit_fail
+	if [[ ! "$type" =~ unconfined_t|unconfined_execmem_t|virtd_t ]]; then
+		exit_fail "$type is not allowed to transition to svirt_t"
 	fi
 done
 

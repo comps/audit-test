@@ -33,13 +33,17 @@ TIMEOUT=600
 
 # Restart ssh daemon
 function ssh_restart_daemon {
-    expect -c "
+    if [ $PPROFILE = lspp ]; then
+        expect -c "
 set timeout $TIMEOUT
 spawn run_init service sshd restart
 expect {
     -nocase {password:} {send \"$PASSWD\r\"; exp_continue}
     eof
 }"
+    else
+        service sshd restart
+    fi
 }
 
 # Remove SSH_USE_STRONG_RNG from environment

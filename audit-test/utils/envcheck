@@ -177,18 +177,27 @@ check_user_session() {
 
 
 ### SUITE LOCATION
-check_suite_loc() {
+check_suite() {
     local CHECK_FAILED
 
     # requires for this check
     [ "$AUDITDIR" ] || return 2
 
+    # check location
     check "[ -d \"$AUDITDIR\" ]"
     check "[ -d \"$AUDITDIR/audit-test\" ]"
     check "[ -d \"$AUDITDIR/ltp\" ]"
 
+    # check mode
     [ -d "$AUDITDIR" ] && \
         check "[ \"$(stat --format=%a "$AUDITDIR")\" = \"755\" ]" 0 "$AUDITDIR has mode 755"
+
+    # check context
+    if [ "$PPROFILE" = "lspp" ]; then
+        local context=$(stat -c%C "$AUDITDIR")
+        check "[ \"$context\" = \"system_u:object_r:lspp_test_dir_t:SystemLow\" ]" 0 \
+            "$AUDITDIR has correct context"
+    fi
 
     if [ "$CHECK_FAILED" ]; then
         echo
@@ -197,7 +206,7 @@ check_suite_loc() {
         echo "Please install/extract the suite according to README.run."
         return 1
     else
-        check_suite_loc_ok=1
+        check_suite_ok=1
     fi
 }
 
@@ -350,7 +359,7 @@ check_kvm() {
     local CHECK_FAILED
 
     # requires for this check
-    [ "$AUDITDIR" -a "$check_suite_loc_ok" ] || return 2
+    [ "$AUDITDIR" -a "$check_suite_ok" ] || return 2
     [ "$(uname -m)" = "x86_64" ] || {
         echo "KVM tests not supported on $(uname -m) architecture"
         return 2
@@ -388,7 +397,7 @@ check_kvm() {
 CHECKS="
 check_variables
 check_user_session
-check_suite_loc
+check_suite
 check_networking_if
 check_networking_probe
 check_services

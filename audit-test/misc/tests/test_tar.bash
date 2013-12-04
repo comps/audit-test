@@ -20,13 +20,14 @@
 #  FILE   : test_tar.bash
 #
 #  TEST DESCRIPTION: Verify that the tar program preserves file security
-#		     contexts. Pack up files with various contexts using tar,
-#		     unpack them in another directory, and compare the file
-#		     contexts using ls -Z.  The file contexts should all
-# 		     be preserved.
+#		     (SELinux) contexts and ACLs. Pack up files with various
+#		     attributes using tar, unpack them in another directory
+#		     and compare the file contexts and ACLs. Both the file
+#		     contexts and ACLs should all be preserved.
 #
 #  HISTORY:  05/2007  created by Lisa Smith <lisa.m.smith@hp.com>
 #            08/2011  ported to audit-test by Tony Ernst <tee@sgi.com>
+#            10/2013  added ACL testing by Jiri Jaburek <jjaburek@redhat.com>
 #
 #############################################################################
 source misc_functions.bash || exit 2
@@ -55,8 +56,12 @@ chcon -t tmp_t -l SystemLow $FILE_DIR/fileLow || exit_fail
 chmod 744 $FILE_DIR/fileSecret || exit_fail
 chcon -t bin_t -l Secret $FILE_DIR/fileSecret || exit_fail
 
+# Add some ACL entries to one of the files
+setfacl -n -m u:1234:rwx $FILE_DIR/fileSecret
+setfacl -n -m g:4321:--x $FILE_DIR/fileSecret
+
 # Pack up the files in the test_files directory
-tar cf $TAR_FILE --xattrs -H posix -C $FILE_DIR .
+tar cf $TAR_FILE --selinux --acls -H posix -C $FILE_DIR .
 
 # Verify the files were successfully packed
 if [ $? != 0 ]; then
@@ -64,7 +69,7 @@ if [ $? != 0 ]; then
 fi
 
 # Unpack the files
-tar xvf $TAR_FILE --xattrs -C $EXTRACT_DIR
+tar xvf $TAR_FILE --selinux --acls -C $EXTRACT_DIR
 if [ $? != 0 ]; then
 	exit_error "Error unpacking tar archive"
 fi
@@ -76,5 +81,9 @@ diff $FILE_DIR.list $EXTRACT_DIR.list
 if [ $? != 0 ]; then
         exit_fail "tar did not preserve correct files and/or security contexts"
 fi
+
+# Check ACLs
+getfacl $EXTRACT_DIR/fileSecret | grep user:1234:rwx || exit_fail
+getfacl $EXTRACT_DIR/fileSecret | grep group:4321:--x || exit_fail
 
 exit_pass

@@ -78,7 +78,7 @@ verify:
 		echo "not installed"; \
 	fi;
 	@echo -n " Number of LSPP test files labeled incorrectly: "; \
-	fixfiles -l /dev/stdout check $(TEST_BASEDIR) | wc -l;
+	restorecon -rvn $(TEST_BASEDIR) | wc -l;
 
 # During this install a role is added to an SELinux user which we use 
 # as a positive test of semanage.  If this did not work correctly the 

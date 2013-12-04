@@ -30,16 +30,10 @@ TOPDIR		= .
 
 include $(TOPDIR)/rules.mk
 
-RUN_LOG = run.log
-ROLLUP_LOG = rollup.log
-
 LTP_BASE = ltp-full
 LTP_BASE_PATH = $(CURDIR)/$(LTP_BASE)
 PATCH_DIR = $(CURDIR)/patch
 MDIR = $(CURDIR)
-
-LTP_ROLLUP_LOG = .rollup.log
-LTP_RUN_LOG = .run.log
 
 LTP_FULL = ltp-full.tar.bz2
 LTP_SOURCE = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20110915/ltp-full-20110915.bz2/download
@@ -89,11 +83,15 @@ clean::
 	echo "Makefile: clean"
 	# remove installed ltp
 	rm -rf /opt/ltp
-	# remove all logs, downloaded and created files/dirs
-	rm -f cc_ospp$(LTP_ROLLUP_LOG) cc_ospp$(LTP_RUN_LOG)
-	rm -f syscalls$(LTP_ROLLUP_LOG) syscalls$(LTP_RUN_LOG)
-	rm -f mnt_syscalls$(LTP_ROLLUP_LOG) mnt_syscalls$(LTP_RUN_LOG)
-	rm -f $(LTP_FULL) $(RUN_LOG) $(ROLLUP_LOG)
+	# remove logs
+	for logtype in rollup run; do \
+		for testset in syscalls cc_ospp mnt_syscalls; do \
+			rm -f "$$testset.$$logtype.log"; \
+		done; \
+	done; \
+	rm -f ltp.rollup.log ltp.run.log
+	# remove downloaded and created files/dirs
+	rm -f $(LTP_FULL)
 	rm -rf $(LTP_BASE)
 
 download::
@@ -113,28 +111,39 @@ runtests::
 	sysctl kernel.msgmni=700
 	# run tests
 	echo "Running syscalls tests"
-	/opt/ltp/testscripts/syscalls.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/syscalls$(LTP_ROLLUP_LOG) 2>&1 | tee syscalls$(LTP_RUN_LOG)
+	/opt/ltp/testscripts/syscalls.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/syscalls.rollup.log 2>&1 | tee syscalls.run.log
 	echo "Running cc_ospp tests"
-	/opt/ltp/testscripts/cc_ospp.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/cc_ospp$(LTP_ROLLUP_LOG) 2>&1 | tee cc_ospp$(LTP_RUN_LOG)
+	/opt/ltp/testscripts/cc_ospp.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/cc_ospp.rollup.log 2>&1 | tee cc_ospp.run.log
 	echo "Running mnt_syscalls tests"
-	/opt/ltp/testscripts/mnt_syscalls.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/mnt_syscalls$(LTP_ROLLUP_LOG) 2>&1 | tee mnt_syscalls$(LTP_RUN_LOG)
+	/opt/ltp/testscripts/mnt_syscalls.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/mnt_syscalls.rollup.log 2>&1 | tee mnt_syscalls.run.log
 	# cleanup
 	setsebool allow_execmem=$(ORIG_BOOL)
 	sysctl kernel.msgmni=$(ORIG_KPARAM)
 
 report::
 	echo "Makefile: report"
-	# create rollup.log
-	echo "TESTS PASSED = "$$(grep PASS cc_ospp$(LTP_ROLLUP_LOG) syscalls$(LTP_ROLLUP_LOG) mnt_syscalls$(LTP_ROLLUP_LOG) 2>&1 | wc -l) > $(ROLLUP_LOG)
-	echo "      FAILED =" $$(grep FAIL cc_ospp$(LTP_ROLLUP_LOG) syscalls$(LTP_ROLLUP_LOG) mnt_syscalls$(LTP_ROLLUP_LOG) 2>&1 | wc -l) >> $(ROLLUP_LOG)
-	echo >> $(ROLLUP_LOG)
-	if [ "x$$(grep FAIL cc_ospp$(LTP_ROLLUP_LOG) syscalls$(LTP_ROLLUP_LOG) mnt_syscalls$(LTP_ROLLUP_LOG) 2>&1 | wc -l)" != "x0" ]; then \
-		echo "Failed tests:" >> $(ROLLUP_LOG); \
-		echo "-------------" >> $(ROLLUP_LOG); \
-		grep -H "\WFAIL\W" cc_ospp$(LTP_ROLLUP_LOG) syscalls$(LTP_ROLLUP_LOG) mnt_syscalls$(LTP_ROLLUP_LOG) >> $(ROLLUP_LOG); \
-	fi
-	# create run.log
-	cat cc_ospp$(LTP_RUN_LOG) syscalls$(LTP_RUN_LOG) mnt_syscalls$(LTP_RUN_LOG) > $(RUN_LOG)
+	@for logtype in rollup run; do \
+		for testset in syscalls cc_ospp mnt_syscalls; do \
+			echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
+			printf "::: %-52s :::\n" "$$testset"; \
+			echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
+			echo; \
+			if [ -f "$$testset.$$logtype.log" ]; then cat "$$testset.$$logtype.log"; fi; \
+			echo; \
+		done &> ltp.$$logtype.log; \
+	done; \
+	{ \
+		echo "Summary:"; \
+		echo "--------"; \
+		echo; \
+		echo "TESTS PASSED = $$(sort -u < ltp.rollup.log | grep -c ' PASS ')"; \
+		echo "      FAILED = $$(sort -u < ltp.rollup.log | grep -c ' FAIL ')"; \
+		echo; \
+		echo "Failed tests:"; \
+		echo "-------------"; \
+		cat ltp.rollup.log | grep ' FAIL '; \
+	} 2>&1 >> ltp.rollup.log; \
+	exit 0
 
 dist:
 	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \

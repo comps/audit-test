@@ -23,6 +23,19 @@
 # the prerequisities for audit-test suite run met.
 # This ranges from initial environment variable checking to ensuring proper
 # routing between TOE and NS.
+#
+
+# The idea is to catch various configuration or setup errors
+# and give useful hints, so that the user doesn't have to debug
+# the system/suite to find out what could possibly go wrong.
+#
+# This script is not supposed to replace or duplicate functionality
+# provided by the suite itself, it should be only used for basic sanity
+# verification of the environment. It doesn't claim to reveal all
+# configuration errors, but it can still be useful.
+#
+# Because of the reasons mentioned above, running this script
+# is purely optional.
 
 ## COLORS
 #

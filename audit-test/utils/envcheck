@@ -173,7 +173,8 @@ check_rpm_deps() {
     local rpms="binutils cpp flex make gcc gcc-c++ glibc-devel libattr-devel \
                 libstdc++-devel libcap-devel \
                 audit-libs-devel expect libselinux-devel perl-devel \
-                perl-Expect perl-IO-Tty selinux-policy-devel xfsprogs-devel"
+                perl-Expect perl-IO-Tty selinux-policy-devel xfsprogs-devel \
+                libseccomp-devel"
 
     for rpm in $rpms; do
         check "rpm -q \"$rpm\"" 0 "rpm package $rpm is installed"

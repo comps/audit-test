@@ -56,10 +56,10 @@ cat > $LABELED << EOF
 %%DocumentData: Clean7Bit
 %%DocumentSuppliedResources: procset bannerprint/1.0
 %%DocumentNeededResources: font Helvetica Helvetica-Bold Times-Roman
-%%Creator: Michael Sweet, Easy Software Products
-%%CreationDate: May 10, 2000
-%%Title: Test Page
-%%For: (root)
+
+
+
+
 %RBINumCopies: 1
 %%Pages: (atend)
 %%BoundingBox: (atend)
@@ -376,11 +376,13 @@ userdict/showpage/ESPshowpage load put
 %!PS-Adobe-3.0
 %%BoundingBox: 12 12 600 780
 %%Pages: 1
-%%For: (root)
-%%Title: (hello-world.ps)
+
+
 %RBINumCopies: 1
 %%EndComments
 %%BeginProlog
+userdict/ESPshowpage/showpage load put
+userdict/showpage{}put
 %%EndProlog
 %%BeginSetup
 % Disable CTRL-D as an end-of-file marker...
@@ -410,7 +412,22 @@ neg 0 rlineto closepath fill grestore}bind}ifelse put
 userdict/ESPrs/rectstroke where{pop/rectstroke load}
 {{gsave newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
 neg 0 rlineto closepath stroke grestore}bind}ifelse put
-userdict/ESPwl{}bind put
+userdict/ESPpa(SystemLow-SystemHigh)put
+userdict/ESPlf /Nimbus-Mono findfont 12 scalefont put
+userdict/ESPwl{
+  ESPlf setfont
+  ESPpa stringwidth pop dup 12 add exch -0.5 mul 306 add
+ 
+  1 setgray
+  dup 6 sub 10 3 index 22 ESPrf
+  dup 6 sub 758 3 index 20 ESPrf
+  0 setgray
+  dup 6 sub 10 3 index 22 ESPrs
+  dup 6 sub 758 3 index 20 ESPrs
+  dup 18 moveto ESPpa show
+  766 moveto ESPpa show
+  pop
+}bind put
 %%EndSetup
 %%Page: 1 1
 %%BeginPageSetup
@@ -429,16 +446,22 @@ newpath			% Start a new path
 
 showpage
 %%EndDocument
+gsave
+ESPwl
+grestore
+ESPshowpage
+userdict/showpage/ESPshowpage load put
+
 %%EOF
 %!PS-Adobe-3.0
 %%LanguageLevel: 1
 %%DocumentData: Clean7Bit
 %%DocumentSuppliedResources: procset bannerprint/1.0
 %%DocumentNeededResources: font Helvetica Helvetica-Bold Times-Roman
-%%Creator: Michael Sweet, Easy Software Products
-%%CreationDate: May 10, 2000
-%%Title: Test Page
-%%For: (root)
+
+
+
+
 %RBINumCopies: 1
 %%Pages: (atend)
 %%BoundingBox: (atend)
@@ -753,6 +776,7 @@ userdict/showpage/ESPshowpage load put
 %%BoundingBox: 0 0 612 792
 %%EOF
 EOF
+
 # add an EOF for good measure, but no linefeed
 echo -n  >> $LABELED
 

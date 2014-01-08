@@ -100,23 +100,14 @@ function delete_printer {
 }
 
 function setup_cupsd {
-    # if everything appears to be right, assume it is
-    /sbin/service cups status
-    if [ $? -eq 0 \
-         -a "x$(grep -i ^Classification /etc/cups/cupsd.conf | awk '{print $2}')" == "xmls" \
-         -a "x$(grep -i ^PerPageLabels /etc/cups/cupsd.conf | awk '{print $2}')" == "xyes" ]; then
-        return
-    fi
+    # if cups is running just return
+    /sbin/service cups status && return
 
-    backup /etc/cups/cupsd.conf
+    # try to start cups if not running
     restart_service cups
 
-    sed -ie "s/Classification.*/Classification mls/" /etc/cups/cupsd.conf
-    sed -ie "s/.*PerPageLabels.*/PerPageLabels no/" /etc/cups/cupsd.conf
-
-    restart_service cups
+    # cannot start cups = error
     /sbin/service cups status || exit_error "cupsd is not running"
-
 }
 
 # Set next job id to a value

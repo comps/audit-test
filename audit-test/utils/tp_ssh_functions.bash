@@ -1,5 +1,5 @@
 ###############################################################################
-#   Copyright (c) 2011 Red Hat, Inc. All rights reserved.
+#   Copyright (c) 2011, 2014 Red Hat, Inc. All rights reserved.
 #
 #   This copyrighted material is made available to anyone wishing
 #   to use, modify, copy, or redistribute it /bin/subject to the terms
@@ -19,7 +19,7 @@
 # AUTHOR: Miroslav Vadkerti <mvadkert@redhat.com>
 #
 # DESCRIPTION:
-# SSH helper functions
+# Various SSH helper functions mainly for crypto bucket.
 #
 
 source functions.bash || exit 2
@@ -30,6 +30,13 @@ BFOLDER="/tmp"
 RND=$RANDOM
 # default expect timeout 10 minutes - in case of not enough entropy
 TIMEOUT=600
+# ssh log location from rsyslog.conf
+SSHDLOG=$(grep ^authpriv /etc/rsyslog.conf | awk '{print $2}')
+
+# Get ssh log mark used to limit grep in sshd
+function get_sshdlog_mark() {
+    echo "$(stat -c %s $SSHDLOG)"
+}
 
 # Remove SSH_USE_STRONG_RNG from environment
 function ssh_remove_strong_rng_env {
@@ -41,7 +48,7 @@ function ssh_remove_strong_rng_env {
 # Does nothing if given file does not exist
 # $1 - file
 function ssh_remove_strong_rng {
-    [ "x$1" = "x" ] && exit_error "No file given for $FUNCNAME"
+    [ -z "$1" ] && exit_error "No file given for $FUNCNAME"
     [ -f $1 ] || return
 
     sed -i "s/.*SSH_USE_STRONG_RNG.*//g" $1
@@ -51,7 +58,7 @@ function ssh_remove_strong_rng {
 # Does nothing if given file does not exist
 # $1 - file
 function ssh_remove_screen {
-    [ "x$1" = "x" ] && exit_error "No file given for $FUNCNAME"
+    [ -z "$1" ] && exit_error "No file given for $FUNCNAME"
     [ -f $1 ] || return
 
     sed -i "s/.*sleep [0-9]\+.*//g; s/.*exec.*SCREENEXEC.*//g" $1
@@ -62,7 +69,7 @@ function ssh_remove_screen {
 # $1 - user
 function ssh_backup_home {
     # check if required user specified
-    [ "x$1" = "x" ] && exit_error "Error: no user given for $FUNCNAME"
+    [ -z "$1" ] && exit_error "Error: no user given for $FUNCNAME"
 
     # if nothing to backup bail out
     /bin/su - -c "test -d .ssh" $1 || return
@@ -74,15 +81,39 @@ function ssh_backup_home {
         exit_error "Error creating .ssh backup $BFILE"
 }
 
-# Wipe the .ssh directory of the specified user.
-# $1 - user
+# Cleanup keys or the whole .ssh directory of the specified user.
+# If -c passed as first parameter user is currentuser use the current user.
+# $1 - user or -c
 # $2 - password
+# $3 - optional key to cleanup
 function ssh_cleanup_home {
-    # check if required parameters specified
-    [ "x$1" = "x" ] && exit_error "Error: no user given for $FUNCNAME"
-    [ "x$2" = "x" ] && exit_error "Error: no password given for $FUNCNAME"
+    if [ "$1" = "-r" ]; then
+        # check required paramaters
+        [[ -n "$2" ]] && [[ ! "$2" =~ (ecdsa|dsa|rsa) ]] && \
+            error "Error: uknown key type $2 for $FUNCNAME"
 
-    ssh_cmd $1 $2 "rm -rf .ssh"
+        # backup .ssh or specified public/private keys
+        if [ -n "$2" ]; then
+            backup ~/.ssh/id_$2{,.pub}
+            rm -f ~/.ssh/id_$2{,.pub}
+        else
+            backup ~/.ssh
+            rm -rf ~/.ssh
+        fi
+    else
+        # check required parameters
+        [ -z "$1" ] && exit_error "Error: no user given for $FUNCNAME"
+        [ -z "$2" ] && exit_error "Error: no password given for $FUNCNAME"
+        [[ -n "$3" ]] && [[ ! "$3" =~ (ecdsa|dsa|rsa) ]] && \
+            error "Error: uknown key type $3 for $FUNCNAME"
+
+        # backup .ssh or specified public/private keys
+        if [ -n "$3" ]; then
+            ssh_cmd $1 $2 "rm -f .ssh/id_$3{,.pub}"
+        else
+            ssh_cmd $1 $2 "rm -rf .ssh"
+        fi
+    fi
 }
 
 # Restore the .ssh directory of the specified user.
@@ -90,7 +121,7 @@ function ssh_cleanup_home {
 # $1 - user
 function ssh_restore_home {
     # check if required user specified
-    [ "x$1" = "x" ] && exit_error "Error: no user given for $FUNCNAME"
+    [ -z "$1" ] && exit_error "Error: no user given for $FUNCNAME"
 
     # wipe the .ssh folder
     /bin/su - -c "rm -rf .ssh" $1
@@ -108,31 +139,40 @@ function ssh_restore_home {
     rm -f $BFILE
 }
 
-# Create auth key for ssh with no password in default location
+# Create auth key for ssh with given or none passphrase in default location
 # $1 - user
 # $2 - user password
 # $3 - type (rsa/dsa)
 # $4 - number of bits in the key
 # $5 - passphrase for key (optional)
 function ssh_create_key {
-    # check if required user specified
-    [ "x$1" = "x" ] && exit_error "Error: no user given for $FUNCNAME"
-    [ "x$2" = "x" ] && exit_error "Error: no password given for $FUNCNAME"
-    [ "x$3" = "x" ] && exit_error "Error: no key type given for $FUNCNAME"
-    [ "x$4" = "x" ] && exit_error "Error: no key size given for $FUNCNAME"
+    if [ "$1" = "-r" ]; then
+        [ -z "$2" ] && exit_error "Error: no key type given for $FUNCNAME"
+        [ -z "$3" ] && exit_error "Error: no key size given for $FUNCNAME"
 
-    # generate the keys
-    expect -c "set timeout $TIMEOUT
-        spawn ssh $1@localhost \"ssh-keygen -t $3 -b $4 -N '$5' -f \\\$(pwd)/.ssh/id_$3\"
-        expect {
-            {yes/no} { send -- \"yes\r\"; exp_continue }
-            {assword:} { send -- \"$2\r\" }
-            default { exit 1 }
-        }
-        expect {randomart} { exit 0 }
-        exit 2"
+        # generate the requested keys for running user
+        ssh-keygen -t $2 -b $3 -N "$4" -f $HOME/.ssh/id_$2
+    else
+        # check if required user specified
+        [ -z "$1" ] && exit_error "Error: no user given for $FUNCNAME"
+        [ -z "$2" ] && exit_error "Error: no password given for $FUNCNAME"
+        [ -z "$3" ] && exit_error "Error: no key type given for $FUNCNAME"
+        [ -z "$4" ] && exit_error "Error: no key size given for $FUNCNAME"
 
-    [ $? -ne 0 ] && exit_fail "Cannot create $3 key"
+        # generate the keys
+        expect -c "set timeout $TIMEOUT
+            spawn ssh $1@localhost \"ssh-keygen -t $3 -b $4 -N '$5' -f \\\$(pwd)/.ssh/id_$3\"
+            expect {
+                {yes/no} { send -- \"yes\r\"; exp_continue }
+                {assword:} { send -- \"$2\r\"; exp_continue }
+                {randomart} {
+                    expect eof { exit 0 }
+                    default { exit 1 }
+                }
+                default { exit 1 }
+            }"
+    fi
+    return $?
 }
 
 # Check ssh key for correct cipher and key length using openssl
@@ -141,37 +181,43 @@ function ssh_create_key {
 # $4 - number of bits in the key
 function ssh_check_key {
     # check if required user specified
-    [ "x$1" = "x" ] && exit_error "Error: no user given for $FUNCNAME"
-    [ "x$2" = "x" ] && exit_error "Error: no password given for $FUNCNAME"
-    [ "x$3" = "x" ] && exit_error "Error: no key type given for $FUNCNAME"
-    [ "x$4" = "x" ] && exit_error "Error: no key size given for $FUNCNAME"
+    [ -z "$1" ] && exit_error "Error: no user given for $FUNCNAME"
+    [ -z "$2" ] && exit_error "Error: no password given for $FUNCNAME"
+    [ -z "$3" ] && exit_error "Error: no key type given for $FUNCNAME"
+    [ -z "$4" ] && exit_error "Error: no key size given for $FUNCNAME"
 
     # check key
-    ssh_cmd $1 $2 "openssl $3 -in /home/$1/.ssh/id_$3 -text" | grep "$4 bit" || \
+    [ "$3" = "ecdsa" ] && cryptalg="ec" || cryptalg=$3
+    ssh_cmd $1 $2 "openssl $cryptalg -in /home/$1/.ssh/id_$3 -text" | grep "$4 bit" || \
         exit_fail "Key /home/$1/.ssh/id_$3 has incorrect size"
 }
 
 
 # Run command via ssh.
 # $1 - user
-# $2 - password
+# $2 - pas
 # $3 - cmd
+# return value - return value of cmd
 function ssh_cmd {
     # check if required params specified
-    [ "x$1" = "x" ] && exit_error "Error: no user for $FUNCNAME"
-    [ "x$2" = "x" ] && exit_error "Error: no password for $FUNCNAME"
-    [ "x$3" = "x" ] && exit_error "Error: no comamnd for $FUNCNAME"
+    [ -z "$1" ] && exit_error "Error: no user for $FUNCNAME"
+    [ -z "$2" ] && exit_error "Error: no password for $FUNCNAME"
+    [ -z "$3" ] && exit_error "Error: no comamnd for $FUNCNAME"
 
     expect -c "set timeout $TIMEOUT
         spawn ssh $1@localhost \"$3\"
         expect {
             {yes/no} { send -- yes\r; exp_continue }
             {assword:} { send -- $2\r }
+            eof { catch wait result; exit [lindex \$result 3] }
         }
-        expect eof { exit 0 }
+        expect {
+            eof { catch wait result; exit [lindex \$result 3] }
+            {assword:} { exit 2 }
+        }
         exit 1"
 
-    [ $? -ne 0 ] && exit_fail "Failed to run $3 as $1"
+    return $?
 }
 
 # Run command via ssh as root in mls mode.
@@ -179,7 +225,7 @@ function ssh_cmd {
 function ssh_mls_cmd {
 
     # check if required params specified
-    [ "x$1" = "x" ] && exit_error "Error: no comamnd for $FUNCNAME"
+    [ -z "$1" ] && exit_error "Error: no comamnd for $FUNCNAME"
 
     local M="${RANDOM}${RANDOM}${RANDOM}"
 
@@ -201,7 +247,7 @@ function ssh_mls_cmd {
         {assword} { send -- \"$PASSWD\r\" }
         default { exit 1 }
       }
-      expect {root} { send -- \"$1 && (echo -n $M && echo PASS) || (echo -n &M && echo FAIL)\r\" }
+      expect {root} { send -- \"$1 && (echo -n $M && echo PASS) || (echo -n $M && echo FAIL)\r\" }
       expect {
         {${M}PASS} { exit 0 }
         {${M}FAIL} { exit 1 }
@@ -218,11 +264,12 @@ function ssh_mls_cmd {
 # $1 - user
 # $2 - password
 # $3 - type (rsa/dsa)
+# $4 - optional - if any string specified check also authorized keys
 function ssh_check_home {
     # check if required params specified
-    [ "x$1" = "x" ] && exit_error "Error: no user for $FUNCNAME"
-    [ "x$2" = "x" ] && exit_error "Error: no password for $FUNCNAME"
-    [ "x$3" = "x" ] && exit_error "Error: no key type for $FUNCNAME"
+    [ -z "$1" ] && exit_error "Error: no user for $FUNCNAME"
+    [ -z "$2" ] && exit_error "Error: no password for $FUNCNAME"
+    [ -z "$3" ] && exit_error "Error: no key type for $FUNCNAME"
 
     # check permissions
     ssh_cmd $1 $2 "stat -c '%a' /home/$1/.ssh" | grep 700 || \
@@ -239,6 +286,13 @@ function ssh_check_home {
         exit_fail "File id_$3 has bad SELinux context"
     ssh_cmd $1 $2 "stat -c '%C' /home/$1/.ssh/id_$3.pub" | grep ssh_home_t || \
         exit_fail "File id_$3.pub has bad SELinux context"
+
+    if [ -n "$4" ]; then
+        ssh_cmd $1 $2 "stat -c '%a' /home/$1/.ssh/authorized_keys" | grep 600 || \
+            exit_fail "File authorized_keys has bad permissions"
+        ssh_cmd $1 $2 "stat -c '%C' /home/$1/.ssh/authorized_keys" | grep ssh_home_t || \
+            exit_fail "File authorized_keys has bad SELinux context"
+    fi
 }
 
 # Copy key from user1 to user2 using ssh-copy-id and test if successful
@@ -248,26 +302,46 @@ function ssh_check_home {
 # $4 - destination user password
 # $5 - rsa/dsa - specifies key to copy from .ssh folder
 function ssh_copy_key {
-    # check if required params specified
-    [ "x$1" = "x" ] && exit_error "Error: no src user for $FUNCNAME"
-    [ "x$2" = "x" ] && exit_error "Error: no src user password for $FUNCNAME"
-    [ "x$3" = "x" ] && exit_error "Error: no dst user for $FUNCNAME"
-    [ "x$4" = "x" ] && exit_error "Error: no dst user password for $FUNCNAME"
-    [ "x$5" = "x" ] && exit_error "Error: no key for $FUNCNAME"
+    if [ "$1" = "-r" ]; then
+        # check if required params specified
+        [ -z "$2" ] && exit_error "Error: no dst user for $FUNCNAME" || \
+            local DUSR=$2
+        [ -z "$3" ] && exit_error "Error: no dst user password for $FUNCNAME" || \
+            local DPASS=$3
+        [ -z "$4" ] && exit_error "Error: no key for $FUNCNAME" || \
+            local DKEY=$4
+    else
+        # check if required params specified
+        [ -z "$1" ] && exit_error "Error: no src user for $FUNCNAME" || \
+            local SUSR=$1
+        [ -z "$2" ] && exit_error "Error: no src user password for $FUNCNAME" || \
+            local SPASS=$2
+        [ -z "$3" ] && exit_error "Error: no dst user for $FUNCNAME" || \
+            local DUSR=$3
+        [ -z "$4" ] && exit_error "Error: no dst user password for $FUNCNAME" || \
+            local DPASS=$4
+        [ -z "$5" ] && exit_error "Error: no key for $FUNCNAME" || \
+            local DKEY=$5
+    fi
 
     # copy key from user1 to user2
-    PRIVKEY="/home/$1/.ssh/id_$5"
+    [ -n "$SUSR" ] && PRIVKEY="/home/$SUSR/.ssh/id_$DKEY" || \
+        PRIVKEY="$HOME/.ssh/id_$DKEY"
     expect -c "set timeout $TIMEOUT
-        spawn ssh $1@localhost
-        expect {
-            {yes/no} { send -- yes\r; exp_continue }
-            {assword:} { send -- $2\r }
+        if {\"$SUSR\" ne \"\"} {
+            spawn ssh $1@localhost
+            expect {
+                {yes/no} { send -- yes\r; exp_continue }
+                {assword:} { send -- $2\r; exp_continue }
+                {$1}
+            }
+            send -- \"ssh-copy-id -i $PRIVKEY $DUSR@localhost\r\"
+        } else {
+            spawn ssh-copy-id -i $PRIVKEY $DUSR@localhost
         }
-        expect {$1}
-        send -- \"ssh-copy-id -i $PRIVKEY $3@localhost\r\"
         expect {
             {yes/no} { send -- yes\r; exp_continue }
-            {assword:} { send -- $4\r }
+            {assword:} { send -- $DPASS\r }
             default { exit 1 }
         }
         expect {try logging}
@@ -275,39 +349,49 @@ function ssh_copy_key {
         expect eof { exit 0 }
         exit 2"
 
-    [ $? -ne 0 ] && exit_fail "Failed to copy $PRIVKEY from $1 to $3"
+    [ $? -ne 0 ] && exit_fail "Failed to copy $PRIVKEY from ${SUSR:-$USER} to $DUSR"
 }
 
-# Connect from user1 to user2 without password and test if successful
+# Connect from user1 to user2 with pubkey authentication and test if successful
 # $1 - source user
 # $2 - source user password
 # $3 - destination user
 # $4 - key passphrase (optional)
-function ssh_connect_nopass {
+# return value - 0 on success
+#                1 if connecting to unknown host
+#                2 if for password asked
+#                3 if timeout
+#                4 should never happen
+#                5 if permission denied on pubkey only auth
+#                6 if account expired
+function ssh_connect_key {
     # check if required params specified
-    [ "x$1" = "x" ] && exit_error "Error: no src user for $FUNCNAME"
-    [ "x$2" = "x" ] && exit_error "Error: no src user password for $FUNCNAME"
-    [ "x$3" = "x" ] && exit_error "Error: no dst user for $FUNCNAME"
+    [ -z "$1" ] && exit_error "Error: no src user for $FUNCNAME"
+    [ -z "$2" ] && exit_error "Error: no src user password for $FUNCNAME"
+    [ -z "$3" ] && exit_error "Error: no dst user for $FUNCNAME"
 
     # connect from user $1 to user $3
     expect -c "set timeout $TIMEOUT
         spawn ssh $1@localhost
         expect {
             {yes/no} { send -- yes\r; exp_continue }
-            {assword:} { send -- $2\r }
+            {assword:} { send -- $2\r; exp_continue }
+            {$1}
         }
-        expect {$1}
-        send -- \"ssh $3@localhost whoami\r\"
+        send -- \"ssh -o PasswordAuthentication=no $3@localhost whoami\r\"
         expect {
             {yes/no} { exit 1 }
-            {$3} { exit 0 }
+            -re \"$3\\\r\" { exit 0 }
             {assword:} { exit 2 }
-            {passphrase} { send -- $4; exp_continue }
+            {passphrase} { send -- $4\r; exp_continue }
+            {Permission denied (publickey)} { exit 5 }
+            {Your account has expired} { exit 6 }
             default { exit 3 }
         }
         exit 4"
 
-    [ $? -ne 0 ] && exit_fail "$FUNCNAME: Failed to connect from $1 to $3"
+    # return exit code of expect
+    return $?
 }
 
 # Connect from user1 to user2 with password and test if successful
@@ -316,35 +400,55 @@ function ssh_connect_nopass {
 # $3 - destination user
 # $4 - destination user password
 # $5 - optional string passed to ssh
-# return value - 0 on success / other fail
+# return value - 0 success
+#                1 other timeout
+#                2 permission denied
+#                3 unable to negotiate key exchange method
+#                4 account expired
+#                5 no matching mac found
+#                6 no matching cipher found
+#                7 no host key known
+#                8 uknown cipher type
+#                9 read from socket failed
+#               10 unexpected eof
 function ssh_connect_pass {
     # check if required params specified
-    [ "x$1" = "x" ] && exit_error "Error: no src user for $FUNCNAME"
-    [ "x$2" = "x" ] && exit_error "Error: no src user password for $FUNCNAME"
-    [ "x$3" = "x" ] && exit_error "Error: no dst user for $FUNCNAME"
-    [ "x$4" = "x" ] && exit_error "Error: no dst user password for $FUNCNAME"
+    [ -z "$1" ] && exit_error "Error: no src user for $FUNCNAME"
+    [ -z "$2" ] && exit_error "Error: no src user password for $FUNCNAME"
+    [ -z "$3" ] && exit_error "Error: no dst user for $FUNCNAME"
+    [ -z "$4" ] && exit_error "Error: no dst user password for $FUNCNAME"
 
     # connect from user $1 to user $3
     expect -c "set timeout $TIMEOUT
         spawn ssh $1@localhost
         expect {
+            {Read from socket failed} { exit 9 }
             {yes/no} { send -- yes\r; exp_continue }
-            {assword:} { send -- $2\r }
+            {assword:} { send -- $2\r; exp_continue }
+            {no matching mac found} { exit 5 }
+            eof { exit 10 }
+            {$1}
         }
-        expect {$1}
         send -- \"ssh $5 $3@localhost whoami\r\"
         expect {
             {yes/no} { send -- yes\r; exp_continue }
             {assword:} { send -- $4\r }
             {passphrase} { send -- INCORRECTPASS\r; exp_continue }
+            {Unable to negotiate a key exchange method} { exit 3 }
+            {Your account has expired} { exit 4 }
+            {no matching mac found} { exit 5 }
+            {Unknown cipher type} { exit 8 }
+            {no matching cipher found} { exit 6 }
+            -re \"No.*host key is known\" { exit 7 }
+            eof { exit 10 }
             default { exit 1 }
         }
         expect {
+            {Your account has expired} { exit 4 }
             {assword:} { send -- $4\r; exp_continue }
             {Permission denied} { exit 2 }
-            {$3} { exit 0 }
-        }
-        exit 3"
+            -re \"$3\\\r\" { exit 0 }
+        }"
 
     # return expect return value
     return $?
@@ -357,9 +461,9 @@ function ssh_connect_pass {
 # $3 - cipher type (default any)
 function ssh_check_audit {
     # check if required params specified
-    [ "x$1" = "x" ] && exit_error "Error: no log mark given for $FUNCNAME"
-    [ "x$2" = "xfail" ] && FAIL=yes
-    [ "x$3" != "x" ] && GROKCIPHER="msg_1=~$3"
+    [ -z "$1" ] && exit_error "Error: no log mark given for $FUNCNAME"
+    [ "$2" = "fail" ] && FAIL=yes
+    [ -n "$3" ] && local GROKCIPHER="msg_1=~$3"
 
     if [ "x$FAIL" = "xyes" ]; then
         # USER_ERR audit record at unsuccessful login
@@ -387,9 +491,9 @@ function ssh_check_audit {
 # The function also disables the sleep in /etc/profile after
 # login to speed up the testing.
 function disable_ssh_strong_rng {
-    MPROFILE="/etc/profile"
-    SSHDCONF="/etc/sysconfig/sshd"
-    CCCONF="/etc/profile.d/cc-configuration.sh"
+    local MPROFILE="/etc/profile"
+    local SSHDCONF="/etc/sysconfig/sshd"
+    local CCCONF="/etc/profile.d/cc-configuration.sh"
 
     # backup global profile and remove sleep
     [ -e $MPROFILE ] && backup $MPROFILE
@@ -407,4 +511,38 @@ function disable_ssh_strong_rng {
     ssh_remove_strong_rng $CCCONF
 
     restart_service sshd
+}
+
+# This function sets the given option to the given value
+# in ssh config file. If the option already exists it changes
+# the option value.
+# $1 - option to change/add
+# $2 - value of the option
+function sshd_config_set {
+    [ -z "$1" ] && exit_error "Error: no option to change/add er for $FUNCNAME"
+    [ -z "$2" ] && exit_error "Error: no option value for $FUNCNAME"
+
+    local SSHDCONF="/etc/ssh/sshd_config"
+    prepend_cleanup "restart_service sshd"
+    backup $SSHDCONF
+
+    if egrep -q "^$1" $SSHDCONF; then
+        sed -i "s/^$1.*$/$1 $2/g" $SSHDCONF
+    else
+        printf "\n%s %s" "$1" "$2" >> $SSHDCONF
+    fi
+
+    # test if option set correctly
+    egrep -q "^${1}.*$2" $SSHDCONF || \
+        exit_error "Failed to set option in $FUNCNAME"
+
+    restart_service sshd
+}
+
+# Expire password of local user
+function expire_account {
+    [ -z "$1" ] && exit_error "Error: no user given for $FUNCNAME"
+
+    chage -E 0 $1 || exit_error "Failed to expire account $1"
+    prepend_cleanup "chage -E -1 $1"
 }

@@ -72,8 +72,11 @@ function append_cleanup {
 function backup {
     declare f b
     for f in "$@"; do
-	b=$(mktemp "$f.XXXXXX") || exit_error
-	cp -a "$f" "$b" || exit_error
-	prepend_cleanup "mv -f '$b' '$f'"
+    # if the path/file does not exist - skip backup
+    if [ -e "$f" ]; then
+        b=$(mktemp "$f.XXXXXX") || exit_error
+        cp -a "$f" "$b" || exit_error
+        prepend_cleanup "mv -f '$b' '$f'"
+    fi
     done
 }

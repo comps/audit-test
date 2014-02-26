@@ -384,7 +384,8 @@ function ssh_check_audit {
 # and causes it to be restored at the end of the test.  This
 # should only be used for test cases that are using ssh as a
 # test tool and not explicitly testing the rng properties of ssh.
-
+# The function also disables the sleep in /etc/profile after
+# login to speed up the testing.
 function disable_ssh_strong_rng {
     MPROFILE="/etc/profile"
     SSHDCONF="/etc/sysconfig/sshd"
@@ -395,10 +396,8 @@ function disable_ssh_strong_rng {
     [ -e $SSHDCONF ] && backup $SSHDCONF
     [ -e $CCCONF ] && backup $CCCONF
 
+    # remove screen from /etc/profile
     ssh_remove_screen $MPROFILE
-
-    # restart sshd to get default state with SSH_USE_STRONG_RNG enabled
-    restart_service sshd
 
     # remove SSH_USE_STRONG_RNG from environment
     ssh_remove_strong_rng_env

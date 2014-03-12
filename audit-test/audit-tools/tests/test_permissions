@@ -1,0 +1,183 @@
+#!/bin/bash
+###############################################################################
+#   Copyright (c) 2014 Red Hat, Inc. All rights reserved.
+#
+#   This copyrighted material is made available to anyone wishing
+#   to use, modify, copy, or redistribute it subject to the terms
+#   and conditions of the GNU General Public License version 2.
+#
+#   This program is distributed in the hope that it will be
+#   useful, but WITHOUT ANY WARRANTY; without even the implied
+#   warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+#   PURPOSE. See the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public
+#   License along with this program; if not, write to the Free
+#   Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+#   Boston, MA 02110-1301, USA.
+###############################################################################
+#
+# FAU_SAR.1.1 - Audit review
+# FAU_SAR.2 - Restricted audit review
+# FMT_MTD.1(AE|AF|AS|AT) - Management of TSF data
+#
+# AUTHOR: Ondrej Moris <omoris@redhat.com>
+#
+# DESCRIPTION:
+# Test that TSF provides the root user (in MLS mode) with the role auditadm_r
+# with the capability to read all audit information from the audit records;
+# and that TSF prohibits all users read access to the audit records, except
+# those users that have been granted explicit read-access.
+
+source testcase.bash || exit 2
+
+###########
+# HELPERS #
+###########
+
+# Check that given file has given owner, group, acl and SElinux context.
+function file_check {
+
+    local file=$1
+    local owner=$2
+    local group=$3
+    local permissions=$4
+    local secontext=$5
+
+    [[ $PPROFILE == capp ]] && \
+	secontext=$(echo $secontext | awk -F ':' '{print $1":"$2":"$3 }')
+
+    f_permissions=$(ls -lZ $file | awk '{print $1}')
+    f_owner=$(ls -lZ $file | awk '{print $2}')
+    f_group=$(ls -lZ $file | awk '{print $3}')
+    f_secontext=$(ls -lZ $file | awk '{print $4}')
+
+    [[ $PPROFILE == capp ]] && \
+	f_secontext=$(echo $f_secontext | awk -F ':' '{print $1":"$2":"$3 }')
+
+    [ "$f_permissions" == "$permissions" ] || \
+	exit_fail "$file has incorrect permissions ($f_permissions)"
+
+    [ "$f_owner" == "$owner" ] || [ "$f_group" == "$group" ] || \
+	exit_fail "$file is not owned by $owner:$group"
+
+    [ "$f_secontext" == "$secontext" ] || \
+	exit_fail "$file is has incorrect SELinux context ($f_secontext)"
+
+    return 0
+}
+
+###########
+# GLOBALS #
+###########
+
+audit_log=/var/log/audit/audit.log
+audit_conf=/etc/audit/auditd.conf
+audit_rules=$(find /etc/audit/ -regex '.*rules$')
+
+#########
+# TESTS #
+#########
+
+# Verify that files containing audit records, configuration and rules i
+# are owned by root:root and only root has permissions to read (applies
+# to audit recors only) or write them.
+
+file_check $audit_log root root "-rw-------." \
+    "system_u:object_r:auditd_log_t:SystemHigh"
+
+for F in $audit_conf $audit_rules; do
+    file_check $F root root "-rw-r-----." \
+	"system_u:object_r:auditd_etc_t:SystemHigh"
+done
+
+# Verify that root with auditadm_r role can read audit records
+# either directly or via ausearch command and that it cannot
+# do so with sysadm_r or staff_r roles (MLS only).
+
+date_mark="$(date +%s)"
+auditctl -m "test+$date_mark"
+if [[ $PPROFILE == lspp ]] ; then
+
+    # check that root is able to take auditadm_r role
+    if semanage user -l | grep root | grep -q auditadm_r; then
+
+	# root with auditadm_r role
+	runcon "root:auditadm_r:auditadm_t:SystemLow-SystemHigh" \
+	    grep "test+$date_mark" $audit_log || \
+	    exit_fail "root/auditadm_r should be able to read $audit_log"
+	runcon "root:auditadm_r:auditadm_t:SystemLow-SystemHigh" \
+	    ausearch -m USER | grep "test+$date_mark" || \
+	    exit_fail "root/auditadm_r should be able to ausearch $audit_log"
+    else
+	exit_fail "Root has no auditadm_r role assigned!"
+    fi
+
+    # check that root is able to take sysadm_r role
+    if semanage user -l | grep root | grep -q sysadm_r; then
+
+	# root with sysadm_r role
+	runcon "staff_u:sysadm_r:sysadm_t:SystemLow-SystemHigh" \
+	    grep "test+$date_mark" $audit_log && \
+	    exit_fail "root/sysadm_r should not be able to read $audit_log"
+	runcon "staff_u:sysadm_r:sysadm_t:SystemLow-SystemHigh" \
+	    ausearch -m USER | grep "test+$date_mark" && \
+	    exit_fail "root/sysadm_r should not be able to ausearch $audit_log"
+    fi
+
+    # check that root is able to take staff_r role
+    if semanage user -l | grep root | grep -q staff_r; then
+
+	# root with staff_r role
+	runcon "staff_u:staff_r:staff_t:SystemLow-SystemHigh" \
+	    grep "test+$date_mark" $audit_log && \
+	    exit_fail "root/sysadm_r should not be able to read $audit_log"
+	runcon "staff_u:sysadm_r:sysadm_t:SystemLow-SystemHigh" \
+	    ausearch -m USER | grep "test+$date_mark" && \
+	    exit_fail "root/staff_r should not be able to ausearch $audit_log"
+    fi
+fi
+
+# root with default (or none) role (both MLS and BASE)
+grep "test+$date_mark" $audit_log || \
+    exit_fail "root should be able to read $audit_log"
+ausearch -m USER | grep "test+$date_mark" || \
+    exit_fail "root should be able to ausearch $audit_log"
+
+# Verify that users other than root cannot read audit records either
+# directly or via ausearch command (even with auditadm_r role, MLS only).
+
+if [[ $PPROFILE == lspp ]] ; then
+
+    # check that testuser is able to take auditadm_r role
+    if semanage user -l | grep testuser | grep -q auditadm_r; then
+
+	# testuser with auditadm_r role
+	/bin/su -c \
+	    "runcon \"staff_u:auditadm_r:auditadm_t:SystemLow-SystemHigh\" \
+	     head -1 $audit_log" -- testuser && \
+	    exit_fail "testuser/auditadm_r should not be able to read $audit_log"
+	/bin/su -c \
+	    "runcon \"staff_u:auditadm_r:auditadm_t:SystemLow-SystemHigh\" \
+	     ausearch -m USER | grep \"test+$date_mark\"" -- testuser && \
+	    exit_fail "testuser/auditadm_r should not be able to ausearch $audit_log"
+    fi
+fi
+
+# testuser with default (or none) role (both MLS and BASE)
+/bin/su -c "grep \"test+$date_mark\" $audit_log" -- testuser && \
+    exit_fail "User testuser should not read $audit_log"
+/bin/su -c "ausearch -m USER | grep \"test+$date_mark\"" -- testuser && \
+    exit_fail "User testuser should not process $audit_log"
+
+# Verify that binaries provided by auditd (expected to have access to audit
+# records) do not contain suid bit which would potentially give that access
+# to anyone.
+
+for B in $(rpm -ql audit | grep bin); do
+    # Check suid bits
+    [ "$(ls -lH $B | cut -c4)" == "s" ] && \
+	exit_fail "$B has access to $audit_log and has suid bit set"
+done
+
+exit_pass

@@ -25,7 +25,6 @@ RUN_DIRS	= syscalls \
 ifeq ($(MODE), $(NATIVE))
 RUN_DIRS       += fail-safe \
 		  filter \
-		  audit-trail-protection \
 		  audit-tools \
 		  libpam
 ifneq ($(DISTRO), SUSE)

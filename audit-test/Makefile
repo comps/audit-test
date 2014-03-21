@@ -118,11 +118,14 @@ rpm: dist
 
 .PHONY: policy
 policy:
-	cd utils/selinux-policy && \
-	$(MAKE) clean && \
-	$(MAKE) && \
-	$(MAKE) install && \
-	$(MAKE) relabel
+	cd utils/selinux-policy && $(MAKE) clean && $(MAKE)
+	@echo "Notice: Need to change role to secadm_r to be able to modify SELinux policy"
+	@if [[ $$(id -Z) =~ .*sysadm_r.* ]]; then \
+		cd utils/selinux-policy && newrole -r secadm_r -- -c "$(MAKE) install"; \
+	else \
+		cd utils/selinux-policy && $(MAKE) install; \
+	fi
+	cd utils/selinux-policy && $(MAKE) relabel
 
 .PHONY: netconfig
 netconfig:

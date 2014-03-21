@@ -85,6 +85,9 @@ verify:
 # testing infrastructure would not run.
 
 install: $(MODULE_NAME).pp
+	@echo "$$(id -Z)" | egrep -q "(secadm_r|lspp_test_r)" || { echo \
+		"Error: You need to be in secadm_r or lspp_test_r role to install/upgrade SELinux policy module"; \
+		exit 1; }
 	@if semodule -l | grep -q $(MODULE_NAME); then \
 		echo -n "Upgrading $(MODULE_NAME) module ... "; \
 		semodule -u $(MODULE_NAME).pp &> /dev/null && echo "ok" || \
@@ -115,6 +118,8 @@ install: $(MODULE_NAME).pp
         fi;
 
 uninstall:
+	@echo "$$(id -Z)" | grep -q "secadm_r" || \
+		{ echo "Error: You need to be in secadm_r role to install lspp_test SELinux policy module"; exit 1; }
 	@role=$$(echo $(MODULE_ROLE) | cut -d':' -f 1); \
 	if [ -n "$$role" ]; then \
 		echo "Removing role/type from the default_types file"; \

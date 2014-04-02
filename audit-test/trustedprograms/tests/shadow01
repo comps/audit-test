@@ -38,10 +38,10 @@ use warnings;
 
 require "utils.plib";
 
-my $username1 = "sha_user";
-my $initial_password1 = "ltp_test_pass";
-my $initial_encrypted_password1 = "\\\$1\\\$1yzzszzz\\\$7P9AphbzAN43pTktT\/kpp\/";
-my $new_password = "what_an_incredible_password";
+my $username1 = 'sha_user';
+my $initial_password1 = 'ltP_t3st*_pass';
+my $initial_encrypted_password1 = '$6$mdf9vvfz$2hQcpjsaKz21PUmjoVfLT23XZb/HbFEKmK6GePHj3arBU2cadAmVDcakSU9HgjaI0u.yzx.XAS3hNXZLtuCZ1.';
+my $new_password = 'br4nd_.new_Phrase_for_test';
 
 my @result;
 my $error = 0;

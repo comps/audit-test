@@ -38,13 +38,13 @@ use warnings;
 
 require "utils.plib";
 
-my $username1 = "pam_user";
-my $initial_password = "ltp_test_pass";
-my $initial_encrypted_password = "\\\$1\\\$1yzzszzz\\\$7P9AphbzAN43pTktT\/kpp\/";
-my $good_password1 = "brand_new_phrase_for_test";
-#my $good_password1 = "long_difficult_password";
-my $good_password2 = "this_passphrase_is_different";
-my $good_password3 = "yet_another_password-phrase";
+my $username1 = 'pam_user';
+my $initial_password = 'ltP_t3st*_pass';
+my $initial_encrypted_password = '$6$mdf9vvfz$2hQcpjsaKz21PUmjoVfLT23XZb/HbFEKmK6GePHj3arBU2cadAmVDcakSU9HgjaI0u.yzx.XAS3hNXZLtuCZ1.';
+my $good_password1 = 'br4nd_.new_Phrase_for_test';
+#my $good_password1 = 'long_difficult_password';
+my $good_password2 = 'thIs_passphr4se_1s_?different';
+my $good_password3 = 'yEt_anoth3r,_passw0rd-phrase';
 
 
 # This two dimensional array contains the information for each test.  This includes:

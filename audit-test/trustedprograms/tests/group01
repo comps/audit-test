@@ -37,12 +37,12 @@ use warnings;
 
 require "utils.plib";
 
-my $username1 = "cg_user1";
-my $username2 = "cg_user2";
-my $initial_password1 = "ltp_test_pass";
-my $initial_encrypted_password1 = "\\\$1\\\$1yzzszzz\\\$7P9AphbzAN43pTktT\/kpp\/";
-my $group1 = "cg_group1";
-my $newgroup1 = "new_" . $group1;
+my $username1 = 'cg_user1';
+my $username2 = 'cg_user2';
+my $initial_password1 = 'ltP_t3st*_pass';
+my $initial_encrypted_password1 = '$6$mdf9vvfz$2hQcpjsaKz21PUmjoVfLT23XZb/HbFEKmK6GePHj3arBU2cadAmVDcakSU9HgjaI0u.yzx.XAS3hNXZLtuCZ1.';
+my $group1 = 'cg_group1';
+my $newgroup1 = 'new_' . $group1;
 
 my @result;
 my $error = 0;

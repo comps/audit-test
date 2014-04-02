@@ -39,11 +39,9 @@ function create_user(){
         echo "Creating test user $TEST_USER..."
 
         #erase user if he may exist , so we can have a clean env
-        userdel $TEST_USER >& /dev/null
+        killall -9 -u $TEST_USER
+        userdel -rf $TEST_USER >& /dev/null
 	groupdel $TEST_USER >& /dev/null
-        [ -d "/home/$TEST_USER" ] && rm -rf /home/$TEST_USER
-
-        sleep 1
 
         useradd -m -p "$TEST_USER_ENCRYPTED_PASSWD" $TEST_USER
 
@@ -60,10 +58,9 @@ function create_user(){
 function delete_user(){
         echo "Deleting test user $TEST_USER..."
 
-        userdel $TEST_USER >& /dev/null
-	sleep 1
+        killall -9 -u $TEST_USER
+        userdel -rf $TEST_USER >& /dev/null
 	groupdel $TEST_USER >& /dev/null
-        [ -d "/home/$TEST_USER" ] && rm -rf /home/$TEST_USER
 
         if [ "$?" != "0" ]; then
                 echo "Not able to delete test user $TEST_USER."

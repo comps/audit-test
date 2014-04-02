@@ -28,7 +28,7 @@ source testcase.bash || exit 2
 
 set -x
 
-append_cleanup "userdel -fr -Z testuser1"
+append_cleanup "killall -9 -u testuser1; userdel -fr -Z testuser1"
 append_cleanup "groupdel testuser1"
 userdel -fr -Z testuser1
 groupdel testuser1
@@ -38,7 +38,7 @@ if [[ $? -ne 0 ]]; then
 	exit_error
 fi
 
-append_cleanup "userdel -fr -Z testuser2"
+append_cleanup "killall -9 -u testuser2; userdel -fr -Z testuser2"
 append_cleanup "groupdel testuser2"
 userdel -fr -Z testuser2
 groupdel testuser2

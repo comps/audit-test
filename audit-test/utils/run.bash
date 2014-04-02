@@ -247,7 +247,8 @@ function startup {
     killall -HUP auditd	# reload config when auditd was already running
 
     # Add the test user which is used for unprivileged tests
-    userdel -r "$TEST_USER" &>/dev/null
+    killall -9 -u "$TEST_USER"
+    userdel -Z -rf "$TEST_USER" &>/dev/null
     groupdel "$TEST_USER" &>/dev/null
     dmsg "Adding group $TEST_USER"
     groupadd "$TEST_USER" || die
@@ -257,7 +258,8 @@ function startup {
     faillock --user "$TEST_USER" --reset
 
     # Add the test user which is in sysadm_r
-    userdel -r "$TEST_ADMIN" &>/dev/null
+    killall -9 -u "$TEST_ADMIN"
+    userdel -Z -rf "$TEST_ADMIN" &>/dev/null
     groupdel "$TEST_ADMIN" &>/dev/null
     dmsg "Adding group $TEST_ADMIN"
     groupadd "$TEST_ADMIN" || die
@@ -289,7 +291,7 @@ function cleanup {
         killall -9 -u "$RUSER"
         # Remove the test user
         dmsg "Removing user $RUSER"
-        userdel -Z -r "$RUSER" &>/dev/null
+        userdel -Z -rf "$RUSER" &>/dev/null
         dmsg "Removing group $RUSER"
         groupdel "$RUSER" &>/dev/null
         # Cleanup polyinstantiated home directory

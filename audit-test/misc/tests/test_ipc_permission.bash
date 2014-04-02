@@ -41,9 +41,8 @@ TEST_USER2="permtest3"
 function create_user(){
         echo "Creating test user $TEST_USER2..."
         if egrep "^$TEST_USER2" /etc/passwd; then
-                userdel $TEST_USER2 >& /dev/null
-                [ -d "home/$TEST_USER2" ] && rm -rf /home/$TEST_USER2
-                sleep 1
+                killall -9 -u $TEST_USER2
+                userdel -rf $TEST_USER2
         fi
 
         useradd -g $TEST_USER2 $TEST_USER2
@@ -72,10 +71,8 @@ function create_group(){
 
 function delete_user(){
         echo "Deleting test user $TEST_USER2..."
-        userdel -r $TEST_USER2 >& /dev/null
-        [ -d "/home/$TEST_USER2" ] && rm -rf /home/$TEST_USER2
-
-        sleep 1
+        killall -9 -u $TEST_USER2
+        userdel -rf $TEST_USER2 >& /dev/null
         if [ "$?" != "0" ]; then
                 echo "Not able to delete test user $TEST_USER2."
                 exit 1

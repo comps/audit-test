@@ -13,6 +13,7 @@ sub create_user($) {
   if ( ! $username ) {
     return -1;
   }
+  `killall -9 -u '$username'`;
   `userdel -rf '$username' 2>/dev/null`;
   `useradd -m -g users '$username'`;
   if ($? != 0) {
@@ -27,6 +28,7 @@ sub delete_user($) {
     return -1;
   }
   clear_oldpassword();
+  `killall -9 -u '$username'`;
   `userdel -rf '$username'`;
   if ($? != 0) {
     die("ERROR $?: Cannot delete user $username");

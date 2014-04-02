@@ -206,18 +206,20 @@ CMD_RET_p4=0
 source pam_functions.bash || exit 2
 
 setup_cleanup() {
-	prepend_cleanup "rm -rf /home/$USERG /home/$USERO /home/$USERT /var/mail/$USERG /var/mail/$USERO /var/mail/$USERT"
 	prepend_cleanup "rm -f /etc/sudoers.new"
 	prepend_cleanup "groupdel $GROUP"
-	prepend_cleanup "userdel $USERT"
-	prepend_cleanup "userdel $USERO"
-	prepend_cleanup "userdel $USERG"
+	prepend_cleanup "killall -9 -u $USERT; userdel -rf $USERT"
+	prepend_cleanup "killall -9 -u $USERO; userdel -rf $USERO"
+	prepend_cleanup "killall -9 -u $USERG; userdel -rf $USERG"
 }
 
 gen_user() {
-	userdel $USERG 2> /dev/null
-	userdel $USERO 2> /dev/null
-	userdel $USERT 2> /dev/null
+	killall -9 -u $USERG
+	killall -9 -u $USERO
+	killall -9 -u $USERT
+	userdel -rf $USERG 2> /dev/null
+	userdel -rf $USERO 2> /dev/null
+	userdel -rf $USERT 2> /dev/null
 	groupdel $GROUP 2> /dev/null
 	groupadd $GROUP
 	useradd -u $USERG_ID -g $GROUP -p $PASSENC $USERG

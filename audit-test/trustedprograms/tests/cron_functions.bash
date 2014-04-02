@@ -59,20 +59,9 @@ function cleanup {
                 crontab -r -u $TEST_USER
         fi
 
-	if [ -d "/home/$TEST_USER2" ]; then
-		userdel $TEST_USER2
-		rm -rf /home/$TEST_USER2
-	fi
+	killall -9 -u $TEST_USER2
+	userdel -rf $TEST_USER2 2>/dev/null
 
-	if [ -d "$TEST_DIR" ]; then
-		rm -rf $TEST_DIR
-	fi
-
-	if [ -e "$CRON_ALLOW" ]; then
-                rm -f $CRON_ALLOW
-        fi
-
-        if [ -e "$CRON_DENY" ]; then
-                rm -f $CRON_DENY
-        fi
+	rm -rf $TEST_DIR
+	rm -f $CRON_ALLOW $CRON_DENY
 }

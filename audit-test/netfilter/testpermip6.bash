@@ -13,12 +13,14 @@ useradd -m -p usertest "$TEST_USER"
 rc=$?
 if [[ $rc -ne 0 ]]; then
     echo "operation not permitted, return code is $rc"
-    userdel -r "$TEST_USER" &>/dev/null
+    killall -9 -u "$TEST_USER"
+    userdel -rf "$TEST_USER" &>/dev/null
     ebtables -L
     exit_pass
 else
     echo "test failed, ebtables operation permitted"
-    userdel -r "$TEST_USER" &>/dev/null
+    killall -9 -u "$TEST_USER"
+    userdel -rf "$TEST_USER" &>/dev/null
     ebtables -L
     exit_fail
 fi

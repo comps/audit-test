@@ -23,7 +23,7 @@ source tp_auth_functions.bash || exit 2
 # setup
 useradd -n -G games -u $uid $user || exit_error "groupadd failed"
 read user2 uid2 <<<"$(generate_unique_user)"
-prepend_cleanup "userdel -r $user2"
+prepend_cleanup "killall -9 -u $user2; userdel -rf $user2"
 
 # test
 setpid usermod -l $user2 $user || exit_error "usermod failed"

@@ -27,9 +27,9 @@
 #
 #  Note: 	Test originally called procperm.sh is now test_procperm.bash
 
-TEST_USER="perm_user"
-TEST_USER_PASSWD="ltp_test_pass"
-TEST_USER_ENCRYPTED_PASSWD="\$1\$1yzzszzz\$7P9AphbzAN43pTktT/kpp/"
+TEST_USER='perm_user'
+TEST_USER_PASSWD='ltP_t3st*_pass'
+TEST_USER_ENCRYPTED_PASSWD='$6$mdf9vvfz$2hQcpjsaKz21PUmjoVfLT23XZb/HbFEKmK6GePHj3arBU2cadAmVDcakSU9HgjaI0u.yzx.XAS3hNXZLtuCZ1.'
 
 #-----------------------------------------------------------------------
 # FUNCTION:  create_user
@@ -45,7 +45,7 @@ function create_user(){
 
         sleep 1
 
-        useradd -m -p $TEST_USER_ENCRYPTED_PASSWD $TEST_USER
+        useradd -m -p "$TEST_USER_ENCRYPTED_PASSWD" $TEST_USER
 
         if [ "$?" != 0 ]; then
                 echo "Could not add test user $TEST_USER."

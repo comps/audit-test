@@ -13,10 +13,8 @@ sub create_user($) {
   if ( ! $username ) {
     return -1;
   }
-  `rm -rf /home/$username`;
-  `userdel $username 2> /dev/null`;
-  sleep(1);
-  `useradd -m -g 100 $username`;
+  `userdel -rf '$username' 2>/dev/null`;
+  `useradd -m -g users '$username'`;
   if ($? != 0) {
     die("ERROR $?: Cannot create user $username");
   }
@@ -29,7 +27,7 @@ sub delete_user($) {
     return -1;
   }
   clear_oldpassword();
-  `rm -rf /home/$username; userdel $username`;
+  `userdel -rf '$username'`;
   if ($? != 0) {
     die("ERROR $?: Cannot delete user $username");
   }
@@ -37,35 +35,29 @@ sub delete_user($) {
 }
 
 sub clear_oldpassword() {
-  `cat /dev/null > /etc/security/opasswd; chmod 600 /etc/security/opasswd`;
+  my $opasswd = "/etc/security/opasswd";
+  if (-e $opasswd) {
+    `echo -n > '$opasswd'`;
+  } else {
+    `echo -n > '$opasswd'; chmod 600 '$opasswd'`;
+  }
   return $?;
 }
 
 sub set_password($$) {
   my $username = shift;
   my $password = shift;
-  my $exp = new Expect;
-  $exp->raw_pty(1);
-  $exp->spawn("passwd $username")
-    or die "Cannot spawn: $!\n";
-  $exp->expect("10",
-    [
-      qr/New password: $/i,
-        sub {
-          sleep($SLEEP);
-          my $self = shift;
-          $self->send("$password\n");
-          sleep($SLEEP);
-          exp_continue;
-        }
-    ]
-  );
+  `echo '$password' | passwd --stdin '$username'`;
+  if ($? != 0) {
+    print("ERROR $?: Cannot set password\n");
+  }
+  return $?;
 }
 
 sub set_encrypted_password($$) {
   my $username = shift;
   my $encrypted_password = shift;
-  `usermod -p $encrypted_password $username`;
+  `usermod -p '$encrypted_password' '$username'`;
   if ($? != 0) {
     die("ERROR $?: Cannot set encrypted password");
   }
@@ -78,8 +70,9 @@ sub change_password ($$$) {
   my $new_password = shift;
 print("[$username], [$current_password], [$new_password]\n");
   my $exp = new Expect;
+  `faillock --user '$username' --reset`;
   $exp->raw_pty(1);
-  $exp->spawn("ssh -t $username\@localhost 'passwd'")
+  $exp->spawn("ssh -t '$username\@localhost' 'passwd'")
     or die "ERROR: Cannot spawn: $!\n";
   $exp->expect("10",
     [
@@ -185,8 +178,9 @@ sub run_as_user ($$$) {
     $command .= " " . $item;
   }
   my $exp = new Expect;
+  `faillock --user '$username' --reset`;
   $exp->raw_pty(1);
-  $exp->spawn("ssh -t $username\@localhost '$command'")
+  $exp->spawn("ssh -t '$username\@localhost' '$command'")
     or die "ERROR: Cannot spawn: $!\n";
   $exp->expect("10",
     [
@@ -222,8 +216,9 @@ sub check_expired ($$$) {
   my $command = shift;
   my $exit = 1;
   my $exp = new Expect;
+  `faillock --user '$username' --reset`;
   $exp->raw_pty(1);
-  $exp->spawn("ssh -t $username\@localhost '$command'")
+  $exp->spawn("ssh -t '$username\@localhost' '$command'")
     or die "ERROR: Cannot spawn: $!\n";
   $exp->expect("10",
     [
@@ -278,8 +273,9 @@ sub user_change_shell($$$$) {
   my $command = shift;
   my $newshell = shift;
   my $exp = new Expect;
+  `faillock --user '$username' --reset`;
   $exp->raw_pty(1);
-  $exp->spawn("ssh -t $username\@localhost '$command'")
+  $exp->spawn("ssh -t '$username\@localhost' '$command'")
     or die "ERROR: Cannot spawn: $!\n";
   $exp->expect("10",
     [
@@ -325,8 +321,9 @@ sub user_change_finger($$$$$$) {
   my $newwork = shift;
   my $newhome = shift;
   my $exp = new Expect;
+  `faillock --user '$username' --reset`;
   $exp->raw_pty(1);
-  $exp->spawn("ssh -t $username\@localhost '$command'")
+  $exp->spawn("ssh -t '$username\@localhost' '$command'")
     or die "ERROR: Cannot spawn: $!\n";
   $exp->expect("10",
     [
@@ -426,7 +423,7 @@ sub revert_system_time($) {
 sub chage_read($$) {
   my $user = $_[0];
   my $line = $_[1];
-  my @array = `chage -l $user`;
+  my @array = `chage -l '$user'`;
   @array = split(/:\s+/, $array[$line]);
   chomp($array[1]);
   return $array[1];

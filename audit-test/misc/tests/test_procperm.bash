@@ -49,6 +49,8 @@ function create_user(){
                 echo "Could not add test user $TEST_USER."
                 exit 1
         fi
+
+	return 0
 }
 
 #-----------------------------------------------------------------------
@@ -60,12 +62,15 @@ function delete_user(){
 
         killall -9 -u $TEST_USER
         userdel -rf $TEST_USER >& /dev/null
-	groupdel $TEST_USER >& /dev/null
 
         if [ "$?" != "0" ]; then
                 echo "Not able to delete test user $TEST_USER."
                 exit 1
         fi
+
+	groupdel $TEST_USER >& /dev/null
+
+	return 0
 }
 
 #

@@ -15,28 +15,44 @@
 
 #include "includes.h"
 #include <pwd.h>
+#include <grp.h>
 
 int main(int argc, char **argv)
 {
     int exitval, result;
+    gid_t gid = -1;
+    uid_t uid = -1;
     struct passwd *pw;
+    struct group *grp;
 
-    if (argc != 3) {
-	fprintf(stderr, "Usage:\n%s <path> <owner>\n", argv[0]);
-	return TEST_ERROR;
+    if (argc != 3 && argc != 4) {
+        fprintf(stderr, "Usage:\n%s <path> <owner> [<group>]\n", argv[0]);
+        return TEST_ERROR;
     }
 
-    pw = getpwnam(argv[2]);
-    if (!pw) {
-	perror("do_lchown: getpwnam");
-	return TEST_ERROR;
+    if(strcmp(argv[2],"")) {
+        pw = getpwnam(argv[2]);
+        if (!pw) {
+            perror("do_lchown: getpwnam");
+            return TEST_ERROR;
+        }
+        uid = pw->pw_uid;
     }
 
-    /* use syscall() to force lchown over lchown32 */
+    if(argc == 4 && strcmp(argv[3],"")) {
+        grp = getgrnam(argv[3]);
+        if(!grp) {
+            perror("do_lchown: getgrnam");
+            return TEST_ERROR;
+        }
+        gid = grp->gr_gid;
+    }
+
     errno = 0;
-    exitval = syscall(__NR_lchown, argv[1], pw->pw_uid, -1);
+    exitval = syscall(__NR_lchown, argv[1], uid, gid);
     result = exitval < 0;
 
     printf("%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
+
 }

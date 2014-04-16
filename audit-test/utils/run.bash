@@ -247,7 +247,7 @@ function startup {
     killall -HUP auditd	# reload config when auditd was already running
 
     # Add the test user which is used for unprivileged tests
-    killall -9 -u "$TEST_USER"
+    killall -9 -u "$TEST_USER" &>/dev/null
     userdel -Z -rf "$TEST_USER" &>/dev/null
     groupdel "$TEST_USER" &>/dev/null
     dmsg "Adding group $TEST_USER"
@@ -258,7 +258,7 @@ function startup {
     faillock --user "$TEST_USER" --reset
 
     # Add the test user which is in sysadm_r
-    killall -9 -u "$TEST_ADMIN"
+    killall -9 -u "$TEST_ADMIN" &>/dev/null
     userdel -Z -rf "$TEST_ADMIN" &>/dev/null
     groupdel "$TEST_ADMIN" &>/dev/null
     dmsg "Adding group $TEST_ADMIN"
@@ -288,7 +288,7 @@ function cleanup {
     for RUSER in $TEST_USER $TEST_ADMIN; do
         # Kill all processes of the user
         dmsg "Killing all processes for $RUSER"
-        killall -9 -u "$RUSER"
+        killall -9 -u "$RUSER" &>/dev/null
         # Remove the test user
         dmsg "Removing user $RUSER"
         userdel -Z -rf "$RUSER" &>/dev/null

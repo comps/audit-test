@@ -364,6 +364,7 @@ function ssh_copy_key {
 #                4 should never happen
 #                5 if permission denied on pubkey only auth
 #                6 if account expired
+#                7 if password change needed
 function ssh_connect_key {
     # check if required params specified
     [ -z "$1" ] && exit_error "Error: no src user for $FUNCNAME"
@@ -386,6 +387,7 @@ function ssh_connect_key {
             {passphrase} { send -- $4\r; exp_continue }
             {Permission denied (publickey)} { exit 5 }
             {Your account has expired} { exit 6 }
+            {Your password has expired} { exit 7 }
             default { exit 3 }
         }
         exit 4"
@@ -411,6 +413,7 @@ function ssh_connect_key {
 #                8 uknown cipher type
 #                9 read from socket failed
 #               10 unexpected eof
+#               11 required to change password
 function ssh_connect_pass {
     # check if required params specified
     [ -z "$1" ] && exit_error "Error: no src user for $FUNCNAME"
@@ -435,7 +438,9 @@ function ssh_connect_pass {
             {assword:} { send -- $4\r }
             {passphrase} { send -- INCORRECTPASS\r; exp_continue }
             {Unable to negotiate a key exchange method} { exit 3 }
-            {Your account has expired} { exit 4 }
+            {Your password has expired} { exit 4 }
+            {You are required to change} { exit 11 }
+            {You are required to change your password} { exit 11 }
             {no matching mac found} { exit 5 }
             {Unknown cipher type} { exit 8 }
             {no matching cipher found} { exit 6 }
@@ -445,6 +450,8 @@ function ssh_connect_pass {
         }
         expect {
             {Your account has expired} { exit 4 }
+            {Your password has expired} { exit 11 }
+            {You are required to change your password} { exit 11 }
             {assword:} { send -- $4\r; exp_continue }
             {Permission denied} { exit 2 }
             -re \"$3\\\r\" { exit 0 }
@@ -545,4 +552,13 @@ function expire_account {
 
     chage -E 0 $1 || exit_error "Failed to expire account $1"
     prepend_cleanup "chage -E -1 $1"
+}
+
+# Expire password of local user
+function expire_password {
+    [ -z "$1" ] && exit_error "Error: no user given for $FUNCNAME"
+
+    chage -d -1 $1 || exit_error "Failed to set last password change"
+    chage -M 0 $1 || exit_error "Failed to set password maximum validity"
+    prepend_cleanup "chage -M -1 $1"
 }

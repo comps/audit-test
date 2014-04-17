@@ -213,6 +213,36 @@ function fallback {
     ssh_check_audit $AUDITMARK failA
 }
 
+function account_expire {
+    # setup
+    ssh_multi_setup
+
+    # create new ecdsa key for test user with passphrase and check if correctly created
+    # the copy the key to test admin
+    ssh_create_key $TEST_USER $TEST_USER_PASSWD ecdsa 384 $PHRASE | egrep "ECDSA[[:space:]]+384" || \
+        exit_fail "Failed to create ECDSA key"
+    ssh_check_home $TEST_USER $TEST_USER_PASSWD ecdsa
+    ssh_copy_key $TEST_USER $TEST_USER_PASSWD $TEST_ADMIN $TEST_ADMIN_PASSWD ecdsa
+
+    # regular login
+    # in MLS user_u->sysadm_u
+    AUDITMARK=$(get_audit_mark)
+    ssh_connect_key $TEST_USER $TEST_USER_PASSWD $TEST_ADMIN $PHRASE  || \
+        exit_fail "Failed to connect from $TEST_USER to $TEST_ADMIN"
+    ssh_check_audit $AUDITMARK
+
+    # expired account - with pubkey login
+    expire_account $TEST_ADMIN
+    ssh_connect_key $TEST_USER $TEST_USER_PASSWD $TEST_ADMIN $PHRASE; local RET=$?
+    [ $RET -eq 0 ] && exit_fail "Succeeded to connect with expired password from $TEST_USER to $TEST_ADMIN"
+    [ $RET -eq 6 ] || exit_error "Connection failed unexpectedly. No expire info?"
+
+    # expired account - with password login
+    ssh_connect_pass $TEST_USER $TEST_USER_PASSWD $TEST_ADMIN $TEST_ADMIN_PASSWD; local RET=$?
+    [ $RET -eq 0 ] && exit_fail "Succeeded to connect with expired password from $TEST_USER to $TEST_ADMIN"
+    [ $RET -eq 4 ] || exit_error "Connection failed unexpectedly. No expire info?"
+}
+
 function password_expire {
     # setup
     ssh_multi_setup
@@ -231,17 +261,16 @@ function password_expire {
         exit_fail "Failed to connect from $TEST_USER to $TEST_ADMIN"
     ssh_check_audit $AUDITMARK
 
-    # expired password - with password login
-    # in MLS user_u->sysadm_u
-    AUDITMARK=$(get_audit_mark)
-    expire_account $TEST_ADMIN
+    # expired password - with pubkey login
+    expire_password $TEST_ADMIN
     ssh_connect_key $TEST_USER $TEST_USER_PASSWD $TEST_ADMIN $PHRASE; local RET=$?
     [ $RET -eq 0 ] && exit_fail "Succeeded to connect with expired password from $TEST_USER to $TEST_ADMIN"
-    [ $RET -eq 6 ] || exit_error "Connection failed unexpectedly. No expire info?"
+    [ $RET -eq 7 ] || exit_error "Connection failed unexpectedly. No expire info?"
 
+    # expired password - with password login
     ssh_connect_pass $TEST_USER $TEST_USER_PASSWD $TEST_ADMIN $TEST_ADMIN_PASSWD; local RET=$?
     [ $RET -eq 0 ] && exit_fail "Succeeded to connect with expired password from $TEST_USER to $TEST_ADMIN"
-    [ $RET -eq 4 ] || exit_error "Connection failed unexpectedly. No expire info?"
+    [ $RET -eq 11 ] || exit_error "Connection failed unexpectedly. No expire info?"
 }
 
 # choose test

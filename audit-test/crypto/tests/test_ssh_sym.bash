@@ -56,6 +56,11 @@ backup $SSHDCONF
 backup $CCCONF
 ssh_remove_screen $MPROFILE
 
+# generate a little entropy with rngd to PASS the tests on low entropy
+# systems
+rngd -r /dev/urandom
+prepend_cleanup "killall rngd"
+
 # restart sshd to get default state with SSH_USE_STRONG_RNG enabled
 ssh_restart_daemon
 

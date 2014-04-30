@@ -437,3 +437,80 @@ allow systemd_timedated_t lspp_harness_t:dbus send_msg;
 
 # needed for tp/setcon fail_self
 allow lspp_test_generic_t lspp_test_file_t:file entrypoint;
+
+#
+# Domains with MLS overrides
+# There are used in the syscalls bucket for MLS related tests
+#
+# For documentation see:
+# https://git.fedorahosted.org/cgit/selinux-policy.git/tree/policy/modules/kernel/mls.if
+# https://git.fedorahosted.org/cgit/selinux-policy.git/tree/policy/mls
+#
+
+# lspp_file_read_t
+# domain with mlsfileread attribute
+userdom_unpriv_user_template(lspp_file_read)
+typeattribute lspp_file_read_t lspp_test_domains, lspp_domains;
+mls_file_read_all_levels(lspp_file_read_t)
+domain_entry_file(lspp_file_read_t,lspp_test_generic_exec_t)
+unconfined_domain_noaudit(lspp_file_read_t)
+
+# lspp_file_readtoclr_t
+# domain with mlsfilereadtoclr attribute
+userdom_unpriv_user_template(lspp_file_readtoclr)
+typeattribute lspp_file_readtoclr_t lspp_test_domains, lspp_domains;
+mls_file_read_to_clearance(lspp_file_readtoclr_t)
+domain_entry_file(lspp_file_readtoclr_t,lspp_test_generic_exec_t)
+unconfined_domain_noaudit(lspp_file_readtoclr_t)
+
+# lspp_file_write_t
+# domain with mlsfilewrite attribute
+userdom_unpriv_user_template(lspp_file_write)
+typeattribute lspp_file_write_t lspp_test_domains, lspp_domains;
+mls_file_write_all_levels(lspp_file_write_t)
+domain_entry_file(lspp_file_write_t,lspp_test_generic_exec_t)
+unconfined_domain_noaudit(lspp_file_write_t)
+
+# lspp_file_writetoclr_t
+# domain with mlsfilewritetoclr attribute
+userdom_unpriv_user_template(lspp_file_writetoclr)
+typeattribute lspp_file_writetoclr_t lspp_test_domains, lspp_domains;
+mls_file_write_to_clearance(lspp_file_writetoclr_t)
+domain_entry_file(lspp_file_writetoclr_t,lspp_test_generic_exec_t)
+unconfined_domain_noaudit(lspp_file_writetoclr_t)
+
+# lspp_file_writeinrange_t
+# domain with mlsfilewriteinrange attribute
+userdom_unpriv_user_template(lspp_file_writeinrange)
+typeattribute lspp_file_writeinrange_t lspp_test_domains, lspp_domains;
+mls_file_write_within_range(lspp_file_writeinrange_t)
+domain_entry_file(lspp_file_writeinrange_t,lspp_test_generic_exec_t)
+unconfined_domain_noaudit(lspp_file_writeinrange_t)
+
+# lspp_file_upgrade_t
+# domain with mlsfileupgrade attribute
+userdom_unpriv_user_template(lspp_file_upgrade)
+typeattribute lspp_file_upgrade_t lspp_test_domains, lspp_domains;
+mls_file_upgrade(lspp_file_upgrade_t)
+domain_entry_file(lspp_file_upgrade_t,lspp_test_generic_exec_t)
+unconfined_domain_noaudit(lspp_file_upgrade_t)
+
+# lspp_file_downgrade_t
+# domain with mlsfiledowngrade attribute
+userdom_unpriv_user_template(lspp_file_downgrade)
+typeattribute lspp_file_downgrade_t lspp_test_domains, lspp_domains;
+mls_file_downgrade(lspp_file_downgrade_t)
+domain_entry_file(lspp_file_downgrade_t,lspp_test_generic_exec_t)
+unconfined_domain_noaudit(lspp_file_downgrade_t)
+
+# lspp_filetype_writeinrange_t
+# Add new file type that has mlsfilewriteinrange attribute
+type lspp_filetype_writeinrange_t;
+files_type(lspp_filetype_writeinrange_t)
+mls_trusted_object(lspp_filetype_writeinrange_t)
+
+# lspp_filetype_trustedobj_t
+# Add new file type that has mlstrustedobject attribute
+type lspp_filetype_trustedobj_t;
+files_type(lspp_filetype_trustedobj_t)
+mls_trusted_object(lspp_filetype_trustedobj_t)

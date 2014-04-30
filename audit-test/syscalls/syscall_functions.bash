@@ -162,6 +162,7 @@ function test_su_time_zone {
 }
 
 function test_runcon_default {
+    [ -n "$subj_type" ] && subj=$(sed "s/[^:]*_t:/$subj_type:/" <<< "$subj")
     read testres exitval pid \
 	<<<"$(runcon $subj do_$syscall $op $dirname $source $target $flag $setcontext 2>&1 1>/dev/null)"
 }
@@ -333,7 +334,14 @@ function compute_contexts {
         incomp)
             subj_def_label="s1:c1.c3"
             obj_def_label="s1:c4.c6" ;;
-        *) exit_error "test must specify an mls op [eq, dom, domby, incomp]" ;;
+        fwritetoclr)
+            subj_def_label="s0-s3"
+            obj_def_label="s2" ;;
+        freadtoclr)
+            subj_def_label="s0-s3"
+            obj_def_label="s2" ;;
+
+        *) exit_error "test must specify an mls op [eq, dom, domby, incomp, etc]" ;;
     esac
 
     subj=$(set_context_label $subj_default $subj_def_label)
@@ -944,7 +952,8 @@ function create_fs_objects_mac {
             name=$target ;;
         file_read|file_write)
             create_file target context=$obj
-            name=$target;;
+            name=$target
+            [ -n "$obj_type" ] && chcon -t $obj_type $target ;;
         file_exec)
             create_exec target basedir=$HOME context=$obj
             name=$target;;
@@ -994,6 +1003,7 @@ function create_fs_objects_mac {
 		create_dir base context=$subj
 		create_file source basedir=$base context=$subj
 	    fi ;;
+
         dir_remove_name)
             create_dir base context=$obj
             case $entry in
@@ -1018,6 +1028,12 @@ function create_fs_objects_mac {
 		    create_file source basedir=$base context=$subj ;;
             esac
             ;;
+
+        dir_access)
+            create_dir base context=$obj
+	    create_file target basedir=$base context=${subj%-*}
+	    augrokfunc=augrok_mls_search_fail
+            [ -n "$obj_type" ] && chcon -t $obj_type $base ;;
 
         *) exit_error "unknown perm to test: $p" ;;
     esac

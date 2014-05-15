@@ -148,6 +148,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_setfsuid \
 		  do_setgid \
 		  do_setgroups \
+		  do_setns \
 		  do_setregid \
 		  do_setresgid \
 		  do_setresuid \

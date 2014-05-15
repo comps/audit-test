@@ -54,7 +54,7 @@ int main(int argc, char **argv)
   errno = 0;
   sflgs = 0;
   sflgs |= MSG_OOB;
-  rc = sendto(sock, MSG_STRING, MSG_LEN, sflgs, host->ai_addr, host->ai_addrlen);
+  rc = send(sock, MSG_STRING, MSG_LEN, sflgs);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 
   printf("%d %d %d\n", result, result ? errno : rc, getpid());

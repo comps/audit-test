@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     int exitval, result;
     int op, flags = 0;
 
-    if (argc < 1) {
+    if (argc < 2) {
 	fprintf(stderr, "%s: you must specify an ipc operation\n", argv[0]);
 	return 1;
     }

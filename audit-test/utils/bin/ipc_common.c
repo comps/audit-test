@@ -61,6 +61,12 @@ int translate_ipc_flags(char *string, int *flags)
     if (!strcmp(string, "create"))
 	/* use IPC_EXCL on create to catch cleanup problems */
 	*flags |= IPC_CREAT|IPC_EXCL|S_IRUSR|S_IWUSR;
+    else if (!strncmp(string, "create:", strlen("create:"))) {
+        /* create with custom mode */
+        *flags |= IPC_CREAT|IPC_EXCL;
+        *flags &= ~((int)0x01ff);  /* reset 9 lsbits */
+        *flags |= strtol(string+strlen("create:"), NULL, 8);
+    }
     else if (!strcmp(string, "read"))
 	*flags |= S_IRUSR;
     else if (!strcmp(string, "write"))

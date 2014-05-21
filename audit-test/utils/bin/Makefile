@@ -136,6 +136,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_llistxattr \
 		  do_lremovexattr \
 		  do_lsetxattr \
+		  do_lstat \
 		  do_mount \
 		  do_ptrace \
 		  do_readlink \
@@ -157,6 +158,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_setuid \
 		  do_setxattr \
 		  do_socketcall \
+		  do_stat \
 		  do_stime \
 		  do_swapon \
 		  do_tgkill \

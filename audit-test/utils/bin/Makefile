@@ -123,6 +123,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_fchownat \
 		  do_fremovexattr \
 		  do_fsetxattr \
+		  do_getpid \
 		  do_getseconds \
 		  do_gettimezone \
 		  do_getxattr \

@@ -134,8 +134,6 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_linkat \
 		  do_listxattr \
 		  do_llistxattr \
-		  do_loop \
-		  do_loop_clear \
 		  do_lremovexattr \
 		  do_lsetxattr \
 		  do_mount \

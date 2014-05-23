@@ -33,6 +33,6 @@ int main(int argc, char **argv)
     exitval = clock_settime(CLOCK_REALTIME, &tspec);
     result = exitval < 0;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

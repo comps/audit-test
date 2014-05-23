@@ -46,6 +46,6 @@ int main(int argc, char **argv)
     error = WIFEXITED(status) ? WEXITSTATUS(status) : EINTR;
     result = !!error;
 
-    printf("%d %d %d\n", result, result ? error : 0, pid);
+    fprintf(stderr, "%d %d %d\n", result, result ? error : 0, pid);
     return result;
 }

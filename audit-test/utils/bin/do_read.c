@@ -68,6 +68,6 @@ int main(int argc, char **argv)
   read_len = read(sock, buf, buf_len);
   result = (read_len <= 0 ? TEST_FAIL : TEST_SUCCESS);
 
-  printf("%d %zd %d\n", result, result ? errno : read_len, getpid());
+  fprintf(stderr, "%d %zd %d\n", result, result ? errno : read_len, getpid());
   return result;
 }

@@ -56,7 +56,7 @@ int main(int argc, char **argv)
   rc = send(sock, MSG_STRING, MSG_LEN, sflgs);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 
-  printf("%d %d %d\n", result, result ? errno : rc, getpid());
+  fprintf(stderr, "%d %d %d\n", result, result ? errno : rc, getpid());
   return result;
 
 }

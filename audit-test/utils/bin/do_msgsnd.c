@@ -28,6 +28,6 @@ int main(int argc, char **argv)
     exitval = do_msgsnd(atoi(argv[1]), atoi(argv[2]), argv[3]);
     result = exitval < 0;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

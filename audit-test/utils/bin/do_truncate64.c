@@ -28,6 +28,6 @@ int main(int argc, char **argv)
     exitval = truncate64(argv[1], 0);
     result = exitval < 0;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

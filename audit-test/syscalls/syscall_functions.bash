@@ -96,7 +96,7 @@ function test_su_default {
     # do the test
     [[ -z $user ]] && exit_error "test \$user undefined"
     if [[ $user == super ]]; then
-	read testres exitval pid <<<"$(do_$syscall "$@")"
+	read testres exitval pid <<<"$(do_$syscall "$@" 2>&1 1>/dev/null)"
     else
 	if [[ $user == "test" ]]; then
 	    testuser=$TEST_USER
@@ -109,7 +109,7 @@ function test_su_default {
 	read uid euid suid fsuid gid egid sgid fsgid \
 	    <<<"$(/bin/su - $testuser -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
 	read testres exitval pid \
-	    <<<"$(/bin/su - $testuser -c "$(which do_$syscall) $testargs")"
+	    <<<"$(/bin/su - $testuser -c "$(which do_$syscall) $testargs 2>&1 1>/dev/null")"
     fi
 }
 
@@ -121,7 +121,7 @@ function test_su_fork {
 	saved=$(ulimit -u)
 	prepend_cleanup "ulimit -u $saved"
 	ulimit -u 2
-	read testres exitval pid <<<"$(do_$syscall)"
+	read testres exitval pid <<<"$(do_$syscall 2>&1 1>/dev/null)"
     else
 	if [[ $user == "test" ]]; then
 	    testuser=$TEST_USER
@@ -133,7 +133,7 @@ function test_su_fork {
 	read uid euid suid fsuid gid egid sgid fsgid \
 	    <<<"$(/bin/su - $testuser -c 'ps --no-headers -p $$ -o uid,euid,suid,fsuid,gid,egid,sgid,fsgid')"
 	read testres exitval pid \
-	    <<<"$(/bin/su - $testuser -c "ulimit -u 2 ; $(which do_$syscall)")"
+	    <<<"$(/bin/su - $testuser -c "ulimit -u 2 ; $(which do_$syscall) 2>&1 1>/dev/null")"
     fi
 }
 
@@ -163,15 +163,15 @@ function test_su_time_zone {
 
 function test_runcon_default {
     read testres exitval pid \
-	<<<"$(runcon $subj do_$syscall $op $dirname $source $target $flag $setcontext)"
+	<<<"$(runcon $subj do_$syscall $op $dirname $source $target $flag $setcontext 2>&1 1>/dev/null)"
 }
 
 function test_runcon_kill_pgrp {
-    read testres exitval pid <<<"$(runcon $subj do_$syscall $target $flag group)"
+    read testres exitval pid <<<"$(runcon $subj do_$syscall $target $flag group 2>&1 1>/dev/null)"
 }
 
 function test_runcon_msg_send {
-    read testres exitval pid <<<"$(runcon $subj do_$syscall $op $target $flag "$msg")"
+    read testres exitval pid <<<"$(runcon $subj do_$syscall $op $target $flag "$msg" 2>&1 1>/dev/null)"
 }
 
 ######################################################################
@@ -492,7 +492,7 @@ function create_msg_id {
     eval "$(parse_named "$@")" || exit_error
 
     prepend_cleanup "ipcrm -Q $ipc_key"
-    read result id foo <<<"$(${context:+runcon $context} $(which do_msgget) $ipc_key create)"
+    read result id foo <<<"$(${context:+runcon $context} $(which do_msgget) $ipc_key create 2>&1 1>/dev/null)"
     [[ $result == 0 ]] || exit_error "could not create message queue"
 
     eval "$var=\$id"
@@ -516,7 +516,7 @@ function create_sem_id {
     eval "$(parse_named "$@")" || exit_error
 
     prepend_cleanup "ipcrm -S $ipc_key"
-    read result id foo <<<"$(${context:+runcon $context} $(which do_semget) $ipc_key create)"
+    read result id foo <<<"$(${context:+runcon $context} $(which do_semget) $ipc_key create 2>&1 1>/dev/null)"
     [[ $result == 0 ]] || exit_error "could not create semaphore set"
 
     eval "$var=\$id"
@@ -540,7 +540,7 @@ function create_shm_id {
     eval "$(parse_named "$@")" || exit_error
 
     prepend_cleanup "ipcrm -M $ipc_key"
-    read result id foo <<<"$(${context:+runcon $context} $(which do_shmget) $ipc_key create)"
+    read result id foo <<<"$(${context:+runcon $context} $(which do_shmget) $ipc_key create 2>&1 1>/dev/null)"
     [[ $result == 0 ]] || exit_error "could not create shared memory segment"
 
     eval "$var=\$id"
@@ -783,7 +783,7 @@ function create_fs_objects_dac {
 		    value="text/plain"
 		    if [[ $action == remove ]]; then
 			read result foo bar \
-			    <<<"$(do_setxattr $target $flag "$value")"
+			    <<<"$(do_setxattr $target $flag "$value" 2>&1 1>/dev/null)"
 			[[ $result == 0 ]] || exit_error "could not initialize xattr"
 		    fi
 		    ;;
@@ -872,7 +872,7 @@ function create_ipc_objects_dac {
 	    # do_ipc utility purely because the harness wants to find a
 	    # do_$syscall binary.
 	    read result foo bar \
-		<<<"$(do_msgsnd $target $flag 'test message')"
+		<<<"$(do_msgsnd $target $flag 'test message' 2>&1 1>/dev/null)"
 	    [[ $result == 0 ]] || exit_error "could not send initial message" ;;
     esac
 
@@ -1063,7 +1063,7 @@ function create_ipc_objects_mac {
 	    # do_ipc utility purely because the harness wants to find a
 	    # do_$syscall binary.
 	    read result foo bar \
-		<<<"$(runcon $obj do_msgsnd $target $flag 'test message')"
+		<<<"$(runcon $obj do_msgsnd $target $flag 'test message' 2>&1 1>/dev/null)"
 	    [[ $result == 0 ]] || exit_error "could not send initial message" ;;
     esac
 

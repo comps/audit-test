@@ -30,6 +30,6 @@ int main(int argc, char **argv)
     exitval = lsetxattr(argv[1], argv[2], argv[3], strlen(argv[3]), XATTR_CREATE);
     result = exitval < 0;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

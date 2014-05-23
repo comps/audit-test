@@ -69,6 +69,6 @@ int main(int argc, char **argv)
     exitval = openat(dirfd, argv[2], flags);
     result = exitval < 0;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

@@ -73,6 +73,6 @@ int main(int argc, char **argv)
     exitval = syscall(__NR_lchown, argv[1], uid, gid);
     result = exitval < 0;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

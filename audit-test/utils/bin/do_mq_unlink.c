@@ -29,6 +29,6 @@ int main(int argc, char **argv)
     exitval = mq_unlink(argv[1]);
     result = exitval < 0;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

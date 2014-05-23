@@ -66,6 +66,6 @@ int main(int argc, char **argv)
     exitval = bind(sockfd, (struct sockaddr *)&addr, addrlen);
     result = exitval < 0;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

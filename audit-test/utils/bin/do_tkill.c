@@ -48,6 +48,6 @@ int main(int argc, char **argv)
     exitval = syscall(__NR_tkill, pid, signum);
     result = exitval < 0;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

@@ -41,6 +41,6 @@ int main(int argc, char **argv)
     exitval = ptrace(req, atoi(argv[1]), NULL, NULL);
     result = exitval < 0;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

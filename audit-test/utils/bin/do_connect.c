@@ -50,7 +50,7 @@ int main(int argc, char **argv)
   rc = connect(sock, host->ai_addr, host->ai_addrlen);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 
-  printf("%d %d %d\n", result, result ? errno : rc, getpid());
+  fprintf(stderr, "%d %d %d\n", result, result ? errno : rc, getpid());
 
   shutdown(sock, SHUT_RDWR);
   close(sock);

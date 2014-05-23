@@ -38,6 +38,6 @@ int main(int argc, char **argv)
     exitval = symlink(argv[1], argv[2]);
     result = exitval < 0;
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

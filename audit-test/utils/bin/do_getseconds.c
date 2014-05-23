@@ -27,5 +27,6 @@ int main(int argc, char **argv)
     result = exitval < 0;
 
     printf("%ld\n", tv.tv_sec);
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

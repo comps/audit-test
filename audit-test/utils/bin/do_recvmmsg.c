@@ -76,6 +76,6 @@ int main(int argc, char **argv)
   rc = recvmmsg(sock, &mmsg, 1, 0, &ts);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 
-  printf("%d %d %d\n", result, result ? errno : rc, getpid());
+  fprintf(stderr, "%d %d %d\n", result, result ? errno : rc, getpid());
   return result;
 }

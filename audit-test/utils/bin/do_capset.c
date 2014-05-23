@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
     cap_free(caps);
 
-    printf("%d %d %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }
 

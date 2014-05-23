@@ -34,6 +34,6 @@ int main(int argc, char **argv)
 
     result = exitval == -1;
 
-    printf("%d %ld %d\n", result, result ? errno : exitval, getpid());
+    fprintf(stderr, "%d %ld %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

@@ -20,24 +20,28 @@ int main(int argc, char **argv)
 {
     int exitval, result;
     struct timeval tv;
-    struct timezone tz;
+    struct timezone tz_data, *tz = NULL;
 
-    if (argc < 3) {
-	fprintf(stderr, "Usage:\n%s <seconds> <timezone> [DST correction]\n",
+    if (argc < 2) {
+	fprintf(stderr, "Usage:\n%s <seconds> [timezone] [DST correction]\n",
 		argv[0]);
 	return TEST_ERROR;
     }
 
-    memset(&tv, 0, sizeof(tv));
-    memset(&tz, 0, sizeof(tz));
-
+    memset(&tv, 0, sizeof(struct timeval));
     tv.tv_sec = atol(argv[1]);
-    tz.tz_minuteswest = atoi(argv[2]);
+
+    if (argc >= 3) {
+        tz = &tz_data;
+        memset(tz, 0, sizeof(struct timezone));
+        tz->tz_minuteswest = atoi(argv[2]);
+    }
+
     if (argc >= 4)
-	tz.tz_dsttime = atoi(argv[3]);
+	tz->tz_dsttime = atoi(argv[3]);
 
     errno = 0;
-    exitval = settimeofday(&tv, &tz);
+    exitval = settimeofday(&tv, tz);
     result = exitval < 0;
 
     printf("%d %d %d\n", result, result ? errno : exitval, getpid());

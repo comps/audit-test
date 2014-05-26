@@ -23,13 +23,6 @@ int main(int argc, char **argv)
     int exitval, result;
     pid_t pid;
 
-
-    struct rlimit slimit;
-
-    getrlimit(RLIMIT_NPROC, &slimit);
-    fprintf(stderr, "rlim_cur = %d  rlim_max = %d\n",
-	    (int)slimit.rlim_cur, (int)slimit.rlim_max);
-
     /* use syscall() to force fork, as the fork() library routine
      * doesn't call sys_fork on x86_64. */
     errno = 0;

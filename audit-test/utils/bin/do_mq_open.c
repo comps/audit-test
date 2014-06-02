@@ -23,16 +23,22 @@ int main(int argc, char **argv)
 {
     int exitval, result;
     int flags = 0;
+    mode_t mode = S_IRWXU;
 
     if (argc < 3) {
-	fprintf(stderr, "Usage:\n%s <path> <create|read|write|rdwr> [context]\n",
-		argv[0]);
+	fprintf(stderr, "Usage:\n"
+                "%s <path> <create|create:mode|read|write|rdwr> [context]\n",
+                argv[0]);
 	return 1;
     }
 
     if (!strcmp(argv[2], "create")) {
 	/* use O_EXCL on create to catch cleanup problems */
 	flags |= O_CREAT|O_EXCL;
+    } else if (!strncmp(argv[2], "create:", 7)) {
+        /* create with custom mode */
+        flags |= O_CREAT|O_EXCL;
+        mode = strtol(argv[2]+7, NULL, 8);
     } else if (!strcmp(argv[2], "read")) {
 	flags |= O_RDONLY;
     } else if (!strcmp(argv[2], "write")) {
@@ -40,8 +46,6 @@ int main(int argc, char **argv)
     } else if (!strcmp(argv[2], "rdwr")) {
 	flags |= O_RDWR;
     } else {
-	fprintf(stderr, "Usage:\n%s <path> <create|read|write|rdwr> [context]\n",
-		argv[0]);
 	return 1;
     }
 
@@ -53,7 +57,7 @@ int main(int argc, char **argv)
 #endif
 
     errno = 0;
-    exitval = mq_open(argv[1], flags, S_IRWXU, NULL);
+    exitval = mq_open(argv[1], flags, mode, NULL);
     result = exitval < 0;
 
     printf("%d %d %d\n", result, result ? errno : exitval, getpid());

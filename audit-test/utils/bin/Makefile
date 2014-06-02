@@ -150,6 +150,8 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_setfsuid \
 		  do_setgid \
 		  do_setgroups \
+		  do_sethostname \
+		  do_setdomainname \
 		  do_setns \
 		  do_setregid \
 		  do_setresgid \

@@ -20,7 +20,7 @@
 
 int main(int argc, char **argv)
 {
-  int rc, result, sflgs;
+  int rc, result, sflgs = 0;
   struct addrinfo *host = NULL;
   struct addrinfo addr_hints;
   int sock;
@@ -34,6 +34,7 @@ int main(int argc, char **argv)
   if (strcasecmp(argv[2], "tcp") == 0) {
     addr_hints.ai_socktype = SOCK_STREAM;
     addr_hints.ai_protocol = IPPROTO_TCP;
+    sflgs |= MSG_OOB;
   } else if (strcasecmp(argv[2], "udp") == 0) {
     addr_hints.ai_socktype = SOCK_DGRAM;
     addr_hints.ai_protocol = IPPROTO_UDP;
@@ -52,8 +53,6 @@ int main(int argc, char **argv)
     return TEST_ERROR;
 
   errno = 0;
-  sflgs = 0;
-  sflgs |= MSG_OOB;
   rc = send(sock, MSG_STRING, MSG_LEN, sflgs);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 

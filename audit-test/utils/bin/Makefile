@@ -162,6 +162,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_setxattr \
 		  do_socketcall \
 		  do_stat \
+		  do_statfs \
 		  do_stime \
 		  do_swapon \
 		  do_tgkill \

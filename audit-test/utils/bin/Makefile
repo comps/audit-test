@@ -124,6 +124,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_fremovexattr \
 		  do_fsetxattr \
 		  do_getpid \
+		  do_getppid \
 		  do_getseconds \
 		  do_gettimezone \
 		  do_getxattr \

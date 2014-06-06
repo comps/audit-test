@@ -135,6 +135,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_getppid \
 		  do_getseconds \
 		  do_gettimezone \
+		  do_getuid \
 		  do_getxattr \
 		  do_init_module \
 		  do_ioctl \

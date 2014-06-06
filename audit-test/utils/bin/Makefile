@@ -129,6 +129,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_fremovexattr \
 		  do_fsetxattr \
 		  do_fstat \
+		  do_newfstatat \
 		  do_ftruncate \
 		  do_getegid \
 		  do_geteuid \

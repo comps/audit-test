@@ -146,6 +146,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_getresgid \
 		  do_getresuid \
 		  do_getsid \
+		  do_gettid \
 		  do_init_module \
 		  do_ioctl \
 		  do_kill \

@@ -140,6 +140,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_gettimezone \
 		  do_getuid \
 		  do_getxattr \
+		  do_getgroups \
 		  do_init_module \
 		  do_ioctl \
 		  do_kill \

@@ -80,6 +80,7 @@ ONLY32Z_EXE	= do_chown32 \
 
 ONLY32_EXE	= do_chown32 \
 		  do_fchown32 \
+		  do_fstatat64 \
 		  do_ioperm \
 		  do_iopl \
 		  do_lchown32 \

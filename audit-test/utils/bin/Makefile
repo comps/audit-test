@@ -118,6 +118,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_dummy \
 		  do_dummy_group \
 		  do_execve \
+		  do_fanotify_mark \
 		  do_fchmod \
 		  do_fchmodat \
 		  do_fchown \

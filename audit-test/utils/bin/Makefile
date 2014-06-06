@@ -142,6 +142,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_getxattr \
 		  do_getgroups \
 		  do_getpgid \
+		  do_getpgrp \
 		  do_init_module \
 		  do_ioctl \
 		  do_kill \

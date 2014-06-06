@@ -130,6 +130,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_fstat \
 		  do_ftruncate \
 		  do_getegid \
+		  do_getgid \
 		  do_getpid \
 		  do_getppid \
 		  do_getseconds \

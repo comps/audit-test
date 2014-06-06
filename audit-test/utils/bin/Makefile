@@ -124,6 +124,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_fchown \
 		  do_fchownat \
 		  do_fgetxattr \
+		  do_flistxattr \
 		  do_fremovexattr \
 		  do_fsetxattr \
 		  do_getpid \

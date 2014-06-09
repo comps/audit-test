@@ -20,32 +20,53 @@
 int main(int argc, char **argv)
 {
     int exitval, result;
-    gid_t gid = -1;
+    long id_read;
+    char *endptr;
     uid_t uid = -1;
+    gid_t gid = -1;
     struct passwd *pw;
-    struct group *grp;
+    struct group *gr;
 
-    if (argc != 3 && argc != 4) {
-        fprintf(stderr, "Usage:\n%s <path> <owner> [<group>]\n", argv[0]);
+    if (argc < 3) {
+        fprintf(stderr, "Usage:\n%s <path> <owner> [group]\n", argv[0]);
         return TEST_ERROR;
     }
 
-    if(strcmp(argv[2],"")) {
+    /* try to convert owner/group into numeric values,
+     * if it fails with EINVAL, the owner/group is probably given
+     * as name (and to be resolved via get*nam) */
+
+    /* uid */
+    errno = 0;
+    id_read = strtol(argv[2], &endptr, 10);
+    if (errno || endptr == argv[2] || id_read > USHRT_MAX) {
+        errno = 0;
         pw = getpwnam(argv[2]);
         if (!pw) {
-            perror("do_chown: getpwnam");
+            fprintf(stderr, "do_chown: getpwnam: %s\n",
+                    errno ? strerror(errno) : "no entry found");
             return TEST_ERROR;
         }
         uid = pw->pw_uid;
+    } else {
+        uid = id_read;
     }
 
-    if(argc == 4 && strcmp(argv[3],"")) {
-        grp = getgrnam(argv[3]);
-        if(!grp) {
-            perror("do_chown: getgrnam");
-            return TEST_ERROR;
+    /* gid */
+    if (argc > 3) {
+        errno = 0;
+        id_read = strtol(argv[3], &endptr, 10);
+        if (errno || endptr == argv[3] || id_read > USHRT_MAX) {
+            gr = getgrnam(argv[3]);
+            if (!gr) {
+                fprintf(stderr, "do_chown: getgrnam: %s\n",
+                        errno ? strerror(errno) : "no entry found");
+                return TEST_ERROR;
+            }
+            gid = gr->gr_gid;
+        } else {
+            gid = id_read;
         }
-        gid = grp->gr_gid;
     }
 
     /* use syscall() to force chown over chown32 */

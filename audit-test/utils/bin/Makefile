@@ -131,6 +131,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_fstat \
 		  do_newfstatat \
 		  do_ftruncate \
+		  do_futimesat \
 		  do_getegid \
 		  do_geteuid \
 		  do_getgid \

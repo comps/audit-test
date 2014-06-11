@@ -153,6 +153,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_ioctl \
 		  do_ioprio_get \
 		  do_ioprio_set \
+		  do_kcmp \
 		  do_kill \
 		  do_lgetxattr \
 		  do_link \

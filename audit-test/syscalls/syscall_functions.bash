@@ -1075,25 +1075,25 @@ function create_ipc_objects_mac {
 function create_mq_objects_mac {
     declare p=$1 mq_dir=/dev/mqueue
 
+    # Message queue fs should be mounted by default, if not see "Mounting
+    # the message queue file system" section in mq_overview(7).
+    mount | grep $mq_dir || exit_error "Message queue FS is not mounted"
+
     if [[ $p == mq_create ]]; then
-	create_mq_name target context=$obj
+        create_mq_name target context=$obj
 
-	mkdir $mq_dir ; mount -t mqueue mqueue $mq_dir
-	    # determine the fscreate context, see comment for
-	    # set_fscreate_context() for an explanation
-	    setcontext=$(set_fscreate_context $subj $obj $mq_dir)
-	umount $mq_dir ; rmdir $mq_dir
+        # determine the fscreate context, see comment for
+        # set_fscreate_context() for an explanation
+        setcontext=$(set_fscreate_context $subj $obj $mq_dir)
 
-	[[ $expres == fail ]] && augrokfunc=augrok_mls_name
-	obj=$setcontext
+        [[ $expres == fail ]] && augrokfunc=augrok_mls_name
+        obj=$setcontext
     else
-	create_mq target context=$obj
-	# get the real object type
-	mkdir $mq_dir ; mount -t mqueue mqueue $mq_dir
-	obj=$(get_fsobj_context "$mq_dir/$target")
-	runcon $subj ls "$mq_dir/$target" || \
-	    augrokfunc=augrok_mls_search_fail
-	umount $mq_dir ; rmdir $mq_dir
+        create_mq target context=$obj
+        # get the real object type
+        obj=$(get_fsobj_context "$mq_dir/$target")
+        runcon $subj ls "$mq_dir/$target" || \
+            augrokfunc=augrok_mls_search_fail
     fi
 
     # set augrok params first, before we change $target

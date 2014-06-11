@@ -152,6 +152,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_inotify_add_watch \
 		  do_ioctl \
 		  do_ioprio_get \
+		  do_ioprio_set \
 		  do_kill \
 		  do_lgetxattr \
 		  do_link \

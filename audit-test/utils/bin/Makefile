@@ -160,6 +160,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_linkat \
 		  do_listxattr \
 		  do_llistxattr \
+		  do_lookup_dcookie \
 		  do_lremovexattr \
 		  do_lsetxattr \
 		  do_lstat \

@@ -137,7 +137,9 @@ Build the audit-test suite
 # cd /usr/local/eal4_testing/audit-test
 
 If running on an LSPP/MLS system, install the test policy and change to the
-"lspp_test_r" role.
+"lspp_test_r" role. Please note that the policy make will require root
+password to be able to load the policy. This is because sysadm_r and secadm_r
+roles got separated in RHEL7.
 
 # make policy
 # newrole -r lspp_test_r

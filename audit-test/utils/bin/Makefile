@@ -166,6 +166,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_lstat \
 		  do_migrate_pages \
 		  do_mount \
+		  do_move_pages \
 		  do_ptrace \
 		  do_readlink \
 		  do_readlinkat \

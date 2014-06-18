@@ -187,6 +187,90 @@ function parse_named {
 }
 
 ######################################################################
+# testing helpers
+######################################################################
+
+# evaluate a syscall wrapper result
+#
+# read expected result ("pass"/"fail") from $1 and expected numeric errno
+# from $2 (in case of "fail") and execute the rest of the arguments, catching
+# stderr and expecting '<result> <errno> <pid>' output
+# - if no such output is found, exit_error
+# - if <result> doesn't match expected result, exit_fail
+# - if <result> is "fail" and <errno> doesn't match expected errno, exit_fail
+# - else do nothing (ie. allowing the test case to exit_pass)
+#
+# errno can also be given as a comma-separated list of possible values
+#
+# exports a bash array called EVAL_SYSCALL_RESULT with 3 members, mapped
+# directly to the three values returned by the syscall (result, errno, pid)
+#
+# usage: eval_syscall <expected_result> <expected_errno> <cmd> [args]
+eval_syscall()
+{
+    local res= exp_res="$1" errno= exp_errno="$2"
+    local i= rc= ret= tmp= tmpfifo= junk=
+
+    [ $# -lt 3 ] && exit_error "$FUNCNAME: not enough arguments"
+    shift 2
+
+    # translate pass/fail into 0/1
+    case "$exp_res" in
+        pass)  exp_res=0 ;;
+        fail)  exp_res=1 ;;
+           *)  exit_error "$FUNCNAME: invalid expected result" ;;
+    esac
+
+    # execute the command, catch stderr
+    # NOTE: no reasonably safe way to do this without tempfile in bash,
+    #       we need to preserve this shell since <cmd> may be another
+    #       shell function (ie. another wrapping one) calling exit_*
+    # NOTE: can't use pipes and stderr/out swap due to the need of { },
+    #       breaking *pend_cleanup redefinitions in nested functions
+    # NOTE: "Process substitution" is *unsafe* here as bash waits only
+    #       for the first process to finish, not for the "tee", resulting
+    #       in grep getting empty file (before tee is able to fill it),
+    #       therefore we use named pipes as a primitive "mutex" lock
+    tmpfifo=$(mktemp -u) || exit_error
+    prepend_cleanup "rm -f \"$tmpfifo\""
+    mkfifo "$tmpfifo" || exit_error
+    tmp=$(mktemp) || exit_error
+    prepend_cleanup "rm -f \"$tmp\""
+
+    "$@" 2> >(tee "$tmp" 1>&2; echo >"$tmpfifo")
+    rc=$?
+    read junk <"$tmpfifo"  # wait for tee to finish
+
+    # try to find something that looks like a syscall wrapper output,
+    # use only first match (no more than one should be present anyway)
+    # NOTE: we can't just use all of stderr, bash -x output is there
+    ret=$(grep -m1 '^[0-9] [0-9]\+ [0-9]\+$' "$tmp") || exit_error \
+        "$FUNCNAME: no matching syscall wrapper result found"
+
+    read res errno junk <<<"$ret"
+    declare -g -a EVAL_SYSCALL_RESULT=("$res" "$errno" "$junk")
+
+    # compare result
+    [ "$res" -eq "$exp_res" ] || \
+        exit_fail "syscall result $res doesn't match expected value $exp_res"
+
+    # sanity - wrapper return code (0/1) should equal syscall result (0/1)
+    [ "$rc" -eq "$res" ] || \
+        exit_error "syscall result $res doesn't match wrapper rc $rc"
+
+    # if fail, compare errno
+    if [ "$res" -eq 1 ]; then
+        local IFS=','
+        for i in $exp_errno; do [ "$i" -eq "$errno" ] && break; done
+        [ "$i" -eq "$errno" ] || \
+            exit_fail "syscall errno $errno doesn't match expected value $exp_errno"
+    fi
+
+    # else do nothing
+    return 0
+}
+
+######################################################################
 # service functions
 ######################################################################
 

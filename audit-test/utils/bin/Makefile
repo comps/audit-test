@@ -61,12 +61,14 @@ NET_EXE		= do_accept \
 RT_EXE		= do_clock_settime
 
 ONLY32P_EXE	= do_mmap2 \
+		  do_nice \
 		  do_uselib
 
 ONLY32Z_EXE	= do_chown32 \
 		  do_fchown32 \
 		  do_lchown32 \
 		  do_mmap2 \
+		  do_nice \
 		  do_setfsgid32 \
 		  do_setfsuid32 \
 		  do_setgid32 \
@@ -85,6 +87,7 @@ ONLY32_EXE	= do_chown32 \
 		  do_iopl \
 		  do_lchown32 \
 		  do_mmap2 \
+		  do_nice \
 		  do_setfsgid32 \
 		  do_setfsuid32 \
 		  do_setgid32 \

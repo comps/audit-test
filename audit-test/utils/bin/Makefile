@@ -172,6 +172,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_mlockall \
 		  do_mount \
 		  do_move_pages \
+		  do_open_by_handle_at \
 		  do_ptrace \
 		  do_readlink \
 		  do_readlinkat \

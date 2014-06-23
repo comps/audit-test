@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 
 static char* filename = "./id";
-static char* output   = "./output";
+static char* output   = "/tmp/output";
 struct passwd *pw;
 struct group *gr;
 
@@ -34,12 +34,13 @@ void fileinfo() {
     printf(readbuf);
     printf("\n");
     close(fd);
+    unlink(output);
 }
 
 /*
  * Perform read, write and execute checks.
  */
-int check_id(mode_t mode, char *uname, char *gname) {
+int check_id(mode_t mode, char *uname, char *gname, int nobody) {
 
     int rc = 0;
     int fd;
@@ -55,8 +56,15 @@ int check_id(mode_t mode, char *uname, char *gname) {
     /*
      * Check effective user
      */
-    if ((rc = system("./id -un >./output")) == -1) {
-      goto EXIT;
+    if (nobody) {
+        if ((rc = system("su -s /bin/bash -c './id -un >/tmp/output' nobody")) == -1) {
+          goto EXIT;
+        }
+    }
+    else {
+        if ((rc = system("./id -un >/tmp/output")) == -1) {
+          goto EXIT;
+        }
     }
     memset(result, '\0', sizeof(result));
     if ((fd = open(output, O_RDONLY)) == -1) {
@@ -77,8 +85,15 @@ int check_id(mode_t mode, char *uname, char *gname) {
     /*
      * Check effective group
      */
-    if ((rc = system("./id -gn >./output")) == -1) {
-      goto EXIT;
+    if (nobody) {
+         if ((rc = system("su -s /bin/bash -c './id -gn >/tmp/output' nobody")) == -1) {
+          goto EXIT;
+        }
+    }
+    else {
+        if ((rc = system("./id -gn >/tmp/output")) == -1) {
+          goto EXIT;
+        }
     }
     memset(result, '\0', sizeof(result));
     if ((fd = open(output, O_RDONLY)) == -1) {
@@ -98,9 +113,9 @@ int check_id(mode_t mode, char *uname, char *gname) {
     printf("\n");
 
 EXIT:
+    unlink(output);
 
     return (rc);
-
 }
 
 int main(int argc, char *argv[]) {
@@ -137,24 +152,44 @@ int main(int argc, char *argv[]) {
     /*
      * Test suid - set suid bit, owner=nobody, group=root
      */
-    check_id(S_ISUID, "nobody", "root");
+    check_id(S_ISUID, "nobody", "root", 0);
 
     /*
      * Test sgid - set sgid bit, owner=root, group=nobody
      */
-    check_id(S_ISGID, "root", "nobody");
+    check_id(S_ISGID, "root", "nobody", 0);
 
     /*
      * Test suid/sgid - set suid/sgid bits owner=nobody, group=nobody
      */
-    check_id(S_ISUID | S_ISGID, "nobody", "nobody");
+    check_id(S_ISUID | S_ISGID, "nobody", "nobody", 0);
 
-    rc = 0;
+    /*
+     * Change owner of local id file - root:root
+     */
+    if ((rc = chown(filename, 0, 0)) == -1) {
+        goto EXIT;
+    }
+
+    /*
+     * Test suid - set suid bit, owner=root, group=nobody
+     */
+    check_id(S_ISUID, "root", "nobody", 1);
+
+    /*
+     * Test sgid - set sgid bit, owner=nobody, group=root
+     */
+    check_id(S_ISGID, "nobody", "root", 1);
+
+    /*
+     * Test suid/sgid - set suid/sgid bits owner=root, group=root
+     */
+    check_id(S_ISUID | S_ISGID, "root", "root", 1);
 
 EXIT:
     unlink(filename);
-    unlink(output);
 
+    rc = 0;
     /*
     ** The reason for 2 return codes:
     ** g_rc represents a failure of the tested function.

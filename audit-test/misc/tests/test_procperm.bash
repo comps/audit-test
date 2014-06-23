@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #*********************************************************************
 #   Copyright (C) International Business Machines  Corp., 2000

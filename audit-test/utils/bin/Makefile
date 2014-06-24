@@ -175,6 +175,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_open_by_handle_at \
 		  do_pivot_root \
 		  do_prctl \
+		  do_prlimit64 \
 		  do_ptrace \
 		  do_readlink \
 		  do_readlinkat \

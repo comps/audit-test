@@ -194,6 +194,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_setresgid \
 		  do_setresuid \
 		  do_setreuid \
+		  do_setrlimit \
 		  do_settimeofday \
 		  do_setuid \
 		  do_setxattr \

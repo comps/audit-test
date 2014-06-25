@@ -188,6 +188,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_rmdir \
 		  do_sched_getaffinity \
 		  do_sched_getparam \
+		  do_sched_getscheduler \
 		  do_sched_setaffinity \
 		  do_sched_setparam \
 		  do_setfsgid \

@@ -186,6 +186,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_rename \
 		  do_renameat \
 		  do_rmdir \
+		  do_sched_getaffinity \
 		  do_setfsgid \
 		  do_setfsuid \
 		  do_setgid \

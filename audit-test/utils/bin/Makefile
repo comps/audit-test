@@ -177,6 +177,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_prctl \
 		  do_prlimit64 \
 		  do_process_vm_readv \
+		  do_process_vm_writev \
 		  do_ptrace \
 		  do_readlink \
 		  do_readlinkat \

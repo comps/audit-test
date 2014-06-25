@@ -189,6 +189,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_sched_getaffinity \
 		  do_sched_getparam \
 		  do_sched_getscheduler \
+		  do_sched_rr_get_interval \
 		  do_sched_setaffinity \
 		  do_sched_setparam \
 		  do_sched_setscheduler \

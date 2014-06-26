@@ -217,6 +217,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_stime \
 		  do_swapoff \
 		  do_swapon \
+		  do_syslog \
 		  do_tgkill \
 		  do_tkill \
 		  do_truncate \

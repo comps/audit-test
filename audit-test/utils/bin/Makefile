@@ -202,6 +202,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_setdomainname \
 		  do_setns \
 		  do_setpgid \
+		  do_setpriority \
 		  do_setregid \
 		  do_setresgid \
 		  do_setresuid \

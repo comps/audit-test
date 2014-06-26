@@ -215,6 +215,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_stat \
 		  do_statfs \
 		  do_stime \
+		  do_swapoff \
 		  do_swapon \
 		  do_tgkill \
 		  do_tkill \

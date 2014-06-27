@@ -227,6 +227,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_uname \
 		  do_unlink \
 		  do_unlinkat \
+		  do_unshare \
 		  do_uselib \
 		  do_utime \
 		  do_utimensat \

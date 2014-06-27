@@ -224,7 +224,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_truncate64 \
 		  do_umask \
 		  do_umount \
-		  do_umount2 \
+		  do_uname \
 		  do_unlink \
 		  do_unlinkat \
 		  do_uselib \

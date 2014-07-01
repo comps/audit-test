@@ -77,10 +77,8 @@ int translate_ipc_flags(char *string, int *flags)
 	*flags |= IPC_RMID;
     else if (!strcmp(string, "set"))
 	*flags |= IPC_SET;
-    else {
-	fprintf(stderr, "ipc flag must be one of <create|read|write|rdwr|remove|set>\n");
-	return 1;
-    }
+    else
+        *flags |= atoi(string);
 
     return 0;
 }

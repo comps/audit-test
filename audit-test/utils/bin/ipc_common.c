@@ -159,6 +159,9 @@ int do_msgctl(int msqid, int cmd)
 	buf.msg_perm.uid = 0; /* use root's uid */
 	ret = msgctl(msqid, cmd, &buf);
 	break;
+    case IPC_STAT:
+	ret = msgctl(msqid, cmd, &buf);
+	break;
     }
     return ret;
 }
@@ -231,6 +234,9 @@ int do_semctl(int semid, int cmd)
 	((struct semid_ds *)sebuf.buf)->sem_perm.uid = 0; /* use root's uid */
 	ret = semctl(semid, 1, cmd, sebuf);
 	break;
+    case IPC_STAT:
+	ret = semctl(semid, 1, cmd, &sebuf);
+	break;
     }
     return ret;
 }
@@ -278,6 +284,9 @@ int do_shmctl(int shmid, int cmd)
     case IPC_SET:
 	memset(&buf, 0, sizeof(buf));
 	buf.shm_perm.uid = 0; /* use root's uid */
+	ret = shmctl(shmid, cmd, &buf);
+	break;
+    case IPC_STAT:
 	ret = shmctl(shmid, cmd, &buf);
 	break;
     }

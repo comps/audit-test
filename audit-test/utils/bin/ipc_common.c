@@ -34,43 +34,6 @@
 #define SHMGET          23
 #define SHMCTL          24
 
-int check_ipc_usage(char *call, int nargs)
-{
-    if (!strcmp(call, "msgctl") || !strcmp(call, "msgget") ||
-	!strcmp(call, "semctl") || !strcmp(call, "semget") ||
-	!strcmp(call, "shmctl") | !strcmp(call, "shmget")) {
-	if (nargs != 3) {
-	    fprintf(stderr, "%s <ipc_key> <flag>\n", call);
-	    return 1;
-	}
-    } else if (!strcmp(call, "msgrcv")) {
-	if (nargs != 3) {
-	    fprintf(stderr, "%s <qid> <msg_type>\n", call);
-	    return 1;
-	}
-    } else if (!strcmp(call, "msgsnd")) {
-	if (nargs != 4) {
-	    fprintf(stderr, "%s <qid> <msg_type> <msg_string>\n", call);
-	    return 1;
-	}
-    } else if (!strcmp(call, "semop") || !strcmp(call, "semtimedop")) {
-	if (nargs != 3) {
-	    fprintf(stderr, "%s <semid> <flag>\n", call);
-	    return 1;
-	}
-    } else if (!strcmp(call, "shmat")) {
-	if (nargs != 3) {
-	    fprintf(stderr, "%s <shmid> <flag>\n", call);
-	    return 1;
-	}
-    } else {
-	fprintf(stderr, "%s is not a supported ipc operation\n", call);
-	return 1;
-    }
-
-    return 0;
-}
-
 int translate_ipc_flags(char *string, int *flags)
 {
     if (!strcmp(string, "create"))

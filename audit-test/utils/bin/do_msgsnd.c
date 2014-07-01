@@ -21,8 +21,10 @@ int main(int argc, char **argv)
 {
     int exitval, result;
 
-    if (check_ipc_usage("msgsnd", argc))
-	return 1;
+    if (argc != 4) {
+        fprintf(stderr, "Usage:\n%s <msqid> <msgtyp> <msg_data>\n", argv[0]);
+        return 1;
+    }
 
     errno = 0;
     exitval = do_msgsnd(atoi(argv[1]), atoi(argv[2]), argv[3]);

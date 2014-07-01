@@ -27,9 +27,6 @@ int main(int argc, char **argv)
 	return 1;
     }
 
-    if (check_ipc_usage(argv[1], argc - 1))
-	return 1;
-
     if (translate_ipc_op(argv[1], &op))
 	return 1;
 

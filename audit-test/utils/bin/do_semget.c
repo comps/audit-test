@@ -22,8 +22,10 @@ int main(int argc, char **argv)
     int exitval, result;
     int flags = 0;
 
-    if (check_ipc_usage("semget", argc))
-	return 1;
+    if (argc != 3) {
+        fprintf(stderr, "Usage:\n%s <ipc_key> <flag>\n", argv[0]);
+        return 1;
+    }
 
     if (translate_ipc_flags(argv[2], &flags))
 	return 1;

@@ -22,8 +22,10 @@ int main(int argc, char **argv)
     int exitval, result;
     int flags = 0;
 
-    if (check_ipc_usage("semtimedop", argc))
-	return 1;
+    if (argc != 3) {
+        fprintf(stderr, "Usage:\n%s <semid> <op>\n", argv[0]);
+        return 1;
+    }
 
     if (translate_sem_flags(argv[2], &flags))
 	return 1;

@@ -21,8 +21,10 @@ int main(int argc, char **argv)
 {
     int exitval, result;
 
-    if (check_ipc_usage("msgrcv", argc))
-	return 1;
+    if (argc != 3) {
+        fprintf(stderr, "Usage:\n%s <msqid> <msgtyp>\n", argv[0]);
+        return 1;
+    }
 
     errno = 0;
     exitval = do_msgrcv(atoi(argv[1]), atoi(argv[2]));

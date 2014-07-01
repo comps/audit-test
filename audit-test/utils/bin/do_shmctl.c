@@ -21,8 +21,10 @@ int main(int argc, char **argv)
 {
     int exitval, result;
 
-    if (check_ipc_usage("shmctl", argc))
-	return 1;
+    if (argc != 3) {
+        fprintf(stderr, "Usage:\n%s <shmid> <cmd>\n", argv[0]);
+        return 1;
+    }
 
     errno = 0;
     exitval = do_shmctl(atoi(argv[1]), atoi(argv[2]));

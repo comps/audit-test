@@ -23,8 +23,10 @@ int main(int argc, char **argv)
     int flags = 0;
     long exitval;
 
-    if (check_ipc_usage("shmat", argc))
-	return 1;
+    if (argc != 3) {
+        fprintf(stderr, "Usage:\n%s <shmid> <op>\n", argv[0]);
+        return 1;
+    }
 
     if (translate_shm_flags(argv[2], &flags))
 	return 1;

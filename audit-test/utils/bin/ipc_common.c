@@ -14,10 +14,25 @@
  */
 
 #include "includes.h"
-#include "ipc_hack.h"
 #include <sys/msg.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
+
+/* from <linux/ipc.h> which has conflicting definition of ipc_perm */
+/* NOTE that these defines are (at this time) used only internally
+ * for one specific switch{} in do_ipc.c */
+#define SEMOP            1
+#define SEMGET           2
+#define SEMCTL           3
+#define SEMTIMEDOP       4
+#define MSGSND          11
+#define MSGRCV          12
+#define MSGGET          13
+#define MSGCTL          14
+#define SHMAT           21
+#define SHMDT           22
+#define SHMGET          23
+#define SHMCTL          24
 
 int check_ipc_usage(char *call, int nargs)
 {

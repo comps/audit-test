@@ -14,8 +14,7 @@
  */
 
 #include "includes.h"
-
-#include "ipc_common.c"
+#include <sys/msg.h>
 
 #define MAX_MSG 256
 

@@ -14,8 +14,7 @@
  */
 
 #include "includes.h"
-
-#include "ipc_common.c"
+#include <sys/shm.h>
 
 int main(int argc, char **argv)
 {

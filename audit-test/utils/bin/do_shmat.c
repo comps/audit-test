@@ -28,8 +28,14 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (translate_shm_flags(argv[2], &flags))
-	return 1;
+    if (!strcmp(argv[2], "read"))
+        flags = SHM_RDONLY;
+    else if (!strcmp(argv[2], "write"))
+        flags = 0;
+    else {
+        fprintf(stderr, "op must be one of <read|write>\n");
+        return 1;
+    }
 
     errno = 0;
     exitval = (long)shmat(atoi(argv[1]), NULL, flags);

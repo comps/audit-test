@@ -34,63 +34,6 @@
 #define SHMGET          23
 #define SHMCTL          24
 
-int translate_ipc_flags(char *string, int *flags)
-{
-    if (!strcmp(string, "create"))
-	/* use IPC_EXCL on create to catch cleanup problems */
-	*flags |= IPC_CREAT|IPC_EXCL|S_IRUSR|S_IWUSR;
-    else if (!strncmp(string, "create:", strlen("create:"))) {
-        /* create with custom mode */
-        *flags |= IPC_CREAT|IPC_EXCL;
-        *flags &= ~((int)0x01ff);  /* reset 9 lsbits */
-        *flags |= strtol(string+strlen("create:"), NULL, 8);
-    }
-    else if (!strcmp(string, "read"))
-	*flags |= S_IRUSR;
-    else if (!strcmp(string, "write"))
-	*flags |= S_IWUSR;
-    else if (!strcmp(string, "rdwr"))
-	*flags |= S_IRUSR|S_IWUSR;
-    else if (!strcmp(string, "remove"))
-	*flags |= IPC_RMID;
-    else if (!strcmp(string, "set"))
-	*flags |= IPC_SET;
-    else if (!strcmp(string, "stat"))
-        *flags |= IPC_STAT;
-    else
-        *flags |= atoi(string);
-
-    return 0;
-}
-
-int translate_sem_flags(char *string, int *flags)
-{
-    if (!strcmp(string, "read"))
-	*flags = 0;
-    else if (!strcmp(string, "write"))
-	*flags = 1;
-    else {
-	fprintf(stderr, "sem flag must be one of <read|write>\n");
-	return 1;
-    }
-
-    return 0;
-}
-
-int translate_shm_flags(char *string, int *flags)
-{
-    if (!strcmp(string, "read"))
-	*flags = SHM_RDONLY;
-    else if (!strcmp(string, "write"))
-	*flags = 0;
-    else {
-	fprintf(stderr, "shm flag must be one of <read|write>\n");
-	return 1;
-    }
-
-    return 0;
-}
-
 int translate_ipc_op(char *string, int *op)
 {
     if (!strcmp(string, "msgctl"))

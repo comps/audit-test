@@ -29,8 +29,14 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (translate_sem_flags(argv[2], &flags))
-	return 1;
+    if (!strcmp(argv[2], "read"))
+        flags = 0;
+    else if (!strcmp(argv[2], "write"))
+        flags = 1;
+    else {
+        fprintf(stderr, "op must be one of <read|write>\n");
+        return 1;
+    }
 
     sops.sem_num = 0;
     sops.sem_op = flags;

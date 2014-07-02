@@ -27,8 +27,24 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (translate_ipc_flags(argv[2], &flags))
-	return 1;
+    if (!strcmp(argv[2], "create")) {
+        /* use IPC_EXCL on create to catch cleanup problems */
+        flags |= IPC_CREAT|IPC_EXCL;
+        /* create with default mode */
+        flags |= S_IRUSR|S_IWUSR;
+    } else if (!strncmp(argv[2], "create:", 7)) {
+        flags |= IPC_CREAT|IPC_EXCL;
+        /* create with custom mode */
+        flags |= strtol(argv[2]+7, NULL, 8);
+    }
+    else if (!strcmp(argv[2], "read"))
+        flags |= S_IRUSR;
+    else if (!strcmp(argv[2], "write"))
+        flags |= S_IWUSR;
+    else if (!strcmp(argv[2], "rdwr"))
+        flags |= S_IRUSR|S_IWUSR;
+    else
+        flags |= atoi(argv[2]);
 
     errno = 0;
     exitval = msgget(atoi(argv[1]), flags);

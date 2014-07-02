@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 {
     int exitval, result;
     struct shmid_ds buf;
-    int shmid, cmd;
+    int shmid, cmd = 0;
 
     if (argc != 3) {
         fprintf(stderr, "Usage:\n%s <shmid> <cmd>\n", argv[0]);
@@ -29,7 +29,14 @@ int main(int argc, char **argv)
     }
 
     shmid = atoi(argv[1]);
-    cmd = atoi(argv[2]);
+    if (!strcmp(argv[2], "remove"))
+        cmd |= IPC_RMID;
+    else if (!strcmp(argv[2], "set"))
+        cmd |= IPC_SET;
+    else if (!strcmp(argv[2], "stat"))
+        cmd |= IPC_STAT;
+    else
+        cmd |= atoi(argv[2]);
 
     errno = 0;
 

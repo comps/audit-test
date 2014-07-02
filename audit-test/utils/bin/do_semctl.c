@@ -28,7 +28,7 @@ union semun
 int main(int argc, char **argv)
 {
     int exitval, result;
-    int semid, cmd;
+    int semid, cmd = 0;
     union semun sebuf;
     struct semid_ds tmpbuf;
 
@@ -38,7 +38,14 @@ int main(int argc, char **argv)
     }
 
     semid = atoi(argv[1]);
-    cmd = atoi(argv[2]);
+    if (!strcmp(argv[2], "remove"))
+        cmd |= IPC_RMID;
+    else if (!strcmp(argv[2], "set"))
+        cmd |= IPC_SET;
+    else if (!strcmp(argv[2], "stat"))
+        cmd |= IPC_STAT;
+    else
+        cmd |= atoi(argv[2]);
 
     errno = 0;
 

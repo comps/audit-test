@@ -92,6 +92,8 @@ int translate_ipc_flags(char *string, int *flags)
 	*flags |= IPC_RMID;
     else if (!strcmp(string, "set"))
 	*flags |= IPC_SET;
+    else if (!strcmp(string, "stat"))
+        *flags |= IPC_STAT;
     else
         *flags |= atoi(string);
 

@@ -32,10 +32,15 @@ int main(int argc, char **argv)
 	return 1;
 
     errno = 0;
-    exitval = do_shmat(atoi(argv[1]), flags);
-
+    exitval = (long)shmat(atoi(argv[1]), NULL, flags);
     result = exitval == -1;
 
     fprintf(stderr, "%d %ld %d\n", result, result ? errno : exitval, getpid());
+
+    if (exitval != -1 && shmdt((void*)exitval) < 0) {
+        fprintf(stderr, "Warning: can't detach from shared memory! %s\n",
+                strerror(errno));
+    }
+
     return result;
 }

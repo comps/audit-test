@@ -20,14 +20,36 @@
 int main(int argc, char **argv)
 {
     int exitval, result;
+    struct shmid_ds buf;
+    int shmid, cmd;
 
     if (argc != 3) {
         fprintf(stderr, "Usage:\n%s <shmid> <cmd>\n", argv[0]);
         return 1;
     }
 
+    shmid = atoi(argv[1]);
+    cmd = atoi(argv[2]);
+
     errno = 0;
-    exitval = do_shmctl(atoi(argv[1]), atoi(argv[2]));
+
+    switch (cmd) {
+    case IPC_RMID:
+        exitval = shmctl(shmid, cmd, NULL);
+        break;
+    case IPC_SET:
+        memset(&buf, 0, sizeof(buf));
+        buf.shm_perm.uid = 0; /* use root's uid */
+        exitval = shmctl(shmid, cmd, &buf);
+        break;
+    case IPC_STAT:
+        exitval = shmctl(shmid, cmd, &buf);
+        break;
+    default:
+        exitval = -1;
+        break;
+    }
+
     result = exitval < 0;
 
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());

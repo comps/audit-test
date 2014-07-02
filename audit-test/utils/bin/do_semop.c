@@ -21,6 +21,7 @@ int main(int argc, char **argv)
 {
     int exitval, result;
     int flags = 0;
+    struct sembuf sops;
 
     if (argc != 3) {
         fprintf(stderr, "Usage:\n%s <semid> <op>\n", argv[0]);
@@ -30,8 +31,12 @@ int main(int argc, char **argv)
     if (translate_sem_flags(argv[2], &flags))
 	return 1;
 
+    sops.sem_num = 0;
+    sops.sem_op = flags;
+    sops.sem_flg = SEM_UNDO;
+
     errno = 0;
-    exitval = do_semop(atoi(argv[1]), flags);
+    exitval = semop(atoi(argv[1]), &sops, 1);
     result = exitval < 0;
 
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());

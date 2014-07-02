@@ -20,15 +20,36 @@
 int main(int argc, char **argv)
 {
     int exitval, result;
+    struct msgbuf *buf;
+    int buflen;
+
+    int msqid;
+    long msgtyp;
+    char *msg;
 
     if (argc != 4) {
         fprintf(stderr, "Usage:\n%s <msqid> <msgtyp> <msg_data>\n", argv[0]);
         return 1;
     }
 
+    msqid = atoi(argv[1]);
+    msgtyp = atoi(argv[2]);
+    msg = argv[3];
+
+    buflen = sizeof(struct msgbuf) + strlen(msg) + 1;
+    buf = (struct msgbuf *)malloc(buflen);
+    if (!buf) {
+        perror("malloc");
+        return 1;
+    }
+    buf->mtype = msgtyp;
+    strcpy(buf->mtext, msg);
+
     errno = 0;
-    exitval = do_msgsnd(atoi(argv[1]), atoi(argv[2]), argv[3]);
+    exitval = msgsnd(msqid, buf, buflen, IPC_NOWAIT);
     result = exitval < 0;
+
+    free(buf);
 
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;

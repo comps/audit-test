@@ -17,17 +17,34 @@
 
 #include "ipc_common.c"
 
+#define MAX_MSG 256
+
 int main(int argc, char **argv)
 {
     int exitval, result;
+    struct msgbuf *buf;
+    int buflen;
+
+    int msqid;
+    long msgtyp;
 
     if (argc != 3) {
         fprintf(stderr, "Usage:\n%s <msqid> <msgtyp>\n", argv[0]);
         return 1;
     }
 
+    msqid = atoi(argv[1]);
+    msgtyp = atoi(argv[2]);
+
+    buflen = sizeof(struct msgbuf) + MAX_MSG;
+    buf = (struct msgbuf *)malloc(buflen);
+    if (!buf) {
+        perror("malloc");
+        return 1;
+    }
+
     errno = 0;
-    exitval = do_msgrcv(atoi(argv[1]), atoi(argv[2]));
+    exitval = msgrcv(msqid, buf, buflen, msgtyp, IPC_NOWAIT);
     result = exitval < 0;
 
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());

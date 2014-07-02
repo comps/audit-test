@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 	return 1;
 
     errno = 0;
-    exitval = do_shmget(atoi(argv[1]), flags);
+    exitval = shmget(atoi(argv[1]), sysconf(_SC_PAGESIZE), flags);
     result = exitval < 0;
 
     if (result == 0)

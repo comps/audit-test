@@ -21,6 +21,8 @@ int main(int argc, char **argv)
 {
     int exitval, result;
     int flags = 0;
+    struct sembuf sops;
+    struct timespec timeout = { 1, 0 };
 
     if (argc != 3) {
         fprintf(stderr, "Usage:\n%s <semid> <op>\n", argv[0]);
@@ -30,8 +32,12 @@ int main(int argc, char **argv)
     if (translate_sem_flags(argv[2], &flags))
 	return 1;
 
+    sops.sem_num = 0;
+    sops.sem_op = flags;
+    sops.sem_flg = SEM_UNDO;
+
     errno = 0;
-    exitval = do_semtimedop(atoi(argv[1]), flags);
+    exitval = semtimedop(atoi(argv[1]), &sops, 1, &timeout);
     result = exitval < 0;
 
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());

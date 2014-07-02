@@ -17,17 +17,49 @@
 
 #include "ipc_common.c"
 
+union semun
+{
+    int val;
+    struct semid_ds *buf;
+    unsigned short int *array;
+    struct seminfo *__buf;
+};
+
 int main(int argc, char **argv)
 {
     int exitval, result;
+    int semid, cmd;
+    union semun sebuf;
+    struct semid_ds tmpbuf;
 
     if (argc != 3) {
         fprintf(stderr, "Usage:\n%s <semid> <cmd>\n", argv[0]);
         return 1;
     }
 
+    semid = atoi(argv[1]);
+    cmd = atoi(argv[2]);
+
     errno = 0;
-    exitval = do_semctl(atoi(argv[1]), atoi(argv[2]));
+
+    switch (cmd) {
+    case IPC_RMID:
+        exitval = semctl(semid, 1, cmd, NULL);
+        break;
+    case IPC_SET:
+        memset(&sebuf, 0, sizeof(sebuf));
+        sebuf.buf = &tmpbuf;
+        ((struct semid_ds *)sebuf.buf)->sem_perm.uid = 0; /* use root's uid */
+        exitval = semctl(semid, 1, cmd, sebuf);
+        break;
+    case IPC_STAT:
+        exitval = semctl(semid, 1, cmd, &sebuf);
+        break;
+    default:
+        exitval = -1;
+        break;
+    }
+
     result = exitval < 0;
 
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());

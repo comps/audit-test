@@ -20,14 +20,36 @@
 int main(int argc, char **argv)
 {
     int exitval, result;
+    struct msqid_ds buf;
+    int msqid, cmd;
 
     if (argc != 3) {
         fprintf(stderr, "Usage:\n%s <msqid> <cmd>\n", argv[0]);
         return 1;
     }
 
+    msqid = atoi(argv[1]);
+    cmd = atoi(argv[2]);
+
     errno = 0;
-    exitval = do_msgctl(atoi(argv[1]), atoi(argv[2]));
+
+    switch (cmd) {
+    case IPC_RMID:
+        exitval = msgctl(msqid, cmd, NULL);
+        break;
+    case IPC_SET:
+        memset(&buf, 0, sizeof(buf));
+        buf.msg_perm.uid = 0; /* use root's uid */
+        exitval = msgctl(msqid, cmd, &buf);
+        break;
+    case IPC_STAT:
+        exitval = msgctl(msqid, cmd, &buf);
+        break;
+    default:
+        exitval = -1;
+        break;
+    }
+
     result = exitval < 0;
 
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());

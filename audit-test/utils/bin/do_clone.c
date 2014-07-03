@@ -22,16 +22,15 @@ int main(int argc, char **argv)
     int flags = CLONE_VFORK;
     pid_t pid;
 
-    if (argc != 2) {
-	fprintf(stderr, "Usage:\n%s <flag>\n", argv[0]);
-	return TEST_ERROR;
-    }
+    /* Usage: "%s [flag]\n", argv[0] */
 
-    if (!strcmp(argv[1], "newns")) {
-	flags |= CLONE_NEWNS;
-    } else {
-	fprintf(stderr, "Usage:\n%s: unknown flag: %s\n", argv[0], argv[1]);
-	return TEST_ERROR;
+    if (argc >= 2) {
+        if (!strcmp(argv[1], "newns")) {
+            flags |= CLONE_NEWNS;
+        } else {
+            fprintf(stderr, "unknown flag: %s\n", argv[1]);
+            return TEST_ERROR;
+        }
     }
 
     /* use syscall() to force clone over clone2 */

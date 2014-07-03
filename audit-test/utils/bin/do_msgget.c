@@ -32,6 +32,9 @@ int main(int argc, char **argv)
     exitval = do_msgget(atoi(argv[1]), flags);
     result = exitval < 0;
 
+    if (result == 0)
+        printf("%d\n", exitval);
+
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

@@ -102,6 +102,17 @@ int main(int argc, char **argv)
 	result = exitval < 0;
     }
 
+    switch(op) {
+    case MSGGET:
+    case SEMGET:
+    case SHMGET:
+        if (result == 0)
+            printf("%d\n", exitval);
+        break;
+    default:
+        break;
+    }
+
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

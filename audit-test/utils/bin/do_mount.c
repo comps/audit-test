@@ -20,19 +20,35 @@ int main(int argc, char **argv)
 {
     int exitval, result;
     void *data = NULL;
+    unsigned long def_flags = MS_MGC_VAL;
+    unsigned long flags = def_flags;
 
     if (argc < 4) {
 	fprintf(stderr,
-		"Usage:\n%s <source> <target> <type> [[fs|def]context=context]\n",
-		argv[0]);
+		"Usage:\n%s <source> <target> <type> [data]\n"
+		"%s <source> <target> <type> [flags] [data]\n",
+		argv[0], argv[0]);
 	return 1;
     }
 
-    if (argc == 5)
-	data = argv[4];
+    if (argc > 4) {
+        if (strstr(argv[4], "MS_BIND"))
+            flags |= MS_BIND;
+
+        /* add more flags here */
+
+        /* if no flags were specified, use the string as data */
+        if (flags == def_flags)
+            data = argv[4];
+    }
+
+    /* if at least one flag matched and an additional arg was
+     * specified, use it as data */
+    if (argc > 5 && flags != def_flags)
+        data = argv[5];
 
     errno = 0;
-    exitval = mount(argv[1], argv[2], argv[3], MS_MGC_VAL, data);
+    exitval = mount(argv[1], argv[2], argv[3], flags, data);
     result = exitval < 0;
 
     printf("%d %d %d\n", result, result ? errno : exitval, getpid());

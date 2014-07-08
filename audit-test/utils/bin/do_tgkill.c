@@ -22,8 +22,8 @@ int main(int argc, char **argv)
     int pid, signum;
 
     if (argc < 3) {
-	fprintf(stderr, "Usage:\n%s <pid> <sigkill|sigstop|sigusr1>\n", argv[0]);
-	return 1;
+        fprintf(stderr, "Usage:\n%s <pid> <sigkill|sigstop|sigusr1|pidcheck>\n", argv[0]);
+        return 1;
     }
     pid = atoi(argv[1]);
 
@@ -33,9 +33,14 @@ int main(int argc, char **argv)
 	signum = SIGSTOP;
     } else if (!strcmp(argv[2], "sigusr1")) {
 	signum = SIGUSR1;
+    } else if (!strcmp(argv[2], "pidcheck")) {
+       /* "If  sig  is 0, then no signal is sent, but error checking is still
+        * performed; this can be used to check for the existence of a process ID
+        * or process group ID." */
+        signum = 0;
     } else {
-	fprintf(stderr, "Usage:\n%s <pid> <sigkill|sigstop|sigusr1>\n", argv[0]);
-	return 1;
+        fprintf(stderr, "unsupported signal\n");
+        return 1;
     }
 
     errno = 0;

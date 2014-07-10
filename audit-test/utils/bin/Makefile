@@ -117,6 +117,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_chdir \
 		  do_chmod \
 		  do_chroot \
+		  do_clock_adjtime \
 		  do_clone \
 		  do_delete_module \
 		  do_dummy \

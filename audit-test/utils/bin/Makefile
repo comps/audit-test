@@ -184,6 +184,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_quotactl \
 		  do_readlink \
 		  do_readlinkat \
+		  do_reboot \
 		  do_removexattr \
 		  do_rename \
 		  do_renameat \

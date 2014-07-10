@@ -190,6 +190,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_removexattr \
 		  do_rename \
 		  do_renameat \
+		  do_request_key \
 		  do_rmdir \
 		  do_sched_getaffinity \
 		  do_sched_getparam \

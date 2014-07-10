@@ -160,6 +160,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_ioprio_set \
 		  do_kcmp \
 		  do_kexec_load \
+		  do_keyctl \
 		  do_kill \
 		  do_lgetxattr \
 		  do_link \

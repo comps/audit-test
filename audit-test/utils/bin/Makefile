@@ -234,7 +234,8 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_uselib \
 		  do_utime \
 		  do_utimensat \
-		  do_utimes
+		  do_utimes \
+		  do_vhangup
 
 ifneq ($(MACHINE), aarch64)
 ALL_EXE		+= do_chown \

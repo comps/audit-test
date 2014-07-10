@@ -112,6 +112,7 @@ ALL_EXE		= $(CAPS_EXE) \
 		  $(RT_EXE) \
 		  do_access \
 		  do_acct \
+		  do_add_key \
 		  do_adjtimex \
 		  do_bind \
 		  do_chdir \

@@ -17,20 +17,30 @@
 
 int main(int argc, char **argv)
 {
-    int dir_fd;
+    int dir_fd, newdir_fd;
     int exitval, result;
 
-    if (argc != 4) {
-	fprintf(stderr, "Usage:\n%s <directory> <oldpath> <newpath>\n", argv[0]);
+    if (argc < 4) {
+	fprintf(stderr, "Usage:\n%s <directory> <oldpath> <newpath> [<new_directory>]\n", argv[0]);
 	return TEST_ERROR;
     }
 
+    /* directory */
     dir_fd = open(argv[1], O_DIRECTORY);
     if (dir_fd < 0)
-	    return TEST_ERROR;
+        return TEST_ERROR;
+
+    /* new_directory */
+    if (argc > 4) {
+        newdir_fd = open(argv[4], O_DIRECTORY);
+        if (newdir_fd < 0)
+            return TEST_ERROR;
+    } else {
+        newdir_fd = dir_fd;
+    }
 
     errno = 0;
-    exitval = linkat(dir_fd, argv[2], dir_fd, argv[3], 0);
+    exitval = linkat(dir_fd, argv[2], newdir_fd, argv[3], 0);
     result = exitval < 0;
 
     printf("%d %d %d\n", result, result ? errno : exitval, getpid());

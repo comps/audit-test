@@ -101,6 +101,8 @@ ONLY32_EXE	= do_chown32 \
 
 ONLYIA64_EXE	= do_clone2
 
+ONLYPPC_EXE	= do_rtas
+
 ONLY86_EXE	= do_fork \
 		  do_vfork
 
@@ -263,8 +265,12 @@ endif
 ifeq ($(MACHINE), ia64)
 ALL_EXE		+= $(ONLYIA64_EXE)
 else
+ifeq ($(MACHINE), ppc64)
+ALL_EXE		+= $(ONLYPPC_EXE)
+else
 ifneq ($(MACHINE), aarch64)
 ALL_EXE		+= $(ONLY86_EXE)
+endif
 endif
 endif
 

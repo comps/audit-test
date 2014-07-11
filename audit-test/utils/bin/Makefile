@@ -102,6 +102,7 @@ ONLY32_EXE	= do_chown32 \
 ONLYIA64_EXE	= do_clone2
 
 ONLYPPC_EXE	= do_pciconfig_read \
+		  do_pciconfig_write \
 		  do_rtas
 
 ONLY86_EXE	= do_fork \

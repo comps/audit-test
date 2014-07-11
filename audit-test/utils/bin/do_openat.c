@@ -48,11 +48,16 @@ int main(int argc, char **argv)
 	return TEST_ERROR;
     }
 
-    dirfd = open(argv[1], O_DIRECTORY);
-    if (dirfd == -1) {
-	perror("do_openat: open dirfd");
-	return TEST_ERROR;
+    if (!strcmp(argv[1], "AT_FDCWD")) {
+        dirfd = AT_FDCWD;
+    } else {
+        dirfd = open(argv[1], O_DIRECTORY);
+        if (dirfd == -1) {
+            perror("do_openat: open dirfd");
+            return TEST_ERROR;
+        }
     }
+
 #ifdef LSM_SELINUX
     if (argc == 5 && setfscreatecon(argv[4]) < 0) {
 	perror("do_openat: setfscreatecon");

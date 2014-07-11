@@ -28,10 +28,14 @@ int main(int argc, char **argv)
 	return TEST_ERROR;
     }
 
-    dir_fd = open(argv[1], O_DIRECTORY);
-    if (dir_fd == -1) {
-	perror("do_fchownat: open dir fd");
-	return TEST_ERROR;
+    if (!strcmp(argv[1], "AT_FDCWD")) {
+        dir_fd = AT_FDCWD;
+    } else {
+        dir_fd = open(argv[1], O_DIRECTORY);
+        if (dir_fd == -1) {
+            perror("do_fchownat: open dir_fd");
+            return TEST_ERROR;
+        }
     }
 
     pw = getpwnam(argv[3]);

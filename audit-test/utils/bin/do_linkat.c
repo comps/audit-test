@@ -26,15 +26,27 @@ int main(int argc, char **argv)
     }
 
     /* directory */
-    dir_fd = open(argv[1], O_DIRECTORY);
-    if (dir_fd < 0)
-        return TEST_ERROR;
+    if (!strcmp(argv[1], "AT_FDCWD")) {
+        dir_fd = AT_FDCWD;
+    } else {
+        dir_fd = open(argv[1], O_DIRECTORY);
+        if (dir_fd == -1) {
+            perror("do_linkat: open dir_fd");
+            return TEST_ERROR;
+        }
+    }
 
     /* new_directory */
     if (argc > 4) {
-        newdir_fd = open(argv[4], O_DIRECTORY);
-        if (newdir_fd < 0)
-            return TEST_ERROR;
+        if (!strcmp(argv[4], "AT_FDCWD")) {
+            newdir_fd = AT_FDCWD;
+        } else {
+            newdir_fd = open(argv[4], O_DIRECTORY);
+            if (newdir_fd == -1) {
+                perror("do_linkat: open newdir_fd");
+                return TEST_ERROR;
+            }
+        }
     } else {
         newdir_fd = dir_fd;
     }

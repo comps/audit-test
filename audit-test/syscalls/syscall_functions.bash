@@ -715,8 +715,8 @@ function create_io_objects_cap {
 	io_priv)
 	    flag=1 ;;	# process io privilege level
 	port_priv)
-	    target=24 	# site-dependent mail handling, unused
-	    flag=0	# INADDR_ANY
+	    target=0.0.0.0	# INADDR_ANY
+	    flag=24		# site-dependent mail handling, unused
 	    [[ -n $op ]] && augrokfunc=augrok_op ;;
 	fio_fibmap)
 	    create_file target mode="a+rwx"

@@ -18,14 +18,19 @@
 TOPDIR		= ..
 UTILSDIR	= .
 CPPFLAGS 	+= -I$(UTILSDIR)/include
+ifdef LSM_SELINUX
 LDLIBS		+= -lselinux
 
 UTILS_EXE	= test_context \
 		  test_setcon
+endif
 
 ALL_EXE		= $(UTILS_EXE)
 
-SUB_DIRS	= bin network-server
+SUB_DIRS	= bin
+ifdef LSM_SELINUX
+SUB_DIRS	+= network-server
+endif
 
 include $(TOPDIR)/rules.mk
 

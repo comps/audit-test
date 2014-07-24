@@ -463,11 +463,15 @@ function show_header {
         printf "%-32s %s\n" Mode: "${MODE:-(native)}"
         printf "%-32s %s\n" Hostname: "$(uname -n)"
         printf "%-32s %s\n" Profile: "$PPROFILE"
-        printf "%-32s %s\n" "selinux-policy version:" "$(rpm -q selinux-policy)"
+        if [[ $LSM_SELINUX ]] ; then
+          printf "%-32s %s\n" "selinux-policy version:" "$(rpm -q selinux-policy)"
+        fi
         if [[ $PPROFILE == lspp ]] ; then
           printf "%-32s %s\n" "lspp_test policy version:" "$(semodule -l | grep lspp_test | awk '{print $2}')"
         fi
-        printf "\n%s\n" "$(sestatus)"
+        if [[ $LSM_SELINUX ]] ; then
+          printf "\n%s\n" "$(sestatus)"
+        fi
         echo
     } | tee $opt_logdir/$header_log
 }

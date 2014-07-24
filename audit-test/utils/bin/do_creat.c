@@ -14,7 +14,7 @@
  */
 
 #include "includes.h"
-#ifndef SUSE
+#ifdef LSM_SELINUX
 #include <selinux/selinux.h>
 #endif
 
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 	return 1;
     }
 
-#ifndef SUSE
+#ifdef LSM_SELINUX
     if ((argc > 2) && (setfscreatecon(argv[2]) < 0)) {
 	perror("do_creat: setfscreatecon");
 	return 1;

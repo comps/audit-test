@@ -193,7 +193,7 @@ ALL_EXE		+= $(ONLY86_EXE)
 endif
 
 $(CAPS_EXE): LDLIBS += -lcap
-ifneq ($(DISTRO), SUSE)
+ifdef LSM_SELINUX
 $(CREATE_EXE): LDLIBS += -lselinux
 $(MQ_EXE): LDLIBS += -lrt -lselinux
 else

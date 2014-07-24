@@ -15,7 +15,7 @@
  */
 
 #include "includes.h"
-#ifndef SUSE
+#ifdef LSM_SELINUX
 #include <selinux/selinux.h>
 #endif
 
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     dir_fd = open(argv[1], O_DIRECTORY);
     if (dir_fd < 0)
 	    return TEST_ERROR;
-#ifndef SUSE
+#ifdef LSM_SELINUX
     if (argc == 5 && setfscreatecon(argv[4]) < 0) {
 	perror("do_symlinkat: setfscreatecon");
 	return TEST_ERROR;

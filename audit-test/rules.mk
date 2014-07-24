@@ -75,13 +75,14 @@ RELEASE = $(wildcard /etc/*-release)
 ifeq (SuSE, $(findstring SuSE, $(RELEASE)))
 CFLAGS +=-DSUSE
 export DISTRO=SUSE
-endif
-ifeq (fedora, $(findstring fedora, $(RELEASE)))
-CFLAGS +=-DFEDORA
+else ifeq (fedora, $(findstring fedora, $(RELEASE)))
+CFLAGS +=-DFEDORA -DLSM_SELINUX
 export DISTRO=FEDORA
+export LSM_SELINUX=1
 else ifeq (redhat, $(findstring redhat, $(RELEASE)))
-CFLAGS +=-DRHEL
+CFLAGS +=-DRHEL -DLSM_SELINUX
 export DISTRO=RHEL
+export LSM_SELINUX=1
 endif
 
 ifeq (s390x, $(findstring s390x, $(MACHINE)))

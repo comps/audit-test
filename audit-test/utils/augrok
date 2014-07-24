@@ -113,8 +113,12 @@ sub new {
         open(S, "gcc $m32 -E -dM /usr/include/syscall.h |") or die;
         my $line;
         while (defined($line = <S>)) {
-            next unless $line =~ /^#define\s+__NR_(\w+)\s+(\w+|\(.*?\))/;
-            $singleton->{$1} = $2;
+            if ($line =~ /^#define\s+__NR_(\w+)\s+(\w+|\(.*?\))/) {
+                $singleton->{$1} = $2;
+            }
+            if ($line =~ /^#define\s+__NR3264_(\w+)\s+(\w+|\(.*?\))/) {
+                $singleton->{"3264_$1"} = $2;
+            }
         }
         close S;
 
@@ -136,6 +140,13 @@ sub new {
                 elsif ($v =~ /^\(__NR_(\w+)\s*\+\s*(\d+)\)$/ and
                          defined($new_v = $singleton->{$1})) {
                     $singleton->{$k} = $new_v + $2;
+                    $changed = 1;
+                }
+
+                #define __NR_truncate __NR3264_truncate
+                if ($v =~ /^__NR3264_(\w+)$/ and
+                         defined($new_v = $singleton->{"3264_$1"})) {
+                    $singleton->{$k} = $new_v;
                     $changed = 1;
                 }
 

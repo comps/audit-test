@@ -187,6 +187,10 @@ ALL_EXE		+= $(ONLY32_EXE)
 endif
 endif
 endif
+ifeq ($(MACHINE), arm)
+ALL_EXE		+= $(ONLY32_EXE)
+endif
+
 
 ifeq ($(MACHINE), ia64)
 ALL_EXE		+= $(ONLYIA64_EXE)

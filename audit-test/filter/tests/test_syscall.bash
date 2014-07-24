@@ -21,13 +21,17 @@
 source filter_functions.bash || exit 2
 
 # setup
-syscall_name="open"
+if [[ ${MACHINE} = "aarch64" ]]; then
+    syscall_name="openat"
+else
+    syscall_name="open"
+fi
 syscall_num=$(augrok --resolve $syscall_name) \
     || exit_error "unable to determine the syscall number for $syscall_name"
 
 op=$1
 case $op in
-    name)   filter_rule="exit,always -F arch=b$MODE -S open" ;;
+    name)   filter_rule="exit,always -F arch=b$MODE -S $syscall_name" ;;
     number) filter_rule="exit,always -S $syscall_num";;
     *) exit_fail "unknown test operation" ;;
 esac

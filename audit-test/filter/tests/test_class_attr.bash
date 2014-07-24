@@ -32,15 +32,29 @@ log_mark=$(stat -c %s $audit_log)
 
 # test
 do_chmod $watch 777
-do_chown $watch root
+if [[ ${MACHINE} = "aarch64" ]]; then
+    do_fchownat $(dirname $watch) $(basename $watch) root
+else
+    do_chown $watch root
+fi
 do_unlink $watch
 
 # verify audit record
-augrok --seek=$log_mark type==SYSCALL syscall==chmod name==$watch \
-    || exit_fail "Expected record for 'chmod' not found."
-augrok --seek=$log_mark type==SYSCALL syscall==chown name==$watch \
-    || exit_fail "Expected record for 'chown' not found."
-augrok --seek=$log_mark type==SYSCALL syscall==unlink name==$watch \
-    && exit_fail "Unexpected record for 'unlink' found."
+if [[ ${MACHINE} = "aarch64" ]]; then
+    augrok --seek=$log_mark type==SYSCALL syscall==fchmodat name==$watch \
+        || exit_fail "Expected record for 'chmod' not found."
+    augrok --seek=$log_mark type==SYSCALL syscall==fchownat
+           name==$(basename $watch) \
+        || exit_fail "Expected record for 'chown' not found."
+    augrok --seek=$log_mark type==SYSCALL syscall==unlinkat name==$watch \
+        && exit_fail "Unexpected record for 'unlink' found."
+else
+    augrok --seek=$log_mark type==SYSCALL syscall==chmod name==$watch \
+        || exit_fail "Expected record for 'chmod' not found."
+    augrok --seek=$log_mark type==SYSCALL syscall==chown name==$watch \
+        || exit_fail "Expected record for 'chown' not found."
+    augrok --seek=$log_mark type==SYSCALL syscall==unlink name==$watch \
+        && exit_fail "Unexpected record for 'unlink' found."
+fi
 
 exit_pass

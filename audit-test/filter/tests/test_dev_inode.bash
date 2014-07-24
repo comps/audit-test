@@ -34,11 +34,16 @@ minor=$((0x$minor))
 event_obj=$(get_event_obj $1)
 [[ $event_obj != $tmp1 ]] && prepend_cleanup "rm -f $event_obj"
 
-auditctl -a exit,always -F arch=b$MODE -S open -F key=$tmp1 \
-    -F inode=$inode -F devmajor=$major -F devminor=$minor
+if [[ ${MACHINE} = "aarch64" ]]; then
+    syscall_name="openat"
+else
+    syscall_name="open"
+fi
 
+auditctl -a exit,always -F arch=b$MODE -S $syscall_name -F key=$tmp1 \
+    -F inode=$inode -F devmajor=$major -F devminor=$minor
 prepend_cleanup "
-auditctl -d exit,always -F arch=b$MODE -S open -F key=$tmp1 \
+auditctl -d exit,always -F arch=b$MODE -S $syscall_name -F key=$tmp1 \
     -F inode=$inode -F devmajor=$major -F devminor=$minor"
 
 log_mark=$(stat -c %s $audit_log)

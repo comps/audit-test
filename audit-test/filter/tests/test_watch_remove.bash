@@ -30,6 +30,10 @@ case $op in
     unlink) touch $name
             gen_audit_event="rm $name" ;;
     rmdir)  mkdir $name
+            if [[ ${MACHINE} = "aarch64" ]]; then
+                op="unlink";
+                opat="unlinkat";
+            fi
             gen_audit_event="rmdir $name" ;;
     rename) touch $name
             gen_audit_event="mv $tmp1 $name" ;;

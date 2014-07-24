@@ -29,8 +29,14 @@ watch=$tmp1
 event_obj=$(get_event_obj $1)
 [[ $event_obj != $watch ]] && prepend_cleanup "rm -f $event_obj"
 
-auditctl -a exit,always -F arch=b$MODE -S open -F key=$watch -F path=$watch
-prepend_cleanup "auditctl -d exit,always -F arch=b$MODE -S openat -F key=$watch -F path=$watch"
+if [[ ${MACHINE} = "aarch64" ]]; then
+    syscall_name="openat"
+else
+    syscall_name="open"
+fi
+
+auditctl -a exit,always -F arch=b$MODE -S $syscall_name -F key=$watch -F path=$watch
+prepend_cleanup "auditctl -d exit,always -F arch=b$MODE -S $syscall_name -F key=$watch -F path=$watch"
 
 # test open with O_CREAT|O_RDONLY; verify audit record
 log_mark=$(stat -c %s $audit_log)

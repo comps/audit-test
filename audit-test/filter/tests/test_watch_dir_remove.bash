@@ -28,6 +28,20 @@ tmpd=$(mktemp -d) || exit_fail "create tempdir failed"
 watch="$tmpd"
 name="$tmpd/foo"
 
+case $op in
+    rename) touch $name
+            gen_audit_event="mv $tmp1 $name" ;;
+    rmdir)  mkdir $name
+            if [[ ${MACHINE} = "aarch64" ]]; then
+                op="unlink";
+                opat="unlinkat";
+            fi
+            gen_audit_event="rmdir $name" ;;
+    unlink) touch $name
+            gen_audit_event="rm $name" ;;
+    *) exit_fail "unknown test operation: $op" ;;
+esac
+
 auditctl -a exit,always -F arch=b$MODE -S $op -F path=$watch
 auditctl -a exit,always -F arch=b$MODE -S $opat -F path=$watch
 
@@ -35,16 +49,6 @@ prepend_cleanup "
     auditctl -d exit,always -F arch=b$MODE -S $op -F path=$watch
     auditctl -d exit,always -F arch=b$MODE -S $opat -F path=$watch
     rm -rf $tmpd"
-
-case $op in
-    rename) touch $name
-            gen_audit_event="mv $tmp1 $name" ;;
-    rmdir)  mkdir $name
-            gen_audit_event="rmdir $name" ;;
-    unlink) touch $name
-            gen_audit_event="rm $name" ;;
-    *) exit_fail "unknown test operation: $op" ;;
-esac
 
 log_mark=$(stat -c %s $audit_log)
 

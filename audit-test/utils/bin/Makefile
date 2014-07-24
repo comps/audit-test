@@ -112,7 +112,6 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_bind \
 		  do_chdir \
 		  do_chmod \
-		  do_chown \
 		  do_clone \
 		  do_delete_module \
 		  do_dummy \
@@ -130,7 +129,6 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_init_module \
 		  do_ioctl \
 		  do_kill \
-		  do_lchown \
 		  do_lgetxattr \
 		  do_link \
 		  do_linkat \
@@ -174,6 +172,10 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_utimensat \
 		  do_utimes
 
+ifneq ($(MACHINE), aarch64)
+ALL_EXE		+= do_chown \
+		  do_lchown
+endif
 ifeq ($(MODE), 32)
 ifeq ($(MACHINE), ppc64)
 ALL_EXE		+= $(ONLY32P_EXE)
@@ -189,7 +191,9 @@ endif
 ifeq ($(MACHINE), ia64)
 ALL_EXE		+= $(ONLYIA64_EXE)
 else
+ifneq ($(MACHINE), aarch64)
 ALL_EXE		+= $(ONLY86_EXE)
+endif
 endif
 
 $(CAPS_EXE): LDLIBS += -lcap

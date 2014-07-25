@@ -115,9 +115,7 @@ Untar the previously created tar file into the newly created
 or
 # tar xvf audit-test-<commit>.tar.gz
 
-When the test suite is installed using the tar file, the ownership
-and permissions will be set correctly.  If another method is used to
-transfer the test suite, manually set the directory permissions:
+Ensure that all files in the target directory have the correct ownership:
 
 # chown -R root:root /usr/local/eal4_testing
 # chmod a+rX /usr/local/eal4_testing

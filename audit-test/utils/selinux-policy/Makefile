@@ -78,7 +78,7 @@ verify:
 		echo "not installed"; \
 	fi;
 	@echo -n " Number of LSPP test files labeled incorrectly: "; \
-	restorecon -rvn $(TEST_BASEDIR) | wc -l;
+	restorecon -Frvn $(TEST_BASEDIR) | wc -l;
 
 # During this install a role is added to an SELinux user which we use 
 # as a positive test of semanage.  If this did not work correctly the 
@@ -135,7 +135,7 @@ relabel:
 	@echo "Resetting file ownership in $(TEST_BASEDIR)"
 	@chown -R root:root $(TEST_BASEDIR)
 	@echo "Relabeling LSPP tests in $(TEST_BASEDIR)"
-	@restorecon -r $(TEST_BASEDIR)
+	@restorecon -Fr $(TEST_BASEDIR)
 
 # remove only generated files
 distclean:

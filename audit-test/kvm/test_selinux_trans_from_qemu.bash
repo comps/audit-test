@@ -38,7 +38,7 @@ if [[ $allowed_count -eq 0 ]]; then
 fi
 
 for type in $allowed; do
-	if [[ ! "$type" =~ smbd_t|ptchown_t|abrt_helper_t|virt_bridgehelper_t ]]; then
+	if [[ ! "$type" =~ smbd_t|ptchown_t|abrt_helper_t|virt_bridgehelper_t|prelink_mask_t ]]; then
 		exit_fail
 	fi
 done

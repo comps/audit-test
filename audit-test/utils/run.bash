@@ -581,7 +581,7 @@ function rerun_test {
     [ ! -f "$opt_logdir/rollup.log.$1" ] && return 0
 
     # if test passed do not run
-    grep -q "\[[0-9]\+\].*PASS[[:space:]]*$" $opt_logdir/rollup.log.$1 && return 1
+    grep -q ".*PASS[[:space:]]*$" $opt_logdir/rollup.log.$1 && return 1
 
     return 0
 }

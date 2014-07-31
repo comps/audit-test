@@ -30,6 +30,3 @@ all: $(ALL_EXE)
 
 install: $(SRVR_EXE)
 	install -o root -g root -m 0644 lblnet_tst-tcp /etc/xinetd.d
-
-clobber:
-	$(RM) $(ALL_EXE)

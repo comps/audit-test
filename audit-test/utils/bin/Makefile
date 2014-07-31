@@ -208,6 +208,3 @@ endif
 $(RT_EXE): LDLIBS += -lrt
 
 all: $(ALL_EXE)
-
-clobber:
-	$(RM) $(ALL_EXE)

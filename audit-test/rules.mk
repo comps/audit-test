@@ -102,7 +102,7 @@ endif
 ##########################################################################
 
 .PHONY: all run \
-	clean clobber distclean _clean _clobber _distclean \
+	clean distclean _clean _distclean \
 	msgque rmlogs showrpms showrpms2
 
 all: deps subdirs $(ALL_AR) $(ALL_EXE) $(ALL_SO)

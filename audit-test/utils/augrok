@@ -144,7 +144,7 @@ sub new {
                 }
 
                 #define __NR_truncate __NR3264_truncate
-                if ($v =~ /^__NR3264_(\w+)$/ and
+                elsif ($v =~ /^__NR3264_(\w+)$/ and
                          defined($new_v = $singleton->{"3264_$1"})) {
                     $singleton->{$k} = $new_v;
                     $changed = 1;

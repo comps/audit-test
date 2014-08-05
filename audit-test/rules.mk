@@ -51,8 +51,8 @@ LINK_SO		= $(CC) $(LDFLAGS) -shared -o $@ $^ $(LOADLIBES) $(LDLIBS)
 export MACHINE
 
 # If MODE isn't set explicitly, the default for the machine is used
-export NATIVE   = $(strip $(shell file /bin/bash | awk -F'[ -]' '{print $$3}'))
-export MODE     ?= $(NATIVE)
+NATIVE		= $(strip $(shell file /bin/bash | awk -F'[ -]' '{print $$3}'))
+export MODE	?= $(NATIVE)
 ifneq ($(MODE), $(NATIVE))
     ifeq ($(MODE), 32)
 	    ifneq (,$(findstring $(MACHINE), $(Z64)))
@@ -314,3 +314,10 @@ subdirs_quiet:
 	@for x in $(SUB_DIRS); do \
 	    $(MAKE) --no-print-directory -C $$x $(MAKECMDGOALS) || exit $$?; \
 	done
+
+##########################################################################
+# Various helper rules
+##########################################################################
+
+export-%:
+	@[ '$($*)' ] && echo 'export $*=$($*)' || true

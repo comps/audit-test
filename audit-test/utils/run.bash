@@ -31,6 +31,21 @@
 # usage information can be retrieved with "./run.bash --help"
 
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+# read certain variables from the make system
+# - these variables are normally exported by 'make run', but not by manual
+#   ./run.bash, so read them (in either case) manually here
+if [[ -f Makefile ]]; then
+    eval "$(MAKELEVEL= make --no-print-directory -f Makefile \
+            export-TOPDIR export-MACHINE export-MODE export-DISTRO \
+            export-LSM_SELINUX)"
+    # convert TOPDIR to absolute path
+    [ "$TOPDIR" ] && TOPDIR=$(cd "$TOPDIR"; pwd)
+else
+    echo "Unable to find Makefile in $PWD, some variables might be empty." >&2
+fi
+
+# fallback, primarily read from Makefile
 if [[ -z $TOPDIR ]]; then
     TOPDIR=$(
 	while [[ ! $PWD -ef / ]]; do
@@ -41,6 +56,7 @@ if [[ -z $TOPDIR ]]; then
     ) || { echo "Can't find TOPDIR, where is rules.mk?" >&2; exit 1; }
     export TOPDIR
 fi
+
 PATH=$TOPDIR/utils:$TOPDIR/utils/bin:$PATH
 
 source functions.bash || exit 2

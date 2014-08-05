@@ -314,23 +314,3 @@ subdirs_quiet:
 	@for x in $(SUB_DIRS); do \
 	    $(MAKE) --no-print-directory -C $$x $(MAKECMDGOALS) || exit $$?; \
 	done
-
-##########################################################################
-# Command framework execution rules
-##########################################################################
-
-ifneq ($(DEBUG),)
-DEBUG_ARG	= -d $(DEBUG)
-endif
-
-ifneq ($(TEST_USER),)
-USER_ARG	= -u $(TEST_USER)
-endif
-
-ifneq ($(LOGIN_USER),)
-LOGIN_ARG	= -l $(LOGIN_USER)
-endif
-
-ifneq ($(TEST),)
-TEST_ARG	= -t $(TEST)
-endif

@@ -13,8 +13,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#
 #  FILE   : Makefile
 #
 #  PURPOSE: Downloads and runs syscalls and cc_ospp tests from LTP suite
@@ -31,77 +29,58 @@ TOPDIR		= .
 include $(TOPDIR)/rules.mk
 
 LTP_BASE = ltp-full
-LTP_BASE_PATH = $(CURDIR)/$(LTP_BASE)
-PATCH_DIR = $(CURDIR)/patch
+PATCH_DIR = patch
 MDIR = $(CURDIR)
 
-LTP_FULL = ltp-full.tar.bz2
-LTP_SOURCE = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20140422/ltp-full-20140422.tar.bz2/download
+LTP_TARBALL = ltp-full.tar.bz2
+LTP_SRCURL = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20140422/ltp-full-20140422.tar.bz2/download
 
 # set temporary directory to /opt/tmp for tests
 # this is because the default /tmp is mounted noexec in evaluated configuration
 LTP_TMPDIR = /opt/ltp/tmp
 
-# save allow_execmem
-ORIG_BOOL = $(shell getsebool deny_execmem | cut -d\  -f3)
+# save allow_execmem / msgmni
+ORIG_EXECMEM = $(shell getsebool deny_execmem | cut -d\  -f3)
+ORIG_MSGMNI = $(shell sysctl -n kernel.msgmni)
 
-# save kernel param msgmni
-ORIG_KPARAM = $(shell sysctl -n kernel.msgmni)
+all: download extract patch build
+run: runtests report
 
-all:: download extract patch build
-
-run:: runtests report
-
-build::
-	echo "Makefile: build (MODE=$$MODE)"
-	export TOP_SRCDIR=$(LTP_BASE_PATH)
-	@$(MAKE) -C $(LTP_BASE_PATH) autotools
-	cd $(LTP_BASE_PATH) && ./configure && cd -
-	@$(MAKE) -C $(LTP_BASE_PATH) all
-	@$(MAKE) -C $(LTP_BASE_PATH) install
-
-extract::
-	echo "Makefile: extract"
-	tar xvf $(LTP_FULL)
-	mv -f ltp-full-* $(LTP_BASE)
-
-patch::
-	echo "Makefile: patch"
-	cp -fv $(PATCH_DIR)/cc_commands $(LTP_BASE_PATH)/runtest/cc_commands
-	cp -fv $(PATCH_DIR)/cc_ospp.sh $(LTP_BASE_PATH)/testscripts/cc_ospp.sh
-	cp -fv $(PATCH_DIR)/mnt_syscalls.sh $(LTP_BASE_PATH)/testscripts/mnt_syscalls.sh
-	cp -fv $(PATCH_DIR)/mnt_syscalls $(LTP_BASE_PATH)/runtest/mnt_syscalls
-	cp -fv $(PATCH_DIR)/su01 $(LTP_BASE_PATH)/testcases/commands/su/su01
-	cp -fv $(PATCH_DIR)/sync_file_range01.c $(LTP_BASE_PATH)/testcases/kernel/syscalls/sync_file_range/sync_file_range01.c
-	cp -fv $(PATCH_DIR)/test_containers.sh $(LTP_BASE_PATH)/testscripts/test_containers.sh
-
-clean::
-	echo "Makefile: clean"
-	# remove installed ltp
-	rm -rf /opt/ltp
-	# remove logs
-	for logtype in rollup run; do \
-		for testset in syscalls cc_ospp mnt_syscalls containers; do \
-			rm -f "$$testset.$$logtype.log"; \
-		done; \
-	done; \
-	rm -f ltp.rollup.log ltp.run.log
-	# remove downloaded and created files/dirs
-	rm -f $(LTP_FULL)
-	rm -rf $(LTP_BASE)
-
-download::
-	echo "Makefile: download"
-	if [ ! -e $(LTP_FULL) ]; then \
-		wget -O $(LTP_FULL) $(LTP_SOURCE); \
+.PHONY: download
+download:
+	if [ ! -e $(LTP_TARBALL) ]; then \
+		wget -O $(LTP_TARBALL) $(LTP_SRCURL); \
 	else \
 		echo "LTP source exists - skipping download"; \
 	fi
 
-rerun::
+.PHONY: extract
+extract:
+	tar xvf $(LTP_TARBALL)
+	mv -f ltp-full-* $(LTP_BASE)
 
-runtests::
-	echo "Makefile: runtests"
+.PHONY: patch
+patch:
+	cp -fv $(PATCH_DIR)/cc_commands $(LTP_BASE)/runtest/cc_commands
+	cp -fv $(PATCH_DIR)/cc_ospp.sh $(LTP_BASE)/testscripts/cc_ospp.sh
+	cp -fv $(PATCH_DIR)/mnt_syscalls.sh $(LTP_BASE)/testscripts/mnt_syscalls.sh
+	cp -fv $(PATCH_DIR)/mnt_syscalls $(LTP_BASE)/runtest/mnt_syscalls
+	cp -fv $(PATCH_DIR)/su01 $(LTP_BASE)/testcases/commands/su/su01
+	cp -fv $(PATCH_DIR)/sync_file_range01.c $(LTP_BASE)/testcases/kernel/syscalls/sync_file_range/sync_file_range01.c
+	cp -fv $(PATCH_DIR)/test_containers.sh $(LTP_BASE)/testscripts/test_containers.sh
+
+.PHONY: build
+build:
+	@cd $(LTP_BASE); \
+	./configure; \
+	make; \
+	make install
+
+.PHONY: rerun
+rerun:
+
+.PHONY: runtests
+runtests:
 	# needed for sendfile tests
 	setsebool deny_execmem=off
 	# needed for msgctl11 to pass, see
@@ -117,11 +96,11 @@ runtests::
 	echo "Running container tests"
 	/opt/ltp/testscripts/test_containers.sh
 	# cleanup
-	setsebool deny_execmem=$(ORIG_BOOL)
-	sysctl kernel.msgmni=$(ORIG_KPARAM)
+	setsebool deny_execmem=$(ORIG_EXECMEM)
+	sysctl kernel.msgmni=$(ORIG_MSGMNI)
 
-report::
-	echo "Makefile: report"
+.PHONY: report
+report:
 	@for logtype in rollup run; do \
 		for testset in syscalls cc_ospp mnt_syscalls containers; do \
 			echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
@@ -145,6 +124,22 @@ report::
 	} 2>&1 >> ltp.rollup.log; \
 	exit 0
 
+.PHONY: clean
+clean:
+	# remove installed ltp
+	rm -rf /opt/ltp
+	# remove logs
+	for logtype in rollup run; do \
+		for testset in syscalls cc_ospp mnt_syscalls containers; do \
+			rm -f "$$testset.$$logtype.log"; \
+		done; \
+	done; \
+	rm -f ltp.rollup.log ltp.run.log
+	# remove downloaded and created files/dirs
+	rm -f $(LTP_TARBALL)
+	rm -rf $(LTP_BASE)
+
+.PHONY: dist
 dist:
 	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \
 	tmpdir=$$(mktemp -d) && \
@@ -159,4 +154,3 @@ dist:
 	rm -rf "$$tmpdir" && \
 	echo && \
 	ls -l ltp-$$rev.tar.gz
-

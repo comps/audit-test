@@ -37,12 +37,11 @@ TEST_BASEDIR := /usr/local/eal4_testing
 #
 # targets
 #
-.PHONY: verifyme verify distclean
+.PHONY: verify distclean
 
 # base SELinux module targets
 include $(SELINUX_DEV_BASEDIR)/Makefile
 
-verifyme: verify
 verify:
 	@echo "Checking system for basic requirements"
 	@echo -n " SELinux policy RPM version ($(SELINUX_POLICY_RPM)): "; \

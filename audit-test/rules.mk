@@ -102,8 +102,7 @@ endif
 ##########################################################################
 
 .PHONY: all run \
-	clean distclean _clean _distclean \
-	msgque rmlogs showrpms showrpms2
+	clean distclean verify _clean _distclean _verify
 
 all: deps subdirs $(ALL_AR) $(ALL_EXE) $(ALL_SO)
 
@@ -218,22 +217,9 @@ _distclean: clean
 
 distclean: _distclean
 
-# This can be augmented per directory to check things other than the default
-# list in "verify".  (In fact some things should be moved from that list to the
-# appropriate directory)
-verifyme: subdirs
+_verify:
 
-verify:
-	$(MAKE) verifyme
-	@if ! mount | grep -q "^$$(df . | head -n2 | tail -n1 | cut -f1 -d\ ) .*(.*user_xattr"; then \
-		echo "please set 'user_xattr' for this filesystem'"; \
-		exit 1; \
-	fi
-	@if ! mount | grep -q "^$$(df . | head -n2 | tail -n1 | cut -f1 -d\ ) .*(.*acl"; then \
-		echo "please set 'acl' for this filesystem'"; \
-		exit 1; \
-	fi
-	@echo "Looks good!"
+verify: _verify
 
 ##########################################################################
 # Dependency rules

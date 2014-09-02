@@ -1,18 +1,16 @@
-| Running LTP tests for RHEL6.2 certification
-+---------------------------------------------
+| Running LTP tests
++------------------
 
 Notes
 -----
-LTP source code from 20110915 is automatically downloaded
-for testing during the make phase.
+LTP source code is automatically downloaded during the make phase.
 
 If you do not have internet connection, please place the
 LTP sources as ltp-full.tar.bz2 to this directory. The download
 will be skipped if the sources are present. Note that a
 'make clean' will remove the LTP source file.
 
-Download link:
-http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20110915/ltp-full-20110915.bz2
+You can find the LTP release tarballs on sourceforge.
 
 Requirements
 ------------
@@ -56,9 +54,8 @@ commands below.
 
 The logs from each test run are stored in the run.log and rollup.log files.
 
-Expected test results
----------------------
-
+Expected test results for RHEL6.2 / LTP 20110915
+------------------------------------------------
 When the tests are run in the native mode for the OS, all the
 tests should pass.  When the tests are run in 32-bit mode on
 a 64-bit OS, the following tests are expected to fail:
@@ -87,4 +84,3 @@ syscalls.rollup.log:truncate02_64
 On s390x the posix_fadvise03 and posixfadvise03_64 tests are expected
 to fail.  The test expects the test to fail due to an invalid advise value.
 Since more advise values are defined on s390, the syscall unexpectedly passes.
-

@@ -7,6 +7,17 @@ Dependencies
 The audit-test suite requires the following packages in order to run
 on RHEL6.2:
 
+binutils
+cpp
+flex
+make
+gcc
+gcc-c++
+glibc-devel
+libattr-devel
+libstdc++-devel
+libcap-devel
+
 audit-libs-devel
 expect
 libselinux-devel

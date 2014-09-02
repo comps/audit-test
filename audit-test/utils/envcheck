@@ -167,7 +167,9 @@ check_rpm_deps() {
     }
 
     # from README.run
-    local rpms="audit-libs-devel expect libselinux-devel perl-devel \
+    local rpms="binutils cpp flex make gcc gcc-c++ glibc-devel libattr-devel \
+                libstdc++-devel libcap-devel \
+                audit-libs-devel expect libselinux-devel perl-devel \
                 perl-Expect perl-IO-Tty"
 
     for rpm in $rpms; do

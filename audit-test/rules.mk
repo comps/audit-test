@@ -218,29 +218,6 @@ _distclean: clean
 
 distclean: _distclean
 
-##########################################################################
-# RPM dependency checking
-##########################################################################
-
-# These are assumed to be the base requirements for all the tests.  Requirements
-# can be refined in individual Makefiles by appending (+=) or overriding (=)
-# the RPMS variable.
-RPMS		= binutils \
-		  cpp \
-                  expect \
-                  flex \
-                  gcc \
-                  gcc-c++ \
-                  glibc-devel \
-                  libattr-devel \
-                  libstdc++-devel \
-                  libcap-devel \
-                  make \
-		  audit-libs-devel
-ifneq ($(findstring $(MACHINE),$(IP)),)
-RPMS		+= gcc-64bit
-endif
-
 # This can be augmented per directory to check things other than the default
 # list in "verify".  (In fact some things should be moved from that list to the
 # appropriate directory)
@@ -256,21 +233,7 @@ verify:
 		echo "please set 'acl' for this filesystem'"; \
 		exit 1; \
 	fi
-	@echo "-----------------------"
-	@echo "Checking installed rpms"
-	@echo "-----------------------"
-	@if ! rpm -q $$($(MAKE) --no-print-directory showrpms); then \
-	    echo "Please install the missing rpms"; \
-	    exit 1; \
-	fi
-	@echo "-----------------------"
 	@echo "Looks good!"
-
-showrpms:
-	@$(MAKE) --no-print-directory _showrpms | xargs -n1 echo | sort -u
-
-_showrpms: subdirs_quiet
-	@echo "$(RPMS)"
 
 ##########################################################################
 # Dependency rules

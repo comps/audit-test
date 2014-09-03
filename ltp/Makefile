@@ -31,6 +31,7 @@ include $(TOPDIR)/rules.mk
 LTP_BASE = ltp-full
 PATCH_DIR = patch
 MDIR = $(CURDIR)
+RUNTEST_DIR = $(CURDIR)/runtest
 
 LTP_TARBALL = ltp-full.tar.bz2
 LTP_SRCURL = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20140422/ltp-full-20140422.tar.bz2/download
@@ -61,13 +62,8 @@ extract:
 
 .PHONY: patch
 patch:
-	cp -fv $(PATCH_DIR)/cc_commands $(LTP_BASE)/runtest/cc_commands
-	cp -fv $(PATCH_DIR)/cc_ospp.sh $(LTP_BASE)/testscripts/cc_ospp.sh
-	cp -fv $(PATCH_DIR)/mnt_syscalls.sh $(LTP_BASE)/testscripts/mnt_syscalls.sh
-	cp -fv $(PATCH_DIR)/mnt_syscalls $(LTP_BASE)/runtest/mnt_syscalls
 	cp -fv $(PATCH_DIR)/su01 $(LTP_BASE)/testcases/commands/su/su01
 	cp -fv $(PATCH_DIR)/sync_file_range01.c $(LTP_BASE)/testcases/kernel/syscalls/sync_file_range/sync_file_range01.c
-	cp -fv $(PATCH_DIR)/test_containers.sh $(LTP_BASE)/testscripts/test_containers.sh
 
 .PHONY: build
 build:
@@ -87,14 +83,10 @@ runtests:
 	#  http://www.mail-archive.com/ltp-list@lists.sourceforge.net/msg12767.html
 	sysctl kernel.msgmni=700
 	# run tests
-	echo "Running syscalls tests"
-	/opt/ltp/testscripts/syscalls.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/syscalls.rollup.log 2>&1 | tee syscalls.run.log
-	echo "Running cc_ospp tests"
-	/opt/ltp/testscripts/cc_ospp.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/cc_ospp.rollup.log 2>&1 | tee cc_ospp.run.log
-	echo "Running mnt_syscalls tests"
-	/opt/ltp/testscripts/mnt_syscalls.sh -p -d ${LTP_TMPDIR} -l $(MDIR)/mnt_syscalls.rollup.log 2>&1 | tee mnt_syscalls.run.log
-	echo "Running container tests"
-	/opt/ltp/testscripts/test_containers.sh
+	/opt/ltp/runltp -f syscalls -p -d $(LTP_TMPDIR) -l $(MDIR)/syscalls.rollup.log 2>&1 | tee syscalls.run.log
+	/opt/ltp/runltp -f $(RUNTEST_DIR)/cc_ospp -p -d $(LTP_TMPDIR) -l $(MDIR)/cc_ospp.rollup.log 2>&1 | tee cc_ospp.run.log
+	/opt/ltp/runltp -f $(RUNTEST_DIR)/mnt_syscalls -p -d $(LTP_TMPDIR) -l $(MDIR)/mnt_syscalls.rollup.log 2>&1 | tee mnt_syscalls.run.log
+	/opt/ltp/runltp -f containers -p -d $(LTP_TMPDIR) -l $(MDIR)/containers.rollup.log 2>&1 | tee containers.run.log
 	# cleanup
 	setsebool deny_execmem=$(ORIG_EXECMEM)
 	sysctl kernel.msgmni=$(ORIG_MSGMNI)

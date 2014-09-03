@@ -1,5 +1,0 @@
-#DESCRIPTION: Mount system calls that uses block devices.
-mount01 mount01 -D /dev/loop0 -T "ext4"
-mount02 mount02 -D /dev/loop0 -T "ext4"
-mount03 mount03 -D /dev/loop0 -T "ext4"
-mount04 mount04 -D /dev/loop0 -T "ext4"

@@ -1,0 +1,18 @@
+diff --git a/testcases/kernel/syscalls/sync_file_range/sync_file_range01.c b/testcases/kernel/syscalls/sync_file_range/sync_file_range01.c
+index 9f7af52..cf28c6f 100644
+--- a/testcases/kernel/syscalls/sync_file_range/sync_file_range01.c
++++ b/testcases/kernel/syscalls/sync_file_range/sync_file_range01.c
+@@ -203,6 +203,13 @@ static inline long syncfilerange(int fd, off64_t offset, off64_t nbytes,
+				 unsigned int flags)
+ {
+
++#if (defined(__S390) || defined(__S390X))
++#if (__WORDSIZE == 32)
++       return ltp_syscall(__NR_sync_file_range, fd, (int)(offset >> 32),
++               (int)offset, (int)(nbytes >> 32), (int)nbytes, flags);
++#endif
++#endif
++
+ #if (defined(__arm__) || defined(__powerpc__) || defined(__powerpc64__))
+ #if (__WORDSIZE == 32)
+ #if __BYTE_ORDER == __BIG_ENDIAN

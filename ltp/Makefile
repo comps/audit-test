@@ -62,7 +62,7 @@ extract:
 
 .PHONY: patch
 patch:
-	cp -fv $(PATCH_DIR)/sync_file_range01.c $(LTP_BASE)/testcases/kernel/syscalls/sync_file_range/sync_file_range01.c
+	patch -p1 -d $(LTP_BASE) < $(PATCH_DIR)/sync_file_range01.patch
 
 .PHONY: build
 build:

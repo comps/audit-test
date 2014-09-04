@@ -60,13 +60,8 @@ ifneq ($(MODE), $(NATIVE))
 		    CFLAGS += -m31
 		    LDFLAGS += -m31
 	    else
-		    ifneq (,$(findstring $(MACHINE), $(X86_64)))
-			    CFLAGS += -m32 -malign-double
-			    LDFLAGS += -m32
-		    else
-			    CFLAGS += -m32
-			    LDFLAGS += -m32
-		    endif
+		    CFLAGS += -m32
+		    LDFLAGS += -m32
 	    endif
     endif
     ifeq ($(MODE), 64)

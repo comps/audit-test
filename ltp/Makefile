@@ -70,6 +70,7 @@ build:
 	@cd $(LTP_BASE); \
 	./configure; \
 	make; \
+	umask 022; \
 	make install
 
 .PHONY: rerun

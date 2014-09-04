@@ -30,66 +30,23 @@
 #
 ##########################################################################
 
-SHELL := /bin/bash
-
-MACHINE		:= $(strip $(shell uname -m))
-X86		:= i486 i586 i686 ix86
-PPC		:= ppc powerpc
-PPC64		:= ppc64 powerpc64
-Z		:= s390
-Z64		:= s390x
-X86_64		:= x86_64
-IA64		:= ia64
-
-export NATIVE   = $(strip $(shell file /bin/bash | awk -F'[ -]' '{print $$3}'))
-export MODE     ?= $(NATIVE)
-
-ifneq (,$(findstring $(MACHINE),$(X86)))
-	ARCH := -D__IX86
-else
-	ifneq (,$(findstring $(MACHINE),$(PPC)))
-		ARCH := -D__PPC32 -D__PPC
-	else
-		ifneq (,$(findstring $(MACHINE),$(PPC64)))
-			ARCH := -D__PPC64 -D__PPC
+NATIVE		= $(strip $(shell file /bin/bash | awk -F'[ -]' '{print $$3}'))
+MODE		?= $(NATIVE)
+ifneq ($(MODE), $(NATIVE))
+	ifeq ($(MODE), 32)
+		ifneq (,$(findstring s390x, $(MACHINE)))
+			CFLAGS += -m31
+			LDFLAGS += -m31
 		else
-			ifneq (,$(findstring $(MACHINE),$(Z)))
-				ARCH := -D__S390
-			else
-				ifneq (,$(findstring $(MACHINE), $(Z64)))
-					ARCH := -D__S390X
-				else
-					ifneq (,$(findstring $(MACHINE), $(X86_64)))
-						ARCH := -D__X86_64
-					endif
-				endif
-			endif
+			CFLAGS += -m32
+			LDFLAGS += -m32
 		endif
 	endif
-endif
-ifeq ($(MODE), 32)
-	ifneq (,$(findstring $(MACHINE), $(Z64)))
-		ARCH += -m31 -D__MODE_32
-		export LDFLAGS = -m31
-	else
-		ifneq (,$(findstring $(MACHINE), $(X86_64)))
-			ARCH += -m32 -D__MODE_32 -malign-double
-			export LDFLAGS = -m32
-		else
-			ARCH += -m32 -D__MODE_32
-			export LDFLAGS = -m32
-		endif
-	endif
-else
-        ifeq (,$(findstring $(MACHINE),$(X86)))
-                ARCH += -D__MODE_64
-        else
-		ifeq (,$(findstring $(MACHINE),$(X86)))
-			ARCH += -m64 -D__MODE_64
-			export LIB_DIR = /lib64
-			export LDFLAGS = -m64
-		endif
+	ifeq ($(MODE), 64)
+		CFLAGS += -m64
+		LDFLAGS += -m64
 	endif
 endif
 
-export CFLAGS += $(ARCH)
+export CFLAGS
+export LDFLAGS

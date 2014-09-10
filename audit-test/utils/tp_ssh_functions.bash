@@ -480,6 +480,7 @@ function ssh_connect_pass {
         }
         expect {
             {Your account has expired} { exit 4 }
+            {Password expired} { exit 4 }
             {Your password has expired} { exit 11 }
             {You are required to change your password} { exit 11 }
             {assword:} { send -- $4\r; exp_continue }

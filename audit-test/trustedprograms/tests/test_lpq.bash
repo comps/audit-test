@@ -74,6 +74,7 @@ runcon $LPQ1CON lpq -P $printer > $CON1OUT
     set timeout 30
     log_file -noappend $env(CON2OUT)
     spawn login
+    sleep 1
     expect -nocase {login: $} {send "$env(TEST_USER)\r"}
     expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
     expect -nocase {level} {send "y\r"}

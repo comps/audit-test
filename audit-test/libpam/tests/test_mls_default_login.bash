@@ -54,6 +54,7 @@ sed -i 's/\(^session.*pam_loginuid.*$\)/\#\1/' /etc/pam.d/login
     export localtmp
     expect -c '
         spawn login
+        sleep 1
         expect -nocase {login: $} {send "$env(TEST_USER)\r"}
         expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
 	expect -nocase {level} {send "\r"}

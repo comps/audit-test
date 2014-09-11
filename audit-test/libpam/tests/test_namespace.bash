@@ -81,6 +81,7 @@ auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S open -F uid=$auid || \
     export tmpnewfile
     expect -c '
         spawn login
+        sleep 1
         expect -nocase {login: $} {send "$env(TEST_USER)\r"}
         expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
 	expect -nocase {level} {send "Y\r"}
@@ -103,6 +104,7 @@ log_mark=$(stat -c %s $audit_log)
     export tmpnewfile
     expect -c '
         spawn login
+        sleep 1
         expect -nocase {login: $} {send "$env(TEST_USER)\r"}
         expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
 	expect -nocase {level} {send "Y\r"}

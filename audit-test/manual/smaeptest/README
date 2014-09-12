@@ -1,0 +1,29 @@
+Simple x86 SMAP/SMEP test
+=========================
+
+This test verifies SMAP/SMEP functionality using a kernel module, "smaeptest",
+and a userspace application.
+
+A successful denial by SMAP/SMEP results in kernel oops / panic.
+
+# ensure you have the necessary packages in addition to what audit-test needs:
+yum -y install kernel-devel
+
+# build
+make
+
+# load
+insmod smaeptest.ko
+
+# mount debugfs
+mkdir debug/
+mount -t debugfs none debug/
+
+# do a sync to limit data loss
+sync
+
+# test SMAP
+./user debug/smaeptest/smap
+
+# test SMEP
+./user debug/smaeptest/smep

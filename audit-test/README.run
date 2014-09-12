@@ -390,6 +390,13 @@ To list all testcases:
 To run a single testcase by number:
 # ./run.bash <number>
 
+Run manual tests
+----------------
+
+To run manual tests, go into the "manual" bucket (subdirectory) and enter one
+of the test directories. Each manual test has its own README to walk you
+through the process of running it.
+
 Workarounds and troubleshooting tips
 ------------------------------------
 

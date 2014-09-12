@@ -1,6 +1,7 @@
 #!/bin/bash
 ###############################################################################
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2006
+# (c) Copyright Red Hat, Inc. All rights reserved.. 2014
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
@@ -16,46 +17,132 @@
 ###############################################################################
 # 
 # PURPOSE:
-# Verify audit of successful su.
+# Verify audit of successful and unsuccessful login via su
+# for local and IPA user
+#
+
 
 if [[ $EUID == 0 ]]; then
     source pam_functions.bash || exit 2
-
-    # setup
-    # allow TEST_USER to write to tmpfile created by root
-    chmod 666 $tmp1
-
-    # turn off screen in /etc/profile
-    backup /etc/profile
-    sed -i 's/\[ -w $(tty) \]/false/' /etc/profile
-
-    # test
-    # rerun this script as TEST_USER.  Confine the exports to a subshell
-    # We must be in group 'wheel' to execute /bin/su.
-    (
-        export tmp1
-        export TEST_EUID=$(id -u "$TEST_USER") zero=$0
-        export WHEEL_GID=$(grep wheel /etc/group | cut -d: -f3)
-        perl -MPOSIX -e 'setgid $ENV{WHEEL_GID}; setuid $ENV{TEST_EUID}; system $ENV{zero}'
-    )
-
-    # returned from test, collect results
-    pts=$(<$tmp1)
-    pts=${pts##*/}
-
-    msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./usr/bin/su. .* terminal=pts/$pts res=success.*"
-    augrok -q type=USER_AUTH msg_1=~"op=PAM:.*authentication $msg_1" || exit_fail
-    augrok -q type=USER_ACCT msg_1=~"op=PAM:.*accounting $msg_1" || exit_fail
-
-    exit_pass
+    backup "/etc/group"
 fi
 
-# This is reached through the perl -e 'system...' above
-expect -c '
-    spawn /bin/su - $env(TEST_USER)
-    expect -nocase {password: $} {
-        send "$env(TEST_USER_PASSWD)\r"
-        send "PS1=:\\::\r"
-    }
-    expect {:::$} {send "tty > $env(tmp1)\r"}
-    expect {:::$} {close; wait}'
+EXEC="$0 $@"
+
+positive_test() {
+    local USR=$1
+    local USRPASS=$2
+
+    if [[ $EUID == 0 ]]; then
+        AUDITMARK=$(get_audit_mark)
+
+        # setup
+        # allow USR to write to tmpfile created by root
+        chmod 666 $tmp1
+
+        # turn off screen in /etc/profile
+        backup /etc/profile
+        sed -i 's/\[ -w $(tty) \]/false/' /etc/profile
+
+        # test
+        # rerun this script as USR.  Confine the exports to a subshell
+        # We must be in group 'wheel' to execute /bin/su.
+        (
+            export tmp1=$tmp1
+            local TEST_EUID=$(id -u "$USR")
+            local WHEEL_GID=$(grep wheel /etc/group | cut -d: -f3)
+            # add test user to wheel group - needed for sssd su
+            usermod -aG wheel $USR
+            perl -MPOSIX -e "setgid $WHEEL_GID; setuid $TEST_EUID; system \"$EXEC\""
+        )
+
+        # returned from test, collect results
+        pts=$(<$tmp1)
+        pts=${pts##*/}
+
+        # check for expected audit events
+        while read LINE; do
+            read EVENT PAMOP GRANTORS <<< "$LINE"
+            msg_1="acct=\"$USR\" exe=\"/usr/bin/su\" hostname=\? addr=\? terminal=pts/$pts res=success"
+            augrok --seek $AUDITMARK type=$EVENT
+            augrok --seek $AUDITMARK type=$EVENT \
+                msg_1=~"op=PAM:$PAMOP grantors=$GRANTORS $msg_1" || \
+                exit_fail "Successful authentication attempt not audited correctly for: $LINE"
+        done <<< "$EPG"
+    else
+        # This is reached through the perl -e 'system...' above
+        expect -c "
+            spawn /bin/su - $USR
+            expect {*assword:} {send $USRPASS\r}
+            expect {*$USR} {send PS1=:::\r}
+            expect {:::$} {send \"tty > $tmp1\r\"}
+            expect {:::$} {close; wait}"
+    fi
+}
+
+negative_test() {
+    local USR=$1
+
+    if [[ $EUID == 0 ]]; then
+        AUDITMARK=$(get_audit_mark)
+
+        # test -- reruns this script as USR
+        # We must be in group 'wheel' to execute /bin/su.
+        local TEST_EUID=$(id -u "$USR")
+        local WHEEL_GID=$(grep wheel /etc/group | cut -d: -f3)
+        usermod -a -G wheel $USR
+        perl -MPOSIX -e "setgid $WHEEL_GID; setuid $TEST_EUID; system \"$EXEC\""
+
+        # check for expected USER_AUTH audit event
+        MSG="op=PAM:authentication grantors=\? acct=\"$USR\""
+        MSG="$MSG exe=\"/usr/bin/su\" hostname=\? addr=\? terminal=pts/[0-9]+ res=failed"
+        augrok --seek $AUDITMARK type=USER_AUTH
+        augrok type=USER_AUTH msg_1=~"$MSG" || \
+            exit_fail "Failed authentication attempt for user $USR not audited correctly"
+    else
+        expect -c "
+            spawn /bin/su - $USR
+            expect {*assword:} {send badpassword\r}
+            expect {incorrect password} {close; wait}"
+    fi
+}
+
+case $1 in
+    local)
+        # expected AUDIT_EVENT PAM_OPERATION GRANTOR triple
+        EPG="USER_AUTH authentication pam_faillock,pam_unix
+             USER_ACCT accounting pam_faillock,pam_unix,pam_localuser
+             USER_START session_open pam_keyinit,pam_keyinit,pam_limits,pam_systemd,\
+pam_unix,pam_xauth"
+        positive_test $TEST_USER $TEST_USER_PASSWD
+        ;;
+    sssd)
+        # expected AUDIT_EVENT PAM_OPERATION GRANTOR triple
+        EPG="USER_AUTH authentication pam_faillock,pam_sss
+             USER_ACCT accounting pam_faillock,pam_unix,pam_sss,pam_permit
+             USER_START session_open pam_keyinit,pam_keyinit,pam_limits,\
+pam_systemd,pam_unix,pam_sss,pam_xauth"
+        source $TOPDIR/utils/auth-server/ipa_env
+        if [[ $EUID == 0 ]]; then
+            restart_service sssd
+            prepend_cleanup "stop_service sssd"
+        fi
+        positive_test $IPA_USER $IPA_PASS
+        ;;
+    local_fail)
+        negative_test $TEST_USER
+        ;;
+    sssd_fail)
+        source $TOPDIR/utils/auth-server/ipa_env
+        if [[ $EUID == 0 ]]; then
+            restart_service sssd
+            prepend_cleanup "stop_service sssd"
+        fi
+        negative_test $IPA_USER
+        ;;
+    *)
+        exit_error "Unknown testcase"
+        ;;
+esac
+
+exit 0

@@ -179,9 +179,10 @@ machine.
 Configure the KVM tests
 -----------------------
 
-For the KVM tests to run you need to have RHEL6 iso image or DVD installation
-media handy. You also need to tell the tests where to search for the
-installation sources by modifying the config.bash file in the kvm subfolder.
+For the KVM tests to run you need to have RHEL6 or RHEL7 iso image or DVD
+installation media handy. You also need to tell the tests where to search
+for the installation sources by modifying the config.bash file in the kvm
+subfolder.
 
 If you are using an iso installation image, please make sure it is accessible
 by the qemu user.  For example, /var/lib/libvirt may be used.

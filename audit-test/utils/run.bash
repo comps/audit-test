@@ -421,6 +421,9 @@ function parse_cmdline {
           true"
     eval -- "$conf" || die "Error reading config file: $opt_config"
 
+    # Don't use color on non-tty devices or terminals without color support
+    [ -t 1 -a "$(tput colors)" -ge 8 ] || colorize() { monoize "$@"; }
+
     if [[ -n $* ]]; then
 	# Additional cmdline indicates tests to run
         dmsg "Filtering TESTS by cmdline"

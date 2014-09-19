@@ -1,0 +1,8 @@
+export IPA_ADMIN="admin"
+export IPA_PASS="0ipaAdminPass0"
+export IPA_REALM="CCTEST"
+export IPA_USER="ipauser"
+export IPA_USER_EXPIRED="ipaexpired"
+export IPA_STAFF="ipastaff"
+export IPA_DOMAIN="cctest.com"
+export IPA_DLDIR="/download"

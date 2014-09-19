@@ -139,3 +139,14 @@ envcheck:
 	@$(check_set_PPROFILE); \
 	$(check_set_PASSWD);
 	@utils/envcheck
+
+.PHONY: sssd-%
+sssd-%:
+	@utils/auth-server/sssd_setup $*
+
+.PHONY: auth-server
+auth-server: auth-server-install auth-server-configure auth-server-verify
+
+.PHONY: auth-server-%
+auth-server-%:
+	@utils/auth-server/ipa_install $*

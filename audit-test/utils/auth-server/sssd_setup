@@ -1,0 +1,348 @@
+#!/bin/bash
+###############################################################################
+#   Copyright (c) 2014 Red Hat, Inc. All rights reserved.
+#
+#   This copyrighted material is made available to anyone wishing
+#   to use, modify, copy, or redistribute it /bin/subject to the terms
+#   and conditions of the GNU General Public License version 2.
+#
+#   This program is distributed in the hope that it will be
+#   useful, but WITHOUT ANY WARRANTY; without even the implied
+#   warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+#   PURPOSE. See the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public
+#   License along with this program; if not, write to the Free
+#   Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+#   Boston, MA 02110-1301, USA.
+###############################################################################
+#
+# AUTHOR: Miroslav Vadkerti <mvadkert@redhat.com>
+#
+# DESCRIPTION:
+# This script setups manually enrolls machine to an IPA domain.
+# It is able also to startp/stop sssd daemon, verify correct
+# configuration (used in envcheck) and reconfigure enrollment.
+#
+# It does not start sssd after the setup. The tests need
+# to start sssd service for the authentication to work.
+#
+
+# globals
+AUTHSRV_DIR="/usr/local/eal4_testing/audit-test/utils/auth-server"
+SSSDCONF="/etc/sssd/sssd.conf"
+SSSDCONFBP="/etc/sssd/sssd.conf.atbackup"
+KRBCONF="/etc/krb5.conf"
+KRBCONFBP="/etc/krb5.conf.atbackup"
+IPA_ETC="/etc/ipa"
+IPA_CA="ca.crt"
+IPA_ETC_CA="/etc/ipa/$IPA_CA"
+
+# helpers
+function print_info {
+    local STR=
+
+    printf ":: "
+    for STR in "$@"; do
+        printf "$STR"
+    done
+    echo
+}
+
+function exit_error {
+    local STR=
+
+    printf "Error: "
+    for STR in "$@"; do
+        printf "$STR"
+    done
+    echo
+
+    exit 1
+}
+
+function ssh_copy {
+    expect -c "
+        set timeout 60
+        spawn scp -o StrictHostKeyChecking=no $1
+        expect {
+            {*assword:} { send $PASSWD\r }
+            {closed} { exit 1 }
+        }
+        expect eof
+        exit [lindex [wait] 3]
+    "
+
+    return $?
+}
+
+function help {
+cat <<EOF
+    usage: $(basename $0) command
+
+    This script configures sssd and optionally deconfigures it.
+
+    Options:
+      -h         Print this help.
+
+    Available commands:
+      configure    Configure sssd for audit-test suite
+      remove       Rollback original sssd and kerberos configuration, remove created files
+      reconfigure  remove, configure and verify sssd functionality
+      start        Start sssd service
+      stop         Stop sssd service
+      verify       Verify that sssd configuration is intact
+EOF
+}
+
+function try_login {
+    [ -z "$1" ] && exit_error "No username for $FUNCNAME"
+
+    expect -c "
+        set timeout 60
+        spawn ssh -oStrictHostKeyChecking=no ${1}@localhost exit
+        expect {*assword:} { send \"$IPA_PASS\r\" }
+        expect {
+            {*assword:} { exit 1 }
+            eof { exit 0 }
+        }
+        exit 2
+    "
+}
+
+# checks if sssd is already configured and no setup should be needed
+function is_sssd_configured {
+    if echo $IPA_PASS | kinit ${IPA_ADMIN}@$IPA_REALM &>/dev/null; then
+        kdestroy
+        return 0
+    fi
+
+    return 1
+}
+
+# setup sssd
+function cmd_configure {
+    local INFO=
+
+    if is_sssd_configured; then
+        INFO="SSSD looks configured on this system for audit-test suite.\n"
+        INFO="${INFO}Run make reconfigure to remove and setup sssd again."
+        exit_error "$INFO"
+        exit
+    fi
+
+    # Setup kerberos configuration
+    print_info "Setting up Kerberos"
+    [ -e $KRBCONF ] && mv -f $KRBCONF $KRBCONFBP
+    cat > $KRBCONF << EOF
+[logging]
+ default = FILE:/var/log/krb5libs.log
+ kdc = FILE:/var/log/krb5kdc.log
+ admin_server = FILE:/var/log/kadmind.log
+
+[libdefaults]
+ default_realm = $IPA_REALM
+ dns_lookup_realm = false
+ dns_lookup_kdc = true
+ rdns = false
+ ticket_lifetime = 24h
+ forwardable = yes
+ default_ccache_name = KEYRING:persistent:%{uid}
+
+[realms]
+ $IPA_REALM = {
+  kdc = $IPA_SERVER:88
+  master_kdc = $IPA_SERVER:88
+  admin_server = $IPA_SERVER:749
+  default_domain = $IPA_DOMAIN
+  pkinit_anchors = FILE:/etc/ipa/ca.crt
+}
+
+[domain_realm]
+ .$IPA_DOMAIN = $IPA_REALM
+ $IPA_DOMAIN = $IPA_REALM
+EOF
+    restorecon -vvF $KRBCONF > /dev/null
+    # it is required for kerberos config to be readable by all
+    chmod 644 $KRBCONF
+
+    # Setting up sssd
+    print_info "Setting up SSSD"
+    [ -e $SSSDCONF ] && mv $SSSDCONF $SSSDCONFBP
+    cat > $SSSDCONF <<EOF
+[domain/$IPA_DOMAIN]
+cache_credentials = True
+krb5_store_password_if_offline = True
+krb5_realm = $IPA_REALM
+ipa_domain = $IPA_DOMAIN
+krb5_use_fast = demand
+id_provider = ipa
+auth_provider = ipa
+access_provider = ipa
+ipa_hostname = $IPA_SERVER_TOE_ID
+chpass_provider = ipa
+selinux_provider = ipa
+ipa_server = _srv_, $IPA_SERVER
+ldap_tls_cacert = $IPA_ETC_CA
+debug_level = 4
+
+[sssd]
+services = nss, pam, ssh
+config_file_version = 2
+domains = $IPA_DOMAIN
+user = sssd
+EOF
+    restorecon -vvF $SSSDCONF > /dev/null
+    chmod 600 $SSSDCONF
+
+    # Get keytab and CA
+    print_info "Copying keytab and CA"
+    mkdir -p $IPA_ETC
+    rpm -q rng-tools &>/dev/null && rngd -r /dev/urandom
+    ssh_copy "eal@$IPA_SERVER:$IPA_DLDIR/$IPA_CA $IPA_ETC_CA" > /dev/null || \
+        exit_error "Failed to copy CA from IPA server - $IPA_DLDIR/$IPA_CA not found." \
+            "\nIPA server does not seem to be correctly setup."
+    restorecon -vvF $IPA_ETC > /dev/null
+    ssh_copy "eal@$IPA_SERVER:$IPA_DLDIR/${IPA_SERVER_TOE_ID}.keytab /etc/krb5.keytab" > /dev/null || \
+        exit_error "Failed to copy keytab from IPA server - keytab for $IPA_SERVER_TOE_ID not found." \
+            "\nMake sure ipa_clients on IPA server is correctly setup according to the README.auth_svr."
+    restorecon -vvF /etc/krb5.keytab > /dev/null
+    rpm -q rng-tools &>/dev/null && killall rngd
+
+    # Create home directories for users
+    cmd_start nolog
+    for IUSER in $IPA_USER $IPA_STAFF; do
+        print_info "Creating home directory for $IUSER"
+        mkdir -p /home/$IUSER
+        # copy skel
+        cp -f /etc/skel/.[^.]* /home/$IUSER
+        chown -Rf $IUSER:$IUSER /home/$IUSER
+        restorecon -RF /home/$IUSER
+    done
+    cmd_stop nolog
+
+    # verify configuration
+    cmd_verify
+}
+
+function cmd_remove {
+    # make sure sssd not configured
+    cmd_stop
+
+    # remove and restore old confs
+    print_info "Removing sssd configuration and cache"
+    rm -f /etc/krb5.keytab $IPA_ETC_CA $SSSDCONF $KRBCONF
+    [ -e $SSSDCONFBP ] && mv $SSSDCONFBP $SSSDCONF
+    [ -e $KRBCONFBP ] && mv $KRBCONFBP $KRBCONF
+    rm -f /var/lib/sss/db/*cache*
+
+    # removing test users home dirs
+    for IUSER in $IPA_USER $IPA_STAFF; do
+        rm -rf /home/$IUSER
+        rm -rf /home/home-inst/*_$IUSER
+    done
+}
+
+function cmd_verify {
+    print_info "Verifying SSSD configuration"
+    is_sssd_configured || exit_error "Kerberos not configured correctly"
+
+    # check id nss_sss works
+    cmd_start nolog
+    rngd -r /dev/urandom
+    for IUSER in $IPA_USER $IPA_STAFF; do
+        getent passwd $IUSER > /dev/null || exit_error \
+            "Could find user $IUSER via Name Service Switch libraries"
+        try_login $IUSER > /dev/null || exit_error \
+            "Could not login as $IUSER, sssd does not work correctly"
+    done
+    cmd_stop nolog
+    killall rngd
+
+    print_info "SSSD configuration verification PASSED"
+}
+
+function cmd_reconfigure {
+    cmd_remove
+    cmd_configure
+    cmd_verify
+}
+
+function cmd_start {
+    [ -z "$1" ] && print_info "Starting sssd"
+    systemctl start sssd
+}
+
+function cmd_stop {
+    [ -z "$1" ] && print_info "Stopping sssd"
+    systemctl stop sssd
+}
+
+function cleanup_faillock {
+    # cleanup faillock for all ipausers
+    for IUSER in $IPA_USER $IPA_STAFF $IPA_EXPIRED; do
+        faillock --reset --user $IPA_USER
+    done
+}
+
+function sanity {
+    local PKG= EVAR=
+
+    # check if sssd-ipa installed
+    for PKG in sssd-ipa krb5-workstation; do
+        rpm -q $PKG &> /dev/null || \
+            exit_error "Required package $PKG not installed"
+    done
+
+    source /etc/os-release &> /dev/null || exit_error \
+        "Could not detect distribution as /etc/os-release file not found"
+    [ "$ID" != "rhel" ] && exit_error \
+        "RHEL system could not be detected. IPA is available only in RHEL"
+
+    # source ipa defaults
+    source $AUTHSRV_DIR/ipa_env || \
+        exit_error "Could not source ipa defaults from $AUTHSRV_DIR/ipa_env"
+
+    # check for required default from ipa_env
+    for EVAR in IPA_SERVER IPA_SERVER_TOE_ID IPA_ADMIN IPA_PASS IPA_REALM \
+        IPA_USER IPA_STAFF IPA_DLDIR PASSWD; do
+        [ -z "$(eval echo \$$EVAR)" ] && \
+            exit_error "Required $EVAR not found in environment"
+    done
+
+    # cleanup faillock for all IPA users
+    cleanup_faillock
+}
+
+# parse params
+while getopts "h" OPTION
+do
+  case $OPTION in
+    h)
+        help
+        exit
+        ;;
+  esac
+done
+
+# sanity
+sanity
+
+# if no command given
+[ -z "$1" ] && help
+
+# execute all given function if exist
+for CMD in $@; do
+    if [ "$(type -t cmd_$CMD)" = "function" ]; then
+        eval cmd_$CMD
+    else
+        help
+    fi
+done
+
+# cleanup faillock for all IPA users
+cleanup_faillock
+
+exit 0
+
+# vim: ts=4 sw=4 sts=4 ft=sh et ai:

@@ -1,0 +1,134 @@
+Authentication Server
+---------------------
+
+Some of the tests require an external authentication server - IPA server for
+providing identity and authentication [1]. IPA server uses Kerberos and LDAP
+to achieve this functionality. On the testing machine the authentication
+is done by pam_sss module and the sssd daemon. The authentication server
+is another separate machine from TOE and NS The IPA cannot be installed
+in MLS mode, so it's not possible to have it installed on the NS. The server
+needs to be reachable via network from the TOE.
+
+This guide is only applicable for RHEL as IPA is only available in this
+distribution.
+
+
+Installation
+------------
+
+To install and setup the authentication server:
+
+1. Kickstart a separate machine (physical or virtual) in Base mode or as RHEL7 minimal installation.
+
+2. After the installation login to the machine as root and setup a yum repository
+
+3. If installing on top of a RHEL7 minimal installation add an administrative eal user. Set the eal user password to the same password as for the eal/root on the TOE machines.
+
+# useradd -m -c "EAL Test User" -G wheel eal
+# passwd eal <TOE root's password>
+
+4. Install tools for extracting archives (if needed in the next step) and executing make
+
+# yum -y install make bzip2 gzip
+
+5. Clone the audit-test suite repository or extract the archive to the root
+home directory. Move the contents of the repository to the test suite folder
+`/usr/local/eal4_testing' via make dist - see README.run.
+
+6. Create ipa_clients file in `audit-test/utils/auth-server/'
+with resolvable FQDNs of the TOE machines used for testing, one per line. Please note
+there cannot be any other content (comments, etc.) in the file. For example
+below is a configuration with four TOE machines:
+
+# cd /usr/local/eal4_testing/audit-test/utils/auth-server/
+# cat ipa_clients
+toe1.cctest.com
+toe2.cctest.com
+
+7. Run the the autentication server installation and configuration via the
+auth-server Makefile target:
+
+# cd /usr/local/eal4_testing/audit-test/
+# make auth-server
+
+Note that this might take a while to complete, depending on your installation.
+The IPA server consists from a lot of services.
+
+The makefile actually calls the ipa-install.sh script in `utils/auth-server'
+subfolder. The script configures IPA with settings from ipa_env file located
+also in the `utils/auth-server/' folder. Please note that this file is also
+sourced by the related tests so it must be the same on the authentication server
+as on the TOE. You should not need to change the default values.
+
+You will need to note down the server's FQDN which you will need to add to
+the exports file on TOE for the tests to work.
+
+During the first run of the command you should see no error messages and
+after the installation you should get PASSED result at the end of the
+verification phase.
+
+Please note that you can run "verify" phase anytime to check if the
+IPA configuration is intact via
+
+# cd /usr/local/eal4_testing/audit-test/
+# make auth-server-verify
+
+8. Make sure ntpd works correctly, especially if you are on a private network.
+Synchronized time is required for Kerberos to work correctly. You can check
+the time synchronization via ntpdate tool querying pool.ntp.org for example:
+
+# ntpdate -q pool.ntp.org
+server 205.233.73.201, stratum 0, offset 0.000000, delay 0.00000
+server 108.61.56.35, stratum 0, offset 0.000000, delay 0.00000
+server 216.66.0.142, stratum 0, offset 0.000000, delay 0.00000
+server 107.170.242.27, stratum 0, offset 0.000000, delay 0.00000
+23 Aug 19:17:32 ntpdate[2270]: no server suitable for synchronization found
+
+In the case above the pool is unreachable meaning that your private network
+firewall is probably blocking UTP that is used for time synchronization.
+You need to add a reachable ntp server in /etc/ntp.conf and restart ntpd:
+
+# vim /etc/ntp.conf
+# systemctl restart ntp
+
+8. Note the FQDN of the authentication server that needs to be exported
+on TOE. You can check the FQDN of your server by running the command below.
+Please note that this FQDN needs to be resolvable by your DNS system or via
+/etc/hosts file.
+
+# hostname
+
+10. You can easily uninstall the authentication server including package removal
+via the auth-server-uninstall Makefile target:
+
+# cd /usr/local/eal4_testing/audit-test/
+# make auth-server-uninstall
+
+
+IPA Ports
+---------
+If you have your IPA server located in another network which is subject to packet
+filtering, note that you need to open these ports for the IPA to work:
+
+https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Linux_Domain_Identity_Authentication_and_Policy_Guide/prerequisites.html#prereq-ports
+
+
+Default configuration
+---------------------
+The installation adds three IPA users intended for testing. These users are
+defined in the IPA_USER, IPA_STAFF and IPA_USER_EXPIRED variables in ipa_env file.
+Both users are added with password set in the IPA_PASS variable. Both users should
+be able to login to all machines enrolled to IPA.
+
+The IPA_USER user maps to the default SELinux user, usually user_u with
+security level s0. This dependes on the SELinux configuration set on the
+TOE. You can check the default SELinux users via:
+
+# semanage user -l
+
+The IPA_STAFF user has a default SELinux mapping to the staff_u user with
+s0-s0:c0.c1023 range.
+
+
+[1] FreeIPA, opensourced IPA server: http://www.freeipa.org/page/Main_Page
+    IPA is a part of the RedHat Enterprise Server

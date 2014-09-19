@@ -27,6 +27,7 @@ perl-IO-Tty
 selinux-policy-devel
 xfsprogs-devel
 libseccomp-devel
+krb5-workstation
 
 The perl-IO-Tty package is available for RHEL6 in the optional channel that
 is not available in the RHEL6 installation media. You should be able to download
@@ -91,11 +92,12 @@ be safe to do:
 # sysctl -p
 
 Verify that each ext4 filesystem in /etc/fstab has the 'user_xattr' option.
+Note that with xfs file system, this option is not needed.
 
 If you do not have an administrative eal user other than the root user, log
 in as root and add one with the following commands:
 
-# useradd -c "EAL Test User" -g wheel eal
+# useradd -c "EAL Test User" -G wheel eal
 # passwd eal <root's password>
 
 If on an LSPP/MLS system perform the following additional step:
@@ -170,6 +172,48 @@ Confirm that the
 '/usr/local/eal4_testing/audit-test/network/system/client_list.txt' file on
 the network test server contains both the IPv4 and IPv6 addresses of the test
 machine.
+
+Configure the authentication server
+-----------------------------------
+
+Configure the authentication server according to the instructions in the
+README.auth_svr file.
+
+On TOE export the FQDN of the authentication server (ipa.cctest.com in
+this example):
+
+# export IPA_SERVER=ipa.cctest.com
+
+Also export the FQDN of TOE that was used in ipa_clients file. This
+record needs to match with the one specified here for things to work. The
+record is used to identify the keytab for the host. In the example below
+the FQDN toe1.cctest.com was used in ipa_clients file on the authentication
+server.
+
+# export IPA_SERVER_TOE_ID=toe1.cctest.com
+
+To configure sssd run the 'sssd-configure' Makefile target in audit-test root
+directory.
+
+# make sssd-configure
+
+To verify the sssd configuration run the 'sssd-verify' Makefile target in
+the audit-test root directory. If configuration is successful you should see
+PASSED in the output as shown below.
+
+# make sssd-verify
+:: Verifying SSSD configuration
+:: SSSD configuration verification PASSED
+
+The configuration is done via the 'utils/auth-server/sssd_setup' script. You
+can use the 'sssd-reconfigure' target to reconfigure sssd anytime.
+
+# make sssd-reconfigure
+
+Please note that sssd is disabled on the system by default. To start sssd
+daemon you can use the 'sssd-start' Makefile target or start sssd via
+service or systemctl commands. Similarly you can use the 'sssd-stop' target
+to stop the daemon.
 
 Configure the KVM tests
 -----------------------

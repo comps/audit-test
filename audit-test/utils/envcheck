@@ -141,6 +141,7 @@ check_variables() {
     vars="$vars LOCAL_SEC_MAC LOCAL_SEC_IPV4 LOCAL_SEC_IPV6 BRIDGE_FILTER"
     vars="$vars LBLNET_SVR_IPV4 LBLNET_SVR_IPV6"
     vars="$vars SECNET_SVR_MAC SECNET_SVR_IPV4 SECNET_SVR_IPV6"
+    vars="$vars IPA_SERVER IPA_SERVER_TOE_ID"
 
     for i in $vars; do
         check "env | grep \"^$i=\"" 0 "Var $i is present in environment"
@@ -174,7 +175,7 @@ check_rpm_deps() {
                 libstdc++-devel libcap-devel \
                 audit-libs-devel expect libselinux-devel perl-devel \
                 perl-Expect perl-IO-Tty selinux-policy-devel xfsprogs-devel \
-                libseccomp-devel"
+                libseccomp-devel krb5-workstation"
 
     for rpm in $rpms; do
         check "rpm -q \"$rpm\"" 0 "rpm package $rpm is installed"
@@ -443,6 +444,25 @@ check_kvm() {
     fi
 }
 
+### SSSD
+check_sssd() {
+    local CHECK_FAILED
+
+    check "$AUDITDIR/audit-test/utils/auth-server/sssd_setup verify" 0 \
+        "SSSD configured correctly"
+
+    if [ "$CHECK_FAILED" ]; then
+        echo
+        echo "SSSD configuration verification failed - make sure you have:"
+        echo "1. Configured IPA server according to README.auth_svr"
+        echo "2. Environment variables IPA_SERVER and IPA_SERVER_TOE_ID set correctly."
+        echo "3. Executed make sssd-configure in $AUDITDIR"
+        return 1
+    else
+        check_sssd_ok=1
+    fi
+}
+
 ### END
 
 # checks to be run, ordering is important
@@ -455,6 +475,7 @@ check_networking_if
 check_networking_probe
 check_services
 check_kvm
+check_sssd
 "
 
 fails=0

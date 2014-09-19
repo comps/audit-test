@@ -1,0 +1,251 @@
+#!/bin/bash
+################################################################################
+#   Copyright (c) 2014 Red Hat, Inc. All rights reserved.
+#
+#   This copyrighted material is made available to anyone wishing
+#   to use, modify, copy, or redistribute it subject to the terms
+#   and conditions of the GNU General Public License version 2.
+#
+#   This program is distributed in the hope that it will be
+#   useful, but WITHOUT ANY WARRANTY; without even the implied
+#   warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+#   PURPOSE. See the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public
+#   License along with this program; if not, write to the Free
+#   Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+#   Boston, MA 02110-1301, USA.
+#
+################################################################################
+#
+# Setup script for authentication server (IPA)
+# Required for SSSD related tests in audit-test suite
+#
+# Suited only for RHEL and clones
+#
+# Refer to README.auth_svr for more information
+#
+# Author: Miroslav Vadkerti <mvadkert@redhat.com>
+# Date: 08/2014
+#
+
+# helpers
+function print_info {
+    printf ":: $@\n"
+}
+
+function exit_error {
+    printf "Error: $@\n"
+    exit 1
+}
+
+# do sanity checks
+function sanity {
+    local EVAR=
+
+    source /etc/os-release &> /dev/null || exit_error \
+        "Could not detect distribution as /etc/os-release file not found"
+    [ "$ID" != "rhel" ] && exit_error \
+        "RHEL system could not be detected. IPA is available only in RHEL"
+
+    # source ipa defaults
+    source $AUTHSRV_DIR/ipa_env 2>/dev/null || \
+        exit_error "Could not source ipa defaults from $AUTHSRV_DIR/ipa_env"
+
+    # check for required default from ipa_env
+    for EVAR in IPA_ADMIN IPA_PASS IPA_REALM IPA_USER IPA_STAFF IPA_DOMAIN; do
+        [ -z "$(eval echo \$$EVAR)" ] && exit_error "$EVAR not found in ipa_env"
+    done
+
+    # check if ipa_clients exits and contains at least one host
+    [ -f $AUTHSRV_DIR/ipa_clients ] || exit_error \
+        "The ipa_clients file found. See README.auth_svr for details."
+    [ $(cat $AUTHSRV_DIR/ipa_clients | wc -l) -eq 0 ] && exit_error \
+        "The ipa_clients file is empty. See README.auth_svr for details."
+}
+
+# Install ipa-server
+function install {
+    if ! rpm --quiet -q $IPA_SRVPKG; then
+        print_info "Installing IPA server packages"
+        yum -y install $IPA_SRVPKG > /dev/null || \
+            exit_error "Installation of $IPA_SRVPKG failed"
+    else
+        print_info "IPA server packages already installed - skipping"
+    fi
+
+    print_info "Installing IPA (will take a few minutes)"
+    ipa-server-install -U -r "$IPA_REALM" -p "$IPA_PASS" -a "$IPA_PASS" \
+        -n "$IPA_DOMAIN" &>/dev/null || exit_error \
+        "Installation of IPA failed. See /var/log/ipaserver-install.log for details."
+}
+
+function configure {
+    local IUSER= HOST=
+
+    # get ticket
+    print_info "Getting ${IPA_ADMIN}@$IPA_REALM ticket"
+    echo $IPA_PASS | kinit ${IPA_ADMIN}@$IPA_REALM >/dev/null
+    klist -s || exit_error "Could not get valid credentials for ${IPA_ADMIN}@$IPA_REALM"
+
+    # set default mapping to user_u
+    print_info "Setting default SELinux user mapping"
+    ipa config-mod --ipaselinuxusermapdefault="user_u:s0" >/dev/null
+
+    # set default shell to /bin/bash
+    print_info "Setting default shell to /bin/bash"
+    ipa config-mod --defaultshell=/bin/bash
+
+    # add ipa users
+    for IUSER in $IPA_USER $IPA_STAFF $IPA_USER_EXPIRED; do
+        print_info "Adding user $IUSER"
+
+        # add user
+        echo $IPA_PASS | ipa user-add --first ipa --last $IUSER \
+            --email $IUSER@cctest.com --password $IUSER >/dev/null
+        # change expired password
+        [ $IUSER != $IPA_USER_EXPIRED ] && printf \
+            "${IPA_PASS}\n${IPA_PASS}\n${IPA_PASS}" | \
+                kpasswd ${IUSER}@$IPA_REALM >/dev/null
+    done
+
+    # add hosts and get host keytabs
+    print_info "Adding hosts to IPA"
+    mkdir -p $IPA_DLDIR
+    for HOST in $(cat $AUTHSRV_DIR/ipa_clients); do
+        ipa host-add --force $HOST >/dev/null
+        ipa-getkeytab -s $(hostname) -p host/$HOST -k $IPA_DLDIR/${HOST}.keytab &>/dev/null
+    done
+
+    # copy CA to download folder
+    cp -f /etc/ipa/ca.crt $IPA_DLDIR
+
+    # make it possible to eal to download
+    chown -Rf eal:eal $IPA_DLDIR
+
+    # set mapping of $IPA_STAFF to staff_u:s0-s0:c0.c1023
+    print_info "Setting mapping of $IPA_STAFF to staff_u:s0-s0:c0.c1023 for hosts in ipa_clients file"
+    ipa selinuxusermap-add staff --selinuxuser=staff_u:s0-s0:c0.c1023 >/dev/null
+    for HOST in $(cat $AUTHSRV_DIR/ipa_clients); do
+        ipa selinuxusermap-add-host staff --hosts=$HOST >/dev/null
+    done
+    ipa selinuxusermap-add-user staff --users=$IPA_STAFF >/dev/null
+}
+
+function verify {
+    local INFO=
+
+    print_info "Verifying authentication server"
+
+    # verify ipa server installation
+    rpm -q ipa-server >/dev/null || exit_error "IPA server is not installed - run '$0 all'"
+    systemctl status ipa >/dev/null || exit_error "IPA server is not running - run 'systemctl start ipa'"
+    echo $IPA_PASS | kinit ${IPA_ADMIN}@$IPA_REALM >/dev/null
+    klist -s || exit_error "Could not get valid credentials for ${IPA_ADMIN}@$IPA_REALM"
+
+    # verify ipa server configuration
+    for IUSER in $IPA_USER $IPA_STAFF $IPA_USER_EXPIRED; do
+        ipa user-show $IUSER >/dev/null || exit_error "IPA user $IUSER not found - run '$0 configure'"
+    done
+
+    # verify hosts added and keytabs generated
+    for HOST in $(cat $AUTHSRV_DIR/ipa_clients); do
+        INFO=$(ipa host-show $HOST) || exit_error "IPA host $HOSTR not found - run '$0 configure'"
+        echo $INFO | egrep -q "Keytab.*True" || exit_error "IPA host keytab not generated for $HOST - run '$0 configure'"
+        [ -e $IPA_DLDIR/${HOST}.keytab ] || exit_error "IPA host keytab not found for $HOST - run '$0 configure'"
+    done
+
+    # verify default mapping to user_u
+    ipa config-show | grep -q "Default SELinux user: user_u:s0" || \
+        exit_error "Default SELinux mapping is wrong - run '$0 configure'"
+
+    # verify mapping of $IPA_STAFF to staff
+    ipa selinuxusermap-show staff | grep -q "SELinux User: staff_u:s0-s0:c0.c1023" || \
+        exit_error "Default mapping for staff is not staff_u:s0-s0:c0.c1023 - run '$0 configure'"
+    for HOST in $(cat $AUTHSRV_DIR/ipa_clients); do
+        ipa selinuxusermap-show staff | egrep -q "Hosts.*$HOST" || \
+            "SELinux mapping of staff for $HOST not found - run '$0 configure'"
+    done
+    ipa selinuxusermap-show staff | egrep -q "Users.*$IPA_STAFF" || \
+        exit_error "SELinux mapping of staff for $IPA_STAFF not found"
+
+    print_info "Verification of server PASSED"
+}
+
+# Removing IPA from the system can be fun. This function should help you in the struggle.
+function uninstall {
+    local ANS=
+
+    echo -n "This will uninstall and remove IPA from the system including all dependencies, continue? (y/n) "
+    read ANS
+    [ "$ANS" == "y" ] || return
+
+    print_info "Uninstalling IPA (will take a few minutes)"
+    ipa-server-install --uninstall -U &>/dev/null
+    ipa-client-install --uninstall -U &>/dev/null
+    print_info "Removing IPA from the system including all dependencies"
+    yum -y remove ipa\* 389\* certmonger\* pki\* &> /dev/null || \
+        exit_error "Problem removing packages ipa\* 389\* certmonger\*"
+    rm -rf /var/lib/dirsrv /var/lib/certmonger /var/lib/pki /var/lib/ipa
+    rm -rf /etc/dirsrv /etc/certmonger /etc/ipa /etc/pki/pki.conf /etc/pki/default.cfg
+    rm -rf /etc/sysconfig/pki* /usr/share/pki /var/log/pki*
+    rm -rf /usr/share/ipa /root/.ipa /root/.certmonger
+    rm -f /etc/httpd/conf/ipa.keytab
+
+    rm -rf $IPA_DLDIR
+}
+
+function help {
+cat <<EOF
+    usage: $(basename $0) [-h] all|install|configure
+
+    This script installs and configures IPA server on a machine
+    installed via Common Criteria kickstart in Base mode.
+
+    Options:
+      -h         Print this help.
+
+    Available commands:
+      install    Install IPA server
+      configure  Configure IPA server for audit-test suite
+      verify     Verify that IPA server configuration is intact for audit-test tests
+      uninstall  Uninstall IPA server
+EOF
+}
+
+# globals
+IPA_SRVPKG="ipa-server"
+# assume TOPDIR is /usr/local/eal4_testing if no TOPDIR
+[ -z "$TOPDIR" ] && TOPDIR="/usr/local/eal4_testing"
+if [ ! -d "$TOPDIR" ]; then
+   exit_error "Please run the command via make, not directly!"
+fi
+AUTHSRV_DIR="$TOPDIR/utils/auth-server"
+
+# parse params
+while getopts "h" OPTION
+do
+  case $OPTION in
+    h)
+        help
+        exit
+        ;;
+  esac
+done
+
+# sanity
+sanity
+
+[ -z "$1" ] && help
+
+for CMD in $@; do
+    # execute test function if exists
+    if [ "$(type -t $CMD)" = "function" ]; then
+        eval $CMD
+    else
+        printf "Error: unknown command $CMD\n"
+        help
+    fi
+done
+
+# vim: ts=4 sw=4 sts=4 ft=sh et ai:

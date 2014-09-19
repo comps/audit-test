@@ -28,6 +28,7 @@ selinux-policy-devel
 xfsprogs-devel
 libseccomp-devel
 krb5-workstation
+dbus-devel
 
 The perl-IO-Tty package is available for RHEL6 in the optional channel that
 is not available in the RHEL6 installation media. You should be able to download

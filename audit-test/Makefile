@@ -22,7 +22,8 @@ include $(TOPDIR)/rules.mk
 RUN_DIRS	= syscalls \
 		  syscalls-ns \
 		  syscalls-dac \
-		  network
+		  network \
+		  dbus
 
 ifeq ($(MODE), $(NATIVE))
 RUN_DIRS       += fail-safe \

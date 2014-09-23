@@ -31,11 +31,7 @@ static int   NOACCESS   = 3;
 struct passwd *pw;
 struct group  *gr;
 
-struct msgbuf
-{
-  long mtype;
-  char mtext[1];
-} mbuf, tbuf;
+struct msgbuf mbuf, tbuf;
 
 uid_t uid;
 gid_t gid;
@@ -76,7 +72,6 @@ int access_check(mode_t access[], uid_t u, gid_t g) {
   int rc = 0;
   int sd = 0;
   char result[80];
-  char *return_string;
 
   struct sockaddr_un sock;
   socklen_t len = 0;
@@ -136,20 +131,12 @@ int access_check(mode_t access[], uid_t u, gid_t g) {
     strcpy(sock.sun_path, socketname);
     len = sizeof(sock.sun_family) + strlen(sock.sun_path);
 
-    return_string = strcpy(result, "Access:CONNECT");
     rc = connect(sd, (struct sockaddr *)&sock, len);
-    if (rc == -1) {
-      return_string = strcat(result, " | Allowed:NO ");
+    if (((rc != -1 && access[i] == access[READWRITE])) ||
+	((rc == -1 && access[i] == access[READ])) ||
+	((rc != -1 && access[i] == access[WRITE])) ||
+	((rc == -1 && access[i] == access[NOACCESS]))) {
     } else {
-      return_string = strcat(result, " | Allowed:YES");
-    }
-    if (((rc != -1) && (access[i] == access[READWRITE])) ||
-	((rc == -1) && (access[i] == access[READ])) ||
-	((rc != -1) && (access[i] == access[WRITE])) ||
-	((rc == -1) && (access[i] == access[NOACCESS]))) {
-      return_string = strcat(result, " | PASS\n");
-    } else {
-      return_string = strcat(result, " | FAIL\n");
       g_rc = -1;
     }
 

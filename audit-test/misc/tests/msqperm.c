@@ -28,7 +28,6 @@ int g_rc  = 0;
  */
 void msqinfo()
 {
-  int rc = 0;
   struct passwd *pw;
   struct group *gr;
   struct msqid_ds msqstat;
@@ -88,7 +87,6 @@ int access_check(mode_t access[])
   int rc = 0;
   ssize_t s;
   char result[80];
-  char *return_string;
   struct msqid_ds msqstat;
   struct msgbuf
   {
@@ -129,38 +127,22 @@ int access_check(mode_t access[])
 
     // Try read access.
     memset(r_message.mtext, '\0', sizeof(r_message.mtext));
-    return_string = strcpy(result, "Access:READ ");
     s = msgrcv(msqid, &r_message, sizeof(r_message.mtext), 0, IPC_NOWAIT);
-    if (s == -1) {
-      return_string = strcat(result, " | Allowed:NO ");
+    if ((s != -1 && access[i] == access[READ]) ||
+	(s == -1 && access[i] != access[READ])) {
     } else {
-      return_string = strcat(result, " | Allowed:YES");
-    }
-    if ((s != -1) && (access[i] == access[READ]) ||
-	(s == -1) && (access[i] != access[READ])) {
-      return_string = strcat(result, " | PASS\n");
-    } else {
-      return_string = strcat(result, " | FAIL\n");
       g_rc = -1;
     }
     printf(result);
 
     // Try write access
-    return_string = strcpy(result, "Access:WRITE");
     s_message.mtype = 1;
     memset(s_message.mtext, '\0', sizeof(s_message.mtext));
     strcpy(s_message.mtext, "Send Test\0");
     rc = msgsnd(msqid, &s_message, sizeof(s_message.mtext), 0);
-    if (rc == -1) {
-      return_string = strcat(result, " | Allowed:NO ");
+    if ((rc != -1 && access[i] == access[WRITE]) ||
+	(rc == -1 && access[i] != access[WRITE])) {
     } else {
-      return_string = strcat(result, " | Allowed:YES");
-    }
-    if ((rc != -1) && (access[i] == access[WRITE]) ||
-	(rc == -1) && (access[i] != access[WRITE])) {
-      return_string = strcat(result, " | PASS\n");
-    } else {
-      return_string = strcat(result, " | FAIL\n");
       g_rc = -1;
     }
     printf(result);
@@ -182,7 +164,6 @@ EXIT:
 
 int main(int argc, char *argv[])
 {
-  int fd;
   int rc = 0;
 
   uid_t uid_nobody;

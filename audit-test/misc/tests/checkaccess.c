@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 extern int alphasort ();
 

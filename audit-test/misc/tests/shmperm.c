@@ -29,7 +29,6 @@ int g_rc = 0;
  */
 void shminfo ()
 {
-  int rc = 0;
   struct passwd *pw;
   struct group *gr;
   struct shmid_ds buf;
@@ -85,7 +84,6 @@ int access_check (mode_t access[])
   int i;
   int rc = 0;
   char result[80];
-  char *return_string;
   struct shmid_ds buf;
   char *shmPtr;
 
@@ -114,36 +112,20 @@ int access_check (mode_t access[])
     }
 
     // Try read only access.
-    return_string = strcpy (result, "Access:READ     ");
     shmPtr = shmat (shmid, NULL, SHM_RDONLY);
-    if (shmPtr == (char *) -1) {
-      return_string = strcat (result, " | Allowed:NO ");
-    } else {
-      return_string = strcat (result, " | Allowed:YES");
-    }
     if (((shmPtr != (char *) -1) && (access[i] == access[READ])) ||
 	  ((shmPtr != (char *) -1) && (access[i] == access[READWRITE])) ||
 	  ((shmPtr == (char *) -1) && (access[i] != access[READ]))) {
-      return_string = strcat (result, " | PASS\n");
     } else {
-      return_string = strcat (result, " | FAIL\n");
       g_rc = -1;
     }
     printf (result);
 
     // Try read/write access.
-    return_string = strcpy (result, "Access:READWRITE");
     shmPtr = shmat (shmid, NULL, 0);
-    if (shmPtr == (char *) -1) {
-      return_string = strcat (result, " | Allowed:NO ");
+    if ((shmPtr != (char *) -1 && access[i] == access[READWRITE]) ||
+	  (shmPtr == (char *) -1 && access[i] != access[READWRITE])) {
     } else {
-      return_string = strcat (result, " | Allowed:YES");
-    }
-    if ((shmPtr != (char *) -1) && (access[i] == access[READWRITE]) ||
-	  (shmPtr == (char *) -1) && (access[i] != access[READWRITE])) {
-      return_string = strcat (result, " | PASS\n");
-    } else {
-      return_string = strcat (result, " | FAIL\n");
       g_rc = -1;
     }
     printf (result);
@@ -166,9 +148,6 @@ EXIT:
 int main (int argc, char *argv[])
 {
   int rc = 0;
-
-  key_t key;
-  char *shmPtr;
 
   uid_t uid_nobody;
   gid_t gid_nobody;

@@ -16,7 +16,6 @@ static char* devfile = "/dev/devtestfile";
 static char* output   = "./output";
 static int   READ     = 0;
 static int   WRITE    = 1;
-static int   NOACCESS = 2;
 
 struct passwd *pw;
 struct group *gr;
@@ -58,7 +57,6 @@ int access_check(mode_t access[]) {
     int rc = 0;
     int fd;
     char result[80];
-    char *return_string;
 
     for (i = 0; i < 3; i++) {
         if ((rc = chmod(devfile, access[i])) == -1) {
@@ -75,19 +73,11 @@ int access_check(mode_t access[]) {
         fileinfo();
 
         // Try open for read
-        return_string = strcpy(result, "Access:READ   ");
         fd = open(devfile, O_RDONLY);
-        if (fd == -1) {
-            return_string = strcat(result, " | Allowed:NO ");
-        } else {
-            return_string = strcat(result, " | Allowed:YES");
-        }
 
-        if ((fd != -1) && (access[i] == access[READ]) ||
-            (fd == -1) && (access[i] != access[READ])) {
-            return_string = strcat(result, " | PASS\n");
+        if ((fd != -1 && access[i] == access[READ]) ||
+            (fd == -1 && access[i] != access[READ])) {
         } else {
-            return_string = strcat(result, " | FAIL\n");
 	    g_rc = -1;
         }
 
@@ -100,19 +90,11 @@ int access_check(mode_t access[]) {
         }
 
         // Try open for write
-        return_string = strcpy(result, "Access:WRITE  ");
         fd = open(devfile, O_WRONLY);
-        if (fd == -1) {
-            return_string = strcat(result, " | Allowed:NO ");
-        } else {
-            return_string = strcat(result, " | Allowed:YES");
-        }
 
-        if ((fd != -1) && (access[i] == access[WRITE]) ||
-            (fd == -1) && (access[i] != access[WRITE])) {
-            return_string = strcat(result, " | PASS\n");
+        if ((fd != -1 && access[i] == access[WRITE]) ||
+            (fd == -1 && access[i] != access[WRITE])) {
         } else {
-            return_string = strcat(result, " | FAIL\n");
 	    g_rc = -1;
         }
 
@@ -145,10 +127,7 @@ EXIT:
 
 int main(int argc, char *argv[]) {
 
-    int fd;
     int rc = 0;
-
-    dev_t dev;
 
     uid_t uid_nobody;
     gid_t gid_nobody;

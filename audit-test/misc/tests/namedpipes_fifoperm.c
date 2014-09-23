@@ -80,7 +80,6 @@ int access_check(mode_t access[]) {
     int rc = 0;
     int fd;
     char result[80];
-    char *return_string;
     pthread_t open_thread;
     struct timespec timeout;
 
@@ -119,19 +118,11 @@ int access_check(mode_t access[]) {
         fifoinfo();
 
         // Try open for read
-        return_string = strcpy(result, "Access:READ   ");
         fd = open(fifoname, O_RDONLY);
-        if (fd < 0) {
-            return_string = strcat(result, " | Allowed:NO ");
-        } else {
-            return_string = strcat(result, " | Allowed:YES");
-        }
 
-        if ((fd >= 0) && (access[i] == access[READ]) ||
-            (fd < 0) && (access[i] != access[READ])) {
-            return_string = strcat(result, " | PASS\n");
+        if ((fd >= 0 && access[i] == access[READ]) ||
+            (fd < 0 && access[i] != access[READ])) {
         } else {
-            return_string = strcat(result, " | FAIL\n");
 	    g_rc = -1;
         }
 
@@ -144,19 +135,11 @@ int access_check(mode_t access[]) {
         }
 
         // Try open for write
-        return_string = strcpy(result, "Access:WRITE  ");
         fd = open(fifoname, O_WRONLY);
-        if (fd < 0) {
-            return_string = strcat(result, " | Allowed:NO ");
-        } else {
-            return_string = strcat(result, " | Allowed:YES");
-        }
 
-        if ((fd >= 0) && (access[i] == access[WRITE]) ||
-            (fd < 0) && (access[i] != access[WRITE])) {
-            return_string = strcat(result, " | PASS\n");
+        if ((fd >= 0 && access[i] == access[WRITE]) ||
+            (fd < 0 && access[i] != access[WRITE])) {
         } else {
-            return_string = strcat(result, " | FAIL\n");
 	    g_rc = -1;
         }
 

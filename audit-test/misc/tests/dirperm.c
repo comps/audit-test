@@ -20,7 +20,6 @@ static char* filename  = "./dactestdir/dactestfile";
 static char* workdir   = "./workdir";
 static char* dirname   = "./dactestdir";
 static char* output    = "./output";
-static char* searchdir = "ls -la ./dactestdir 2>/dev/null";
 static int   READ   = 0;
 static int   WRITE  = 1;
 static int   SEARCH = 2;
@@ -66,7 +65,6 @@ int access_check(mode_t access[]) {
     int rc = 0;
     int fd;
     char result[80];
-    char *return_string;
     DIR *dir;
 
     for (i = 0; i < 3; i++) {
@@ -86,19 +84,11 @@ int access_check(mode_t access[]) {
         dirinfo();
 
         // Try read access
-        return_string = strcpy(result, "Access:READ  ");
         dir = opendir(dirname);
-        if (dir == NULL) {
-            return_string = strcat(result, " | Allowed:NO ");
-        } else {
-            return_string = strcat(result, " | Allowed:YES");
-        }
 
-        if ((dir != NULL) && (access[i] == access[READ]) ||
-            (dir == NULL) && (access[i] != access[READ])) {
-            return_string = strcat(result, " | PASS\n");
+        if ((dir != NULL && access[i] == access[READ]) ||
+            (dir == NULL && access[i] != access[READ])) {
         } else {
-            return_string = strcat(result, " | FAIL\n");
 	    g_rc = -1;
         }
 
@@ -111,19 +101,11 @@ int access_check(mode_t access[]) {
         }
 
         // Try write access
-        return_string = strcpy(result, "Access:WRITE ");
         fd = creat(filename, O_WRONLY);
-        if (fd == -1) {
-            return_string = strcat(result, " | Allowed:NO ");
-        } else {
-            return_string = strcat(result, " | Allowed:YES");
-        }
 
-        if ((fd != -1) && (access[i] == access[WRITE]) ||
-            (fd == -1) && (access[i] != access[WRITE])) {
-            return_string = strcat(result, " | PASS\n");
+        if ((fd != -1 && access[i] == access[WRITE]) ||
+            (fd == -1 && access[i] != access[WRITE])) {
         } else {
-            return_string = strcat(result, " | FAIL\n");
 	    g_rc = -1;
         }
 
@@ -136,18 +118,10 @@ int access_check(mode_t access[]) {
         }
 
         // Try cd
-        return_string = strcpy(result, "Access:SEARCH");
 	rc = chdir(dirname);
-        if (rc == -1) {
-            return_string = strcat(result, " | Allowed:NO ");
-        } else {
-            return_string = strcat(result, " | Allowed:YES");
-        }
 
-        if ((rc != -1) || (rc == -1) && (access[i] != access[SEARCH])) {
-            return_string = strcat(result, " | PASS\n");
+        if ((rc != -1) || (rc == -1 && access[i] != access[SEARCH])) {
         } else {
-            return_string = strcat(result, " | FAIL\n");
 	    g_rc = -1;
         }
 
@@ -176,7 +150,6 @@ EXIT:
 
 int main(int argc, char *argv[]) {
 
-    int fd;
     int rc = 0;
     int cd = 0;
 

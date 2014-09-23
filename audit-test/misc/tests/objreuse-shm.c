@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
   }
 
   /* set the value of SHMMAX */
-  sprintf (new_shmmax, "%d\n", increments[ARRAY_SIZE(increments) - 1]);
+  sprintf (new_shmmax, "%zd\n", increments[ARRAY_SIZE(increments) - 1]);
   rc = write(fd, new_shmmax, sizeof(new_shmmax));
   if (rc == -1) {
     printf("%s: WARN unable to set kernel.shmmax, errno = %d\n", __FILE__, errno);

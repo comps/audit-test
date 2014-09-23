@@ -16,7 +16,6 @@ mode_t other_access[] = {S_IROTH, S_IWOTH, 0};
 
 static int READ     = 0;
 static int WRITE    = 1;
-static int NOACCESS = 2;
 
 uid_t uid = 0;
 gid_t gid = 0;
@@ -36,13 +35,9 @@ union semun {
  */
 void seminfo()
 {
-  int rc = 0;
   char output[80];
   char access[10];
-  char *return_string;
 
-  struct passwd *pw;
-  struct group *gr;
   struct semid_ds semstat;
   union semun arg;
 
@@ -52,50 +47,7 @@ void seminfo()
   memset(access, '\0', sizeof(access));
 
   semctl(semid, 0, IPC_STAT, arg);
-  pw = getpwuid(semstat.sem_perm.uid);
-  gr = getgrgid(semstat.sem_perm.gid);
 
-  if ((semstat.sem_perm.mode & user_access[READ]) != 0) {
-    return_string = strcat(access, "R");
-  } else {
-    return_string = strcat(access, "-");
-  }
-  if ((semstat.sem_perm.mode & user_access[WRITE]) != 0) {
-    return_string = strcat(access, "W");
-  } else {
-    return_string = strcat(access, "-");
-  }
-  return_string = strcat(access, "-");
-
-  if ((semstat.sem_perm.mode & group_access[READ]) != 0) {
-    return_string = strcat(access, "R");
-  } else {
-    return_string = strcat(access, "-");
-  }
-  if ((semstat.sem_perm.mode & group_access[WRITE]) != 0) {
-    return_string = strcat(access, "W");
-  } else {
-    return_string = strcat(access, "-");
-  }
-  return_string = strcat(access, "-");
-
-  if ((semstat.sem_perm.mode & other_access[READ]) != 0) {
-    return_string = strcat(access, "R");
-  } else {
-    return_string = strcat(access, "-");
-  }
-  if ((semstat.sem_perm.mode & other_access[WRITE]) != 0) {
-    return_string = strcat(access, "W");
-  } else {
-    return_string = strcat(access, "-");
-  }
-
-  return_string = strcat(access, "-");
-  return_string = strcat(output, access);
-  return_string = strcat(output, " Owner = ");
-  return_string = strcat(output, pw->pw_name);
-  return_string = strcat(output, ", Group = ");
-  return_string = strcat(output, gr->gr_name);
   printf(output);
   printf("\n");
 }
@@ -107,9 +59,7 @@ int access_check(mode_t access[])
 {
   int i;
   int rc = 0;
-  ssize_t s;
   char result[80];
-  char *return_string;
   struct semid_ds semstat;
   struct sembuf sop;
   union semun arg;
@@ -139,46 +89,33 @@ int access_check(mode_t access[])
     }
 
     // Try read access (sem_op = 0).
-    return_string = strcpy(result, "Access:READ ");
     sop.sem_num = 0;
     sop.sem_op  = 0; // read access
     sop.sem_flg = SEM_UNDO;
     rc = semop(semid, &sop, 1);
-    if (rc == -1) {
-      return_string = strcat(result, " | Allowed:NO ");
+    if ((rc != -1 && access[i] == access[READ]) ||
+	(rc == -1 && access[i] != access[READ])) {
     } else {
-      return_string = strcat(result, " | Allowed:YES");
-    }
-    if ((rc != -1) && (access[i] == access[READ]) ||
-	(rc == -1) && (access[i] != access[READ])) {
-      return_string = strcat(result, " | PASS\n");
-    } else {
-      return_string = strcat(result, " | FAIL\n");
       g_rc = -1;
     }
     printf(result);
 
     // Try write access (sem_op = 1)
-    return_string = strcpy(result, "Access:WRITE");
     sop.sem_num = 0;
     sop.sem_op  = 1; // write access
     sop.sem_flg = SEM_UNDO;
     rc = semop(semid, &sop, 1);
     if (rc == -1) {
-      return_string = strcat(result, " | Allowed:NO ");
     } else {
-      return_string = strcat(result, " | Allowed:YES");
       // Reset the semaphore
       sop.sem_num = 0;
       sop.sem_op  = -1; // write access
       sop.sem_flg = SEM_UNDO;
       semop(semid, &sop, 1);
     }
-    if ((rc != -1) && (access[i] == access[WRITE]) ||
-	(rc == -1) && (access[i] != access[WRITE])) {
-      return_string = strcat(result, " | PASS\n");
+    if ((rc != -1 && access[i] == access[WRITE]) ||
+	(rc == -1 && access[i] != access[WRITE])) {
     } else {
-      return_string = strcat(result, " | FAIL\n");
       g_rc = -1;
     }
     printf(result);
@@ -200,7 +137,6 @@ EXIT:
 
 int main(int argc, char *argv[])
 {
-  int fd;
   int rc = 0;
 
   uid_t uid_nobody;

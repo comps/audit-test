@@ -5,7 +5,6 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <grp.h>
-#include <pthread.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/types.h>

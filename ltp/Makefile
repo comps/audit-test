@@ -92,6 +92,7 @@ runtests:
 	# cleanup
 	setsebool deny_execmem=$(ORIG_EXECMEM)
 	sysctl kernel.msgmni=$(ORIG_MSGMNI)
+	faillock --reset
 
 .PHONY: report
 report:

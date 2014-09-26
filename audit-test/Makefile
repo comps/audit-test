@@ -23,7 +23,8 @@ RUN_DIRS	= syscalls \
 		  syscalls-ns \
 		  syscalls-dac \
 		  network \
-		  dbus
+		  dbus \
+		  polkit
 
 ifeq ($(MODE), $(NATIVE))
 RUN_DIRS       += fail-safe \

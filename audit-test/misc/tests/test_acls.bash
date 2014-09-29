@@ -17,9 +17,9 @@
 #   along with this program;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
-#  FILE: Ext3_ACLs test
+#  FILE: ACLs test
 #
-#  PURPOSE: Wrapper script to run test_ext3_acls.bash script.
+#  PURPOSE: Wrapper script to run test_acls.bash script.
 #
 #  HISTORY:
 #               09/11 T.N Santhosh (santhosh.tn@hp.com)
@@ -29,9 +29,9 @@
 source testcase.bash || exit 2
 
 LOG="run.log"
-EXE="ext3acl_file"
-ACL_RUN="./ext3acl_run"
-ACL_TESTS="getfacl-noacl.test setfacl.test ext3acl_permissions.test ext3acl_misc.test"
+EXE="acl_file"
+ACL_RUN="./acl_run"
+ACL_TESTS="getfacl-noacl.test setfacl.test acl_permissions.test acl_misc.test"
 
 ./$EXE &> $EXE.$LOG
 

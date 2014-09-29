@@ -15,7 +15,7 @@
 #
 #  FILE   : Makefile
 #
-#  PURPOSE: Downloads and runs syscalls and cc_ospp tests from LTP suite
+#  PURPOSE: Downloads and runs specific tests from the LTP suite
 #
 #  REQUIRENTS: Exported PASSWD env variable
 #
@@ -30,8 +30,6 @@ include $(TOPDIR)/rules.mk
 
 LTP_BASE = ltp-full
 PATCH_DIR = patch
-MDIR = $(CURDIR)
-RUNTEST_DIR = $(CURDIR)/runtest
 
 LTP_TARBALL = ltp-full.tar.bz2
 LTP_SRCURL = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20140828/ltp-full-20140828.tar.bz2/download
@@ -41,8 +39,14 @@ LTP_SRCURL = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20140828
 LTP_TMPDIR = /opt/ltp/tmp
 
 # save allow_execmem / msgmni
-ORIG_EXECMEM = $(shell getsebool deny_execmem | cut -d\  -f3)
-ORIG_MSGMNI = $(shell sysctl -n kernel.msgmni)
+ORIG_EXECMEM := $(shell getsebool deny_execmem | cut -d\  -f3)
+ORIG_MSGMNI := $(shell sysctl -n kernel.msgmni)
+
+# runtest files to run - comma-separated list
+# - provided by upstream ltp
+RUNTESTS := syscalls,containers,fs_perms_simple
+# - additional/custom
+RUNTESTS := $(RUNTESTS),$(CURDIR)/runtest/custom
 
 all: download extract patch build
 run: runtests report
@@ -85,10 +89,7 @@ runtests:
 	#  http://www.mail-archive.com/ltp-list@lists.sourceforge.net/msg12767.html
 	sysctl kernel.msgmni=700
 	# run tests
-	/opt/ltp/runltp -f syscalls -p -d $(LTP_TMPDIR) -l $(MDIR)/syscalls.rollup.log 2>&1 | tee syscalls.run.log
-	/opt/ltp/runltp -f $(RUNTEST_DIR)/cc_ospp -p -d $(LTP_TMPDIR) -l $(MDIR)/cc_ospp.rollup.log 2>&1 | tee cc_ospp.run.log
-	/opt/ltp/runltp -f $(RUNTEST_DIR)/mnt_syscalls -p -d $(LTP_TMPDIR) -l $(MDIR)/mnt_syscalls.rollup.log 2>&1 | tee mnt_syscalls.run.log
-	/opt/ltp/runltp -f containers -p -d $(LTP_TMPDIR) -l $(MDIR)/containers.rollup.log 2>&1 | tee containers.run.log
+	/opt/ltp/runltp -f $(RUNTESTS) -p -d $(LTP_TMPDIR) -l $(CURDIR)/ltp.rollup.log 2>&1 | tee ltp.run.log
 	# cleanup
 	setsebool deny_execmem=$(ORIG_EXECMEM)
 	sysctl kernel.msgmni=$(ORIG_MSGMNI)
@@ -96,16 +97,6 @@ runtests:
 
 .PHONY: report
 report:
-	@for logtype in rollup run; do \
-		for testset in syscalls cc_ospp mnt_syscalls containers; do \
-			echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
-			printf "::: %-52s :::\n" "$$testset"; \
-			echo "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"; \
-			echo; \
-			if [ -f "$$testset.$$logtype.log" ]; then cat "$$testset.$$logtype.log"; fi; \
-			echo; \
-		done &> ltp.$$logtype.log; \
-	done; \
 	{ \
 		echo "Summary:"; \
 		echo "--------"; \
@@ -124,11 +115,6 @@ clean:
 	# remove installed ltp
 	rm -rf /opt/ltp
 	# remove logs
-	for logtype in rollup run; do \
-		for testset in syscalls cc_ospp mnt_syscalls containers; do \
-			rm -f "$$testset.$$logtype.log"; \
-		done; \
-	done; \
 	rm -f ltp.rollup.log ltp.run.log
 	# remove downloaded and created files/dirs
 	rm -f $(LTP_TARBALL)

@@ -321,6 +321,16 @@ function remote_call {
     tstsvr_cleanup $LBLNET_SVR_IPV4
 }
 
+# Check if machine is in FIPS mode
+#
+# return 0 if machine in FIPS mode, 1 otherwise
+function is_fips {
+    [ -e "/etc/system-fips" ] || return 1
+    [ $(sysctl -n crypto.fips_enabled) -eq 0 ] && return 1
+
+    return 0
+}
+
 ######################################################################
 # service functions
 ######################################################################

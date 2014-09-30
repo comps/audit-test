@@ -97,15 +97,17 @@ function cipher {
         "Connection successful with incompatible ciphers"
     [ $RET -ne 6 ] && exit_error "Unexpected error message"
 
-    # Try invalid cipher type with all supported ciphers
-    sshd_config_set "Ciphers" "blowfish-cbc"
-    # Try all cipher types
-    for CIPHER in $CIPHERS; do
-        AUDITMARK=$(get_audit_mark)
-        ssh_connect_pass $TEST_USER $TEST_USER_PASSWD \
-            $TEST_ADMIN $TEST_ADMIN_PASSWD "-c $CIPHER" && \
-            exit_fail "Connection successful with invalid cipher ($CIPHER)"
-    done
+    # Try invalid cipher type with all supported ciphers, only in non-FIPS mode
+    if ! is_fips; then
+        sshd_config_set "Ciphers" "blowfish-cbc"
+        # Try all cipher types
+        for CIPHER in $CIPHERS; do
+            AUDITMARK=$(get_audit_mark)
+            ssh_connect_pass $TEST_USER $TEST_USER_PASSWD \
+                $TEST_ADMIN $TEST_ADMIN_PASSWD "-c $CIPHER" && \
+                exit_fail "Connection successful with invalid cipher ($CIPHER)"
+        done
+    fi
 
     # FMT_MTD.1(CM) - Test 3
     # check if admin user is unable to modify $SSHDCONF
@@ -115,7 +117,8 @@ function cipher {
 
 
 function hmac {
-    # Try out all HMAC types
+    # Try out all HMAC types (in FIPS mode limit to HMACS_FIPS)
+    is_fips && HMACS="$HMACS_FIPS"
     for HMAC in $HMACS; do
         # make sure server supports only one MAC
         sshd_config_set "MACs" "$HMAC"
@@ -134,7 +137,7 @@ function hmac {
     sshd_config_set "MACs" "hmac-sha1"
     AUDITMARK=$(get_audit_mark)
     ssh_connect_pass $TEST_USER $TEST_USER_PASSWD \
-        $TEST_ADMIN $TEST_ADMIN_PASSWD "-m hmac-md5"; local RET=$?
+        $TEST_ADMIN $TEST_ADMIN_PASSWD "-m hmac-sha2-256-etm@openssh.com"; local RET=$?
     [ $RET -eq 0 ] && exit_fail \
         "Connection successful with incompatible hmacs"
     [ $RET -ne 5 ] && exit_error "Unexpected connection failure"

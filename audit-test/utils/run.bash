@@ -40,7 +40,7 @@ if [[ -f Makefile ]]; then
     # explicitly unset make-specific variables to avoid test confusion
     unset MAKELEVEL MAKEFILES MAKEFLAGS MFLAGS
     # convert TOPDIR to absolute path
-    [ "$TOPDIR" ] && TOPDIR=$(cd "$TOPDIR"; pwd)
+    [ "$TOPDIR" ] && export TOPDIR=$(cd "$TOPDIR"; pwd)
 else
     echo "Unable to find Makefile in $PWD, some variables might be empty." >&2
 fi

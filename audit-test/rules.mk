@@ -48,6 +48,7 @@ LINK_AR		= $(AR) rc $@ $^
 LINK_EXE	= $(CC) $(LDFLAGS) -o $@ $^ $(LOADLIBES) $(LDLIBS)
 LINK_SO		= $(CC) $(LDFLAGS) -shared -o $@ $^ $(LOADLIBES) $(LDLIBS)
 
+export TOPDIR
 export MACHINE
 
 # If MODE isn't set explicitly, the default for the machine is used

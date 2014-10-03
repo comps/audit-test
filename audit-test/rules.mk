@@ -268,5 +268,8 @@ subdirs_quiet:
 # Various helper rules
 ##########################################################################
 
-export-%:
-	@[ '$($*)' ] && echo 'export $*=$($*)' || true
+# needs SHELL set to bash (due to printf %q)
+export_env:
+	@IFS=$$'\n'; for var in $$(env); do \
+		printf 'export %q\n' "$$var"; \
+	done;

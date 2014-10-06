@@ -331,6 +331,15 @@ function is_fips {
     return 0
 }
 
+# check syscall relevancy to currently running system
+#
+# returns 0 if a syscall is relevant, 1 otherwise
+sc_is_relevant()
+{
+	case " $SCREL_SYSCALLS " in *" $1 "*) return 0;; esac
+	return 1
+}
+
 ######################################################################
 # service functions
 ######################################################################

@@ -1,0 +1,193 @@
+Intro
+=====
+The (audit-test) suite has a lot of "syscall wrappers" that are used for
+execution and auditing of syscalls. Unfortunately, various HW architectures
+have various differences in the number of available syscalls and their names.
+This has been previously worked around by arch-based (+ bitness-based)
+conditions on various places in the suite (utils/bin/Makefile, run.conf of
+various buckets or test code itself), compiling, executing and auditing only
+syscalls that existed for a given architecture.
+
+Syscall (HW) relevancy abstracts this, using a single file, defining which
+syscalls are "relevant" for which arch/bitness combinations, and by providing
+means to check against this "relevancy".
+
+
+'relevancy' file
+================
+This file defines syscall-to-arch mapping, specifying relevant arch:bitness
+combinations for each syscall in utils/bin/.
+
+syntax
+------
+The basic syntax definition is
+
+  <line>: <aliasdef> | <syscalldef> | (empty)
+  <aliasdef>: alias <syscalldef>
+  <syscalldef>: <syscall> | <syscall><separator><archlist>
+  <syscall>: (syscall or alias name, any non-whitespace string)
+  <separator>: (any non-LF whitespace)
+  <archlist>: <neg><archspec> | <neg><archspec>,<archlist>
+  <neg>: ! | (empty)
+  <archspec>: <arch> | <arch>:<bits> | <alias>
+  <arch>: (uname -m output, any non-whitespace string) | all
+  <bits>: (specified as MODE within audit-test, any non-whitespace string)
+  <alias>: (any non-whitespace string)
+
+For example
+
+  syscall1    all                  # relevant everywhere
+  syscall2    !s390x,all           # not on s390x, relevant elsewhere
+  syscall3    !x86_64:32,all:32    # not on 32bit x86_64, elsewhere only 32bit
+  syscall4    ppc64                # relevant only on ppc64
+  syscall5                         # not relevant anywhere
+
+In addition,
+
+   - the file can have shell-like comments (anything starting with # is ignored)
+     even in-line, ie. 'syscall1  arch1,arch2#,arch3', the syntax definition
+     above then applies to a file with removed comments
+
+   - arch is a shell glob, ie. it can contain shell-like wildcards (not regexp),
+     ie. 'i*86' or 'i?86' or 'i[3456]86' or 'i[3-6]86'
+     - yes, this essentially means that '*' is equivalent to 'all', by logic
+
+aliases
+-------
+The file can contain "aliases" to archlists that can be thought of as "nested"
+archlists, having their own "return value" that can be negated, for example:
+
+  alias intel32 x86_64:32,i?86
+  syscall1    !intel32,all:32      # relevant everywhere except x86-based 32bit
+
+Aliases can refer to other aliases:
+
+  alias intel32 x86_64:32,i?86
+  alias nointel !x86_64,!intel32,!ia64
+  syscall1    nointel,all          # relevant everywhere except any intel
+
+(or even to themselves, which unfortunately leads to infinite loop/recursion)
+
+Note, however, that an alias within an archlist is equivalent to archspec,
+not to arch directly, therefore:
+
+  - alias name itself never matches as an arch
+  - alias cannot have bitness
+    - although you can define alias called 'abc:32' and refer to it by this name
+  - can be negated (like archspec)
+    - the negation then applies to the entire "nested" archlist, think of:
+        alias al2  !arch4,arch5
+        alias al1  arch2,!arch3,al2
+        sc1        arch1,!al1,!arch6
+      as
+        sc1  arch1,!(arch2,!arch3,(!arch4,arch5)),!arch6
+
+
+Relevancy algorithm
+===================
+This is a basic algorithm used by the syscall relevancy parser to decide whether
+a syscall is relevant to a given arch/bitness:
+
+  for each line:
+    for each comma-separated archspec on the line:
+      if arch doesn't match current arch:
+        continue (next archspec)
+      if archspec has bits and it doesn't match current bitness:
+        continue (next archspec)
+      if archspec has negation sign:
+        return EXCLUDE (syscall is not relevant)
+      else
+        return INCLUDE (syscall is relevant)
+    return EXCLUDE (syscall is not relevant, no archspec matched)
+
+
+Usage within audit-test
+=======================
+The relevancy can be and is used for several types of utilities. The list of
+relevant syscalls is availabel as SCREL_SYSCALLS env var to all Makefiles and
+tests (via run.bash).
+
+Makefile
+--------
+GNU make can make use of the relevancy for building syscalls by generating
+targets (list) from the list of relevant syscalls, assuming the syscall wrappers
+are named after syscalls they call.
+
+bash run.conf / tests
+---------------------
+utils/functions exports the 'sc_is_relevant' function, which returns 0 when
+a syscall, given as an argument, is relevant to the current arch/bitness:
+
+  if sc_is_relevant open; then
+    do_open /file read
+  elif sc_is_relevant openat; then
+    do_openat AT_FDCWD /file read
+  else
+    error "no usable open found"
+  fi
+
+
+Additional considerations
+=========================
+
+Syscall arguments
+-----------------
+Various architectures may implement the same syscall with the same name, but
+with different arguments or argument order. Unfortunately, syscall relevancy
+in its current implementation doesn't address this and such syscalls have
+to be manually #ifdef'ed within their wrappers.
+
+There is no easy solution to this problem and trying to solve it in a generic
+way introduces more problems - ie. in the simplest case of different arg order
+- we could create a 'reference' mapping and map different ordering types to it.
+Who would declare the 'reference' order? Where? Based on what names/ids?
+Cases where syscalls with identical names have completely different arguments
+*and* functions cannot be solved in this way.
+
+Another possibility is to introduce multiple wrappers, one per arch or kernel
+"implementation" of the syscall. However in such case, any abstraction from
+the POV of the tests/Makefile is only harmful as two identically-named syscalls
+can do different things). It makes therefore sense to let tests decide in these
+special cases (using relevancy) between syscalls.
+
+This could be easily supported by modifying the utils/bin/Makefile logic to
+include ie. do_*$syscall into the target list, allowing for wrappers such as
+do_s390x-mmap2.c.
+
+(Note: doing do_mmap2-s390x.c would be much more complex due to source/target
+       Makefile logic - wildcarding would remove even *.c on 'make clean')
+
+Syscall relevancy would then support it automatically as "s390x-mmap2".
+
+However at this point, there's no known case which would need such complex
+solution and - for simple argument ordering - #ifdef within a wrapper should
+suffice.
+
+External criteria
+-----------------
+There may be cases where additional criteria may be useful for syscall relevancy
+checking, such as $DISTRO, $PPROFILE, etc. This could be solved with another
+"column" in the 'relevancy' file, specifying a shell expression to evaluate.
+Since using more then one relevancy line for the same syscall (name) is allowed,
+one could do ie.
+
+  syscall1  all        [ "$KERNEL" = "3.10" ]
+  syscall1  !ia64,all  [ "$KERNEL" = "2.6.32" ]
+
+  syscall2  all        [ "$PPROFILE" = "lspp" ]
+
+However such feature would have limited use and would likely serve means other
+than the (original, intended) hardware syscall relevancy. For example the latter
+case with 'lspp' is a *testing* logic, some other bucket may use the syscall
+for non-lspp means.
+
+Using ie. kernel versions wouldn't make much sense either as other parts of
+the suite depend on features available in specific kernel versions, needing
+different branches for ie. RHEL6, RHEL7, etc.
+In case of multiple distributions having different needs, multiple relevancy
+files (with DISTRO-based logic in rules.mk) may offer a cleaner solution.
+
+(Hardare) syscall relevancy should therefore serve only as means to avoid
+unwanted build/execution errors due to the syscall not existing on a given
+architecture / bitness as defined in /usr/include/asm/unistd_*.h generated from
+syscall tables present in the kernel sources under arch/.

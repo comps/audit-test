@@ -42,6 +42,9 @@ AUDIT_MARK=$(get_audit_mark)
 # test
 restart_service cups
 
+# give cups a bit more time to startup and emit audit events
+sleep 2
+
 # verify
 augrok --seek=$AUDIT_MARK -q type=LABEL_LEVEL_CHANGE msg_1=~".Config. Classification=mls.*" || exit_fail
 augrok --seek=$AUDIT_MARK -q type=USYS_CONFIG msg_1=~".Config. ClassifyOverride=enabled.*" || exit_fail

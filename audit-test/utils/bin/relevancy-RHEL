@@ -186,7 +186,7 @@ uname			all
 unlink			all
 unlinkat		all
 unshare			all
-uselib			all
+uselib			!x86_64:64,all  # exists, but returns ENOSYS
 utime			!ia64,all  # old kernel?
 utimensat		!ia64,all  # old kernel?
 utimes			all

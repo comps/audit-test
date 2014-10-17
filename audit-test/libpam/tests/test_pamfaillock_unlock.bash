@@ -66,7 +66,7 @@ expect -c '
     expect {:::$} { close; wait }'
 
 msg_2="acct=\"$TEST_USER\" exe=./usr/sbin/sshd.*terminal=ssh res=success.*"
-augrok -q type=CRED_ACQ msg_1=~"PAM:setcred $msg_2" || exit_fail
-augrok -q type=USER_ACCT msg_1=~"PAM:accounting $msg_2" || exit_fail
+augrok -q type=CRED_ACQ msg_1=~"PAM:setcred grantors=pam_env,pam_faillock,pam_unix $msg_2" || exit_fail
+augrok -q type=USER_ACCT msg_1=~"PAM:accounting grantors=pam_faillock,pam_unix,pam_localuser $msg_2" || exit_fail
 
 exit_pass

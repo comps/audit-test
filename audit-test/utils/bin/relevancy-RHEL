@@ -5,14 +5,21 @@
 #
 # to highlight aliases in vim, use :match Operator /^alias\s\@=/
 
+# <aliasname>		<archlist>
+
+#syscalls consolidated to socketcall(2) on some architectures
+alias netcall		!s390x,!x86_64:32,all
+#syscalls consolidated to ipc(2) on most architectures
+alias ipccall		x86_64:64
+
 # <syscall>		<archlist>
-accept			!s390x,!x86_64:32,all
-accept4			!s390x,!x86_64:32,all
+accept			netcall
+accept4			netcall
 access			all
 acct			all
 add_key			all
 adjtimex		all
-bind			!s390x,!x86_64:32,all
+bind			netcall
 capset			all
 chdir			all
 chmod			all
@@ -23,7 +30,7 @@ clock_adjtime		all
 clock_settime		all
 clone			all
 clone2			# was ia64 only
-connect			!s390x,!x86_64:32,all
+connect			netcall
 creat			all
 delete_module		all
 execve			all
@@ -91,10 +98,10 @@ mount			all
 move_pages		!s390x,all
 mq_open			all
 mq_unlink		all
-msgctl			x86_64:64
-msgget			x86_64:64
-msgrcv			x86_64:64
-msgsnd			x86_64:64
+msgctl			ipccall
+msgget			ipccall
+msgrcv			ipccall
+msgsnd			ipccall
 newfstatat		all:64
 nice			!x86_64:64,all
 open			all
@@ -113,9 +120,9 @@ read			all
 readlink		all
 readlinkat		all
 reboot			all
-recvfrom		!s390x,!x86_64:32,all
+recvfrom		netcall
 recvmmsg		!s390x,all
-recvmsg			!s390x,!x86_64:32,all
+recvmsg			netcall
 removexattr		all
 rename			all
 renameat		all
@@ -129,13 +136,13 @@ sched_rr_get_interval	all
 sched_setaffinity	all
 sched_setparam		all
 sched_setscheduler	all
-semctl			x86_64:64
-semget			x86_64:64
-semop			x86_64:64
-semtimedop		x86_64:64
+semctl			ipccall
+semget			ipccall
+semop			ipccall
+semtimedop		ipccall
 send			ppc64
-sendmsg			!s390x,!x86_64:32,all
-sendto			!s390x,!x86_64:32,all
+sendmsg			netcall
+sendto			netcall
 set_robust_list		all
 setdomainname		all
 setfsgid		all
@@ -163,9 +170,9 @@ settimeofday		all
 setuid			all
 setuid32		!ppc64,all:32
 setxattr		all
-shmat			x86_64:64
-shmctl			x86_64:64
-shmget			x86_64:64
+shmat			ipccall
+shmctl			ipccall
+shmget			ipccall
 socketcall		!x86_64:64,all
 stat			all
 statfs			all

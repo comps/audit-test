@@ -6,28 +6,28 @@
 # to highlight aliases in vim, use :match Operator /^alias\s\@=/
 
 # <syscall>		<archlist>
-accept			!s390x,!x86_64:32,!i686,all
-accept4			!s390x,!x86_64:32,!i686,!ia64,all
+accept			!s390x,!x86_64:32,all
+accept4			!s390x,!x86_64:32,all
 access			all
 acct			all
 add_key			all
 adjtimex		all
-bind			!s390x,!x86_64:32,!i686,all
+bind			!s390x,!x86_64:32,all
 capset			all
 chdir			all
 chmod			all
-chown			!aarch64,all
+chown			all
 chown32			!ppc64,all:32
 chroot			all
-clock_adjtime		!ia64,all  # old kernel?
+clock_adjtime		all
 clock_settime		all
 clone			all
-clone2			ia64
-connect			!s390x,!x86_64:32,!i686,all
+clone2			# was ia64 only
+connect			!s390x,!x86_64:32,all
 creat			all
 delete_module		all
 execve			all
-fanotify_mark		!i686,!ia64,all  # old kernel?
+fanotify_mark		all
 fchmod			all
 fchmodat		all
 fchown			all
@@ -35,7 +35,7 @@ fchown32		!ppc64,all:32
 fchownat		all
 fgetxattr		all
 flistxattr		all
-fork			!ia64,all  # old kernel?
+fork			all
 fremovexattr		all
 fsetxattr		all
 fstat			all
@@ -47,7 +47,7 @@ geteuid			all
 getgid			all
 getgroups		all
 getpgid			all
-getpgrp			!ia64,all  # old kernel?
+getpgrp			all
 getpid			all
 getppid			all
 getresgid		all
@@ -59,16 +59,16 @@ getxattr		all
 init_module		all
 inotify_add_watch	all
 ioctl			all
-ioperm			!s390x:64,!ia64,all
-iopl			!s390x,!ia64,all
+ioperm			!s390x:64,all
+iopl			!s390x,all
 ioprio_get		all
 ioprio_set		all
-ipc			!x86_64:64,!ia64,all
-kcmp			!i686,!ia64,all  # old kernel?
+ipc			!x86_64:64,all
+kcmp			all
 kexec_load		all
 keyctl			all
 kill			all
-lchown			!aarch64,all
+lchown			all
 lchown32		!ppc64,all:32
 lgetxattr		all
 link			all
@@ -86,36 +86,36 @@ mknod			all
 mknodat			all
 mlock			all
 mlockall		all
-mmap2			ia64,all:32
+mmap2			all:32
 mount			all
 move_pages		!s390x,all
 mq_open			all
 mq_unlink		all
-msgctl			x86_64:64,ia64
-msgget			x86_64:64,ia64
-msgrcv			x86_64:64,ia64
-msgsnd			x86_64:64,ia64
+msgctl			x86_64:64
+msgget			x86_64:64
+msgrcv			x86_64:64
+msgsnd			x86_64:64
 newfstatat		all:64
-nice			!x86_64:64,!ia64,all
+nice			!x86_64:64,all
 open			all
-open_by_handle_at	!i686,!ia64,all  # old kernel?
+open_by_handle_at	all
 openat			all
-pciconfig_read		ppc64,ia64
-pciconfig_write		ppc64,ia64
+pciconfig_read		ppc64
+pciconfig_write		ppc64
 pivot_root		all
 prctl			all
-prlimit64		!i686,!ia64,all  # old kernel?
-process_vm_readv	!ia64,all  # old kernel?
-process_vm_writev	!ia64,all  # old kernel?
+prlimit64		all
+process_vm_readv	all
+process_vm_writev	all
 ptrace			all
 quotactl		all
 read			all
 readlink		all
 readlinkat		all
 reboot			all
-recvfrom		!s390x,!x86_64:32,!i686,all
+recvfrom		!s390x,!x86_64:32,all
 recvmmsg		!s390x,all
-recvmsg			!s390x,!x86_64:32,!i686,all
+recvmsg			!s390x,!x86_64:32,all
 removexattr		all
 rename			all
 renameat		all
@@ -129,13 +129,13 @@ sched_rr_get_interval	all
 sched_setaffinity	all
 sched_setparam		all
 sched_setscheduler	all
-semctl			x86_64:64,ia64
-semget			x86_64:64,ia64
-semop			x86_64:64,ia64
-semtimedop		x86_64:64,ia64
-send			ppc64,ia64
-sendmsg			!s390x,!x86_64:32,!i686,all
-sendto			!s390x,!x86_64:32,!i686,all
+semctl			x86_64:64
+semget			x86_64:64
+semop			x86_64:64
+semtimedop		x86_64:64
+send			ppc64
+sendmsg			!s390x,!x86_64:32,all
+sendto			!s390x,!x86_64:32,all
 set_robust_list		all
 setdomainname		all
 setfsgid		all
@@ -147,7 +147,7 @@ setgid32		!ppc64,all:32
 setgroups		all
 setgroups32		!ppc64,all:32
 sethostname		all
-setns			!ia64,all  # old kernel?
+setns			all
 setpgid			all
 setpriority		all
 setregid		all
@@ -163,10 +163,10 @@ settimeofday		all
 setuid			all
 setuid32		!ppc64,all:32
 setxattr		all
-shmat			x86_64:64,ia64
-shmctl			x86_64:64,ia64
-shmget			x86_64:64,ia64
-socketcall		!x86_64:64,!ia64,all
+shmat			x86_64:64
+shmctl			x86_64:64
+shmget			x86_64:64
+socketcall		!x86_64:64,all
 stat			all
 statfs			all
 stime			ppc64,all:32
@@ -181,14 +181,14 @@ truncate		all
 truncate64		all:32
 umask			all
 umount			!x86_64:64,all
-umount2			!ia64,all
+umount2			all
 uname			all
 unlink			all
 unlinkat		all
 unshare			all
 uselib			!x86_64:64,all  # exists, but returns ENOSYS
-utime			!ia64,all  # old kernel?
-utimensat		!ia64,all  # old kernel?
+utime			all
+utimensat		all
 utimes			all
-vfork			!ia64,all
+vfork			all
 vhangup			all

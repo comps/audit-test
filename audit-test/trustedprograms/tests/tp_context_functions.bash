@@ -101,7 +101,7 @@ function verify_fail_chcon_level {
 	declare log_mark
 	log_mark=$(stat -c %s $audit_log)
 	auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S setxattr
-        if [[ $ARCH == PPC ]]; then
+        if [[ $MACHINE == ppc64 || $MACHINE == ppc ]]; then
            auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S fstatat
         else
 	   auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S newfstatat

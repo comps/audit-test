@@ -30,7 +30,7 @@ restart_service auditd || exit 2
 
 # Fill the filesystem hosting audit.log, leaving 5k available
 # On power systems the page size is 64k so leave slightly more than that
-if [[ $ARCH != "PPC" ]]; then
+if [[ $MACHINE != "ppc64" && $MACHINE != "ppc" ]]; then
    fill_disk ${audit_log%/*} 5 || exit 2
 else
    fill_disk ${audit_log%/*} 70 || exit 2

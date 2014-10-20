@@ -146,8 +146,6 @@ check_variables() {
         check "env | grep \"^$i=\"" 0 "Var $i is present in environment"
     done;
 
-    # s390x / ppc64 check? (ARCH variable)
-
     if [ "$CHECK_FAILED" ]; then
         echo
         echo "Variable checking failed, please make sure to export all required"

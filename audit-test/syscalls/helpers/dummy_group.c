@@ -13,30 +13,37 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "includes.h"
-#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-static void signal_handler(int sig)
+int main(int argc, char **argv)
 {
-    int save_errno;
+    int i, n, pid;
 
-    switch (sig) {
-    /* add other signals here, or below */
-    case SIGUSR1:
-        /* re-register this signal handler for next time */
-        save_errno = errno;
-        signal(sig, signal_handler);
-        errno = save_errno;
-        break;
+    if (argc < 2) {
+	fprintf(stderr, "Usage:\n%s <number of processes>\n", argv[0]);
+	return 1;
+    }
+    n = atoi(argv[1]);
+
+    if (setpgid(0, 0) == -1) {
+	perror("dummy_group: setpgid");
+	return 1;
     }
 
-    return;
-}
+    for (i = 0; i < n; i++) {
 
-int main(void)
-{
-    if (signal(SIGUSR1, signal_handler) == SIG_ERR)
-        perror("do_dummy: signal");
+	pid = fork();
+	switch (pid) {
+	case -1:
+	    perror("dummy_group: fork");
+	    break;
+	case 0:
+	    for (;;) sleep(1);
+	    break;
+	}
+    }
 
     for (;;) sleep(1);
 

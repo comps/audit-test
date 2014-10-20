@@ -13,20 +13,35 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "includes.h"
-#include <sys/time.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
+#include <signal.h>
 
-int main(int argc, char **argv)
+static void signal_handler(int sig)
 {
-    int exitval, result;
-    struct timeval tv;
-    struct timezone tz;
+    int save_errno;
 
-    errno = 0;
-    exitval = gettimeofday(&tv, &tz);
-    result = exitval < 0;
+    switch (sig) {
+    /* add other signals here, or below */
+    case SIGUSR1:
+        /* re-register this signal handler for next time */
+        save_errno = errno;
+        signal(sig, signal_handler);
+        errno = save_errno;
+        break;
+    }
 
-    printf("%ld\n", tv.tv_sec);
-    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
-    return result;
+    return;
+}
+
+int main(void)
+{
+    if (signal(SIGUSR1, signal_handler) == SIG_ERR)
+        perror("dummy_process: signal");
+
+    for (;;) sleep(1);
+
+    /* not reached */
+    return 1;
 }

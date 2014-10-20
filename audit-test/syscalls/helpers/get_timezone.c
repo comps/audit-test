@@ -13,38 +13,22 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "includes.h"
+#include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/time.h>
 
 int main(int argc, char **argv)
 {
-    int i, n, pid;
+    int exitval, result;
+    struct timeval tv;
+    struct timezone tz;
 
-    if (argc < 2) {
-	fprintf(stderr, "Usage:\n%s <number of processes>\n", argv[0]);
-	return 1;
-    }
-    n = atoi(argv[1]);
+    errno = 0;
+    exitval = gettimeofday(&tv, &tz);
+    result = exitval < 0;
 
-    if (setpgid(0, 0) == -1) {
-	perror("do_dummy_group: setpgid");
-	return 1;
-    }
-
-    for (i = 0; i < n; i++) {
-
-	pid = fork();
-	switch (pid) {
-	case -1:
-	    perror("do_dummy_group: fork");
-	    break;
-	case 0:
-	    for (;;) sleep(1);
-	    break;
-	}
-    }
-
-    for (;;) sleep(1);
-
-    /* not reached */
-    return 1;
+    fprintf(stderr, "%d %d\n", tz.tz_minuteswest, tz.tz_dsttime);
+    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
+    return result;
 }

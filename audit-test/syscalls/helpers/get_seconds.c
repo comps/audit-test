@@ -13,7 +13,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "includes.h"
+#include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
 #include <sys/time.h>
 
 int main(int argc, char **argv)
@@ -26,7 +28,7 @@ int main(int argc, char **argv)
     exitval = gettimeofday(&tv, &tz);
     result = exitval < 0;
 
-    fprintf(stderr, "%d %d\n", tz.tz_minuteswest, tz.tz_dsttime);
+    printf("%ld\n", tv.tv_sec);
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }

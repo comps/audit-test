@@ -575,7 +575,7 @@ function create_process {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
-    ${context:+runcon $context} $(which do_dummy) &
+    ${context:+runcon $context} $(which dummy_process) &
     mypid=$!
 
     prepend_cleanup "kill -SIGKILL $mypid"
@@ -588,11 +588,11 @@ function create_pgrp {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
-    ${context:+runcon $context} $(which do_dummy_group) 20 &
-    sleep 1 # let do_dummy_group get started
-    mypgid=$(ps --no-headers -C do_dummy_group -o pgid | head -n1)
+    ${context:+runcon $context} $(which dummy_group) 20 &
+    sleep 1 # let dummy_group get started
+    mypgid=$(ps --no-headers -C dummy_group -o pgid | head -n1)
 
-    prepend_cleanup "killall -SIGKILL do_dummy_group"
+    prepend_cleanup "killall -SIGKILL dummy_group"
     eval "$var=\$mypgid"
 }
 
@@ -733,10 +733,10 @@ function setup_time {
 
     case $p in
 	time_set)
-	    flag=$(do_getseconds) ;;
+	    flag=$(get_seconds) ;;
 	time_zone_set)
-	    flag=$(do_getseconds)
-	    read zone dst <<<"$(do_gettimezone)" ;;
+	    flag=$(get_seconds)
+	    read zone dst <<<"$(get_timezone)" ;;
     esac
 
     augrokfunc=augrok_default
@@ -1113,7 +1113,7 @@ function create_process_objects_mac {
             opid=$target ;;
         pgrp_*)
             create_pgrp target context=$obj
-            opid+=( $(ps --no-headers -C do_dummy_group -o pid | sort -n) ) ;;
+            opid+=( $(ps --no-headers -C dummy_group -o pid | sort -n) ) ;;
         *) exit_error "unknown perm to test: $p" ;;
     esac
 

@@ -125,8 +125,6 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_clock_adjtime \
 		  do_clone \
 		  do_delete_module \
-		  do_dummy \
-		  do_dummy_group \
 		  do_execve \
 		  do_fanotify_mark \
 		  do_fchmod \
@@ -146,8 +144,6 @@ ALL_EXE		= $(CAPS_EXE) \
 		  do_getgid \
 		  do_getpid \
 		  do_getppid \
-		  do_getseconds \
-		  do_gettimezone \
 		  do_getuid \
 		  do_getxattr \
 		  do_getgroups \

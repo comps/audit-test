@@ -25,7 +25,7 @@
 source pam_functions.bash || exit 2
 
 do_login() {
-    local PTS=
+    local PTS= LINE= EVENT= GRANTORS= PAMOP=
     local TUSR=$1
     local TPASS=$2
 
@@ -49,10 +49,14 @@ do_login() {
     PTS=$(<$localtmp)
     PTS=${PTS##*/}
 
-    msg_1="acct=\"*$TUSR\"*[ :]* exe=.*/bin/login.* terminal=.*pts/$PTS res=success.*"
-    augrok -q type=USER_AUTH msg_1=~"PAM: *authentication $msg_1" || exit_fail
-    augrok -q type=USER_ACCT msg_1=~"PAM: *accounting $msg_1" || exit_fail
-    augrok -q type=USER_START msg_1=~"PAM: *session[_ ]open $msg_1" || exit_fail
+    while read LINE; do
+        read EVENT PAMOP GRANTORS <<< "$LINE"
+        msg_1="acct=\"$TUSR\" exe=\"/usr/bin/login\" hostname=\? addr=\? terminal=pts/$PTS res=success"
+        augrok --seek $AUDITMARK type=$EVENT
+        augrok --seek $AUDITMARK type=$EVENT \
+            msg_1=~"op=PAM:$PAMOP (grantors=$GRANTORS )?$msg_1" || \
+            exit_fail "Successful authentication attempt not audited correctly for: $LINE"
+    done <<< "$EGP"
 }
 
 do_login_fail() {
@@ -65,10 +69,11 @@ do_login_fail() {
         expect -nocase {password: $} {send badpassword\r}
         expect -nocase {login incorrect} {close; wait}"
 
-    MSG="op=PAM:.*authentication acct=\"*$TUSR\"*[ :]*"
-    MSG="$MSG exe=./usr/bin/login. .* terminal=.*pts/.*res=failed.*"
-    augrok -q type=USER_AUTH msg_1=~"$MSG" || \
-        exit_fail "Failed authentication attempt for user $TUSR not audited"
+    MSG="op=PAM:authentication (grantors=\? )?acct=\"$TUSR\""
+    MSG="$MSG exe=\"/usr/bin/login\" hostname=\? addr=\? terminal=pts/[0-9]+ res=failed"
+    augrok --seek $AUDITMARK type=USER_AUTH
+    augrok type=USER_AUTH msg_1=~"$MSG" || \
+        exit_fail "Failed authentication attempt for user $TUSR not audited correctly"
 }
 
 test_local() {
@@ -79,7 +84,17 @@ test_local() {
         append_cleanup user_cleanup
     fi
 
+    EGP="USER_AUTH authentication pam_securetty,pam_faillock,pam_unix
+         USER_ACCT accounting pam_faillock,pam_unix,pam_localuser
+         USER_START session_open pam_selinux,pam_console,pam_selinux,\
+pam_namespace,pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlog"
+
+    # get audit mark
+    AUDITMARK=$(get_audit_mark)
     do_login $TEST_USER $TEST_USER_PASSWD
+
+    # get audit mark
+    AUDITMARK=$(get_audit_mark)
     do_login_fail $TEST_USER
 }
 
@@ -90,13 +105,23 @@ test_sssd() {
     restart_service "sssd"
     prepend_cleanup "stop_service sssd"
 
+    EGP="USER_AUTH authentication pam_securetty,pam_faillock,pam_sss
+         USER_ACCT accounting pam_faillock,pam_unix,pam_sss,pam_permit
+         USER_START session_open pam_selinux,pam_console,pam_selinux,\
+pam_namespace,pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,\
+pam_sss,pam_lastlog"
+
     # source IPA env
     . $TOPDIR/utils/auth-server/ipa_env
     local TEST_USERS="$IPA_STAFF $IPA_USER"
     [ "$PPROFILE" == "capp" ] && TEST_USERS="$IPA_STAFF"
 
     for USR in $TEST_USERS; do
+        # get audit mark
+        AUDITMARK=$(get_audit_mark)
         do_login $USR $IPA_PASS
+        # get audit mark
+        AUDITMARK=$(get_audit_mark)
         do_login_fail $USR
     done
 }

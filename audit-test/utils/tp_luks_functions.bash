@@ -54,7 +54,7 @@ function check_luks {
 
 	# dump the LUKS device
 	TMP=$(mktemp)
-	cryptsetup luksDump $LOOPDEV &> $TMP
+	cryptsetup luksDump $LOOPDEV | tee $TMP
 
 	# Check for correct parameters
 	egrep "Cipher name.*aes" $TMP || exit_fail "Failed check on cipher name"

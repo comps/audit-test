@@ -38,7 +38,7 @@ ifneq ($(MACHINE), ppc64)
 ifneq ($(MACHINE), s390x)
 RUN_DIRS       += netfilebt
 ifneq ($(MACHINE), i686)
-ifeq ($(VIRT_TYPE),)
+ifeq ($(shell virt-what),)
 RUN_DIRS       += kvm \
 		  kvm-cgroups \
 		  kvm-iommu

@@ -23,7 +23,7 @@
 * s390 is not able to handle more than 5 syscall parameters
 * need to pass the parameters in a struct
 */
-#if defined(S390X) || defined(S390)
+#if defined(MACHINE_s390x) || defined(MACHINE_s390)
 struct mmap_arg_struct {
     unsigned long addr;
     unsigned long len;
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     int fd, rc;
     int result = TEST_SUCCESS;
     char filename[80];
-#if defined(S390X) || defined(S390)
+#if defined(MACHINE_s390x) || defined(MACHINE_s390)
     struct mmap_arg_struct mmap_arg_struct;
     int prot = PROT_WRITE;
     int flags = MAP_SHARED;
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 
     errno = 0;
 
-#if defined(S390X) || defined(S390)
+#if defined(MACHINE_s390x) || defined(MACHINE_s390)
     mmap_arg_struct.addr = 0;
     mmap_arg_struct.len = 10;
     mmap_arg_struct.prot = prot;
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     	result = TEST_FAIL;
         fprintf(stderr, "%d %d %d\n", result, errno, getpid());
     } else {
-#if defined(PPC64) || defined(I686)
+#if defined(MACHINE_ppc64) || defined(MACHINE_i686)
         fprintf(stderr, "%d %d %d\n", result, (int) addr, getpid());
 #else
         fprintf(stderr, "%d %lu %d\n", result, (unsigned long) addr, getpid());

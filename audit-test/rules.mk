@@ -30,67 +30,97 @@
 #
 ##########################################################################
 
-SHELL := /bin/bash
-
-MACHINE		= $(strip $(shell uname -m))
-VIRT_TYPE	= $(shell virt-what)
-X		= i486 i586 i686 ix86
-P		= ppc powerpc
-IP		= ppc64 powerpc64
-Z		= s390
-Z64		= s390x
-X86_64		= x86_64
-IA		= ia64
-CFLAGS          += -g -O2 -Wall -Werror -D_GNU_SOURCE -fno-strict-aliasing
-LDFLAGS         +=
-
-LINK_AR		= $(AR) rc $@ $^
-LINK_EXE	= $(CC) $(LDFLAGS) -o $@ $^ $(LOADLIBES) $(LDLIBS)
-LINK_SO		= $(CC) $(LDFLAGS) -shared -o $@ $^ $(LOADLIBES) $(LDLIBS)
-
+# defined by parent
 export TOPDIR
+
+#
+# initial definitions
+#
+
+SHELL		:= /bin/bash
+CFLAGS		+= -g -O2 -Wall -Werror -D_GNU_SOURCE -fno-strict-aliasing
+
+#
+# MACHINE - architecture of this machine
+#
+
+MACHINE		:= $(strip $(shell uname -m))
+
+# architecture aliases
+archalias = $(if $(findstring $(1),$(2)),$(3),$(1))
+#      		                               from                     to
+MACHINE		:= $(call archalias,$(MACHINE),i386 i486 i586 i686 ix86,i686)
+MACHINE		:= $(call archalias,$(MACHINE),powerpc,ppc)
+MACHINE		:= $(call archalias,$(MACHINE),powerpc64,ppc64)
+
 export MACHINE
 
-# If MODE isn't set explicitly, the default for the machine is used
-NATIVE		= $(strip $(shell file /bin/bash | awk -F'[ -]' '{print $$3}'))
-export MODE	?= $(NATIVE)
-ifneq ($(MODE), $(NATIVE))
-    ifeq ($(MODE), 32)
-	    ifneq (,$(findstring $(MACHINE), $(Z64)))
-		    CFLAGS += -m31
-		    LDFLAGS += -m31
-	    else
-		    CFLAGS += -m32
-		    LDFLAGS += -m32
-	    endif
-    endif
-    ifeq ($(MODE), 64)
-	    CFLAGS += -m64
-	    LDFLAGS += -m64
-    endif
-endif
-RELEASE = $(wildcard /etc/*-release)
-ifeq (SuSE, $(findstring SuSE, $(RELEASE)))
-CFLAGS +=-DSUSE
-export DISTRO=SUSE
-else ifeq (fedora, $(findstring fedora, $(RELEASE)))
-CFLAGS +=-DFEDORA -DLSM_SELINUX
-export DISTRO=FEDORA
-export LSM_SELINUX=1
-else ifeq (redhat, $(findstring redhat, $(RELEASE)))
-CFLAGS +=-DRHEL -DLSM_SELINUX
-export DISTRO=RHEL
-export LSM_SELINUX=1
+# MACHINE32 - 32bit multilib of MACHINE
+ifeq ($(MACHINE),x86_64)
+    export MACHINE32 := i686
+else ifeq ($(MACHINE),ppc64)
+    export MACHINE32 := ppc
+else ifeq ($(MACHINE),s390x)
+    export MACHINE32 := s390
 endif
 
-ifeq (s390x, $(findstring s390x, $(MACHINE)))
-CFLAGS +=-DS390X
+#
+# MODE - bitness of this machine (may be overriden by user)
+#
+
+NATIVE		:= $(strip $(shell file /bin/bash | awk -F'[ -]' '{print $$3}'))
+MODE		?= $(NATIVE)
+ifneq ($(MODE), $(NATIVE))
+    ifeq ($(MODE),32)
+        ifeq ($(MACHINE),s390x)
+            CFLAGS += -m31
+            LDFLAGS += -m31
+        else
+            CFLAGS += -m32
+            LDFLAGS += -m32
+        endif
+    else ifeq ($(MODE),64)
+        CFLAGS += -m64
+        LDFLAGS += -m64
+    endif
 endif
-ifeq (ppc64, $(findstring ppc64, $(MACHINE)))
-CFLAGS +=-DPPC64
+
+export MODE
+
+#
+# DISTRO - current OS distribution
+#
+
+# crude detection
+DISTRO := $(wildcard /etc/*-release)
+
+ifneq (,$(findstring SuSE,$(DISTRO)))
+    DISTRO := SUSE
+else ifneq (,$(findstring fedora,$(DISTRO)))
+    DISTRO := FEDORA
+else ifneq (,$(findstring redhat,$(DISTRO)))
+    DISTRO := RHEL
 endif
-ifeq (i686, $(findstring i686, $(MACHINE)))
-CFLAGS +=-DI686
+
+export DISTRO
+
+# selinux
+ifneq (,$(findstring $(DISTRO),RHEL FEDORA))
+    export LSM_SELINUX := 1
+endif
+
+#
+# additional CFLAGS exports for conditional binary compilation
+#
+
+ifdef MACHINE
+    CFLAGS += -DMACHINE_$(MACHINE)
+endif
+ifdef DISTRO
+    CFLAGS += -DDISTRO_$(DISTRO)
+endif
+ifdef LSM_SELINUX
+    CFLAGS += -DLSM_SELINUX
 endif
 
 ##########################################################################

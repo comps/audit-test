@@ -102,7 +102,8 @@ function verify_fail_chcon_level {
 	log_mark=$(stat -c %s $audit_log)
 	auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S setxattr
         if [[ $MACHINE == ppc64 || $MACHINE == ppc ]]; then
-           auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S fstatat
+           # see RHBZ#1155221, kernel uapi doesn't match audit sc name
+           auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S fstatat64
         else
 	   auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S newfstatat
         fi

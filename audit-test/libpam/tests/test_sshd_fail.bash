@@ -22,6 +22,9 @@ source pam_functions.bash || exit 2
 source tp_ssh_functions.bash || exit 2
 disable_ssh_strong_rng
 
+# mark audit log
+AUDITMARK=$(get_audit_mark)
+
 # test
 expect -c "
     spawn ssh $TEST_USER@localhost
@@ -34,7 +37,10 @@ expect -c "
         {assword} {close; wait}
     }"
 
-msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./usr/sbin/sshd.*terminal=ssh res=failed.*"
-augrok -q type=USER_AUTH msg_1=~"PAM: *authentication $msg_1" || exit_fail
+MSG="op=PAM:authentication grantors=\? acct=\"$TEST_USER\""
+MSG="$MSG exe=\"/usr/sbin/sshd\" hostname=localhost addr=::1 terminal=ssh res=failed"
+augrok --seek $AUDITMARK type=USER_AUTH
+augrok --seek $AUDITMARK type=USER_AUTH msg_1=~"$MSG" || \
+    exit_fail "Failed authentication attempt for user $TEST_USER not audited correctly"
 
 exit_pass

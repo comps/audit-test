@@ -170,12 +170,12 @@ check_rpm_deps() {
         return 2
     }
 
-    # from README.run
-    local rpms="binutils cpp flex make gcc gcc-c++ glibc-devel libattr-devel \
-                libstdc++-devel libcap-devel \
-                audit-libs-devel expect libselinux-devel perl-devel \
-                perl-Expect perl-IO-Tty selinux-policy-devel xfsprogs-devel \
-                libseccomp-devel krb5-workstation dbus-devel"
+    # use rpm names from rules.mk / depinstall
+    local rpms="$AUDIT_TEST_DEP"
+    [ "$rpms" ] || {
+        echo "list of rpm dependencies not available, skipping dep check"
+        return 2
+    }
 
     for rpm in $rpms; do
         check "rpm -q \"$rpm\"" 0 "rpm package $rpm is installed"

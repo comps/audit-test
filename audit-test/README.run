@@ -1,52 +1,6 @@
 | Quickstart
 +-----------
 
-Dependencies
-------------
-
-The audit-test suite requires the following packages in order to run
-on RHEL7:
-
-binutils
-cpp
-flex
-make
-gcc
-gcc-c++
-glibc-devel
-libattr-devel
-libstdc++-devel
-libcap-devel
-
-audit-libs-devel
-expect
-libselinux-devel
-perl-devel
-perl-Expect
-perl-IO-Tty
-selinux-policy-devel
-xfsprogs-devel
-libseccomp-devel
-krb5-workstation
-dbus-devel
-
-The perl-IO-Tty package is available for RHEL6 in the optional channel that
-is not available in the RHEL6 installation media. You should be able to download
-it via RHN.
-
-The perl-Expect is available via EPEL (Extra Packages for Enterprise Linux).
-You can install it after adding the EPEL repository:
-http://fedoraproject.org/wiki/EPEL#How_can_I_use_these_extra_packages.3F
-
-or download it directly from the koji build system:
-http://koji.fedoraproject.org/koji/packageinfo?packageID=2922
-
-All the other packages will be installed automatically if the
-certification kickstart file and certification rpm are used.
-
-For tips on installing the test suite on other distros,
-refer to the notes at the end of this README.
-
 Create the audit-test tar file
 ------------------------------
 
@@ -136,6 +90,32 @@ Ensure that all files in the target directory have the correct ownership:
 
 # chown -R root:root /usr/local/eal4_testing
 # chmod a+rX /usr/local/eal4_testing
+
+Install package requirements / dependencies
+-------------------------------------------
+
+If you haven't done so already, install the required suite package dependencies
+found as AUDIT_TEST_DEP in audit-test/rules.mk.
+
+The perl-IO-Tty package is available for RHEL7 in the optional channel that
+is not available on the installation media. You should be able to download
+it via RHN.
+
+The perl-Expect is available via EPEL (Extra Packages for Enterprise Linux).
+You can install it after adding the EPEL repository:
+http://fedoraproject.org/wiki/EPEL#How_can_I_use_these_extra_packages.3F
+or download it directly from the koji build system:
+http://koji.fedoraproject.org/koji/packageinfo?packageID=2922
+
+Assuming you have yum repositories / channels set up correctly, you can
+automatically install all required dependencies (excluding those that
+have to be downloaded separately, like perl-Expect) simply by:
+
+# cd /usr/local/eal4_testing/audit-test
+# make depinstall
+
+For tips on installing the test suite on other distros,
+refer to the notes at the end of this README.
 
 Build the audit-test suite
 --------------------------

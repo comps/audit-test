@@ -123,6 +123,72 @@ ifdef LSM_SELINUX
     CFLAGS += -DLSM_SELINUX
 endif
 
+#
+# AUDIT_TEST_DEP, suite (rpm) dependencies
+#
+
+# ie. pkgname.noarch everywhere
+AUDIT_TEST_DEP_NOARCH := \
+	selinux-policy-devel \
+	perl-Expect
+
+# ie. pkgname.x86_64 on x86_64 or pkgname.s390x on s390x
+AUDIT_TEST_DEP_NATIVE := \
+	binutils \
+	cpp \
+	flex \
+	make \
+	gcc \
+	gcc-c++ \
+	glibc \
+	glibc-devel \
+	libgcc \
+	libattr \
+	libattr-devel \
+	libstdc++ \
+	libstdc++-devel \
+	libcap \
+	libcap-devel \
+	audit-libs \
+	audit-libs-devel \
+	libselinux-devel \
+	perl-devel \
+	perl-IO-Tty \
+	xfsprogs-devel \
+	libseccomp-devel \
+	krb5-workstation \
+	dbus-devel \
+	\
+	expect \
+	strace \
+	kpartx \
+	setools-console \
+	iptables \
+	ebtables \
+	patch \
+	nmap-ncat \
+	psmisc
+
+# ie. pkgname.i686 on x86_64 or pkgname.s390 on s390x
+AUDIT_TEST_DEP_MULTILIB := \
+	glibc \
+	glibc-devel \
+	libgcc \
+	libattr \
+	audit-libs \
+	libselinux-devel \
+	xfsprogs-devel \
+	dbus-devel
+
+AUDIT_TEST_DEP := \
+	$(addsuffix .noarch,$(AUDIT_TEST_DEP_NOARCH)) \
+	$(addsuffix .$(MACHINE),$(AUDIT_TEST_DEP_NATIVE))
+ifdef MACHINE32
+    AUDIT_TEST_DEP += $(addsuffix .$(MACHINE32),$(AUDIT_TEST_DEP_MULTILIB))
+endif
+
+export AUDIT_TEST_DEP
+
 ##########################################################################
 # Common rules
 ##########################################################################

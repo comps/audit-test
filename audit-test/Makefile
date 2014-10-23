@@ -131,6 +131,17 @@ rpm: dist
 	echo && \
 	ls -l audit-test-$$rev-1.*
 
+ifdef AUDIT_TEST_DEP
+.PHONY: depinstall
+depinstall:
+	@# install only non-installed pkgs, prevents upgrading existing versions
+	@for pkg in $(AUDIT_TEST_DEP); do \
+		rpm --quiet -q "$$pkg" || toinstall+=" $$pkg"; \
+	done; \
+	if [ "$$toinstall" ]; then yum -y install $$toinstall; \
+	else echo "all dependencies already installed"; fi
+endif
+
 .PHONY: policy
 policy:
 	cd utils/selinux-policy && $(MAKE) clean && $(MAKE)

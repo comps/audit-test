@@ -22,6 +22,9 @@ source pam_functions.bash || exit 2
 source tp_ssh_functions.bash || exit 2
 disable_ssh_strong_rng
 
+# audit mark for seeking
+AUDITMARK=$(get_audit_mark)
+
 # test
 expect -c "
     spawn ssh ${TEST_USER}@localhost
@@ -33,9 +36,24 @@ expect -c "
     expect eof
     exit 0"
 
-msg_1="acct=\"*$TEST_USER\"*[ :]* exe=./usr/sbin/sshd.*terminal=ssh res=success.*"
-augrok -q type=CRED_REFR msg_1=~"PAM: setcred $msg_1" || \
-augrok -q type=CRED_ACQ  msg_1=~"PAM:setcred $msg_1"  || exit_fail
-augrok -q type=USER_ACCT msg_1=~"PAM: *accounting $msg_1" || exit_fail
+DATA="USER_AUTH authentication pam_faillock,pam_unix
+      USER_ACCT accounting pam_faillock,pam_unix,pam_localuser
+      CRED_ACQ setcred pam_env,pam_faillock,pam_unix
+      USER_START session_open pam_selinux,pam_loginuid,pam_selinux,\
+pam_namespace,pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlog
+      CRED_ACQ setcred pam_env,pam_faillock,pam_unix
+      USER_END session_close pam_selinux,pam_loginuid,pam_selinux,\
+pam_namespace,pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlog
+      CRED_DISP setcred pam_env,pam_faillock,pam_unix"
+
+while read LINE; do
+    [ -z "$LINE" ] && break
+    read EVENT PAMTYPE GRANTORS <<< "$LINE"
+    augrok --seek=$AUDITMARK type==$EVENT
+    augrok --seek=$AUDITMARK type==$EVENT msg_1="op=PAM:$PAMTYPE \
+grantors=$GRANTORS acct=\"$TEST_USER\" exe=\"/usr/sbin/sshd\" hostname=localhost \
+addr=::1 terminal=ssh res=success" || exit_fail \
+        "Expected $EVENT audit event for $TEST_USER successful login not found"
+done <<< "$DATA"
 
 exit_pass

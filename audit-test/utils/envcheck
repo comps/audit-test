@@ -455,7 +455,7 @@ fails=0
 skips=0
 for check in $CHECKS; do
     echo "::::::::::::::::::::::::::::::::::::::::::"
-    echo -e "::: \e[1m$check\e[0m"
+    incolor && echo -e "::: \e[1m$check\e[0m" || echo "::: $check"
     echo "::::::::::::::::::::::::::::::::::::::::::"
     "$check"
     case "$?" in
@@ -468,12 +468,14 @@ done;
 
 echo "=========================================="
 echo -n "OVERALL: "
-[ $fails -eq 0 ] && \
-    echo -ne "\e[1;32mPASSED\e[0m" || \
-    echo -ne "\e[1;31mFAILED\e[0m ($fails checks failed)"
-[ $skips -eq 0 ] && \
-    echo ||
-    echo " ($skips checks skipped)"
+if [ $fails -eq 0 ]; then
+    incolor && echo -ne "\e[1;32mPASSED\e[0m" || echo -n "PASSED"
+else
+    incolor && echo -ne "\e[1;31mFAILED\e[0m" || echo -n "FAILED"
+    echo -n " ($fails checks failed)"
+fi
+[ $skips -ne 0 ] && echo -n " ($skips checks skipped)"
+echo
 
 exit 0
 

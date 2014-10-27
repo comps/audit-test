@@ -482,14 +482,28 @@ function create_symlink {
     eval "$var=\$symlink" || exit_error
 }
 
+# echo an ipc manipulation cmd, of $1 type,
+# ie. for 'semget' echoes 'do_semget' or 'do_ipc semget', whichever exists
+function ipc_relevant {
+    if sc_is_relevant "$1"; then
+        echo "do_$1"
+        return 0
+    elif sc_is_relevant "ipc"; then
+        echo "do_ipc $1"
+        return 0
+    fi
+    return 1
+}
+
 # create a message queue and return the key <var> [context=context] 
 function create_msg_key {
-    declare ipc_key=50 var context
+    declare ipc_key=50 var context cmd
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
+    cmd=$(ipc_relevant msgget) || exit_error "no usable syscall"
     prepend_cleanup "ipcrm -Q $ipc_key"
-    ${context:+runcon $context} $(which do_msgget) $ipc_key create || exit_error
+    ${context:+runcon $context} $cmd $ipc_key create || exit_error
     eval "$var=\$ipc_key"
 }
 
@@ -499,8 +513,9 @@ function create_msg_id {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
+    cmd=$(ipc_relevant msgget) || exit_error "no usable syscall"
     prepend_cleanup "ipcrm -Q $ipc_key"
-    read result id foo <<<"$(${context:+runcon $context} $(which do_msgget) $ipc_key create 2>&1 1>/dev/null)"
+    read result id foo <<<"$(${context:+runcon $context} $cmd $ipc_key create 2>&1 1>/dev/null)"
     [[ $result == 0 ]] || exit_error "could not create message queue"
 
     eval "$var=\$id"
@@ -512,8 +527,9 @@ function create_sem_key {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
+    cmd=$(ipc_relevant semget) || exit_error "no usable syscall"
     prepend_cleanup "ipcrm -S $ipc_key"
-    ${context:+runcon $context} $(which do_semget) $ipc_key create || exit_error
+    ${context:+runcon $context} $cmd $ipc_key create || exit_error
     eval "$var=\$ipc_key"
 }
 
@@ -523,8 +539,9 @@ function create_sem_id {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
+    cmd=$(ipc_relevant semget) || exit_error "no usable syscall"
     prepend_cleanup "ipcrm -S $ipc_key"
-    read result id foo <<<"$(${context:+runcon $context} $(which do_semget) $ipc_key create 2>&1 1>/dev/null)"
+    read result id foo <<<"$(${context:+runcon $context} $cmd $ipc_key create 2>&1 1>/dev/null)"
     [[ $result == 0 ]] || exit_error "could not create semaphore set"
 
     eval "$var=\$id"
@@ -536,8 +553,9 @@ function create_shm_key {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
-    ${context:+runcon $context} $(which do_shmget) $ipc_key create || exit_error
+    cmd=$(ipc_relevant shmget) || exit_error "no usable syscall"
     prepend_cleanup "ipcrm -M $ipc_key"
+    ${context:+runcon $context} $cmd $ipc_key create || exit_error
     eval "$var=\$ipc_key"
 }
 
@@ -547,8 +565,9 @@ function create_shm_id {
     var=$1; shift
     eval "$(parse_named "$@")" || exit_error
 
+    cmd=$(ipc_relevant shmget) || exit_error "no usable syscall"
     prepend_cleanup "ipcrm -M $ipc_key"
-    read result id foo <<<"$(${context:+runcon $context} $(which do_shmget) $ipc_key create 2>&1 1>/dev/null)"
+    read result id foo <<<"$(${context:+runcon $context} $cmd $ipc_key create 2>&1 1>/dev/null)"
     [[ $result == 0 ]] || exit_error "could not create shared memory segment"
 
     eval "$var=\$id"
@@ -872,15 +891,12 @@ function create_ipc_objects_dac {
 	*_send)
 	    flag=$msg_type ;;
 	*_recv)
-	    declare result
+	    declare result cmd
 
 	    flag=$msg_type
-	    # always use do_msgsnd regardless of whether the syscall is ipc() or
-	    # msgrcv() -- it's using a library call, so it works. we have a
-	    # do_ipc utility purely because the harness wants to find a
-	    # do_$syscall binary.
+	    cmd=$(ipc_relevant msgsnd) || exit_error "no usable syscall"
 	    read result foo bar \
-		<<<"$(do_msgsnd $target $flag 'test message' 2>&1 1>/dev/null)"
+		<<<"$($cmd $target $flag 'test message' 2>&1 1>/dev/null)"
 	    [[ $result == 0 ]] || exit_error "could not send initial message" ;;
     esac
 
@@ -1071,15 +1087,12 @@ function create_ipc_objects_mac {
 	*_send)
 	    flag=$msg_type ;;
 	*_recv)
-	    declare result
+	    declare result cmd
 
 	    flag=$msg_type
-	    # always use do_msgsnd regardless of whether the syscall is ipc() or
-	    # msgrcv() -- it's using a library call, so it works. we have a
-	    # do_ipc utility purely because the harness wants to find a
-	    # do_$syscall binary.
+	    cmd=$(ipc_relevant msgsnd) || exit_error "no usable syscall"
 	    read result foo bar \
-		<<<"$(runcon $obj do_msgsnd $target $flag 'test message' 2>&1 1>/dev/null)"
+		<<<"$(runcon $obj $cmd $target $flag 'test message' 2>&1 1>/dev/null)"
 	    [[ $result == 0 ]] || exit_error "could not send initial message" ;;
     esac
 

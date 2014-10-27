@@ -283,7 +283,7 @@ As an additional sanity check, you can run:
 
 # make envcheck
 or
-# make envcheck | less -R
+# COLOR=1 make envcheck | less -R
 
 Run the tests
 -------------

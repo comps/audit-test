@@ -60,7 +60,7 @@
 # $3 = optional cmd text to show instead of $1
 # returns the command's exit code
 # and sets CHECK_FAILED var to nonempty value upon fail
-incolor() { [ -t 1 -a "$(tput colors)" -ge 8 ]; }
+incolor() { [ -t 1 -a "$(tput colors)" -ge 8 ] || [ "$COLOR" = "1" ]; }
 check()
 {
     [ $# -lt 1 ] && return 1

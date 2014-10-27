@@ -460,7 +460,7 @@ function parse_cmdline {
 	    rerun_test $x && TNUMS[$x]=$x
 	done
     fi
-    [[ ${#TNUMS[@]} -gt 0 ]] || die "no matching tests"
+    [[ ${#TNUMS[@]} -gt 0 ]] || { echo "no matching tests"; exit 0; }
 
     if $opt_list; then
 	declare TESTNUM

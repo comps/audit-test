@@ -132,6 +132,14 @@ rpm: dist
 	ls -l audit-test-$$rev-1.*
 
 ifdef AUDIT_TEST_DEP
+.PHONY: deplist
+deplist:
+	@echo '$(AUDIT_TEST_DEP)' | tr ' ' '\n'
+.PHONY: depmissing
+depmissing:
+	@for pkg in $(AUDIT_TEST_DEP); do \
+		rpm --quiet -q "$$pkg" || echo "$$pkg"; \
+	done
 .PHONY: depinstall
 depinstall:
 	@# install only non-installed pkgs, prevents upgrading existing versions

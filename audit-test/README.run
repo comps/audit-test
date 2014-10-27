@@ -94,8 +94,23 @@ Ensure that all files in the target directory have the correct ownership:
 Install package requirements / dependencies
 -------------------------------------------
 
+# cd /usr/local/eal4_testing/audit-test
+
 If you haven't done so already, install the required suite package dependencies
-found as AUDIT_TEST_DEP in audit-test/rules.mk.
+found as AUDIT_TEST_DEP in rules.mk that can be also listed simply by:
+
+# make deplist
+
+To view only missing packages (so you can ie. pass them to yum-downloader
+on another machine with configured repository access), try:
+
+# make depmissing
+
+Assuming you have yum repositories / channels set up correctly, you can
+automatically install all required dependencies (excluding those that
+have to be downloaded separately, like perl-Expect) simply by:
+
+# make depinstall
 
 The perl-IO-Tty package is available for RHEL7 in the optional channel that
 is not available on the installation media. You should be able to download
@@ -106,13 +121,6 @@ You can install it after adding the EPEL repository:
 http://fedoraproject.org/wiki/EPEL#How_can_I_use_these_extra_packages.3F
 or download it directly from the koji build system:
 http://koji.fedoraproject.org/koji/packageinfo?packageID=2922
-
-Assuming you have yum repositories / channels set up correctly, you can
-automatically install all required dependencies (excluding those that
-have to be downloaded separately, like perl-Expect) simply by:
-
-# cd /usr/local/eal4_testing/audit-test
-# make depinstall
 
 For tips on installing the test suite on other distros,
 refer to the notes at the end of this README.

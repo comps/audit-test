@@ -118,15 +118,10 @@ AUDITDIR="/usr/local/eal4_testing"
 
 
 ### VARIABLES
-check_variables() {
+check_variables_base() {
     local CHECK_FAILED
-    local vars
 
-    # basic variables
-    vars="DISTRO MODE PPROFILE PASSWD"
-    #vars="PASSWD"
-
-    for i in $vars; do
+    for i in DISTRO MODE PPROFILE PASSWD; do
         check "env | grep \"^$i=\"" 0 "Var $i is present in environment"
     done;
 
@@ -134,14 +129,23 @@ check_variables() {
     check "[ \"$PPROFILE\" = \"capp\" -o \"$PPROFILE\" = \"lspp\" ]" 0 \
         "Var PPROFILE is either capp or lspp"
 
-    [ -z "$CHECK_FAILED" ] && check_variables_ok_nonet=1
+    if [ "$CHECK_FAILED" ]; then
+        echo
+        echo "Basic variable checking failed, please make sure to export all"
+        echo "relevant environment variables specified in README.run."
+        return 1
+    else
+        check_variables_base_ok=1
+    fi
+}
+check_variables_net() {
+    local CHECK_FAILED
+    local vars
 
-    # networking variables
     vars="LOCAL_DEV LOCAL_IPV4 LOCAL_IPV6"
     vars="$vars LOCAL_SEC_MAC LOCAL_SEC_IPV4 LOCAL_SEC_IPV6 BRIDGE_FILTER"
     vars="$vars LBLNET_SVR_IPV4 LBLNET_SVR_IPV6"
     vars="$vars SECNET_SVR_MAC SECNET_SVR_IPV4 SECNET_SVR_IPV6"
-    vars="$vars IPA_SERVER IPA_SERVER_TOE_ID"
 
     for i in $vars; do
         check "env | grep \"^$i=\"" 0 "Var $i is present in environment"
@@ -149,13 +153,27 @@ check_variables() {
 
     if [ "$CHECK_FAILED" ]; then
         echo
-        echo "Variable checking failed, please make sure to export all required"
-        echo "environment variables specified in README.run."
-        echo "Also make sure the networking variables are set according"
-        echo "to README.netfilter."
+        echo "Some or all networking-related variables are missing,"
+        echo "sure to export them according to README.run and README.netfilter."
         return 1
     else
-        check_variables_ok=1
+        check_variables_net_ok=1
+    fi
+}
+check_variables_sssd() {
+    local CHECK_FAILED
+
+    for i in IPA_SERVER IPA_SERVER_TOE_ID; do
+        check "env | grep \"^$i=\"" 0 "Var $i is present in environment"
+    done;
+
+    if [ "$CHECK_FAILED" ]; then
+        echo
+        echo "SSSD variable checking failed, make sure the relevant IPA_*"
+        echo "variables are exported according to README.run."
+        return 1
+    else
+        check_variables_sssd_ok=1
     fi
 }
 
@@ -198,7 +216,7 @@ check_user_session() {
     local CHECK_FAILED
 
     # requires for this check
-    [ "$check_variables_ok_nonet" ] || return 2
+    [ "$check_variables_base_ok" ] || return 2
 
     check "[ \"$(whoami)\" = \"root\" ]" 0 \
         "Logged in as root"
@@ -269,7 +287,7 @@ check_networking_if() {
     local CHECK_FAILED
 
     # requires for this check
-    [ "$check_variables_ok" ] || return 2
+    [ "$check_variables_net_ok" ] || return 2
 
     # interface checks
     check "ip -o link show dev $LOCAL_DEV" 0 \
@@ -315,7 +333,7 @@ check_networking_probe() {
     local CHECK_FAILED
 
     # requires for this check
-    [ "$check_variables_ok" -a "$check_networking_if_ok" ] || return 2
+    [ "$check_variables_net_ok" -a "$check_networking_if_ok" ] || return 2
 
     check "ping -I lo -q -c1 127.0.0.1" 0 \
         "127.0.0.1 reachable via lo"
@@ -356,7 +374,7 @@ check_services() {
     local CHECK_FAILED
 
     # requires for this check
-    [ "$check_variables_ok" ] || return 2
+    [ "$check_variables_base_ok" -a "$check_variables_net_ok" ] || return 2
 
     local daem daems
     daems="auditd rsyslogd mcstransd"
@@ -448,6 +466,9 @@ check_kvm() {
 check_sssd() {
     local CHECK_FAILED
 
+    # requires for this check
+    [ "$check_variables_sssd_ok" ] || return 2
+
     check "$AUDITDIR/audit-test/utils/auth-server/sssd_setup verify" 0 \
         "SSSD configured correctly"
 
@@ -467,7 +488,9 @@ check_sssd() {
 
 # checks to be run, ordering is important
 CHECKS="
-check_variables
+check_variables_base
+check_variables_net
+check_variables_sssd
 check_rpm_deps
 check_user_session
 check_suite

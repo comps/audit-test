@@ -155,7 +155,6 @@ AUDIT_TEST_DEP_NATIVE := \
 	perl-devel \
 	perl-IO-Tty \
 	xfsprogs-devel \
-	libseccomp-devel \
 	krb5-workstation \
 	dbus-devel \
 	\
@@ -179,6 +178,13 @@ AUDIT_TEST_DEP_MULTILIB := \
 	libselinux-devel \
 	xfsprogs-devel \
 	dbus-devel
+
+# special cases
+# libseccomp only on x86
+ifneq (,$(findstring $(MACHINE),x86_64 i686))
+    AUDIT_TEST_DEP_NATIVE += libseccomp libseccomp-devel
+    AUDIT_TEST_DEP_MULTILIB += libseccomp libseccomp-devel
+endif
 
 AUDIT_TEST_DEP := \
 	$(addsuffix .noarch,$(AUDIT_TEST_DEP_NOARCH)) \

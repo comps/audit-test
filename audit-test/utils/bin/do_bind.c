@@ -19,7 +19,7 @@
 #include <arpa/inet.h>
 #include <linux/un.h>  /* instead of <sys/un.h> for UNIX_PATH_MAX */
 
-int main(int argc, char **argv)
+int do_bind(int argc, char **argv)
 {
     int exitval, result;
     int sockfd;
@@ -69,3 +69,10 @@ int main(int argc, char **argv)
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }
+
+#ifndef SOCKCALL_MODULE
+int main(int argc, char **argv)
+{
+    return do_bind(argc, argv);
+}
+#endif

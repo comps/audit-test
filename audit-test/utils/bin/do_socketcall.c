@@ -18,45 +18,26 @@
 #include <netinet/in.h>
 #include <linux/net.h>
 
+#define SOCKCALL_MODULE
+#include "do_bind.c"
+
 int main(int argc, char **argv)
 {
-    int exitval, result;
-    int sockfd;
-    struct sockaddr_in my_addr;
-    socklen_t addrlen = sizeof(my_addr);
+    char *op;
 
     if (argc < 2) {
 	fprintf(stderr, "Usage:\n%s <op> <arg>...\n", argv[0]);
 	return TEST_ERROR;
     }
 
-    if (!strcmp(argv[1], "bind")) {
-	if (argc != 4) {
-	    fprintf(stderr, "Usage:\n%s bind <port> <0|127>\n", argv[0]);
-	    return TEST_ERROR;
-	}
+    op = argv[1];
+    argv++;
+    argc--;
 
-	memset(&my_addr, 0, addrlen);
-	my_addr.sin_family = AF_INET;
-	my_addr.sin_port = htons(atoi(argv[2]));
-	my_addr.sin_addr.s_addr = atoi(argv[3]);
-
-	sockfd = socket(PF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0) {
-	    perror("do_socketcall: open socket");
-	    return TEST_ERROR;
-	}
-
-	errno = 0;
-	/* use library routine for build's sake */
-	exitval = bind(sockfd, (struct sockaddr *)&my_addr, addrlen);
-
+    if (!strcmp(op, "bind")) {
+        return do_bind(argc, argv);
     } else {
 	fprintf(stderr, "%s: unimplemented op: %s\n", argv[0], argv[1]);
 	return TEST_ERROR;
     }
-
-    result = exitval < 0;
-    fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
-    return result;
 }

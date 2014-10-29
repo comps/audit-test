@@ -22,9 +22,7 @@ include $(TOPDIR)/rules.mk
 RUN_DIRS	= syscalls \
 		  syscalls-ns \
 		  syscalls-dac \
-		  network \
-		  dbus \
-		  polkit
+		  network
 
 ifeq ($(MODE), $(NATIVE))
 RUN_DIRS       += fail-safe \
@@ -32,21 +30,19 @@ RUN_DIRS       += fail-safe \
 		  audit-tools \
 		  libpam
 ifneq ($(DISTRO), SUSE)
-RUN_DIRS       += trustedprograms \
-		  netfilter \
+RUN_DIRS       += audit-remote \
+		  trustedprograms \
 		  crypto \
-		  audit-remote \
-		  misc
-ifneq ($(MACHINE), ppc64)
-ifneq ($(MACHINE), s390x)
-RUN_DIRS       += netfilebt
-ifneq ($(MACHINE), i686)
+		  misc \
+		  netfilter \
+		  netfilebt \
+		  dbus \
+		  polkit
+ifeq ($(MACHINE), x86_64)
 ifeq ($(shell virt-what),)
 RUN_DIRS       += kvm \
 		  kvm-cgroups \
 		  kvm-iommu
-endif
-endif
 endif
 endif
 endif

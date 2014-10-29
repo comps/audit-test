@@ -18,7 +18,7 @@
 
 #define MAX_MSG 256
 
-int main(int argc, char **argv)
+int do_msgrcv(int argc, char **argv)
 {
     int exitval, result;
     struct msgbuf *buf;
@@ -49,3 +49,10 @@ int main(int argc, char **argv)
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }
+
+#ifndef IPC_MODULE
+int main(int argc, char **argv)
+{
+    return do_msgrcv(argc, argv);
+}
+#endif

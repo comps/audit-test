@@ -16,7 +16,7 @@
 #include "includes.h"
 #include <sys/shm.h>
 
-int main(int argc, char **argv)
+int do_shmat(int argc, char **argv)
 {
     int result;
     int flags = 0;
@@ -49,3 +49,10 @@ int main(int argc, char **argv)
 
     return result;
 }
+
+#ifndef IPC_MODULE
+int main(int argc, char **argv)
+{
+    return do_shmat(argc, argv);
+}
+#endif

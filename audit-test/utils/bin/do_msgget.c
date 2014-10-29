@@ -16,7 +16,7 @@
 #include "includes.h"
 #include <sys/msg.h>
 
-int main(int argc, char **argv)
+int do_msgget(int argc, char **argv)
 {
     int exitval, result;
     int flags = 0;
@@ -55,3 +55,10 @@ int main(int argc, char **argv)
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }
+
+#ifndef IPC_MODULE
+int main(int argc, char **argv)
+{
+    return do_msgget(argc, argv);
+}
+#endif

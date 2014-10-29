@@ -24,7 +24,7 @@ union semun
     struct seminfo *__buf;
 };
 
-int main(int argc, char **argv)
+int do_semctl(int argc, char **argv)
 {
     int exitval, result;
     int semid, cmd = 0;
@@ -71,3 +71,10 @@ int main(int argc, char **argv)
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
     return result;
 }
+
+#ifndef IPC_MODULE
+int main(int argc, char **argv)
+{
+    return do_semctl(argc, argv);
+}
+#endif

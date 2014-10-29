@@ -1,0 +1,189 @@
+#!/bin/bash -x
+###############################################################################
+#   Copyright (c) 2014 Red Hat, Inc. All rights reserved.
+#
+#   This copyrighted material is made available to anyone wishing
+#   to use, modify, copy, or redistribute it subject to the terms
+#   and conditions of the GNU General Public License version 2.
+#
+#   This program is distributed in the hope that it will be
+#   useful, but WITHOUT ANY WARRANTY; without even the implied
+#   warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+#   PURPOSE. See the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public
+#   License along with this program; if not, write to the Free
+#   Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+#   Boston, MA 02110-1301, USA.
+###############################################################################
+#
+# FAU_SEL.1 - Selective audit
+#
+# AUTHOR: Ondrej Moris <omoris@redhat.com>
+#
+# DESCRIPTION: TSF shall be able to select the set of events to be audited
+# from the set of all auditable events based on the following attributes.
+
+source testcase.bash || exit 2
+
+bin_path="../../utils/bin"
+
+# 0. Type of audit event
+# ======================
+
+rules[0]="-S fork -k testkey"
+triggers[0]="${bin_path}/do_fork"
+filters[0]="-k testkey -x do_fork"
+
+# 1. Subject or user identity consisting of the user identifier
+# =============================================================
+
+rules[1]="-S fork -F uid=0"
+triggers[1]="${bin_path}/do_fork"
+filters[1]="-m SYSCALL -x do_fork"
+
+# 2.-3. Outcome (success or failure) of the audit event
+# =====================================================
+
+rules[2]="-S fork -F success=1"
+triggers[2]="${bin_path}/do_fork"
+filters[2]="-x do_fork -sv yes"
+
+rules[3]="-S open -F success=0"
+triggers[3]="runuser -u testuser ${bin_path}/do_open /etc/shadow read"
+filters[3]="-x do_open -sv no"
+
+# 4. System call number
+# =====================
+
+fork_id=$(ausyscall --dump | egrep "[0-9]+\sfork" | awk '{print $1}')
+rules[4]="-S fork"
+triggers[4]="${bin_path}/do_fork"
+filters[4]="-x do_fork -sc $fork_id"
+
+# 5. Named object identity
+# ========================
+
+rules[5]="-S open -F obj_user=system_u"
+triggers[5]="${bin_path}/do_open /etc/shadow read"
+filters[5]="-x do_open -f /etc/shadow"
+
+# 6. Access types on a particular object
+# ======================================
+
+rules[6]="-F path=/etc/shadow"
+triggers[6]="${bin_path}/do_open /etc/shadow read"
+filters[6]="-x do_open -f /etc/shadow"
+
+# 7.-8. Performing inter-field comparison rule
+# ============================================
+
+rules[7]="-C uid!=obj_uid"
+triggers[7]="runuser -u testuser ${bin_path}/do_open /etc/shadow read"
+filters[7]="-x do_open -f /etc/shadow"
+
+rules[8]="-C uid=obj_uid"
+triggers[8]="${bin_path}/do_open /etc/shadow read"
+filters[8]="-x do_open -f /etc/shadow"
+
+# 9. Arguments to system calls
+# ============================
+
+rules[9]="-S fork -F a0>=0 -F a1>=0 -F a2>=0 -F a3>=0"
+triggers[9]="${bin_path}/do_fork"
+filters[9]="-x do_fork"
+
+# 10.-13. Access type to file system objects
+# ==========================================
+
+rules[10]="-F path=/tmp/test_rules_file -p r"
+triggers[10]="{ touch /tmp/test_rules_file ;                   \
+                ${bin_path}/do_open /tmp/test_rules_file read; \
+                rm -f /tmp/test_rules_file;                    }"
+filters[10]="-x do_open -f /tmp/test_rules_file"
+
+rules[11]="-F path=/tmp/test_rules_file -p w"
+triggers[11]="{ touch /tmp/test_rules_file ;                    \
+                ${bin_path}/do_open /tmp/test_rules_file write; \
+                rm -f /tmp/test_rules_file;                     }"
+filters[11]="-x do_open -f /tmp/test_rules_file"
+
+rules[12]="-F path=/tmp/test_rules_file -p a"
+triggers[12]="{ touch /tmp/test_rules_file;                    \
+                ${bin_path}/do_chmod /tmp/test_rules_file 777; \
+                rm -f /tmp/test_rules_file;                    }"
+filters[12]="-x do_chmod -f /tmp/test_rules_file"
+
+rules[13]="-F path=/bin/true -p x"
+triggers[13]="/bin/true"
+filters[13]="-x /bin/true -f /bin/true"
+
+# 14. MLS mode: Subject sensitivity label
+# =======================================
+
+rules[14]="-S fork -F subj_sen>=s0 -F subj_sen<=s15"
+triggers[14]="${bin_path}/do_fork"
+filters[14]="-x do_fork"
+
+# 15. MLS mode: Object sensitivity label
+# ======================================
+
+rules[15]="-S open -F obj_lev_low=s0"
+triggers[15]="${bin_path}/do_open /etc/shadow read"
+filters[15]="-x do_open -f /etc/shadow"
+
+# 16. MLS mode: User role
+# =======================
+
+rules[16]="-S fork -F subj_role=lspp_test_r"
+triggers[16]="${bin_path}/do_fork"
+filters[16]="-x do_fork"
+
+# Initial clean-up.
+auditctl -D >/dev/null
+
+for t in $([[ $PPROFILE == lspp ]] && seq 0 16 || seq 0 13); do
+
+    #########
+    # NEVER #
+    #########
+
+    # Adding audit rule.
+    date_mark="$(date +%T)"
+    auditctl -A never,exit -F arch=b${MODE} $(echo ${rules[$t]})
+
+    # Trigger the rule.
+    eval ${triggers[$t]} >/dev/null 2>&1
+
+    # Filter audit record.
+    ausearch -ts "$date_mark" $(echo ${filters[$t]}) 2>/dev/null && \
+        exit_fail "Unexpected event (test #${t})"
+
+    # Clean-up.
+    auditctl -D >/dev/null
+    sleep 1
+
+    ##########
+    # ALWAYS #
+    ##########
+
+    # Adding audit rule.
+    date_mark="$(date +%T)"
+    auditctl -a always,exit -F arch=b${MODE} $(echo ${rules[$t]})
+
+    # Trigger the rule.
+    eval ${triggers[$t]} >/dev/null 2>&1
+
+    # Filter audit record.
+    ausearch -ts "$date_mark" $(echo ${filters[$t]}) 2>/dev/null || \
+        exit_fail "Missing event (test #${t})"
+
+    # Clean-up.
+    auditctl -D >/dev/null
+    sleep 1
+done
+
+# Final clean-up.
+restart_service "auditd"
+
+exit_pass

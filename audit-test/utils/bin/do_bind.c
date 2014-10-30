@@ -19,7 +19,8 @@
 #include <arpa/inet.h>
 #include <linux/un.h>  /* instead of <sys/un.h> for UNIX_PATH_MAX */
 
-int do_bind(int argc, char **argv)
+int do_bind(int argc, char **argv,
+            int (*bindfunc)(int, const struct sockaddr *, socklen_t addrlen))
 {
     int exitval, result;
     int sockfd;
@@ -63,7 +64,7 @@ int do_bind(int argc, char **argv)
     }
 
     errno = 0;
-    exitval = bind(sockfd, (struct sockaddr *)&addr, addrlen);
+    exitval = bindfunc(sockfd, (struct sockaddr *)&addr, addrlen);
     result = exitval < 0;
 
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());
@@ -71,8 +72,13 @@ int do_bind(int argc, char **argv)
 }
 
 #ifndef SOCKCALL_MODULE
+int bind_syscall(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+{
+    return syscall(__NR_bind, sockfd, addr, addrlen);
+}
+
 int main(int argc, char **argv)
 {
-    return do_bind(argc, argv);
+    return do_bind(argc, argv, bind_syscall);
 }
 #endif

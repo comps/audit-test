@@ -21,6 +21,12 @@
 #define SOCKCALL_MODULE
 #include "do_bind.c"
 
+int bind_socketcall(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+{
+    unsigned long arr[] = { sockfd, (unsigned long)addr, addrlen };
+    return syscall(__NR_socketcall, SYS_BIND, arr);
+}
+
 int main(int argc, char **argv)
 {
     char *op;
@@ -35,7 +41,7 @@ int main(int argc, char **argv)
     argc--;
 
     if (!strcmp(op, "bind")) {
-        return do_bind(argc, argv);
+        return do_bind(argc, argv, bind_socketcall);
     } else {
 	fprintf(stderr, "%s: unimplemented op: %s\n", argv[0], argv[1]);
 	return TEST_ERROR;

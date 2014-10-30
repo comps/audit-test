@@ -189,7 +189,7 @@ tkill			all
 truncate		all
 truncate64		all:32
 umask			all
-umount			!x86_64:64,all
+umount			!x86_64:64,!ppc64,all  # exists on ppc64, but ENOSYS
 umount2			all
 uname			all
 unlink			all

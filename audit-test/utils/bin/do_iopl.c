@@ -14,7 +14,6 @@
  */
 
 #include "includes.h"
-#include <sys/io.h>
 
 int main(int argc, char **argv)
 {
@@ -26,7 +25,7 @@ int main(int argc, char **argv)
     }
 
     errno = 0;
-    exitval = iopl(atoi(argv[1]));
+    exitval = syscall(__NR_iopl, atoi(argv[1]));
     result = exitval < 0;
 
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());

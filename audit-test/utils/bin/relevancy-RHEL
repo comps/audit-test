@@ -83,8 +83,8 @@ getxattr		all
 init_module		all
 inotify_add_watch	all
 ioctl			all
-ioperm			!s390x:64,all
-iopl			!s390x,all
+ioperm			!s390x,!ppc64,all  # exists on s390x:32 and ppc64, but ENOSYS
+iopl			!s390x,!ppc64,all  # exists on ppc64, but ENOSYS
 ioprio_get		all
 ioprio_set		all
 ipc			!x86_64:64,all
@@ -195,7 +195,7 @@ uname			all
 unlink			all
 unlinkat		all
 unshare			all
-uselib			!x86_64:64,all  # exists, but returns ENOSYS
+uselib			!x86_64:64,all  # exists on x86_64:64, but ENOSYS
 utime			all
 utimensat		all
 utimes			all

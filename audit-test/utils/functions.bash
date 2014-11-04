@@ -186,6 +186,21 @@ function parse_named {
     done
 }
 
+# backup - backup files, with automatic restore on exit
+#
+# usage: backup file1 file2 dir3 ...
+function backup {
+    declare f b
+    for f in "$@"; do
+    # if the path/file does not exist - skip backup
+    if [ -e "$f" ]; then
+        b=$(mktemp "$f.XXXXXX") || exit_error
+        cp -a "$f" "$b" || exit_error
+        prepend_cleanup "mv -f '$b' '$f'"
+    fi
+    done
+}
+
 ######################################################################
 # testing helpers
 ######################################################################

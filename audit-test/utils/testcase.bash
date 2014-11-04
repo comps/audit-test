@@ -65,18 +65,3 @@ function append_cleanup {
 	$*
     }"
 }
-
-# backup files, with automatic restore when the script exits.
-# prepend_cleanup is used since files should probably be restored in reverse
-# order.
-function backup {
-    declare f b
-    for f in "$@"; do
-    # if the path/file does not exist - skip backup
-    if [ -e "$f" ]; then
-        b=$(mktemp "$f.XXXXXX") || exit_error
-        cp -a "$f" "$b" || exit_error
-        prepend_cleanup "mv -f '$b' '$f'"
-    fi
-    done
-}

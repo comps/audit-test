@@ -25,6 +25,8 @@ source pam_functions.bash || exit 2
 # allow TEST_USER to write to tmpfile
 chmod 666 $localtmp
 
+AUDITMARK=$(get_audit_mark)
+
 # if in LSPP mode, map the TEST_USER to staff_u
 if [[ $PPROFILE == "lspp" ]]; then
 	semanage login -d $TEST_USER
@@ -66,14 +68,18 @@ sed -i 's/\(^session.*pam_loginuid.*$\)/\#\1/' /etc/pam.d/login
 pts=$(<$localtmp)
 pts=${pts##*/}
 
-msg_1="acct=\"*$TEST_USER\"* exe=.(/usr)?/bin/login.* terminal=pts/$pts res=success.*"
-augrok -q type=USER_AUTH msg_1=~"PAM:authentication $msg_1" || exit_fail
-augrok -q type=USER_ACCT msg_1=~"PAM:accounting $msg_1" || exit_fail
-augrok -q type=USER_START msg_1=~"PAM:session_open $msg_1" \
-	subj=$login_context || exit_fail
+augrok --seek=$AUDITMARK type=USER_START
+msg_1="grantors=pam_selinux,pam_console,pam_selinux,pam_namespace,pam_keyinit,\
+pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlog acct=\"$TEST_USER\" \
+exe=\"/usr/bin/login\" hostname=? addr=? terminal=pts/$pts res=success"
+augrok --seek=$AUDITMARK type=USER_START msg_1="op=PAM:session_open $msg_1" subj=$login_context || exit_fail
+
 # Check for ROLE_ASSIGN event for testuser
-augrok -q type=ROLE_ASSIGN msg_1=~"op=login-sename,role,range acct=\"$TEST_USER\" old-seuser=user_u old-role=user_r old-range=s0 new-seuser=staff_u new-role=auditadm_r,staff_r,lspp_test_r,secadm_r,sysadm_r,system_r new-range=$def_range" || exit_fail "ROLE_ASSIGN event does not match"
+augrok --seek=$AUDITMARK type=ROLE_ASSIGN
+augrok --seek=$AUDITMARK type=ROLE_ASSIGN msg_1=~"op=login-sename,role,range acct=\"$TEST_USER\" old-seuser=user_u old-role=user_r old-range=s0 new-seuser=staff_u new-role=auditadm_r,staff_r,lspp_test_r,secadm_r,sysadm_r,system_r new-range=$def_range" || exit_fail "ROLE_ASSIGN event does not match"
+
 # Check for USER_ROLE_CHANGE for login command
-augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$def_context.*exe=.(/usr)?/bin/login.* terminal=pts/$pts res=success.*" || exit_fail "USER_ROLE_CHANGE does not match"
+augrok --seek=$AUDITMARK type=USER_ROLE_CHANGE
+augrok --seek=$AUDITMARK type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$def_context.*exe=.(/usr)?/bin/login.* terminal=pts/$pts res=success.*" || exit_fail "USER_ROLE_CHANGE does not match"
 
 exit_pass

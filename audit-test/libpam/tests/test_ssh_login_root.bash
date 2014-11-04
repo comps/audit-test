@@ -1,6 +1,7 @@
 #!/bin/bash
 #*********************************************************************
 #   Copyright (C) International Business Machines  Corp., 2000
+#   Copyright (c) 2014 Red Hat, Inc. All rights reserved.
 #
 #   This program is free software;  you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -16,36 +17,40 @@
 #   along with this pronram;  if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
-#  FILE   :test_ssh 04.bash
+#  FILE   : test_ssh_login_root.bash
 #
-#  PURPOSE: Tests to see that ssh rejects a 'root' login attempt
+#  PURPOSE: Tests to see that ssh rejects a 'root' login attempt with correct
+#           and incorrect password
 #
 #  SETUP: The program `/usr/bin/expect' MUST be installed.
 #
 #  HISTORY:
 #    10/11 T.N Santhosh (santhosh.tn@hp.com)
+#    11/14 Miroslav Vadkerti (mvadkert@redhat.com)
 #
 
 source testcase.bash || exit 2
 source tp_ssh_functions.bash || exit 2
 disable_ssh_strong_rng
 
-RUSER="root"
+append_cleanup "faillock --user root --reset"
 
-expect -c "
-    spawn ssh root@localhost
-	expect {
-        {continue} {send yes\r; exp_continue}
-        {assword} { send $PASSWD\r }
-	}
-	expect {
-        eof { exit 0 }
-        {assword} { exit 1 }
-        {root} { exit 2 }
-    }
-    "
+# try good and bad password for root login - should fail
+for PASS in $PASSWD badpassword; do
+    AUDITMARK=$(get_audit_mark)
 
-msg_1="acct=\"*$RUSER\"*[ :]* exe=./usr/sbin/sshd.*terminal=ssh res=failed.*"
-augrok -q type=USER_AUTH  msg_1=~"PAM:authentication $msg_1"  || exit_fail
+    # try to connect to root
+    ssh_connect_pass $TEST_USER $TEST_USER_PASSWD root $PASS
+    echo "RET=$?"
+
+    MSG="op=PAM:authentication grantors=\? acct=\"root\""
+    MSG="$MSG exe=\"/usr/sbin/sshd\" hostname=localhost addr=::1 terminal=ssh res=failed"
+    augrok --seek $AUDITMARK type=USER_AUTH
+    augrok --seek $AUDITMARK type=USER_AUTH msg_1=~"$MSG" || \
+        exit_fail "Failed authentication attempt for user $TUSR not audited correctly"
+
+    # make sure root is not locked out via faillock
+    faillock --user root --reset
+done
 
 exit_pass

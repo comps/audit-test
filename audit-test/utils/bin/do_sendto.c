@@ -21,27 +21,51 @@
 int main(int argc, char **argv)
 {
   int rc, result;
-  struct addrinfo *host = NULL;
-  struct addrinfo addr_hints;
   int sock;
+  struct addrinfo *host, hints;
+  int flags = 0;
 
-  if (argc != 3) {
-    fprintf(stderr, "Usage:\n%s <host> <port>\n", argv[0]);
+  if (argc < 3) {
+    fprintf(stderr, "Usage:\n%s <host> <port> [proto] [flags]\n", argv[0]);
     return TEST_ERROR;
   }
 
-  memset(&addr_hints, 0, sizeof(addr_hints));
-  addr_hints.ai_socktype = SOCK_DGRAM;
-  addr_hints.ai_protocol = IPPROTO_UDP;
-  rc = getaddrinfo(argv[1], argv[2], &addr_hints, &host);
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_protocol = IPPROTO_UDP;
+
+  /* proto */
+  if (argc >= 4) {
+    if (!strcmp(argv[3], "tcp")) {
+      hints.ai_socktype = SOCK_STREAM;
+      hints.ai_protocol = IPPROTO_TCP;
+    }
+    /* udp selected by default */
+  }
+
+  /* flags */
+  if (argc >= 5) {
+    if (strstr(argv[4], "MSG_OOB"))
+      flags |= MSG_OOB;
+  }
+
+  rc = getaddrinfo(argv[1], argv[2], &hints, &host);
   if (rc < 0)
     return TEST_ERROR;
   sock = socket(host->ai_family, host->ai_socktype, host->ai_protocol);
   if (sock < 0)
     return TEST_ERROR;
 
+  /* connect if stream */
+  if (host->ai_socktype == SOCK_STREAM) {
+    rc = connect(sock, host->ai_addr, host->ai_addrlen);
+    if (rc < 0)
+      return TEST_ERROR;
+  }
+
   errno = 0;
-  rc = sendto(sock, MSG_STRING, MSG_LEN, 0, host->ai_addr, host->ai_addrlen);
+  rc = sendto(sock, MSG_STRING, MSG_LEN, flags, host->ai_addr, host->ai_addrlen);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 
   fprintf(stderr, "%d %d %d\n", result, result ? errno : rc, getpid());

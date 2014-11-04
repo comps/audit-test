@@ -159,7 +159,6 @@ sched_rr_get_interval	all
 sched_setaffinity	all
 sched_setparam		all
 sched_setscheduler	all
-send			ppc64
 set_robust_list		all
 setdomainname		all
 setfsgid		all

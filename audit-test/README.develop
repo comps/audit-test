@@ -89,6 +89,11 @@ cleanup()
     - runs after looping through all the tests, manipulated by prepend_cleanup()
       and append_cleanup().  See section Test Cleanup.
 
+cleanup_hook()
+
+    - similar to startup_hook, may be used as an alternative for prepend_cleanup
+      in certain special cases
+
 | Writing mls syscall tests
 +--------------------------
 
@@ -288,3 +293,39 @@ the middle of the call tree will look more like this:
         subshell terminates
             no cleanup since traps were set in the external script
 
+run.bash sourcing testcase.bash
+-------------------------------
+The examples above show sourcing testcase.bash in a subshell or in a separate
+script (test case) completely, but it's also technically possible to do
+something like:
+
+run.bash
+    source testcase.bash
+    test runs, other code
+
+Historically, some buckets used this setup and appeared to be working, but
+this usage is strongly discouraged and should be avoided in all cases,
+because it prevents execution of the run.bash 'cleanup' (user removal, ...).
+
+run.bash
+    cleanup() { ... }
+    append_cleanup() { append to cleanup }
+    prepend_cleanup() { prepend to cleanup }
+    trap 'cleanup; close_log; exit' 0 1 2 15
+
+    source run.conf
+    source testcase.bash
+    test_cleanup() { ... }
+    append_cleanup() { append to test_cleanup }
+    prepend_cleanup() { prepend to test_cleanup }
+    trap 'test_cleanup; exit' 0 1 2 15
+
+As we can see, not only append/prepend_cleanup functions get overwriten to
+test_cleanup, but the second trap overrides the first one.
+
+Newer versions of run.bash have the trap definition *after* sourcing run.conf,
+which enforces the execution of 'cleanup', but discards anything the run.conf
+itself may have added to test_cleanup.
+
+Therefore please avoid sourcing testcase.bash within run.conf without spawning
+a subshell first. The run_test function runs in a subshell by default.

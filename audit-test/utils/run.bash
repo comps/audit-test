@@ -722,6 +722,10 @@ function run_tests {
 
 early_startup
 parse_cmdline "$@"
+# note: trap needs to be down here, after parse_cmdline due to:
+# - no cleanup execution in cases like --list, no users added yet, no log open
+# - run.conf is sourced in parse_cmdline and may define its own traps, possibly
+#   overriding our cleanup - don't allow that, run.conf is not supposed to trap
 trap 'cleanup; close_log; exit' 0 1 2 3 15
 startup || die "startup failed"
 run_tests

@@ -23,8 +23,11 @@ source tp_ssh_functions.bash || exit 2
 
 # setup
 tuid=$(id -u $TEST_USER)
-grep -q pam_faillock /etc/pam.d/sshd || grep -q pam_faillock /etc/pam.d/password-auth || exit_error
+grep -q pam_faillock /etc/pam.d/sshd || grep -q pam_faillock /etc/pam.d/password-auth || \
+    exit_error "pam_faillock does not seem to be configured in PAM"
 disable_ssh_strong_rng
+
+AUDITMARK=$(get_audit_mark)
 
 # Unlike pam_tally2, faillock doesn't have a --reset=n option that lets us
 # pre-set the number of failures. So we need to fail the login multiple times
@@ -48,10 +51,13 @@ expect -c '
     expect -nocase {denied} { close; wait }'
 
 # test
-/sbin/faillock --user $TEST_USER --reset > /dev/null || exit_error
+/sbin/faillock --user $TEST_USER --reset > /dev/null || \
+    exit_error "faillock reset for $TEST_USER user failed"
 
-msg_1="faillock reset uid=$tuid.*exe=./usr/sbin/faillock. .* res=success.*"
-augrok -q type=USER_ACCT msg_1=~"$msg_1" || exit_fail
+augrok --seek=$AUDITMARK type=USER_MGMT
+MSG="op=faillock-reset id=$tuid exe=\"/usr/sbin/faillock\" hostname=\? addr=\? terminal=pts/[0-9]+ res=success"
+augrok --seek=$AUDITMARK -q type=USER_MGMT msg_1=~"$MSG" || \
+    exit_fail "USER_MGMT failock-reset message not found"
 
 # verify the account is unlocked
 expect -c '
@@ -63,10 +69,14 @@ expect -c '
             send "PS1=:\\::\r"
         }
     }
-    expect {:::$} { close; wait }'
+    expect {:::$} { send "exit\r"; close; wait }'
 
-msg_2="acct=\"$TEST_USER\" exe=./usr/sbin/sshd.*terminal=ssh res=success.*"
-augrok -q type=CRED_ACQ msg_1=~"PAM:setcred grantors=pam_env,pam_faillock,pam_unix $msg_2" || exit_fail
-augrok -q type=USER_ACCT msg_1=~"PAM:accounting grantors=pam_faillock,pam_unix,pam_localuser $msg_2" || exit_fail
+MSG="acct=\"$TEST_USER\" exe=./usr/sbin/sshd.*terminal=ssh res=success.*"
+augrok --seek=$AUDITMARK type=CRED_ACQ
+augrok --seek=$AUDITMARK type=CRED_ACQ msg_1=~"PAM:setcred grantors=pam_env,pam_faillock,pam_unix $MSG" || \
+    exit_fail "Expected CRED_ACQ message not found"
+augrok --seek=$AUDITMARK type=CRED_ACCT
+augrok --seek=$AUDITMARK type=USER_ACCT msg_1=~"PAM:accounting grantors=pam_faillock,pam_unix,pam_localuser $MSG" || \
+    exit_fail "Expected USER_ACCT mesage not found"
 
 exit_pass

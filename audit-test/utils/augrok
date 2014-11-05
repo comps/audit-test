@@ -1204,7 +1204,7 @@ if ($zero eq 'ausearch' or grep {$_ eq '--ausearch'} @ARGV) {
 if ($> == 0 and not $opt{'nosync'}) {
     my ($i, $backlog);
     for ($i = 0; $i < 30; $i++) {
-        ($backlog = `/sbin/auditctl -s`) =~ s/.*?\bbacklog=(\d+).*/$1/s;
+        ($backlog = `/sbin/auditctl -s`) =~ s/.*?\bbacklog[= ](\d+).*/$1/s;
         last if $backlog == 0;
         if ($i % 10 == 0 and $opt{'debug'}) {
             print STDERR "$zero: waiting on backlog ($backlog)\n";

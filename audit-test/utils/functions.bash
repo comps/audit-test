@@ -481,3 +481,118 @@ function rolecall {
     # exit status from subshell
     return $?
 }
+
+######################################################################
+# synchronization
+######################################################################
+
+# these functions can be used to block until a certain condition is met
+
+# feel free to override these variables in your test
+# - timeouts
+WAIT_FOR_SLEEP=0.1  # how long (in sec) to wait between iterations
+WAIT_FOR_MAX=100    # for how many iterations
+                    # (100*0.1 = ~10sec, ignoring the command exec time)
+
+# wait for a command to return a specified value
+# executes $1 until it returns 0
+# if $2 is specified, wait for $1 to return code $2
+# if $2 is "not", use $3 instead and negate the condition
+# (eg. wait until cmd stops returning $3)
+#
+# ie.
+#  wait_for_cmd "cmd"        # wait for rc to be 0
+#  wait_for_cmd "cmd" 2      # wait for rc to be 2
+#  wait_for_cmd "cmd" not 1  # wait for rc to be 0 or 2-255
+#
+# use case - virtually anything, ie.
+#  # wait for file to exist
+#  "[ -e $file ]"
+#  # wait for a file to be logrotated (inode changed && exists)
+#  "[ \"\$(stat -c %i $file)\" != 123456 -a \$? -eq 0 ]"
+#  # wait for anything to start listening on tcp port 1234
+#  "ss -tnl | grep -q 1234"
+wait_for_cmd()
+{
+    local i="$WAIT_FOR_MAX"
+    local cmd="$1" rc="$2" notrc="$3" op='='
+    [ "$rc" ] || rc=0
+    if [ "$rc" = "not" ]; then
+        [ "$notrc" ] || return 1
+        rc="$notrc"; op='!='
+    fi
+    for ((;i>0;i--)); do
+        eval "$cmd" &>/dev/null
+        [ "$?" "$op" "$rc" ] && return 0
+        sleep "$WAIT_FOR_SLEEP"
+    done
+    return 1
+}
+
+# wait for pid $1 to have at least 1 child (fork done) and return its pid
+#
+# use case - simple command wrapper, which does something and spawns a child,
+# doing execve in it, like "initwrap" from syscalls-ns -- note that this
+# function waits only for the fork, not the execve, ie.
+#   ./initwrap nc -l 1234 &
+#   ncpid=$(wait_for_child $!) || exit_error "timed out"
+wait_for_child()
+{
+    local i="$WAIT_FOR_MAX"
+    local pid="$1" child=
+    for ((;i>0;i--)); do
+        child=$(pgrep -oP "$pid") && { echo "$child"; return 0; }
+        sleep "$WAIT_FOR_SLEEP"
+    done
+    return 1
+}
+
+# wait for pid $1 to have name $2 (ie. after execve)
+# if $3 contains 'full', wait for full cmdline spec instead of binary name
+#
+# use case - setup binaries like unshare(1), which do something (ie. to
+# the environment) and call execve -- useful if you need to wait for that
+# "something" to be done (ie. namespace switch) prior to other work, ie.
+#   unshare --mount nc -l 1234 &
+#   wait_for_pname $! nc || exit_error "timed out"
+wait_for_pname()
+{
+    local i="$WAIT_FOR_MAX"
+    local pid="$1" pname="$2" full="$3" pexe=
+    [ "$pid" -a "$pname" ] || return 1
+    [ "$full" = "full" ] && full='' || full='-c'
+    for ((;i>0;i--)); do
+        pexe=$(ps $full -o cmd --no-headers -p "$pid")
+        [ "$pexe" ] || return 0  # already ended
+        [ "$pexe" = "$pname" ] && return 0
+        sleep "$WAIT_FOR_SLEEP"
+    done
+    return 1
+}
+
+# wait for pid $1 to have a child with name $2 and return its pid
+# if $3 contains 'full', wait for full cmdline spec
+# (combines wait_for_pname and wait_for_child functions together)
+#
+# use case - waiting for bash function, spawned in background, to spawn
+# a particular command, ie.
+#   func() { nc 1.1.1.1 2222 <<<"woohoo"; sleep 1; nc -l 1234; }
+#   func &
+#   ncpid=$(wait_for_child_pname $! "nc -l 1234" full) || exit_error "timed out"
+wait_for_child_pname()
+{
+    local i="$WAIT_FOR_MAX"
+    local pid="$1" pname="$2" full="$3" children= c= pexe=
+    [ "$full" = "full" ] && full='' || full='-c'
+    for ((;i>0;i--)); do
+        ps -o pid --no-headers -p "$pid" >/dev/null || return 1  # parent ended
+        children=$(pgrep -P "$pid")
+        for c in $children; do
+            pexe=$(ps $full -o cmd --no-headers -p "$c")
+            [ "$pexe" ] || continue  # already ended
+            [ "$pexe" = "$pname" ] && { echo "$c"; return 0; }
+        done
+        sleep "$WAIT_FOR_SLEEP"
+    done
+    return 1
+}

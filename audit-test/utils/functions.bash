@@ -274,24 +274,9 @@ eval_syscall()
 # service functions
 ######################################################################
 
-function _busy_wait {
-    # busy wait for $1 to complete in $i centiseconds (exit with 0)
-    # or return 1 if the command fails even after that
-    local i_max=100  #10sec
-    local i
-
-    for (( i=0; i<i_max; i++ )); do
-        eval "$1" && break
-        echo -n "."
-        sleep 0.1
-    done;
-    echo
-    [ $i -eq $i_max ] && return 1 || return 0
-}
-
 function start_service {
 
-    if ! pgrep -f  sbin/$1 &>/dev/null; then
+    if ! pgrep -f sbin/$1 &>/dev/null; then
 	if [ "$DISTRO" = "SUSE" ]; then
 	    rc${1} start || return 2
 	else
@@ -300,9 +285,8 @@ function start_service {
 	fi
     fi
 
-    # Busy waiting.
     echo -n "start_service: Waiting for $1 to start"
-    if ! _busy_wait "pgrep -f  sbin/${1} &>/dev/null"; then
+    if ! wait_for_cmd "pgrep -f sbin/${1}"; then
 	echo "start_service: timed out, could not start $1" >&2
 	return 2
     fi
@@ -316,7 +300,7 @@ function start_service {
 
             # auditd daemonizes before it is ready to receive records from the kernel.
             # make sure it's receiving before continuing.
-            if ! _busy_wait "auditctl -r 0 >/dev/null; tail -n10 $log_file | grep -Fq audit_rate_limit=0"; then
+            if ! wait_for_cmd "auditctl -r 0 >/dev/null; tail -n10 $log_file | grep -Fq audit_rate_limit=0"; then
 		echo "start_service: auditd slow starting, giving up" >&2
 		return 2
 	    fi
@@ -324,20 +308,20 @@ function start_service {
 
         "sshd")
             # make sure sshd is listening
-            if ! _busy_wait "[ \"\$(ss -tnlp | grep sshd)\" ]"; then
+            if ! wait_for_cmd "ss -tnlp | grep -q '\"sshd\"'"; then
                 echo "start_service: cannot start sshd" >&2
                 return 2
             fi
             # make sure a TCP client can connect to it
-            local ssh_port=$(ss -4 -tnlp | grep sshd | awk -F" " '{print $4}' | head -n 1 | sed -r 's/.+://')
-            if ! _busy_wait "echo -ne \'\\\004\' | nc -w 3 127.0.0.1 \"$ssh_port\" 1>/dev/null"; then
+            local ssh_port=$(ss -4 -tnlp | grep '"sshd"' | awk '{print $4}' | sed -rn '1s/.+:([0-9]+)$/\1/p')
+            if ! wait_for_cmd "echo -ne \'\\\004\' | nc -w 1 127.0.0.1 \"$ssh_port\""; then
                 echo "start_service: sshd still refuses connection requests" >&2
                 return 2
             fi
             ;;
         "cups")
             # make sure cups is listening on socket
-            if ! _busy_wait "lsof -c cupsd -a /var/run/cups/cups.sock &>/dev/null"; then
+            if ! wait_for_cmd "lsof -c cupsd -a /var/run/cups/cups.sock"; then
                 echo "start_service: cannot start cups" >&2
                 return 2
             fi
@@ -360,9 +344,9 @@ function stop_service {
 	service $1 stop || killall $1
     fi
 
-    # Busy waiting.
     echo -n "stop_service: Waiting for $1 to stop"
-    if ! _busy_wait "! pgrep -f  sbin/${1} &>/dev/null"; then
+    # wait until pgrep starts failing (process exited)
+    if ! wait_for_cmd "pgrep -f sbin/${1}" not 0; then
         echo "start_service: timed out, could not stop $1" >&2
         return 2
     fi

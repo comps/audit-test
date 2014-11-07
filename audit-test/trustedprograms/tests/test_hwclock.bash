@@ -1,6 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # (c) Copyright Hewlett-Packard Development Company, L.P., 2005
+#  Copyright (c) 2014 Red Hat, Inc. All rights reserved.
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
@@ -15,8 +16,14 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
 #
-# PURPOSE:
+# SFRs: FPT_STM.1
+#
+# DESCRIPTION:
 # Verify audit of changes to system time.
+# Check if only privileged user is able to set hwclock.
+#
+
+source testcase.bash
 
 HWCLOCK_UTILITY="/sbin/hwclock"
 AUDIT_LOG="/var/log/audit/audit.log"
@@ -36,7 +43,7 @@ fi
 #       msg='hwclock: op=changing system time id=0 res=success'
 
 # Store off the audit log offset
-AUDIT_SEEK=$(wc -c < $AUDIT_LOG)
+AUDIT_SEEK=$(get_audit_mark)
 
 # Alter the hardware clock
 echo "$(hwclock) -- original hardware clock"
@@ -52,8 +59,17 @@ count=$(augrok --count --seek $AUDIT_SEEK type==USYS_CONFIG \
     msg_1=~"changing system time.*exe=./usr/sbin/hwclock.*res=success.*")
 if [[ $count == 2 ]]; then
     echo "pass: augrok found 2 hwclock records"
-    exit 0
 else
-    echo "fail: augrok found $count records, expecting only 2"
-    exit 1
+    exit_fail "fail: augrok found $count records, expecting only 2"
 fi
+
+# Try to set the time as untrusted user
+su -c "$HWCLOCK_UTILITY --set --date '1/1/2000 00:00:00'" $TEST_USER
+if [ $? -eq 0 ]; then
+    # Restore HW clock if setting hwclock passed
+    $HWCLOCK_UTILITY $UTCFLAG --systohc
+    echo "$(hwclock) -- restored hardware clock"
+    exit_fail "$TEST_USER was able to set the time"
+fi
+
+exit_pass

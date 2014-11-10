@@ -226,6 +226,17 @@ commands to setup the required configuration for the labeled networking tests:
 
 # make netconfig
 
+For the localhost ipsec tests to succeed, check that you have both following
+tunables set to 0:
+
+# cat /proc/sys/net/ipv4/conf/lo/disable_{xfrm,policy}
+
+if not, add sysctl.conf entries to make them 0:
+
+# echo "net.ipv4.conf.lo.disable_xfrm = 0" >> /etc/sysctl.conf
+# echo "net.ipv4.conf.lo.disable_policy = 0" >> /etc/sysctl.conf
+# sysctl -p
+
 Configure the netfilter tests
 -----------------------------
 
@@ -346,18 +357,17 @@ workaround if you experience these failures.
 2. Login as eal
 3. Use 'newrole -r lspp_test_r' to change to root/lspp_test_r
 4. Use '/bin/su -' to change to root
-5. Run '/etc/rc.d/rc.local' to re-initialize the IPsec subsystem
-6. Run the following commands:
+5. Run the following commands:
    # export PASSWD=<password>
    # export PPROFILE=lspp
    # export MODE=<whatever you want (64|32), but set it to something>
    # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
    # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
-7. Change to the '/usr/local/eal4_testing/audit-test/network' directory
-8. Type './run.bash host=remote*type=ipsec'. There may be a few failures;
+6. Change to the '/usr/local/eal4_testing/audit-test/network' directory
+7. Type './run.bash host=remote*type=ipsec'. There may be a few failures;
 rerun the command until all of the tests pass. At most, this should be two
 passes.
-9. Logoff the system
+8. Logoff the system
 
 Re-login into the system and re-run the audit testsuite (or just networking
 tests) as following the directions in previous sections of this README.

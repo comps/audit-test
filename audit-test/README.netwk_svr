@@ -65,10 +65,21 @@ NOTE: Whenever TOE's IP address changes, the steps above need to be re-done
 (sourcing profile.bash, editing client_list.txt and performing install_server).
 
 
+For the localhost ipsec tests to succeed, check that you have both following
+tunables set to 0:
+
+# cat /proc/sys/net/ipv4/conf/lo/disable_{xfrm,policy}
+
+if not, add sysctl.conf entries to make them 0:
+
+# echo "net.ipv4.conf.lo.disable_xfrm = 0" >> /etc/sysctl.conf
+# echo "net.ipv4.conf.lo.disable_policy = 0" >> /etc/sysctl.conf
+# sysctl -p
+
+
 Reboot the network test server or run the following commands:
 
 # service xinetd restart
 # service mcstransd restart
 # service netlabel restart
 # service ipsec restart
-# /etc/rc.d/rc.local

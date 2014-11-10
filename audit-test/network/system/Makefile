@@ -29,26 +29,7 @@ include $(TOPDIR)/rules.mk
 install: install_client
 
 install_client: install_setrans install_ipsec_client install_netlabel
-	cat rc.local.client | ./addr_filter.bash > rc.local
-	install -o root -g root -m 755 rc.local /etc/rc.d
-	if [[ ! -L /etc/rc3.d/S99local ]]; then \
-		(cd /etc/rc3.d; ln -s ../rc.local S99local); \
-	fi
-	restorecon /etc
-
 install_server: install_setrans install_ipsec_server install_netlabel
-	if [[ ! -f client_list.txt ]]; then \
-		echo "error: file client_list.txt does not exist"; \
-		exit 1; \
-	fi
-	cat rc.local.server.in_header > rc.local
-	cat client_list.txt | ./addr_loop.bash rc.local.server.in_body >> rc.local
-	cat rc.local.server.in_footer >> rc.local
-	install -o root -g root -m 755 rc.local /etc/rc.d
-	if [[ ! -L /etc/rc3.d/S99local ]]; then \
-		(cd /etc/rc3.d; ln -s ../rc.local S99local); \
-	fi
-	restorecon /etc
 
 install_check:
 	@[[ -n $$LBLNET_SVR_IPV4 ]] || \

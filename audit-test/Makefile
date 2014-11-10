@@ -105,6 +105,7 @@ report:
 	done
 	utils/tally-results.awk < audit.rollup.log \
 	    | tee -a audit.run.log | tee -a audit.rollup.log
+	@utils/envcheck > envcheck.log
 
 .PHONY: rpm
 rpm: dist

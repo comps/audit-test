@@ -62,7 +62,9 @@ extract:
 
 .PHONY: patch
 patch:
-	patch -p1 -d $(LTP_BASE) < $(PATCH_DIR)/sync_file_range01.patch
+	@for patchfile in $(PATCH_DIR)/*.patch; do \
+		patch -p1 -d $(LTP_BASE) < "$$patchfile"; \
+	done
 
 .PHONY: build
 build:

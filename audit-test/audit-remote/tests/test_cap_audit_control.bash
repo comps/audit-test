@@ -16,13 +16,13 @@
 #   Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 #   Boston, MA 02110-1301, USA.
 ###############################################################################
-# 
+#
 # FMT_MTD.1(AUD-AE) - Query or modify audited event set
 #
 # AUTHOR: Eduard Benes <ebenes@redhat.com>
 #
 # DESCRIPTION:
-#   Test that TSF restricts the ability to query, modify the set of events 
+#   Test that TSF restricts the ability to query, modify the set of events
 #   audited by a remote trusted IT system to processes with the capability
 #   CAP_AUDIT_CONTROL.
 #
@@ -66,7 +66,8 @@ getpcaps $$
 # Make sure we don't have the capability to query or modify the set of audited
 # events after dropping CAP_AUDIT_CONTROL.
 capsh --drop=cap_dac_override,cap_audit_control -- -c 'getpcaps $$' 2>&1 | \
-  grep cap_dac_override,cap_audit_control || exit_error "Failed to drop CAP_..."
+    egrep "(cap_dac_override|cap_audit_control)" && \
+    exit_error "Failed to drop cap_dac_override or cap_audit_control"
 
 # Now we shoudl be NOT allowed to query or modify rules:
 # Query
@@ -84,4 +85,3 @@ capsh --drop=cap_dac_override,cap_audit_control -- \
 
 # If we got this far, we are good to PASS
 exit_pass
-

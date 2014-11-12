@@ -54,6 +54,14 @@ PROFILE="/etc/profile"
 # be verbose
 set -x
 
+# enable IPA
+source $TOPDIR/utils/auth-server/ipa_env
+restart_service sssd
+prepend_cleanup "stop_service sssd"
+
+# make sure test user is not locked after testing
+prepend_cleanup "faillock --reset --user $TEST_USER"
+
 # make sure TEST_USER and TEST_ADMIN leave no trace in the system
 append_cleanup "kill -9 $(lsof | egrep "($TEST_USER|$TEST_ADMIN)" | \
     awk '{print $2}' | sort | uniq)"
@@ -65,16 +73,24 @@ screen_check_global_config
 backup $PROFILE
 screen_remove_sleep $PROFILE
 
+# check if
+# + screen locked after LOCK_TIME seconds
+# + screen asking for password
+# + unlock successful using the correct password
+for LOCK_TIME in 2 3 4 6; do
+    # local authentication
+    screen_config_set_lock $SCREENRC $LOCK_TIME
+    screen_check_lock $TEST_USER $TEST_USER_PASSWD $LOCK_TIME || \
+        exit_fail "screen for $TEST_USER did not lock after 2s ($?)"
+    # remote authentication
+    screen_config_set_lock $SCREENRC $LOCK_TIME
+    screen_check_lock $IPA_USER $IPA_PASS $LOCK_TIME || \
+        exit_fail "screen for $IPA_USER did not lock after 2s ($?)"
+done
+
 # set test user lockscreen timeout to 2s
 su - -c "echo 'idle 2 lockscreen' > ~/.screenrc" $TEST_USER || \
     exit_fail "Failed to set lockscreen timeout for $TEST_USER"
-
-# check if
-# + screen locked after 2 seconds
-# + screen asking for password
-# + unlock successful using the correct password
-screen_check_lock $TEST_USER $TEST_USER_PASSWD 2 || \
-    exit_fail "screen for $TEST_USER did not lock after 2s ($?)"
 
 # check if
 # + unlock using a incorrect password fails
@@ -85,8 +101,10 @@ screen_check_badpass $TEST_USER $TEST_USER_PASSWD 2 || exit_fail \
 # check if
 # + escape sequence for clearing the screen sent if screen locked
 # + kernel boot options contain "no-scroll" and "fbcon=scrollback:0"
-screen_check_clear $TEST_USER $TEST_USER_PASSWD 5 || exit_fail \
-    "screen clear before locking failed ($?)"
+for LOCK_TIME in 2 3 4 6; do
+    screen_check_clear $TEST_USER $TEST_USER_PASSWD $LOCK_TIME || exit_fail \
+        "screen clear before locking failed ($?)"
+done
 
 # checks if
 # + screen locking via "CTRL-A x" works

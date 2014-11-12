@@ -24,8 +24,9 @@
 
 source functions.bash || exit 2
 
-#### global configuration
+#### globals
 SCREENRC="/etc/screenrc"
+AUTHSRV_DIR="/usr/local/eal4_testing/audit-test/utils/auth-server"
 
 # Remove sleep calls from given file
 # $1 - file
@@ -188,8 +189,8 @@ function screen_check_clear {
 set timeout $(($3+1))
 spawn screen $4
 expect {$1} {
-    sleep 4
-    send { send -- $2\r }
+    expect {Password} { send -- $2\r }
+    default { exit 1 }
 }
 expect {
     {$1} { send -- exit\r }

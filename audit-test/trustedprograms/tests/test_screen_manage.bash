@@ -76,20 +76,15 @@ su - -c "echo 'idle 30 lockscreen' > /home/$TEST_ADMIN/.screenrc" \
 su - -c "echo 'idle 30 lockscreen' > /etc/screenrc" \
     $TEST_USER && exit_fail "$TEST_USER can modify /etc/screenrc"
 
-for LOCK_TIME in 2 3 4 6; do
-	screen_config_set_lock $SCREENRC $LOCK_TIME
+# check if test user account locked after 5 seconds
+screen_check_lock $TEST_USER $TEST_USER_PASSWD 5 || \
+    exit_fail "screen for $TEST_USER did not lock after 5s"
 
-	# check if test user account locked after 2 seconds
-	screen_check_lock $TEST_USER $TEST_USER_PASSWD $LOCK_TIME || \
-	    exit_fail "screen for $TEST_USER did not lock after ${LOCK_TIME}s"
-done
-
-# set test user lockscreen timeout to 2s -> it should override global 6s
+# set test user lockscreen timeout to 2s -> it should override global 5s
 su - -c "echo 'idle 2 lockscreen' > ~/.screenrc" $TEST_USER || \
     exit_fail "Failed to set lockscreen timeout for $TEST_USER"
 screen_check_lock $TEST_USER $TEST_USER_PASSWD 2 || \
     exit_fail "screen for $TEST_USER did not lock after 2s"
-
 
 # check if test user account wasn't locked after 2 seconds if
 # screen is run with -c /dev/null to ignore user settings

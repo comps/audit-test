@@ -11,6 +11,10 @@ Install the network test server as if it were a test machine.  This
 means that it should be in the evaluated configuration in LSPP/MLS
 mode.
 
+The network test server can be installed as a Virtual Machine as the essential
+part of it is providing a software (network) reference point for the
+test machine, meaning its exact hardware requirements are relaxed.
+
 Install the audit-test suite, following the instructions in the README.run
 file, until the "Configure the network test server" step.
 

@@ -183,11 +183,9 @@ AUDIT_TEST_DEP_BOTH := \
 
 # special cases
 # libseccomp only on x86,
-# kvm virt stuff only on x86 (for now)
 ifneq (,$(findstring $(MACHINE),x86_64 i686))
     AUDIT_TEST_DEP_NATIVE += libseccomp libseccomp-devel
     AUDIT_TEST_DEP_MULTILIB += libseccomp libseccomp-devel
-    AUDIT_TEST_DEP_NATIVE += libvirt qemu-kvm virt-install
 endif
 
 # add pkg name suffixes

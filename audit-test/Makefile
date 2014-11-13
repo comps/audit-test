@@ -54,6 +54,8 @@ endif
 endif
 endif
 
+RUN_DIRS_EXCLUDE := netfilebt kvm kvm-cgroups kvm-iommu
+
 ifneq ($(RUN_DIRS_SET),)
     RUN_DIRS := $(RUN_DIRS_SET)
 endif

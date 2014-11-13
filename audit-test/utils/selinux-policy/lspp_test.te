@@ -64,6 +64,8 @@ gen_require(`
 	# needed for timedatectl testing
 	type systemd_timedated_t;
 	class dbus send_msg;
+	# for lspp_harness_t -> lspp_test_generic_exec_t via runcon
+	class file entrypoint;
 ')
 ###
 #
@@ -217,6 +219,10 @@ domain_auto_trans(domain,lspp_harness_exec_t,lspp_harness_t)
 
 # allow manual transitions to any other domain on the system
 allow lspp_harness_t domain:process transition;
+
+# allow lspp_harness_t -> lspp_test_generic_exec_t via runcon
+# (this was previously done on rhel7 in unconfined_domain_noaudit)
+allow lspp_harness_t lspp_test_generic_exec_t:file entrypoint;
 
 # give the harness domain mls override privleges
 mls_file_read_all_levels(lspp_harness_t)

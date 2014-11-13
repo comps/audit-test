@@ -69,8 +69,11 @@ append_cleanup "kill -9 $(lsof | egrep "($TEST_USER|$TEST_ADMIN)" | \
 # check permissions of global configuration
 screen_check_global_config
 
-# backup global profile and remove sleep
+# backup global profile and screen config
 backup $PROFILE
+backup $SCREENRC
+
+# remove sleep from /etc/profile
 screen_remove_sleep $PROFILE
 
 # check if

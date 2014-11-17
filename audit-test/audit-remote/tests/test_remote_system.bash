@@ -248,6 +248,13 @@ check_client_disk_error_stop() {
     local timeout=100
     local rc=1
     for t in `seq $timeout` ; do
+      # Sometimes it might happen that connection to remote server is lost because
+      # of disk error, this is very rare and after restarting audit the connection
+      # is re-established. This is not a bug of audit daemon.
+      if search_syslog "audisp-remote: Error connecting to $LBLNET_SVR_IPV4"; then
+          sleep 10
+          restart_service auditd || exit_error "restart_service auditd"
+      fi
       sleep 1
       search_syslog "remote logging stopping due to remote server has a disk error, disk write error" && break
     done
@@ -408,7 +415,7 @@ test_client_disk_error() {
     # Trigger action of the remote plugin so we can check for configured action.
     # Server should report error disk back to the plugin.
     auditctl -m "$remote_client_test_string"
-    check_client_disk_error_stop || exit_fail "check_client_disk_full_stop"
+    check_client_disk_error_stop || exit_fail "check_client_disk_error_stop"
 }
 
 
@@ -424,4 +431,3 @@ fi
 
 # Looks like we are good to pass!
 exit_pass
-

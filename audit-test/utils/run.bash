@@ -101,6 +101,10 @@ function warn {
     msg "<red>Warning: $*"
 }
 
+function incolor {
+    [ -t 1 -a "$(tput colors)" -ge 8 -a -z "$NOCOLOR" ]
+}
+
 function colorize {
     declare color
     case $* in
@@ -422,7 +426,8 @@ function parse_cmdline {
     eval -- "$conf" || die "Error reading config file: $opt_config"
 
     # Don't use color on non-tty devices or terminals without color support
-    [ -t 1 -a "$(tput colors)" -ge 8 ] || colorize() { monoize "$@"; }
+    # or if NOCOLOR variable set
+    incolor || colorize() { monoize "$@"; }
 
     if [[ -n $* ]]; then
 	# Additional cmdline indicates tests to run

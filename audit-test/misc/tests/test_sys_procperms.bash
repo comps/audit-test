@@ -41,8 +41,8 @@ DIRECTORY=$2
 ./$FILENAME /$DIRECTORY $TEST_USER $TEST_USER &> $FILENAME.$DIRECTORY.log
 [ $? -eq 0 ] || exit_error "Test program failed to execute"
 
-retval=`grep -v "FAILED" $FILENAME.$DIRECTORY.log | grep "FAIL" | wc -l`
-echo "TEST PASSED = " `grep "PASS" $FILENAME.$DIRECTORY.log | wc -l` ", FAILED = " $retval >> $FILENAME.$DIRECTORY.log
+retval=`grep -v "FAILED" $FILENAME.$DIRECTORY.log | grep "result: FAIL" | wc -l`
+echo "TEST PASSED = " `grep "result: PASS" $FILENAME.$DIRECTORY.log | wc -l` ", FAILED = " $retval >> $FILENAME.$DIRECTORY.log
 
 #Checking status of retval variable
 if [ $retval -gt 0 ]; then

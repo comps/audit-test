@@ -126,6 +126,39 @@ pam_sss,pam_lastlog"
     done
 }
 
+test_banner() {
+    local BANNER_TXT="This is a disclaimer"
+    local EXP_OUT=
+
+    # add test banner
+    backup /etc/issue
+    echo "$BANNER_TXT" >> /etc/issue
+
+    # banner is displayed via agetty, run it in screen as it hijacks
+    # the given (current) tty
+    EXP_OUT=$(
+        expect -c "
+            set timeout 2
+            spawn screen
+            expect {
+                {*root} { send \"/sbin/agetty --noclear 9600 \\\$(sed 's|/dev/||' <<< \\\$(tty))\r\" }
+                timeout { exit 1 }
+            }
+            expect {
+                {*login:} { send noone\r }
+                timeout { exit 2 }
+            }
+            exit 0"
+    ); RET=$?
+
+    # Be verbose
+    echo "$EXP_OUT"
+
+    # check if expect finished as expected and banner text displayed at login
+    [ $RET -eq 0 ] || exit_fail "Expect failed unexpectedly ($RET)"
+    echo "$EXP_OUT" | egrep -q "^$BANNER_TXT" || exit_fail "Banner text '$BANNER_TXT' not found"
+}
+
 ## common setup
 # turn off screen in /etc/profile
 backup /etc/profile

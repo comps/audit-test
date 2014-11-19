@@ -151,12 +151,24 @@ test_banner() {
             exit 0"
     ); RET=$?
 
-    # Be verbose
-    echo "$EXP_OUT"
-
     # check if expect finished as expected and banner text displayed at login
     [ $RET -eq 0 ] || exit_fail "Expect failed unexpectedly ($RET)"
     echo "$EXP_OUT" | egrep -q "^$BANNER_TXT" || exit_fail "Banner text '$BANNER_TXT' not found"
+}
+
+test_feedback() {
+    local EXP_OUT=$(
+        expect -c "
+            spawn login
+            sleep 1
+            expect -nocase {login: $} {send $TUSR\r}
+            expect -nocase {password: $} {send badpassword\r}
+            expect -nocase {login incorrect} {close; wait}" | xxd -c256
+    )
+
+    # check if password feedback obscured -> no output
+    echo "$EXP_OUT" | egrep -q "Password: ..Login incorrect" || \
+        exit_fail "Unexpected obscured output after password prompt"
 }
 
 ## common setup

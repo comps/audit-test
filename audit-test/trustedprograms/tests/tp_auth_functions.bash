@@ -5,12 +5,12 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
@@ -22,18 +22,20 @@ source testcase.bash || exit 2
 ######################################################################
 
 useradd_conf=/etc/default/useradd
+date_mark=""
 
 ######################################################################
 # common functions
 ######################################################################
 
 function generate_unique {
-    declare file=$1
+    declare subject=$1
+    declare file=$2
     declare i name id
 
     # find the first available name called testuser%d
     for ((i=1; i<100; i++)); do
-        name=testuser$i
+        name=test${subject}$i
         grep -q "^$name:" "$file" || break
     done
     if [[ $i == 100 ]]; then
@@ -58,17 +60,11 @@ function generate_unique {
 }
 
 function generate_unique_user {
-    generate_unique /etc/passwd
+    generate_unique "user" /etc/passwd
 }
 
 function generate_unique_group {
-    generate_unique /etc/group
-}
-
-function setpid {
-    "$@" &
-    pid=$!
-    wait $pid
+    generate_unique "group" /etc/group
 }
 
 function user_cleanup {

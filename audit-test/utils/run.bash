@@ -102,7 +102,7 @@ function warn {
 }
 
 function incolor {
-    [ -t 1 -a "$(tput colors)" -ge 8 -a -z "$NOCOLOR" ]
+    [ -t 1 -a "$(tput colors)" -ge 8 -a "$NOCOLOR" != "1" ]
 }
 
 function colorize {

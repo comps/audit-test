@@ -21,7 +21,7 @@ include $(TOPDIR)/rules.mk
 EXECUTABLE=do_tty devfileperm dirperm fileperm namedpipes_fifoperm suid_sgid unixdomainsocketperm semperm shmperm msqperm \
 	sys_procperms \
 	objreuse-brk objreuse-ftruncate objreuse-lseek objreuse-mmap objreuse-msg objreuse-sem objreuse-shm \
-	checkaccess seccomp
+	checkaccess seccomp sparse_file
 
 all: $(EXECUTABLE)
 

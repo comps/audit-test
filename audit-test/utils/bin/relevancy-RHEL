@@ -32,6 +32,21 @@ shmat			ipccall
 shmctl			ipccall
 shmget			ipccall
 
+# '32' versions of syscalls - not on ppc64
+alias 32call		!ppc64,!ppc64le,all:32
+chown32			32call
+fchown32		32call
+lchown32		32call
+setfsgid32		32call
+setfsuid32		32call
+setgid32		32call
+setgroups32		32call
+setregid32		32call
+setresgid32		32call
+setresuid32		32call
+setreuid32		32call
+setuid32		32call
+
 # other
 #<syscall>		<archlist>
 access			all
@@ -42,7 +57,6 @@ capset			all
 chdir			all
 chmod			all
 chown			all
-chown32			!ppc64,all:32
 chroot			all
 clock_adjtime		all
 clock_settime		all
@@ -55,7 +69,6 @@ fanotify_mark		all
 fchmod			all
 fchmodat		all
 fchown			all
-fchown32		!ppc64,all:32
 fchownat		all
 fgetxattr		all
 flistxattr		all
@@ -83,8 +96,8 @@ getxattr		all
 init_module		all
 inotify_add_watch	all
 ioctl			all
-ioperm			!s390x,!ppc64,all  # exists on s390x:32 and ppc64, but ENOSYS
-iopl			!s390x,!ppc64,all  # exists on ppc64, but ENOSYS
+ioperm			!s390x,!ppc64,!ppc64le,all  # exists on s390x:32 and ppc64, but ENOSYS
+iopl			!s390x,!ppc64,!ppc64le,all  # exists on ppc64, but ENOSYS
 ioprio_get		all
 ioprio_set		all
 ipc			!x86_64:64,all
@@ -93,7 +106,6 @@ kexec_load		all
 keyctl			all
 kill			all
 lchown			all
-lchown32		!ppc64,all:32
 lgetxattr		all
 link			all
 linkat			all
@@ -120,8 +132,8 @@ nice			!x86_64:64,all
 open			all
 open_by_handle_at	all
 openat			all
-pciconfig_read		ppc64
-pciconfig_write		ppc64
+pciconfig_read		ppc64,ppc64le
+pciconfig_write		ppc64,ppc64le
 pivot_root		all
 prctl			all
 prlimit64		all
@@ -139,7 +151,7 @@ rename			all
 renameat		all
 request_key		all
 rmdir			all
-rtas			ppc64
+rtas			ppc64,ppc64le
 sched_getaffinity	all
 sched_getparam		all
 sched_getscheduler	all
@@ -151,34 +163,25 @@ send			ppc64
 set_robust_list		all
 setdomainname		all
 setfsgid		all
-setfsgid32		!ppc64,all:32
 setfsuid		all
-setfsuid32		!ppc64,all:32
 setgid			all
-setgid32		!ppc64,all:32
 setgroups		all
-setgroups32		!ppc64,all:32
 sethostname		all
 setns			all
 setpgid			all
 setpriority		all
 setregid		all
-setregid32		!ppc64,all:32
 setresgid		all
-setresgid32		!ppc64,all:32
 setresuid		all
-setresuid32		!ppc64,all:32
 setreuid		all
-setreuid32		!ppc64,all:32
 setrlimit		all
 settimeofday		all
 setuid			all
-setuid32		!ppc64,all:32
 setxattr		all
 socketcall		!x86_64:64,all
 stat			all
 statfs			all
-stime			ppc64,all:32
+stime			ppc64,ppc64le,all:32
 swapoff			all
 swapon			all
 symlink			all
@@ -189,7 +192,7 @@ tkill			all
 truncate		all
 truncate64		all:32
 umask			all
-umount			!x86_64:64,!ppc64,all  # exists on ppc64, but ENOSYS
+umount			!x86_64:64,!ppc64,!ppc64le,all  # exists on ppc64, but ENOSYS
 umount2			all
 uname			all
 unlink			all

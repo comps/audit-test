@@ -143,9 +143,7 @@ check_variables_net() {
     local vars
 
     vars="LOCAL_DEV LOCAL_IPV4 LOCAL_IPV6"
-    vars="$vars LOCAL_SEC_MAC LOCAL_SEC_IPV4 LOCAL_SEC_IPV6 BRIDGE_FILTER"
     vars="$vars LBLNET_SVR_IPV4 LBLNET_SVR_IPV6"
-    vars="$vars SECNET_SVR_MAC SECNET_SVR_IPV4 SECNET_SVR_IPV6"
 
     for i in $vars; do
         check "env | grep \"^$i=\"" 0 "Var $i is present in environment"
@@ -297,28 +295,14 @@ check_networking_if() {
     # interface checks
     check "ip -o link show dev $LOCAL_DEV" 0 \
         "Device $LOCAL_DEV exists"
-    check "ip -o link show dev $LOCAL_SEC_DEV" 0 \
-        "Device $LOCAL_SEC_DEV exists"
-    check "ip -o link show dev $BRIDGE_FILTER" 0 \
-        "Device $BRIDGE_FILTER exists"
-    check "brctl show $BRIDGE_FILTER | grep $LOCAL_SEC_DEV" 0 \
-        "Device $LOCAL_SEC_DEV is enslaved in bridge $BRIDGE_FILTER"
 
     check "ip -o -4 addr show dev $LOCAL_DEV | grep \"$LOCAL_IPV4\"" 0 \
         "Device $LOCAL_DEV has IPv4 address: $LOCAL_IPV4"
     check "ip -o -6 addr show dev $LOCAL_DEV | grep \"$LOCAL_IPV6\"" 0 \
         "Device $LOCAL_DEV has IPv6 address: $LOCAL_IPV6"
-    check "ip -o link show dev $BRIDGE_FILTER | grep \"$(sed 's/\(.*\)/\L\1/' <<<$LOCAL_SEC_MAC)\"" 0 \
-        "Device $BRIDGE_FILTER has MAC address: $LOCAL_SEC_MAC"
-    check "ip -o -4 addr show dev $BRIDGE_FILTER | grep \"$LOCAL_SEC_IPV4\"" 0 \
-        "Device $BRIDGE_FILTER has IPv4 address: $LOCAL_SEC_IPV4"
-    check "ip -o -6 addr show dev $BRIDGE_FILTER | grep \"$LOCAL_SEC_IPV6\"" 0 \
-        "Device $BRIDGE_FILTER has IPv6 address: $LOCAL_SEC_IPV6"
 
     check "ip -o -6 addr show dev $LOCAL_DEV | grep \"$LOCAL_IPV6\" | grep -v deprecated" 0 \
         "IPv6 address $LOCAL_IPV6 on $LOCAL_DEV is not deprecated"
-    check "ip -o -6 addr show dev $BRIDGE_FILTER | grep \"$LOCAL_SEC_IPV6\" | grep -v deprecated" 0 \
-        "IPv6 address $LOCAL_SEC_IPV6 on $BRIDGE_FILTER is not deprecated"
 
     if [ "$CHECK_FAILED" ]; then
         echo
@@ -348,10 +332,6 @@ check_networking_probe() {
         "$LBLNET_SVR_IPV4 reachable via $LOCAL_DEV"
     check "ping6 -I $LOCAL_DEV -q -c1 $LBLNET_SVR_IPV6" 0 \
         "$LBLNET_SVR_IPV6 reachable via $LOCAL_DEV"
-    check "ping -I $BRIDGE_FILTER -q -c1 $SECNET_SVR_IPV4" 0 \
-        "$SECNET_SVR_IPV4 reachable via $BRIDGE_FILTER"
-    check "ping6 -I $BRIDGE_FILTER -q -c1 $SECNET_SVR_IPV6" 0 \
-        "$SECNET_SVR_IPV6 reachable via $BRIDGE_FILTER"
 
     check "nc $LOCAL_IPV4 4000 <<<\"echo:testme;\" | grep -a testme" 0 \
         "lblnet_tst_server on TOE responds over unlabeled IPv4"
@@ -502,7 +482,6 @@ check_suite
 check_networking_if
 check_networking_probe
 check_services
-check_kvm
 check_sssd
 "
 

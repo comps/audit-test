@@ -140,23 +140,13 @@ AUDIT_TEST_DEP_NATIVE := \
 	make \
 	gcc \
 	gcc-c++ \
-	glibc \
-	glibc-devel \
-	libgcc \
-	libattr \
 	libattr-devel \
 	libstdc++ \
 	libstdc++-devel \
-	libcap \
-	libcap-devel \
-	audit-libs \
 	audit-libs-devel \
-	libselinux-devel \
 	perl-devel \
 	perl-IO-Tty \
-	xfsprogs-devel \
 	krb5-workstation \
-	dbus-devel \
 	\
 	expect \
 	strace \
@@ -170,12 +160,18 @@ AUDIT_TEST_DEP_NATIVE := \
 	xinetd
 
 # ie. pkgname.i686 on x86_64 or pkgname.s390 on s390x
-AUDIT_TEST_DEP_MULTILIB := \
+AUDIT_TEST_DEP_MULTILIB :=
+
+# both native and multilib versions (ie. pkgname.x86_64 and pkgname.i686)
+AUDIT_TEST_DEP_BOTH := \
 	glibc \
 	glibc-devel \
 	libgcc \
 	libattr \
+	libcap \
+	libcap-devel \
 	audit-libs \
+	libselinux \
 	libselinux-devel \
 	xfsprogs-devel \
 	dbus-devel
@@ -189,10 +185,13 @@ ifneq (,$(findstring $(MACHINE),x86_64 i686))
     AUDIT_TEST_DEP_NATIVE += libvirt qemu-kvm virt-install
 endif
 
+# add pkg name suffixes
+AUDIT_TEST_DEP_NATIVE += $(AUDIT_TEST_DEP_BOTH)
 AUDIT_TEST_DEP := \
 	$(addsuffix .noarch,$(AUDIT_TEST_DEP_NOARCH)) \
 	$(addsuffix .$(MACHINE),$(AUDIT_TEST_DEP_NATIVE))
 ifdef MACHINE32
+    AUDIT_TEST_DEP_MULTILIB += $(AUDIT_TEST_DEP_BOTH)
     AUDIT_TEST_DEP += $(addsuffix .$(MACHINE32),$(AUDIT_TEST_DEP_MULTILIB))
 endif
 

@@ -390,7 +390,7 @@ In the trustedprograms tests, the 'aide_update' test may fail in LSPP/MLS mode.
 The aide program reports the changed file in the aide.log, but the return code
 does not reflect that there was a change.  This test is not run in CAPP mode.
 
-If the database tests fail, be sure that the perl-IO and perl-expect packages
+If the database tests fail, be sure that the perl-IO and perl-Expect packages
 are installed.
 
 Audit-remote tests

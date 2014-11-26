@@ -1,6 +1,9 @@
 About netfilter/netfilebt tests
 -------------------------------
 
+Note: For RHEL7.1 Common Criteria certification please skip configuration
+of the secondary network (SECNET) and ignore references to netfilebt tests.
+
 The netfilter tests reside in the sub-directories netfilter and netfilebt of
 the audit-test suite. The tests of the iptables and ip6tables reside in
 netfilter, and the bridge table filtering tests are in netfilebt. The use
@@ -133,6 +136,9 @@ LBLNET_SVR_IPV4 	IPv4 address for the primary network on the NS
 
 LBLNET_SVR_IPV6		IPv6 address for the primary device on the NS
 
+# Note: For RHEL7.1 Common criteria certification please skip the environment
+#       variables below
+
 SECNET_SVR_IPV4 	IPv4 address for secondary network on NS
 
 SECNET_SVR_IPV6 	IPv6 address of secondary network on NS
@@ -165,6 +171,10 @@ export LOCAL_SEC_IPV4="10.0.1.2"
 export LOCAL_SEC_IPV6="fd00:1::2"
 export LBLNET_SVR_IPV4="10.0.0.1"
 export LBLNET_SVR_IPV6="fd00::1"
+
+# Note: For RHEL7.1 Common criteria certification please skip the environment
+#       variables below
+
 export SECNET_SVR_IPV4="10.0.1.1"
 export SECNET_SVR_IPV6="fd00:1::1"
 export SECNET_SVR_MAC="00:04:23:B3:B5:83"
@@ -191,6 +201,9 @@ IPV6INIT="yes"
 IPV6ADDR="fd00::2"
 IPV6_AUTOCONF="no"
 ONBOOT="yes"
+
+Note: For RHEL7.1 Common Criteria certification please skip the configuration
+of SECNET (eth4 in this example) and the  bridge (toebr in this example)
 
 # cat /etc/sysconfig/network-scripts/ifcfg-eth4
 DEVICE="eth4"
@@ -223,6 +236,9 @@ IPV6INIT="yes"
 IPV6ADDR=fd00::1
 IPV6_AUTOCONF="no"
 ONBOOT="yes"
+
+Note: For RHEL7.1 Common Criteria certification please skip the configuration
+of SECNET (eth1 in this example)
 
 # cat /etc/sysconfig/network-scripts/ifcfg-eth1
 DEVICE="eth1"

@@ -219,6 +219,8 @@ to stop the daemon.
 Configure the KVM tests
 -----------------------
 
+Note: For RHEL7.1 Common Criteria certification please skip this step
+
 For the KVM tests to run you need to have RHEL6 or RHEL7 iso image or DVD
 installation media handy. You also need to tell the tests where to search
 for the installation sources by modifying the config.bash file in the kvm
@@ -285,6 +287,9 @@ if not, add sysctl.conf entries to make them 0:
 
 Configure the netfilter tests
 -----------------------------
+
+Note: For RHEL7.1 Common Criteria certification please skip configuration
+of the secondary network (SECNET).
 
 Follow the steps in README.netfilter. Make sure to have properly
 configured testing environment before proceeding.

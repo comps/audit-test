@@ -142,10 +142,8 @@ AUDIT_TEST_DEP_NATIVE := \
 	make \
 	gcc \
 	gcc-c++ \
-	libattr-devel \
 	libstdc++ \
 	libstdc++-devel \
-	audit-libs-devel \
 	perl-devel \
 	perl-IO-Tty \
 	krb5-workstation \
@@ -170,11 +168,15 @@ AUDIT_TEST_DEP_BOTH := \
 	glibc-devel \
 	libgcc \
 	libattr \
+	libattr-devel \
 	libcap \
 	libcap-devel \
 	audit-libs \
+	audit-libs-devel \
 	libselinux \
 	libselinux-devel \
+	keyutils-libs \
+	keyutils-libs-devel \
 	xfsprogs-devel \
 	dbus-devel
 

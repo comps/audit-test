@@ -25,6 +25,9 @@ disable_ssh_strong_rng
 # audit mark for seeking
 AUDITMARK=$(get_audit_mark)
 
+# in MLS mode check also for pam_namespace success
+[ "$PPROFILE" = "lspp" ] && PAM_ADDTL="pam_namespace,"
+
 # test
 expect -c "
     spawn ssh ${TEST_USER}@localhost
@@ -40,10 +43,10 @@ DATA="USER_AUTH authentication pam_faillock,pam_unix
       USER_ACCT accounting pam_faillock,pam_unix,pam_localuser
       CRED_ACQ setcred pam_env,pam_faillock,pam_unix
       USER_START session_open pam_selinux,pam_loginuid,pam_selinux,\
-pam_namespace,pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlog
+${PAM_ADDTL}pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlog
       CRED_ACQ setcred pam_env,pam_faillock,pam_unix
       USER_END session_close pam_selinux,pam_loginuid,pam_selinux,\
-pam_namespace,pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlog
+${PAM_ADDTL}pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlog
       CRED_DISP setcred pam_env,pam_faillock,pam_unix"
 
 while read LINE; do

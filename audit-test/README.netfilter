@@ -120,17 +120,9 @@ PASSWD         		The root/eal password for the TOE
 
 LOCAL_DEV      		Device for the TOE primary network, such as "eth3"
 
-LOCAL_SEC_DEV  		Device for the TOE secondary network, such as "eth4"
-
-LOCAL_SEC_MAC  		MAC address of the secondary network device on the TOE
-
 LOCAL_IPV4     		IPv4 address for primary network on TOE
 
 LOCAL_IPV6     		IPv6 address for primary network on TOE
-
-LOCAL_SEC_IPV4 		IPv4 address for secondary network on TOE
-
-LOCAL_SEC_IPV6 		IPv6 address for secondary network on TOE
 
 LBLNET_SVR_IPV4 	IPv4 address for the primary network on the NS
 
@@ -138,6 +130,14 @@ LBLNET_SVR_IPV6		IPv6 address for the primary device on the NS
 
 # Note: For RHEL7.1 Common criteria certification please skip the environment
 #       variables below
+
+LOCAL_SEC_DEV  		Device for the TOE secondary network, such as "eth4"
+
+LOCAL_SEC_MAC  		MAC address of the secondary network device on the TOE
+
+LOCAL_SEC_IPV4 		IPv4 address for secondary network on TOE
+
+LOCAL_SEC_IPV6 		IPv6 address for secondary network on TOE
 
 SECNET_SVR_IPV4 	IPv4 address for secondary network on NS
 

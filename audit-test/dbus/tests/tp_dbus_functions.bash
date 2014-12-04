@@ -37,7 +37,11 @@ DBUS_PLACEHOLDER="<!--PLACEHOLDER-->"
 
 # start dbus test server
 dbus_server_start() {
-    $DBUS_TSERVER &
+    if [ -z "$1" ]; then
+        $DBUS_TSERVER &
+    else
+        runcon -l $1 $DBUS_TSERVER &
+    fi
     DBUS_PID=$!
     sleep 1
     ps -hp $DBUS_PID || exit_error "D-Bus test server did not start"
@@ -45,7 +49,7 @@ dbus_server_start() {
 
 # stop dbus server
 dbus_server_stop() {
-    [ -n "$DBUS_PID" ] && kill $DBUS_PID
+    [ -n "$DBUS_PID" ] && kill -9 $DBUS_PID
 }
 
 # dbus test message send function
@@ -88,12 +92,8 @@ dbus_add_policy() {
     echo "Current test daemon config '$DBUS_SYSTEM_CONF':"
     cat $DBUS_SYSTEM_CONF
 
-    # make sure new config is applied
-    systemctl reset-failed messagebus
-    systemctl restart messagebus
-
-    # start dbus test server again because messagebus restarted
-    dbus_server_start
+    # restart the test server
+    dbus_server_restart
 }
 
 # Create clean configuration file. Only root is allowed to own the connection.
@@ -114,11 +114,24 @@ $DBUS_PLACEHOLDER
 EOF
     append_cleanup "rm -f $DBUS_SYSTEM_CONF"
 
+    # restart dbus to have the new configuration file read
+    dbus_restart
+
+    # create config is usually called only once at the beginning of the test
+    # this makes it ideal to also add server stop
+    append_cleanup "dbus_server_stop"
+}
+
+dbus_restart() {
     # make sure new config is applied
     systemctl reset-failed messagebus
     systemctl restart messagebus
+}
+
+dbus_server_restart() {
+    # restart the message bus to read new configuration files
+    dbus_restart
 
     # start dbus test server again because messagebus restarted
     dbus_server_start
-    append_cleanup "dbus_server_stop"
 }

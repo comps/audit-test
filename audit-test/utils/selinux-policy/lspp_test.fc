@@ -72,3 +72,6 @@
 /usr/local/eal4_testing/audit-test/utils/bin/do_[a-zA-Z0-9_\-]+			--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
 /usr/local/eal4_testing/audit-test/syscalls/helpers/[a-z0-9_\-]+		--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
 /usr/local/eal4_testing/audit-test/syscalls-ns/tests/helpers/[a-z0-9_\-]+	--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
+
+# dbus test server
+/usr/local/eal4_testing/audit-test/dbus/tests/dbus_test_server	--	gen_context(system_u:object_r:lspp_harness_exec_t,s0)

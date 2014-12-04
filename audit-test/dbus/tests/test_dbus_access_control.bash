@@ -220,6 +220,9 @@ test_policy_order() {
 # create default configuration
 dbus_create_config
 
+# restart the test server
+dbus_server_start
+
 # run testing
 if [ "$(type -t test_$1)" = "function" ]; then
     eval test_$1

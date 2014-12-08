@@ -220,10 +220,6 @@ domain_auto_trans(domain,lspp_harness_exec_t,lspp_harness_t)
 # allow manual transitions to any other domain on the system
 allow lspp_harness_t domain:process transition;
 
-# allow lspp_harness_t -> lspp_test_generic_exec_t via runcon
-# (this was previously done on rhel7 in unconfined_domain_noaudit)
-allow lspp_harness_t lspp_test_generic_exec_t:file entrypoint;
-
 # give the harness domain mls override privleges
 mls_file_read_all_levels(lspp_harness_t)
 mls_file_write_all_levels(lspp_harness_t)
@@ -286,6 +282,13 @@ domain_auto_trans(lspp_harness_t,lspp_test_generic_exec_t,lspp_test_generic_t)
 
 # give the test domain "unconfined" access
 unconfined_domain_noaudit(lspp_test_generic_t)
+
+# allow syscall wrapper execution (lspp_test_generic_exec_t) via runcon
+# from the syscalls/network buckets
+# (this was previously done on rhel7 in unconfined_domain_noaudit)
+allow lspp_harness_t lspp_test_generic_exec_t:file entrypoint;
+allow lspp_test_ipsec_t lspp_test_generic_exec_t:file entrypoint;
+allow lspp_test_netlabel_t lspp_test_generic_exec_t:file entrypoint;
 
 ##
 # virtualisation domain

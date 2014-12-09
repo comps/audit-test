@@ -165,6 +165,7 @@ AUDIT_TEST_DEP_MULTILIB :=
 # both native and multilib versions (ie. pkgname.x86_64 and pkgname.i686)
 AUDIT_TEST_DEP_BOTH := \
 	glibc \
+	glibc-static \
 	glibc-devel \
 	libgcc \
 	libattr \

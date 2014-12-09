@@ -18,6 +18,8 @@ TOPDIR		= ../../..
 
 include $(TOPDIR)/rules.mk
 
-ALL_EXE		=
+ALL_EXE		= dummy
+
+dummy: LDFLAGS += -static
 
 all: $(ALL_EXE)

@@ -206,14 +206,19 @@ export AUDIT_TEST_DEP
 #
 # - needs to be here as it may be needed in any bucket,
 #   even when running via ./run.bash
+#
+# note that SCREL_FILE may be overwritten by make(1) args
 
 ifdef DISTRO
-    SCREL_FILE := $(TOPDIR)/utils/bin/relevancy-$(DISTRO)
-    SCREL_SYSCALLS := $(shell $(TOPDIR)/utils/screl-parser.py \
-                              $(SCREL_FILE) $(MACHINE) $(MODE))
-else
-    SCREL_SYSCALLS :=
+    SCREL_FILE := $(wildcard $(TOPDIR)/utils/bin/relevancy-$(DISTRO))
 endif
+ifeq (,$(SCREL_FILE))
+    # if DISTRO is unset or relevancy-$DISTRO doesn't exist
+    SCREL_FILE := $(TOPDIR)/utils/bin/relevancy  # fallback
+endif
+
+SCREL_SYSCALLS := $(shell $(TOPDIR)/utils/screl-parser.py \
+                          $(SCREL_FILE) $(MACHINE) $(MODE))
 
 export SCREL_SYSCALLS
 

@@ -64,9 +64,12 @@ distclean: subdirs
 
 .PHONY: report
 report: systeminfo summary
-	@tarball="logs-$$(date +'%m%d%Y_%H%M').tar.gz"; \
-	tar zcvf logs-$$(date +"%m%d%Y_%H%M").tar.gz $$(find . -name "*.log"); \
-	ls -l $$tarball
+	@tarball="logs-$$(date +'%m%d%Y_%H%M').tar.xz"; \
+	logs="audit-test/*/run.log audit-test/*/rollup.log"; \
+	logs+=" audit-test/audit.*.log ltp/ltp.*.log"; \
+	logs+=" audit-test/envcheck.log systeminfo.run.log"; \
+	eval tar --ignore-failed-read -cvJf "$$tarball" "$$logs"; \
+	ls -l "$$tarball"
 
 .PHONY: systeminfo
 systeminfo:

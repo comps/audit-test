@@ -217,7 +217,9 @@ ifeq (,$(SCREL_FILE))
     SCREL_FILE := $(TOPDIR)/utils/bin/relevancy  # fallback
 endif
 
-SCREL_SYSCALLS := $(shell $(TOPDIR)/utils/screl-parser.py \
+# the -x check is required, see utils/Makefile
+SCREL_SYSCALLS := $(shell [ -x "$(TOPDIR)/utils/screl-parser.py" ] && \
+                          "$(TOPDIR)/utils/screl-parser.py" \
                           $(SCREL_FILE) $(MACHINE) $(MODE))
 
 export SCREL_SYSCALLS

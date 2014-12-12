@@ -27,3 +27,11 @@ sync
 
 # test SMEP
 ./user debug/smaeptest/smep
+
+
+Notes for RHEL-7.1 CCC
+======================
+
+Please ignore SMAP at this point as only SMEP is claimed, therefore skip the
+"test SMAP" command above. Once again, as written above, a successful test PASS
+is considered a machine crash (because the crash prevented unsafe execution).

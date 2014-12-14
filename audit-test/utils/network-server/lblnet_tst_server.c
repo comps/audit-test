@@ -60,6 +60,8 @@
 /* lock file */
 #define LCK_FILE                        "/var/lock/lblnet_tst_server"
 
+#define REMOTE_CALL_PATH                "/usr/local/eal4_testing/audit-test/utils/network-server/remote-call/"
+
 /* control socket constants */
 #define CTL_SOCK_PORT_DEFAULT           4000
 #define CTL_SOCK_LISTEN_QUEUE           1
@@ -346,6 +348,64 @@ void ctl_audit_remote_call(int sock, char *param)
 
   } else if (pID < 0) {
     SMSG(SMSG_ERR, fprintf(log_fd, "error(audit_remote_call): fork failed\n"));
+    return;
+  } else
+    SMSG(SMSG_NOTICE, fprintf(log_fd, "parent process continues\n"));
+}
+
+/**
+ * ctl_remote_call - Handle the "remote_call" control message
+ * @sock: socket
+ * @param: parameter string
+ *
+ * Description:
+ * Call given executable with given parameters. The control message
+ * format:
+ *
+ *  remote_call:<executable,parameter1,...,parameterN>
+ *
+ */
+void ctl_remote_call(int sock, char *param)
+{
+  char *argv[64], *executable, executable_full_path[256] = "";
+  int rc;
+
+  if (param == NULL) {
+    SMSG(SMSG_ERR, fprintf(log_fd, "error(remote_call): bad message\n"));
+    return;
+  }
+
+  /* parse the control message */
+  executable = strtok(param, ",");
+  if (executable == NULL)
+    SMSG(SMSG_ERR, fprintf(log_fd, "error(remote_call): missing executable\n"));
+
+  strcat(executable_full_path, REMOTE_CALL_PATH);
+  strcat(executable_full_path, executable);
+
+  int argc = 0;
+  argv[argc++] = executable_full_path;
+  argv[argc++] = strtok(NULL, ",");
+  while (argv[argc - 1] != NULL) {
+    argv[argc++] = strtok(NULL, ",");
+  }
+
+  SMSG(SMSG_NOTICE, fprintf(log_fd, "executable = (%10s)\n",
+                            (char *) executable_full_path));
+
+  int i;
+  for (i = 0; i < argc; i++)
+    SMSG(SMSG_NOTICE, fprintf(log_fd, "executable = (%10s)\n, parameter %d = (%s)\n",
+                              (char *) executable_full_path, i, (char *) argv[i]));
+
+  pid_t pID = fork();
+  if (pID == 0) {
+    rc = execv(executable_full_path, argv);
+    if (rc == -1)
+      SMSG(SMSG_ERR, fprintf(log_fd, "error(remote_call): execl failed (%d)\n", errno));
+
+  } else if (pID < 0) {
+    SMSG(SMSG_ERR, fprintf(log_fd, "error(remote_call): fork failed\n"));
     return;
   } else
     SMSG(SMSG_NOTICE, fprintf(log_fd, "parent process continues\n"));
@@ -1263,6 +1323,8 @@ int main(int argc, char *argv[])
 					ctl_getcon(rem_sock, ctl_param);
 				} else if (strcasecmp(ctl_cmd, "audit_remote_call") == 0) {
 					ctl_audit_remote_call(rem_sock, ctl_param);
+				} else if (strcasecmp(ctl_cmd, "remote_call") == 0) {
+					ctl_remote_call(rem_sock, ctl_param);
 				} else if (strcasecmp(ctl_cmd, "ipsec") == 0) {
 					ctl_ipsec(rem_sock, ctl_param);
 				} else {

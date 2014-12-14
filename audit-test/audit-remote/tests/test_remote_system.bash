@@ -34,11 +34,6 @@ source audisp-remote_functions.bash || exit 2
 
 [ -z "$LBLNET_SVR_IPV4" ] && exit_error "Please, define LBLNET_SVR_IPV4"
 
-#
-# Global variables
-#
-remote_script="/usr/local/eal4_testing/audit-test/audit-remote/tests/remote_call.bash"
-
 # Test scenario to test for by calling corresponding function
 scenario=$1
 test_time_start="`date +'%x %T'`"
@@ -54,8 +49,7 @@ call_remote_function() {
     local my_ip="$LOCAL_IPV4"
     # the mode variable will get here from audisp-remote_functions.bash
     echo "---- START [$call_remote_function_seq] call_remote_function($call_function) ----"
-    # /usr/bin/nc -v $LBLNET_SVR_IPV4 4000 <<< "exec: bash -c \"$remote_script $call_function $mode $my_ip \";"
-    /usr/bin/nc -v $LBLNET_SVR_IPV4 4000 <<< "audit_remote_call:$call_function,$mode,$my_ip;"
+    /usr/bin/nc -v $LBLNET_SVR_IPV4 4000 <<< "remote_call:audit-remote.bash,$call_function,$mode,$my_ip;"
     echo "---- END [$call_remote_function_seq] call_remote_function($call_function)  ----"
     ((call_remote_function_seq+=1))
 }

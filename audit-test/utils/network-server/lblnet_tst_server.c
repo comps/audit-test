@@ -300,60 +300,6 @@ void ctl_ipsec(int sock, char *param)
 }
 
 /**
- * ctl_audit_remote_call - Handle the "audit_remote_call" control message
- * @sock: socket
- * @param: parameter string
- *
- * Description:
- * Call given function in audit-remote test actions.  The control message
- * format:
- *
- *  audite_remote_call:<action,mode,caller_ipv4>
- *
- * This is intended for audit-remote testing only.
- *
- */
-void ctl_audit_remote_call(int sock, char *param)
-{
-  char *action_str, *caller_ipv4_str, *mode_str;
-  int rc;
-
-  if (param == NULL) {
-    SMSG(SMSG_ERR, fprintf(log_fd, "error(audit_remote_call): bad message\n"));
-    return;
-  }
-
-  /* Close leaked sockets, or we will get AVC denials requesting policy rule:
-   *   allow run_init_t inetd_exec_t:file execute; 
-   * For development/debugging it's better NOT to close the socket and leave 
-   * the function call in a commented. */
-  /* net_hlp_socket_close(&sock); */
-  
-  /* parse the control message */
-  action_str = strtok(param, ",");
-  mode_str = strtok(NULL, ",");
-  caller_ipv4_str = strtok(NULL, ",");
-
-
-  SMSG(SMSG_NOTICE, fprintf(log_fd, "action = (%10s)\n, mode = (%10s), caller_ipv4 = (%10s)\n",
-			    (char *) action_str, (char *) mode_str, (char *) caller_ipv4_str));
-
-  pid_t pID = fork();
-  if (pID == 0) {
-    rc = execl("/usr/local/eal4_testing/audit-test/audit-remote/tests/remote_call.bash", 
-               "/usr/local/eal4_testing/audit-test/audit-remote/tests/remote_call.bash",
-	       (char *) action_str, (char *) mode_str, (char *) caller_ipv4_str, (char *) NULL);
-    if (rc == -1)
-      SMSG(SMSG_ERR, fprintf(log_fd, "error(audit_remote_call): execl failed (%d)\n", errno));
-
-  } else if (pID < 0) {
-    SMSG(SMSG_ERR, fprintf(log_fd, "error(audit_remote_call): fork failed\n"));
-    return;
-  } else
-    SMSG(SMSG_NOTICE, fprintf(log_fd, "parent process continues\n"));
-}
-
-/**
  * ctl_remote_call - Handle the "remote_call" control message
  * @sock: socket
  * @param: parameter string
@@ -1321,8 +1267,6 @@ int main(int argc, char *argv[])
 					ctl_sockcon(rem_sock, ctl_param);
 				} else if (strcasecmp(ctl_cmd, "getcon") == 0) {
 					ctl_getcon(rem_sock, ctl_param);
-				} else if (strcasecmp(ctl_cmd, "audit_remote_call") == 0) {
-					ctl_audit_remote_call(rem_sock, ctl_param);
 				} else if (strcasecmp(ctl_cmd, "remote_call") == 0) {
 					ctl_remote_call(rem_sock, ctl_param);
 				} else if (strcasecmp(ctl_cmd, "ipsec") == 0) {

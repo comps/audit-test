@@ -41,7 +41,7 @@ function trigger_daemon_disk_full_action {
 
     # Fill the local filesystem hosting audit.log, leaving 5k available
     # compensate for 64k page size on power
-    if [[ $MACHINE != "ppc64" && $MACHINE != "ppc" ]]; then
+    if [[ $MACHINE != "ppc64le" && $MACHINE != "ppc64" && $MACHINE != "ppc" ]]; then
        fill_disk ${audit_log%/*} 5 || exit_error "fill_disk failed"
     else
        fill_disk ${audit_log%/*} 70 || exit_error "fill_disk failed"
@@ -50,7 +50,7 @@ function trigger_daemon_disk_full_action {
     # each record is at least 80 bytes (based on empirical evidence), so writing
     # 65 records should always take us over (65 * 80 =~ 5k)
     # if powerpc it will take 875 80 byte records to get to the 70K
-    if [[ $MACHINE != "ppc64" && $MACHINE != "ppc" ]]; then
+    if [[ $MACHINE != "ppc64le" && $MACHINE != "ppc64" && $MACHINE != "ppc" ]]; then
        write_local_records 65 || exit_error "write_local_records failed"
     else
        write_local_records 875 || exit_error "write_local_records failed"

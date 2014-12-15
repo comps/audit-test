@@ -363,7 +363,7 @@ call_ns_simulate_disk_full() {
 
     # Fill the local filesystem hosting audit.log, leaving 5k available
     # Compensate for 64k page size on power
-    if [[ $MACHINE != "ppc64" && $MACHINE != "ppc" ]]; then
+    if [[ $MACHINE != "ppc64le" && $MACHINE != "ppc64" && $MACHINE != "ppc" ]]; then
        fill_disk ${audit_log%/*} 5 || logger "fill_disk failed"
     else
        fill_disk ${audit_log%/*} 70 || logger "fill_disk failed"

@@ -285,13 +285,57 @@ eval_syscall()
     return 0
 }
 
+# Call remote executable
+#
+# On NS lblnet_test_svr is able to execute any executable in remote_call
+# directory in utils/network-server. It might be either script or a binary
+# executable. This function call lblnet_tst_server to do such remote
+# execution. First parameter is the name of executable and the second
+# (optional) parameter is data to be given to executable. Please see
+# remote_call control message documentation for a format of such data.
+#
+# usage: remote_call <executable> [data]
+#
+function remote_call {
+
+    local executable="$1"
+    local data="$2"
+
+    [ -z "$executable" ] && exit_error "Missing executable"
+    [ -z "$LBLNET_SVR_IPV4" ] && exit_erro "LBLNET_SVR_IPV4 is not exported"
+
+    echo "---- START remote_call ----"
+
+    echo "Executable = $executable"
+    if [ -z "$data" ]; then
+        echo "Data = (no data)"
+    else
+        echo "Data = $data"
+    fi
+    echo ""
+
+    /usr/bin/nc -v $LBLNET_SVR_IPV4 4000 <<< "remote_call:$executable,$data;"
+
+    echo "---- END remote_call ----"
+
+    tstsvr_cleanup $LBLNET_SVR_IPV4
+}
+
 ######################################################################
 # service functions
 ######################################################################
 
 function start_service {
 
-    if ! pgrep -f sbin/$1 &>/dev/null; then
+    local service="sbin/${1}"
+
+    case $1 in
+	"ipsec" )
+	    service="ipsec/pluto"
+	    ;;
+    esac
+
+    if ! pgrep -f $service &>/dev/null; then
 	if [ "$DISTRO" = "SUSE" ]; then
 	    rc${1} start || return 2
 	else
@@ -301,7 +345,7 @@ function start_service {
     fi
 
     echo -n "start_service: Waiting for $1 to start"
-    if ! wait_for_cmd "pgrep -f sbin/${1}"; then
+    if ! wait_for_cmd "pgrep -f $service"; then
 	echo "start_service: timed out, could not start $1" >&2
 	return 2
     fi
@@ -318,6 +362,14 @@ function start_service {
             if ! wait_for_cmd "auditctl -r 0 >/dev/null; tail -n10 $log_file | grep -Fq audit_rate_limit=0"; then
 		echo "start_service: auditd slow starting, giving up" >&2
 		return 2
+	    fi
+	    ;;
+
+	"ipsec")
+	    if ! ipsec status >/dev/null 2>&1; then
+                echo "start_service: cannot start ipsec" >&2
+	    else
+		ip xfrm policy
 	    fi
 	    ;;
 
@@ -348,9 +400,12 @@ function start_service {
 
 function stop_service {
 
+    local service="sbin/${1}"
+
     # Services specifics.
     case $1 in
 	"auditd" ) auditctl -D &>/dev/null ;;
+	"ipsec" ) service="ipsec/pluto" ;;
     esac
 
     if [ "$DISTRO" = "SUSE" ]; then
@@ -361,7 +416,7 @@ function stop_service {
 
     echo -n "stop_service: Waiting for $1 to stop"
     # wait until pgrep starts failing (process exited)
-    if ! wait_for_cmd "pgrep -f sbin/${1}" not 0; then
+    if ! wait_for_cmd "pgrep -f $service" not 0; then
         echo "start_service: timed out, could not stop $1" >&2
         return 2
     fi

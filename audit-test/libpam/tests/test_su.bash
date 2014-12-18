@@ -24,6 +24,7 @@
 
 if [[ $EUID == 0 ]]; then
     source pam_functions.bash || exit 2
+    source tp_ssh_functions.bash || exit 2
     backup "/etc/group"
 fi
 
@@ -107,6 +108,48 @@ negative_test() {
     fi
 }
 
+mls_test() {
+    local USR=$1
+    local LEVEL=$2
+    local OUT=
+
+    # remove screen and strong rng
+    disable_ssh_strong_rng
+
+    # set TEST_USER to level s5
+    semanage login -a -s staff_u -r $LEVEL $TEST_USER
+    append_cleanup "semanage login -d $TEST_USER"
+    backup "/etc/group"
+    usermod -aG wheel $TEST_USER
+
+    # login as TEST_USER and su to root
+    OUT=$(
+        expect -c "
+            set timeout 60
+            spawn ssh ${TEST_USER}@localhost
+            expect {
+                {*yes/no} { send yes\r; exp_continue }
+                {*assword} { send $TEST_USER_PASSWD\r }
+                default { exit 1 }
+            }
+            expect {
+                {*${TEST_USER}} { send \"newrole -r sysadm_r\r\"; exp_continue }
+                {*assword} { send $TEST_USER_PASSWD\r }
+                default { exit 3 }
+            }
+            expect {
+                {*/sysadm_r} { send \"/bin/su - -c 'id -Z'; exit\r\"; exp_continue}
+                {*assword} { send $PASSWD\r }
+            }
+            expect {*logout} { exit 0 }
+            exit 4
+        "
+    )
+
+    echo $OUT | grep -q staff_u:sysadm_r:sysadm_t:$LEVEL || exit_fail \
+        "Unexpected context after /bin/su"
+}
+
 case $1 in
     local)
         # expected AUDIT_EVENT PAM_OPERATION GRANTOR triple
@@ -140,9 +183,15 @@ pam_systemd,pam_unix,pam_sss,pam_xauth"
         fi
         negative_test $IPA_USER
         ;;
+    mls)
+        # check if su does not change levels
+        for LEVEL in s5 s9 s3-s7; do
+            mls_test $TEST_USER $LEVEL
+        done
+        ;;
     *)
         exit_error "Unknown testcase"
         ;;
 esac
 
-exit 0
+exit_pass

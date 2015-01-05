@@ -134,6 +134,8 @@ AUDIT_TEST_DEP_NOARCH := \
 
 # ie. pkgname.x86_64 on x86_64 or pkgname.s390x on s390x
 AUDIT_TEST_DEP_NATIVE := \
+	tar \
+	bzip2 \
 	binutils \
 	cpp \
 	flex \

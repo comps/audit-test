@@ -211,6 +211,9 @@ check_user_session() {
         check "[ \"$(id -Z)\" = \"staff_u:lspp_test_r:lspp_harness_t:SystemLow-SystemHigh\" ]" 0 \
             "id -Z is staff_u:lspp_test_r:lspp_harness_t:SystemLow-SystemHigh"
 
+    check "selinuxenabled" 0 "SELinux is enabled"
+    check "getenforce | grep Enforcing" 0 "SELinux is in Enforcing mode"
+
     check "[ \"$(pwd)\" = \"/usr/local/eal4_testing/audit-test\" ]" 0 \
         "\$(pwd) is /usr/local/eal4_testing/audit-test"
 

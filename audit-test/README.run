@@ -397,40 +397,12 @@ To run manual tests, go into the "manual" bucket (subdirectory) and enter one
 of the test directories. Each manual test has its own README to walk you
 through the process of running it.
 
+
 Workarounds and troubleshooting tips
 ------------------------------------
 
-Workaround for network test failures
-------------------------------------
-
-Some test runs may experience network test failures in the labeled IPsec
-tests due to the current implementation of ipsec. Use the following
-workaround if you experience these failures.
-
-1. Reboot the test machine
-2. Login as eal
-3. Use 'newrole -r lspp_test_r' to change to root/lspp_test_r
-4. Use '/bin/su -' to change to root
-5. Run the following commands:
-   # export PASSWD=<password>
-   # export PPROFILE=lspp
-   # export MODE=<whatever you want (64|32), but set it to something>
-   # export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
-   # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
-6. Change to the '/usr/local/eal4_testing/audit-test/network' directory
-7. Type './run.bash host=remote*type=ipsec'. There may be a few failures;
-rerun the command until all of the tests pass. At most, this should be two
-passes.
-8. Logoff the system
-
-Re-login into the system and re-run the audit testsuite (or just networking
-tests) as following the directions in previous sections of this README.
-
-Each time you reboot the system and run the network tests, you
-must follow the steps above.  It is also possible, although unlikely, that if
-you wait an excessive period of time between step #8 above and running the
-test suite, the network tests may fail. For that reason, it is recommended that
-you do these steps only when you are ready to re-run the test suite.
+Network tests
+-------------
 
 If you interrupt the network tests, the network test server may be
 left in a locked condition, preventing subsequent network tests
@@ -438,23 +410,6 @@ from running.  To unlock the network test server:
 
 # cd /usr/local/eal4_testing/audit-test/network
 # make unlock
-
-Fail-safe tests
----------------
-
-In the fail-safe tests, the 'admin_space_left email' and 'space_left email'
-tests may fail in CAPP mode if SELinux is enabled and in enforcing mode.  These
-tests are not run in LSPP/MLS mode.
-
-Trusted programs
-----------------
-
-In the trustedprograms tests, the 'aide_update' test may fail in LSPP/MLS mode.
-The aide program reports the changed file in the aide.log, but the return code
-does not reflect that there was a change.  This test is not run in CAPP mode.
-
-If the database tests fail, be sure that the perl-IO and perl-Expect packages
-are installed.
 
 Audit-remote tests
 ------------------
@@ -482,10 +437,6 @@ Audit-remote tests
   probably due to incorrectly set LOCAL_IPV4 environment variable.
   Use only unicast addresses of global scope (if there are more of them, try
   them all iteratively).
-
-6) NS fails to run init script via run_init due to bad password.
-  FIX: Make sure you have correctly set password in profile.bash, which should
-  be available in top-level audit-test directory.
 
 7) TOE has issues running remote actions on NS.
   FIX: Suggested is debug you test env with simple action "ns_connection_check"
@@ -537,13 +488,9 @@ pwdutils-plugin-audit
 python-selinux
 vsftpd
 
-If not running RHEL6, make sure vsftpd is available on the system and
+If not running RHEL, make sure vsftpd is available on the system and
 configured to start in runlevel 3.  If it is not, configure vsftpd with
 the following commands:
-
-On a RHEL machine (except RHEL6 or greater):
-# chkconfig vsftpd on
-# service vsftpd start
 
 On a SuSE system:
 # echo audit >> /etc/pwdutils/logging

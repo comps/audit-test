@@ -77,9 +77,7 @@ if not, add sysctl.conf entries to make them 0:
 # sysctl -p
 
 
-Reboot the network test server or run the following commands:
-
-# service xinetd restart
-# service mcstransd restart
-# service netlabel restart
-# service ipsec restart
+Now you can perform an optional system reboot to make sure all services start
+properly with their newconfiguration files.
+This is optional as these services should have been restarted by appropriate
+Makefiles during the above steps and therefore no action should be needed here.

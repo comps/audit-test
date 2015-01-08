@@ -43,15 +43,19 @@ install_setrans:
 		echo 'Include=/etc/selinux/mls/setrans.d/setrans_lspp.conf' \
 			>> /etc/selinux/mls/setrans.conf
 	chkconfig mcstransd on
+	service mcstransd restart
 
 install_netlabel:
 	install -o root -g root -m 640 --backup=t netlabel.rules /etc
 	chkconfig netlabel on
+	service netlabel restart
 
 install_ipsec_client: install_check
 	cat ipsec.conf.client | ./addr_filter.bash > ipsec.conf
 	install -o root -g root -m 600 ipsec.conf /etc/ipsec.conf
 	install -o root -g root -m 600 ipsec.secrets /etc/ipsec.secrets
+	chkconfig ipsec on
+	service ipsec restart
 
 install_ipsec_server:
 	if [[ ! -f client_list.txt ]]; then \
@@ -62,3 +66,5 @@ install_ipsec_server:
 	cat client_list.txt | ./addr_loop.bash ipsec.conf.server.in_body >> ipsec.conf
 	install -o root -g root -m 600 ipsec.conf /etc/ipsec.conf
 	install -o root -g root -m 600 ipsec.secrets /etc/ipsec.secrets
+	chkconfig ipsec on
+	service ipsec restart

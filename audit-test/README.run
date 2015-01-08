@@ -246,10 +246,11 @@ configured testing environment before proceeding.
 Reboot the test machine or restart network services
 ---------------------------------------------------
 
-After configuring the labeled networking tests, it is necessary
-to restart all the system services that were configured for the
-network tests (xinetd, netlabel, ipsec, rc.local, mcstransd).
-The simpliest approach is to reboot the test machine.
+After configuring the labeled networking tests, you can perform an optional
+system reboot to make sure all services start properly with their new
+configuration files.
+This is optional as these services should have been restarted by appropriate
+Makefiles during the above steps and therefore no action should be needed here.
 
 Prepare to run the tests
 ------------------------

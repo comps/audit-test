@@ -38,14 +38,10 @@ install_check:
 		(echo "error: variable LBLNET_SVR_IPV6 is not set"; /bin/false)
 
 install_setrans:
-	grep -q "# labeled networking" /etc/selinux/mls/setrans.conf || \
-	(echo ""; \
-	 echo "# labeled networking"; \
-	 echo "s15:c0.c239=NetHigh"; \
-	 echo "s1:c1=NetS1"; \
-	 echo "s1:c1.c3=NetIncomp1"; \
-	 echo "s1:c4.c6=NetIncomp2"; \
-	 echo "s0:c0=NetLowIncomp") >> /etc/selinux/mls/setrans.conf
+	install -o root -g root -m 640 setrans_lspp.conf /etc/selinux/mls/setrans.d
+	grep -q 'setrans_lspp.conf' /etc/selinux/mls/setrans.conf || \
+		echo 'Include=/etc/selinux/mls/setrans.d/setrans_lspp.conf' \
+			>> /etc/selinux/mls/setrans.conf
 	chkconfig mcstransd on
 
 install_netlabel:

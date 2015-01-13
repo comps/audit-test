@@ -61,6 +61,8 @@ gen_require(`
 	type ifconfig_t, ipsec_t;
 	# needed for mls cron (maybe)
 	type tmp_t, crond_t, cronjob_t;
+	# needed for aide tests
+	type aide_exec_t;
 	# needed for timedatectl testing
 	type systemd_timedated_t;
 	class dbus send_msg;
@@ -404,6 +406,9 @@ allow initrc_t lspp_harness_t:fifo_file write;
 allow portreserve_t lspp_harness_t:fifo_file write;
 allow udev_t lspp_harness_t:fifo_file write;
 allow lspp_test_generic_t lpr_exec_t:file entrypoint;
+
+# needed for aide
+allow lspp_harness_t aide_exec_t:file entrypoint;
 
 # needed for ipsec to be able to start via run_init
 allow ifconfig_t lspp_harness_t:association setcontext;

@@ -434,3 +434,6 @@ allow domain lspp_harness_t:process sigchld;
 
 # allow sending messages to systemd-timedated via D-Bus
 allow systemd_timedated_t lspp_harness_t:dbus send_msg;
+
+# needed for tp/setcon fail_self
+allow lspp_test_generic_t lspp_test_file_t:file entrypoint;

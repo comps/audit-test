@@ -47,6 +47,9 @@ backup /var/run/utmp
 backup /etc/pam.d/login
 sed -i 's/\(^session.*pam_loginuid.*$\)/\#\1/' /etc/pam.d/login
 
+# get audit mark
+AUDITMARK=$(get_audit_mark)
+
 # test
 (
     export localtmp
@@ -55,18 +58,20 @@ sed -i 's/\(^session.*pam_loginuid.*$\)/\#\1/' /etc/pam.d/login
         sleep 1
         expect -nocase {login: $} {send "$env(TEST_USER)\r"}
         expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
-	expect -nocase {level} {send "Y\r"}
-	expect -nocase {role:} {send "\r"}
-	expect -nocase {level:} {send "s15\r"}
-	expect -nocase {"authentication failure"} {close; wait}
-    expect {
-        -nocase {"authentication failure"} {close; wait}
-        -nocase {"Cannot make/remove"} {close; wait}
-    }'
+        expect -nocase {level} {send "Y\r"}
+        expect -nocase {role:} {send "\r"}
+        expect -nocase {level:} {send "s15\r"}
+        expect {
+            -nocase {"Unable to get valid context"} {close; wait}
+            -nocase {"authentication failure"} {close; wait}
+            -nocase {"Cannot make/remove"} {close; wait}
+        }'
 )
 
-msg_1="acct=\"*$TEST_USER\"* exe=.(/usr)?/bin/login.* res=failed.*"
-augrok -q type=USER_START msg_1=~"PAM:session_open $msg_1" \
+msg_1="grantors=\? acct=\"*$TEST_USER\"* exe=.(/usr)?/bin/login.* res=failed.*"
+augrok --seek $AUDITMARK type=USER_START
+augrok --seek $AUDITMARK type=USER_START msg_1=~"PAM:session_open $msg_1" \
 	subj=$login_context || exit_fail
-augrok -q type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$sel_context.*exe=.(/usr)?/bin/login.* res=failed.*" || exit_fail
+augrok --seek $AUDITMARK type=USER_ROLE_CHANGE
+augrok --seek $AUDITMARK type=USER_ROLE_CHANGE msg_1=~"pam: default-context=$def_context selected-context=$sel_context.*exe=.(/usr)?/bin/login.* res=failed.*" || exit_fail
 exit_pass

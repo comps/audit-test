@@ -61,8 +61,7 @@ sed -i 's/\(^session.*pam_loginuid.*$\)/\#\1/' /etc/pam.d/login
 	expect -nocase {role:} {send "\r"}
 	expect -nocase {level:} {send "s2\r"}
         send "PS1=:\\::\r"
-        expect {:::$} {send "printf \"sel_context2=%s\\n\" `cat /proc/self/attr/current` > $env(localtmp)\r"}
-        expect {:::$} {send "printf \"pts=%s\\n\" `tty` >> $env(localtmp)\r"}
+        expect {:::$} {send "printf \"sel_context2=%s\\npts=%s\\n\" `cat /proc/self/attr/current` `tty` > $env(localtmp)\r"}
         expect {:::$} {close; wait}'
 )
 

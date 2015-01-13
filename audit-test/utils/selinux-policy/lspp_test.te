@@ -56,7 +56,7 @@ gen_require(`
 	# more objects needed for dmcrypt and cryptsetup
 	type lvm_t, fsadm_t, udev_t;
 	# more objects needed for cupsd and lpr
-	type cupsd_t, initrc_t, portreserve_t;
+	type cupsd_t, initrc_t, portreserve_t, lpr_exec_t;
 	# more objects needed for ipsec
 	type ifconfig_t, ipsec_t;
 	# needed for mls cron (maybe)
@@ -403,6 +403,7 @@ allow cupsd_t lspp_harness_t:fifo_file write;
 allow initrc_t lspp_harness_t:fifo_file write;
 allow portreserve_t lspp_harness_t:fifo_file write;
 allow udev_t lspp_harness_t:fifo_file write;
+allow lspp_test_generic_t lpr_exec_t:file entrypoint;
 
 # needed for ipsec to be able to start via run_init
 allow ifconfig_t lspp_harness_t:association setcontext;

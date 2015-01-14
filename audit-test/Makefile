@@ -19,37 +19,52 @@ TOPDIR		= .
 
 include $(TOPDIR)/rules.mk
 
-RUN_DIRS	= syscalls \
-		  syscalls-ns \
-		  syscalls-dac \
-		  network
+RUN_DIRS := \
+	syscalls \
+	syscalls-ns \
+	syscalls-dac \
+	network
 
 ifeq ($(MODE), $(NATIVE))
-RUN_DIRS       += fail-safe \
-		  filter \
-		  audit-tools \
-		  libpam
+RUN_DIRS += \
+	fail-safe \
+	filter \
+	audit-tools \
+	libpam
+
 ifneq ($(DISTRO), SUSE)
-RUN_DIRS       += audit-remote \
-		  trustedprograms \
-		  crypto \
-		  misc \
-		  netfilter \
-		  netfilebt \
-		  dbus \
-		  polkit
+RUN_DIRS += \
+	audit-remote \
+	trustedprograms \
+	crypto \
+	misc \
+	netfilter \
+	netfilebt \
+	dbus \
+	polkit
+
 ifeq ($(MACHINE), x86_64)
 ifeq ($(shell virt-what),)
-RUN_DIRS       += kvm \
-		  kvm-cgroups \
-		  kvm-iommu
+RUN_DIRS += \
+	kvm \
+	kvm-cgroups \
+	kvm-iommu
 endif
 endif
 endif
 endif
 
-SUB_DIRS	= $(RUN_DIRS) \
-		  utils
+ifneq ($(RUN_DIRS_SET),)
+    RUN_DIRS := $(RUN_DIRS_SET)
+endif
+ifneq ($(RUN_DIRS_EXCLUDE),)
+    RUN_DIRS := $(filter-out $(RUN_DIRS_EXCLUDE),$(RUN_DIRS))
+endif
+ifneq ($(RUN_DIRS_INCLUDE),)
+    RUN_DIRS += $(RUN_DIRS_INCLUDE)
+endif
+
+SUB_DIRS := $(RUN_DIRS) utils
 
 run:
 	@for l in run rollup; do \

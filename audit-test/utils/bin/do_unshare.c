@@ -26,18 +26,23 @@ int main(int argc, char **argv)
         return TEST_ERROR;
     }
 
-    if (strstr(argv[1], "CLONE_FILES") != NULL)
-        flags |= CLONE_FILES;
-    if (strstr(argv[1], "CLONE_FS") != NULL)
-        flags |= CLONE_FS;
-    if (strstr(argv[1], "CLONE_NEWIPC") != NULL)
-        flags |= CLONE_NEWIPC;
-    if (strstr(argv[1], "CLONE_NEWNET") != NULL)
-        flags |= CLONE_NEWNET;
+    /* namespaces */
     if (strstr(argv[1], "CLONE_NEWNS") != NULL)
         flags |= CLONE_NEWNS;
     if (strstr(argv[1], "CLONE_NEWUTS") != NULL)
         flags |= CLONE_NEWUTS;
+    if (strstr(argv[1], "CLONE_NEWIPC") != NULL)
+        flags |= CLONE_NEWIPC;
+    if (strstr(argv[1], "CLONE_NEWNET") != NULL)
+        flags |= CLONE_NEWNET;
+    if (strstr(argv[1], "CLONE_NEWPID") != NULL)
+        flags |= CLONE_NEWPID;
+
+    /* other */
+    if (strstr(argv[1], "CLONE_FILES") != NULL)
+        flags |= CLONE_FILES;
+    if (strstr(argv[1], "CLONE_FS") != NULL)
+        flags |= CLONE_FS;
     if (strstr(argv[1], "CLONE_SYSVSEM") != NULL)
         flags |= CLONE_SYSVSEM;
 

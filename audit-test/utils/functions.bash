@@ -335,6 +335,10 @@ function start_service {
 	    ;;
     esac
 
+    # systemctl will block service if started to often
+    # clear the failed state of the service
+    systemctl reset-failed $1
+
     if ! pgrep -f $service &>/dev/null; then
 	if [ "$DISTRO" = "SUSE" ]; then
 	    rc${1} start || return 2
@@ -426,7 +430,6 @@ function stop_service {
 
 function restart_service {
     stop_service $1
-    systemctl reset-failed $1
     start_service $1
 }
 

@@ -54,6 +54,9 @@ all: subdirs
 run: subdirs
 	$(MAKE) report
 
+.PHONY: rerun
+rerun: run
+
 .PHONY: clean
 clean: subdirs
 

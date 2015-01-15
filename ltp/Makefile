@@ -102,6 +102,8 @@ download::
 		echo "LTP source exists - skipping download"; \
 	fi
 
+rerun::
+
 runtests::
 	echo "Makefile: runtests"
 	# needed for sendfile tests

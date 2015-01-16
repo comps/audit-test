@@ -18,7 +18,8 @@
 #define MSG_STRING "NetLabel is awesome!"
 #define MSG_LEN    (strlen(MSG_STRING) + 1)
 
-int main(int argc, char **argv)
+int do_sendmsg(int argc, char **argv,
+               ssize_t (*sendmsgfunc)(int, const struct msghdr *, int))
 {
   int rc, result;
   struct addrinfo *host = NULL;
@@ -48,9 +49,22 @@ int main(int argc, char **argv)
   msg.msg_iovlen = 1;
 
   errno = 0;
-  rc = sendmsg(sock, &msg, 0);
+  rc = sendmsgfunc(sock, &msg, 0);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 
   fprintf(stderr, "%d %d %d\n", result, result ? errno : rc, getpid());
   return result;
 }
+
+#ifndef SOCKCALL_MODULE
+static ssize_t
+sendmsg_syscall(int sockfd, const struct msghdr *msg, int flags)
+{
+    return syscall(__NR_sendmsg, sockfd, msg, flags);
+}
+
+int main(int argc, char **argv)
+{
+    return do_sendmsg(argc, argv, sendmsg_syscall);
+}
+#endif

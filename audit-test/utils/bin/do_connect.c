@@ -15,7 +15,8 @@
 
 #include "includes.h"
 
-int main(int argc, char **argv)
+int do_connect(int argc, char **argv,
+               int (*connectfunc)(int, const struct sockaddr *, socklen_t))
 {
   int rc, result;
   struct addrinfo *host = NULL;
@@ -47,7 +48,7 @@ int main(int argc, char **argv)
   setsockopt(sock, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
 
   errno = 0;
-  rc = connect(sock, host->ai_addr, host->ai_addrlen);
+  rc = connectfunc(sock, host->ai_addr, host->ai_addrlen);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 
   fprintf(stderr, "%d %d %d\n", result, result ? errno : rc, getpid());
@@ -56,3 +57,16 @@ int main(int argc, char **argv)
   close(sock);
   return result;
 }
+
+#ifndef SOCKCALL_MODULE
+static int
+connect_syscall(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+{
+    return syscall(__NR_connect, sockfd, addr, addrlen);
+}
+
+int main(int argc, char **argv)
+{
+    return do_connect(argc, argv, connect_syscall);
+}
+#endif

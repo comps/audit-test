@@ -19,12 +19,13 @@
 #define BUF_SIZE 2048
 #define ALARM_TIMER 15
 
-void sig_handler(int sig_num)
-{
-  return;
-}
+#ifndef SOCKCALL_MODULE
+void dummy_handler(int signum) { return; }
+#endif
 
-int main(int argc, char **argv)
+int do_recvfrom(int argc, char **argv,
+                ssize_t (*recvfromfunc)(int, void *, size_t, int,
+                                        struct sockaddr *, socklen_t *))
 {
   int rc, result;
   struct sockaddr_storage sock_addr;
@@ -40,7 +41,7 @@ int main(int argc, char **argv)
     return TEST_ERROR;
   }
 
-  signal(SIGALRM, sig_handler);
+  signal(SIGALRM, dummy_handler);
   siginterrupt(SIGALRM, 1);
   alarm(ALARM_TIMER);
 
@@ -64,9 +65,23 @@ int main(int argc, char **argv)
     return TEST_ERROR;
 
   errno = 0;
-  rc = recvfrom(sock, buf, buf_len, 0, NULL, NULL);
+  rc = recvfromfunc(sock, buf, buf_len, 0, NULL, NULL);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 
   fprintf(stderr, "%d %d %d\n", result, result ? errno : rc, getpid());
   return result;
 }
+
+#ifndef SOCKCALL_MODULE
+static ssize_t
+recvfrom_syscall(int sockfd, void *buf, size_t len, int flags,
+                 struct sockaddr *src_addr, socklen_t *addrlen)
+{
+    return syscall(__NR_recvfrom, sockfd, buf, len, flags, src_addr, addrlen);
+}
+
+int main(int argc, char **argv)
+{
+    return do_recvfrom(argc, argv, recvfrom_syscall);
+}
+#endif

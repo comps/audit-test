@@ -25,6 +25,7 @@ typedef enum {
     TEST_SUCCESS = 0,  /* test succeeded */
     TEST_FAIL = 1,     /* test failed */
     TEST_ERROR = 2,    /* test did not complete due to error */
+    TEST_ENOSYS = 3,   /* test or test feature not implemented */
 } ts_exit;
 
 #endif	/* _TESTSUITE_H */

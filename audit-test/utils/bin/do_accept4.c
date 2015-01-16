@@ -18,12 +18,12 @@
 
 #define ALARM_TIMER 15
 
-void sig_handler(int sig_num)
-{
-  return;
-}
+#ifndef SOCKCALL_MODULE
+void dummy_handler(int signum) { return; }
+#endif
 
-int main(int argc, char **argv)
+int do_accept4(int argc, char **argv,
+               int (*accept4func)(int, struct sockaddr *, socklen_t *, int))
 {
   int rc, result;
   struct sockaddr_storage sock_addr;
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     return TEST_ERROR;
   }
 
-  signal(SIGALRM, sig_handler);
+  signal(SIGALRM, dummy_handler);
   siginterrupt(SIGALRM, 1);
   if (argc == 4) {
      alarm(atoi(argv[3]));
@@ -67,9 +67,23 @@ int main(int argc, char **argv)
     return TEST_ERROR;
 
   errno = 0;
-  rc = accept4(sock, NULL, 0, 0);
+  rc = accept4func(sock, NULL, 0, 0);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 
   fprintf(stderr, "%d %d %d\n", result, result ? errno : rc, getpid());
   return result;
 }
+
+#ifndef SOCKCALL_MODULE
+static int
+accept4_syscall(int sockfd, struct sockaddr *addr, socklen_t *addrlen,
+                int flags)
+{
+    return syscall(__NR_accept4, sockfd, addr, addrlen, flags);
+}
+
+int main(int argc, char **argv)
+{
+    return do_accept4(argc, argv, accept4_syscall);
+}
+#endif

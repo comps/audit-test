@@ -72,7 +72,8 @@ int do_bind(int argc, char **argv,
 }
 
 #ifndef SOCKCALL_MODULE
-int bind_syscall(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+static int
+bind_syscall(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
     return syscall(__NR_bind, sockfd, addr, addrlen);
 }

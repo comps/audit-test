@@ -18,7 +18,9 @@
 #define MSG_STRING "NetLabel is awesome!"
 #define MSG_LEN    (strlen(MSG_STRING) + 1)
 
-int main(int argc, char **argv)
+int do_sendto(int argc, char **argv,
+              ssize_t (*sendtofunc)(int, const void *, size_t, int,
+                                    const struct sockaddr *, socklen_t))
 {
   int rc, result;
   int sock;
@@ -65,9 +67,23 @@ int main(int argc, char **argv)
   }
 
   errno = 0;
-  rc = sendto(sock, MSG_STRING, MSG_LEN, flags, host->ai_addr, host->ai_addrlen);
+  rc = sendtofunc(sock, MSG_STRING, MSG_LEN, flags, host->ai_addr, host->ai_addrlen);
   result = (rc < 0 ? TEST_FAIL : TEST_SUCCESS);
 
   fprintf(stderr, "%d %d %d\n", result, result ? errno : rc, getpid());
   return result;
 }
+
+#ifndef SOCKCALL_MODULE
+static ssize_t
+sendto_syscall(int sockfd, const void *buf, size_t len, int flags,
+               const struct sockaddr *dest_addr, socklen_t addrlen)
+{
+    return syscall(__NR_sendto, sockfd, buf, len, flags, dest_addr, addrlen);
+}
+
+int main(int argc, char **argv)
+{
+    return do_sendto(argc, argv, sendto_syscall);
+}
+#endif

@@ -340,6 +340,19 @@ sc_is_relevant()
 	return 1
 }
 
+# check if the do_socketcall wrapper supports given op
+#
+# returns 0 if it does, 1 otherwise
+function is_socketcall_op {
+    do_socketcall "$1" &>/dev/null
+    # $? == 3 would be 'sockcall op not implemented' (not a valid op),
+    # $? == 127 'command not found', etc.
+    # only 1 (TEST_FAIL) or 2 (TEST_ERROR) is returned by a valid wrapper
+    # when displaying help / usage
+    [ $? -eq 1 -o $? -eq 2 ] && return 0
+    return 1
+}
+
 ######################################################################
 # service functions
 ######################################################################

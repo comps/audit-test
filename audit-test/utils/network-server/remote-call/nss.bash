@@ -26,52 +26,24 @@
 
 export TOPDIR=/usr/local/eal4_testing/audit-test
 export PATH=$PATH:$TOPDIR
-export PATH=$PATH:$TOPDIR/utils
-export PATH=$PATH:$TOPDIR/crypto/tests
+export PATH=$PATH:$TOPDIR/utils/
+export PATH=$PATH:$TOPDIR/crypto/tests/
 
 source functions.bash || exit 2
-source tp_ipsec_functions.bash || exit 2
+source tp_nss_functions.bash || exit 2
 
 # Wrappers.
 
-function call_ipsec_start {
-    start_service ipsec
+function call_nss_init {
+    nss_init $@
 }
 
-function call_ipsec_stop {
-    stop_service ipsec
+function call_nss_destroy {
+    nss_destroy $@
 }
 
-function call_ipsec_restart {
-    restart_service ipsec
-}
-
-function call_ipsec_del_connection {
-    ipsec_del_connection $@
-}
-
-function call_ipsec_add_connection {
-    ipsec_add_connection $@
-}
-
-function call_ipsec_backup_conf {
-    ipsec_backup_conf
-}
-
-function call_ipsec_restore_conf {
-    ipsec_restore_conf
-}
-
-function call_ipsec_backup_secrets {
-    ipsec_backup_secrets
-}
-
-function call_ipsec_set_secrets {
-    ipsec_set_secrets $@
-}
-
-function call_ipsec_restore_secrets {
-    ipsec_restore_secrets
+function call_nss_import {
+    nss_import $@
 }
 
 # Called function.

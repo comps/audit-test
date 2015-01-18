@@ -24,54 +24,19 @@
 # AUTHOR: Ondrej Moris <omoris@redhat.com>
 #
 
-export TOPDIR=/usr/local/eal4_testing/audit-test
-export PATH=$PATH:$TOPDIR
-export PATH=$PATH:$TOPDIR/utils
-export PATH=$PATH:$TOPDIR/crypto/tests
+function call_scp {
 
-source functions.bash || exit 2
-source tp_ipsec_functions.bash || exit 2
+    expect -c "
+        set timeout 60;
+        spawn scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $1 $2;
+        expect {
+            {*assword:} { send $3\r; exp_continue; }
+            {*assword:} { send $3\r; }
+            {closed} { exit 1 }
+        }
+        wait;" || { echo "Cannot copy" ; return 1; }
 
-# Wrappers.
-
-function call_ipsec_start {
-    start_service ipsec
-}
-
-function call_ipsec_stop {
-    stop_service ipsec
-}
-
-function call_ipsec_restart {
-    restart_service ipsec
-}
-
-function call_ipsec_del_connection {
-    ipsec_del_connection $@
-}
-
-function call_ipsec_add_connection {
-    ipsec_add_connection $@
-}
-
-function call_ipsec_backup_conf {
-    ipsec_backup_conf
-}
-
-function call_ipsec_restore_conf {
-    ipsec_restore_conf
-}
-
-function call_ipsec_backup_secrets {
-    ipsec_backup_secrets
-}
-
-function call_ipsec_set_secrets {
-    ipsec_set_secrets $@
-}
-
-function call_ipsec_restore_secrets {
-    ipsec_restore_secrets
+    return 0
 }
 
 # Called function.

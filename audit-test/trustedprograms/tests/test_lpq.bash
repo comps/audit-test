@@ -35,6 +35,7 @@ CON2OUT=sysadm_lpq.out
 
 printer=tests$$
 
+setup_cupsd
 prepend_cleanup delete_printer $printer
 prepend_cleanup semanage login -d $TEST_USER
 create_socket_printer $printer

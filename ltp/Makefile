@@ -32,7 +32,7 @@ LTP_BASE = ltp-full
 PATCH_DIR = patch
 
 LTP_TARBALL = ltp-full.tar.bz2
-LTP_SRCURL = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20140828/ltp-full-20140828.tar.bz2/download
+LTP_SRCURL = http://sourceforge.net/projects/ltp/files/LTP%20Source/ltp-20150119/ltp-full-20150119.tar.bz2/download
 
 # set temporary directory to /opt/tmp for tests
 # this is because the default /tmp is mounted noexec in evaluated configuration

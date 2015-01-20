@@ -195,23 +195,27 @@ sub new {
         bless $singleton, $class;
 
         # Fetch config location from sestatus
-        my $config;
+        my @configs;
         open(C, "sestatus|") or goto out;
         while (<C>) {
             /^Loaded policy name:\s*(\S+)/ || next;
-            $config = "/etc/selinux/$1/setrans.conf";
+            @configs = </etc/selinux/$1/setrans.d/*>;
+            push(@configs, "/etc/selinux/$1/setrans.conf");
             last;
         }
         close C;
 
         # Snarf the mctransd translation pairs
-        open(C, $config) or warn("Can't open $config"), goto out;
-        while (<C>) {
-            /^\s*#/ && next;
-            /(\S+?)=(\S+)/ || next;
-            $singleton->{$1} = $2;
+        my $config;
+        foreach $config (@configs) {
+            open(C, $config) or warn("Can't open $config"), goto out;
+            while (<C>) {
+                /^\s*#/ && next;
+                /(\S+?)=(\S+)/ || next;
+                $singleton->{$1} = $2;
+            }
+            close C;
         }
-        close C;
 
 out:
         # Invert hash for reverse lookups

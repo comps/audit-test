@@ -5,71 +5,71 @@ config setup
 	nat_traversal=yes
 	plutostderrlog=/var/log/pluto.log
 
-conn test1-1-ipv4
-	auto=route
-	rekey=no
-	authby=secret
-	type=transport
-	left=127.0.0.1
-	right=127.0.0.1
-	ike=3des-sha1
-	phase2=esp
-	phase2alg=aes-sha1
-	loopback=yes
-	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
-	leftprotoport=tcp/4300
-	rightprotoport=tcp
+# conn test1-1-ipv4
+# 	auto=route
+# 	rekey=no
+# 	authby=secret
+# 	type=transport
+# 	left=127.0.0.1
+# 	right=127.0.0.1
+# 	ike=3des-sha1
+# 	phase2=esp
+# 	phase2alg=aes-sha1
+# 	loopback=yes
+# 	labeled_ipsec=yes
+# 	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
+# 	leftprotoport=tcp/4300
+# 	rightprotoport=tcp
 
-conn test1-2-ipv4
-	auto=route
-	rekey=no
-	authby=secret
-	type=transport
-	left=127.0.0.1
-	right=127.0.0.1
-	ike=3des-sha1
-	phase2=esp
-	phase2alg=aes-sha1
-	loopback=yes
-	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
-	leftprotoport=tcp
-	rightprotoport=tcp/4300
+# conn test1-2-ipv4
+# 	auto=route
+# 	rekey=no
+# 	authby=secret
+# 	type=transport
+# 	left=127.0.0.1
+# 	right=127.0.0.1
+# 	ike=3des-sha1
+# 	phase2=esp
+# 	phase2alg=aes-sha1
+# 	loopback=yes
+# 	labeled_ipsec=yes
+# 	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
+# 	leftprotoport=tcp
+# 	rightprotoport=tcp/4300
 
-conn test1-1-ipv6
-	auto=route
-	rekey=no
-	connaddrfamily=ipv6
-	authby=secret
-	type=transport
-	left=::1
-	right=::1
-	ike=3des-sha1
-	phase2=esp
-	phase2alg=aes-sha1
-	loopback=yes
-	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
-	leftprotoport=tcp/4300
-	rightprotoport=tcp
+# conn test1-1-ipv6
+# 	auto=route
+# 	rekey=no
+# 	connaddrfamily=ipv6
+# 	authby=secret
+# 	type=transport
+# 	left=::1
+# 	right=::1
+# 	ike=3des-sha1
+# 	phase2=esp
+# 	phase2alg=aes-sha1
+# 	loopback=yes
+# 	labeled_ipsec=yes
+# 	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
+# 	leftprotoport=tcp/4300
+# 	rightprotoport=tcp
 
-conn test1-2-ipv6
-	auto=route
-	rekey=no
-	connaddrfamily=ipv6
-	authby=secret
-	type=transport
-	left=::1
-	right=::1
-	ike=3des-sha1
-	phase2=esp
-	phase2alg=aes-sha1
-	loopback=yes
-	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
-	leftprotoport=tcp
-	rightprotoport=tcp/4300
+# conn test1-2-ipv6
+# 	auto=route
+# 	rekey=no
+# 	connaddrfamily=ipv6
+# 	authby=secret
+# 	type=transport
+# 	left=::1
+# 	right=::1
+# 	ike=3des-sha1
+# 	phase2=esp
+# 	phase2alg=aes-sha1
+# 	loopback=yes
+# 	labeled_ipsec=yes
+# 	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
+# 	leftprotoport=tcp
+# 	rightprotoport=tcp/4300
 
 conn test2-1-ipv4
 	auto=route
@@ -133,71 +133,71 @@ conn test2-2-ipv6
 	leftprotoport=tcp
 	rightprotoport=tcp/4300
 
-conn test3-1-ipv4
-	auto=route
-	rekey=no
-	authby=secret
-	type=transport
-	left=127.0.0.1
-	right=127.0.0.1
-	ike=3des-sha1
-	phase2=esp
-	phase2alg=aes-sha1
-	loopback=yes
-	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
-	leftprotoport=udp
-	rightprotoport=udp/4300
+# conn test3-1-ipv4
+# 	auto=route
+# 	rekey=no
+# 	authby=secret
+# 	type=transport
+# 	left=127.0.0.1
+# 	right=127.0.0.1
+# 	ike=3des-sha1
+# 	phase2=esp
+# 	phase2alg=aes-sha1
+# 	loopback=yes
+# 	labeled_ipsec=yes
+# 	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
+# 	leftprotoport=udp
+# 	rightprotoport=udp/4300
 
-conn test3-2-ipv4
-	auto=route
-	rekey=no
-	authby=secret
-	type=transport
-	left=127.0.0.1
-	right=127.0.0.1
-	ike=3des-sha1
-	phase2=esp
-	phase2alg=aes-sha1
-	loopback=yes
-	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
-	leftprotoport=udp/4300
-	rightprotoport=udp
+# conn test3-2-ipv4
+# 	auto=route
+# 	rekey=no
+# 	authby=secret
+# 	type=transport
+# 	left=127.0.0.1
+# 	right=127.0.0.1
+# 	ike=3des-sha1
+# 	phase2=esp
+# 	phase2alg=aes-sha1
+# 	loopback=yes
+# 	labeled_ipsec=yes
+# 	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
+# 	leftprotoport=udp/4300
+# 	rightprotoport=udp
 
-conn test3-1-ipv6
-	auto=route
-	rekey=no
-	connaddrfamily=ipv6
-	authby=secret
-	type=transport
-	left=::1
-	right=::1
-	ike=3des-sha1
-	phase2=esp
-	phase2alg=aes-sha1
-	loopback=yes
-	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
-	leftprotoport=udp
-	rightprotoport=udp/4300
+# conn test3-1-ipv6
+# 	auto=route
+# 	rekey=no
+# 	connaddrfamily=ipv6
+# 	authby=secret
+# 	type=transport
+# 	left=::1
+# 	right=::1
+# 	ike=3des-sha1
+# 	phase2=esp
+# 	phase2alg=aes-sha1
+# 	loopback=yes
+# 	labeled_ipsec=yes
+# 	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
+# 	leftprotoport=udp
+# 	rightprotoport=udp/4300
 
-conn test3-2-ipv6
-	auto=route
-	rekey=no
-	connaddrfamily=ipv6
-	authby=secret
-	type=transport
-	left=::1
-	right=::1
-	ike=3des-sha1
-	phase2=esp
-	phase2alg=aes-sha1
-	loopback=yes
-	labeled_ipsec=yes
-	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
-	leftprotoport=udp/4300
-	rightprotoport=udp
+# conn test3-2-ipv6
+# 	auto=route
+# 	rekey=no
+# 	connaddrfamily=ipv6
+# 	authby=secret
+# 	type=transport
+# 	left=::1
+# 	right=::1
+# 	ike=3des-sha1
+# 	phase2=esp
+# 	phase2alg=aes-sha1
+# 	loopback=yes
+# 	labeled_ipsec=yes
+# 	policy_label=system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023
+# 	leftprotoport=udp/4300
+# 	rightprotoport=udp
 
 conn test4-1-ipv4
 	auto=route

@@ -307,7 +307,13 @@ test_server_msg_sequence() {
     check_client_connected || exit_fail "check_client_connected"
 
     call_remote_function generate_audit_log_msg_sequence
+
+    # wait for message transmission
     sleep 5
+
+    # on non-x86_64 archs transmission may take more time
+    [[ $(uname -i) != "x86_64" ]] && sleep 15
+
     for i in `seq 1 $max_audit_log_dump_seq` ; do
         #echo -n "[$i]"  >> /tmp/seq.l g #  Uncomment for easier debugging
         check_message_arrived  "$remote_client_test_string SEQ_NUM=$i:?" || \

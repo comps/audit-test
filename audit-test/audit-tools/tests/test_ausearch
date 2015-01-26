@@ -6,12 +6,12 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
@@ -20,6 +20,18 @@
 # Verify ausearch finds requested records
 
 source testcase.bash || exit 2
+
+# Running ausearch-test, for now system audit.log is used, in the
+# future more complete (arch-based) sample audit logs will be used.
+if [ "$1" == "test" ]; then
+
+    sample_audit_log="/var/log/audit/audit.log"
+
+    ./ausearch-test $sample_audit_log --continue || \
+        exit_fail
+
+    exit_pass
+fi
 
 # some of these require sed -r, and all are compatible with it
 collapse_interior_whitespace='s/[[:blank:]]+/ /g'
@@ -31,9 +43,9 @@ remove_daemon_commas='/^type=DAEMON_START/s/,[[:blank:]]+/ /g'
 echo "# augrok --ausearch -if auditlog.sample $*" >&2
 augrok_output=$(augrok --ausearch -if auditlog.sample "$@" \
     | sed -r "
-	$collapse_interior_whitespace
-	$remove_daemon_commas
-	$remove_quotes" \
+        $collapse_interior_whitespace
+        $remove_daemon_commas
+        $remove_quotes" \
     | tee /dev/stderr \
     | sort)
 
@@ -45,11 +57,11 @@ echo
 echo "# ausearch -if auditlog.sample $*" >&2
 ausearch_output=$(ausearch -if auditlog.sample "$@" \
     | sed -r "
-	$collapse_interior_whitespace
-	$remove_trailing_whitespace
-	$remove_msg_space
-	$remove_daemon_commas
-	$remove_quotes" \
+        $collapse_interior_whitespace
+        $remove_trailing_whitespace
+        $remove_msg_space
+        $remove_daemon_commas
+        $remove_quotes" \
     | tee /dev/stderr \
     | sort)
 
@@ -59,7 +71,7 @@ if [[ "$augrok_output" == "$ausearch_output" ]]; then
 else
     echo "diff augrok_output ausearch_output"
     diff -u <(sed 's/[[:blank:]]/\n/g' <<<"$augrok_output") \
-	    <(sed 's/[[:blank:]]/\n/g' <<<"$ausearch_output")
+            <(sed 's/[[:blank:]]/\n/g' <<<"$ausearch_output")
     echo
     exit_fail "discrepancies found"
 fi

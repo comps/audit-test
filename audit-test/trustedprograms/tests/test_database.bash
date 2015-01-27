@@ -31,7 +31,7 @@ disable_ssh_strong_rng
 
 FILENAME=$1
 
-./$FILENAME &> $FILENAME.log
+./$FILENAME |& tee $FILENAME.log
 [ $? -eq 0 ] || exit_fail "Test program failed to execute"
 
 retval=`grep "FAIL" $FILENAME.log | wc -l`

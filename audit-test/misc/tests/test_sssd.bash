@@ -62,6 +62,9 @@ function unprivileged {
 restart_service sssd
 prepend_cleanup "stop_service sssd"
 
+# make sure strong rng is disabled
+sssd_disable_strong_rng
+
 # choose test
 if [ "$(type -t $1)" = "function" ]; then
     eval $1

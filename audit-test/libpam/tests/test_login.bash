@@ -125,6 +125,9 @@ pam_namespace,pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlo
 test_sssd() {
     local USR=
 
+    # make sure strong rng is disabled
+    sssd_disable_strong_rng
+
     # start sssd
     restart_service "sssd"
     prepend_cleanup "stop_service sssd"

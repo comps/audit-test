@@ -23,7 +23,6 @@
 # for local and IPA user
 #
 
-
 if [[ $EUID == 0 ]]; then
     source pam_functions.bash || exit 2
     source tp_ssh_functions.bash || exit 2
@@ -171,6 +170,8 @@ pam_unix,pam_xauth"
         positive_test $TEST_USER $TEST_USER_PASSWD
         ;;
     sssd)
+	# make sure strong rng is disabled
+	sssd_disable_strong_rng
         # expected AUDIT_EVENT PAM_OPERATION GRANTOR triple
         EPG="USER_AUTH authentication pam_faillock,pam_sss
              USER_ACCT accounting pam_faillock,pam_unix,pam_sss,pam_permit
@@ -187,6 +188,9 @@ pam_systemd,pam_unix,pam_sss,pam_xauth"
         negative_test $TEST_USER
         ;;
     sssd_fail)
+        # make sure strong rng is disabled
+        sssd_disable_strong_rng
+
         source $TOPDIR/utils/auth-server/ipa_env
         if [[ $EUID == 0 ]]; then
             restart_service sssd
@@ -205,4 +209,4 @@ pam_systemd,pam_unix,pam_sss,pam_xauth"
         ;;
 esac
 
-exit_pass
+exit 0

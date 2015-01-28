@@ -668,3 +668,16 @@ wait_for_child_pname()
     done
     return 1
 }
+
+######################################################################
+# sssd functions
+######################################################################
+
+# disable sssd seeding from /dev/random
+function sssd_disable_strong_rng {
+    local SSSDCONF="/etc/sysconfig/sssd"
+
+    backup $SSSDCONF
+    sed -i 's/^\(NSRAND.*\)/# \1/' $SSSDCONF
+    systemctl restart sssd
+}

@@ -185,6 +185,9 @@ addr=::1 terminal=ssh res=failed" || exit_fail \
             "Expected failed $EVENT audit event for $IPA_STAFF user not found"
 }
 
+# make sure strong rng is disabled
+sssd_disable_strong_rng
+
 ssh_sssd_setup
 
 # choose test

@@ -201,6 +201,64 @@ function backup {
     done
 }
 
+# human_time - given a number of seconds, prints out a human-readable format
+#
+# note: date(1) cannot do this as it heavily relies on the concept of wall
+# clock rather than relative time
+function human_time {
+    local secs="$1" out=
+    local day=86400 hour=3600 min=60
+
+    # only one way to format 0
+    if [ "$secs" -eq 0 ]; then
+        echo "0s"
+        return
+    fi
+
+    if [ "$((secs/day))" -gt 0 ]; then
+        out+="$((secs/day))d"
+        secs="$((secs%day))"
+    fi
+    if [ "$((secs/hour))" -gt 0 ]; then
+        out+="$((secs/hour))h"
+        secs="$((secs%hour))"
+    fi
+    if [ "$((secs/min))" -gt 0 ]; then
+        out+="$((secs/min))m"
+        secs="$((secs%min))"
+    fi
+    if [ "$secs" -gt 0 ]; then
+        out+="${secs}s"
+    fi
+
+    echo "$out"
+}
+
+# machine_time - given a human-readable format, prints out the number of seconds
+#
+# (essentially a reverse of human_time)
+function machine_time {
+    local human="$1" out=
+    local day=86400 hour=3600 min=60
+    local days= hours= mins= secs=
+
+    # no easy way without this bashism
+    [[ $human =~ ([0-9]+d)?([0-9]+h)?([0-9]+m)?([0-9]+s)? ]]
+    [ $? -eq 0 ] || return
+
+    days=${BASH_REMATCH[1]%%d}
+    hours=${BASH_REMATCH[2]%%h}
+    mins=${BASH_REMATCH[3]%%m}
+    secs=${BASH_REMATCH[4]%%s}
+
+    out=$(( out + days*day ))
+    out=$(( out + hours*hour ))
+    out=$(( out + mins*min ))
+    out=$(( out + secs ))
+
+    echo "$out"
+}
+
 ######################################################################
 # testing helpers
 ######################################################################

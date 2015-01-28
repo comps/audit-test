@@ -117,7 +117,7 @@ report:
 	    cat $$x/$$l.log; \
 	  done &> audit.$$l.log; \
 	done
-	utils/tally-results.awk < audit.rollup.log \
+	utils/tally-results.sh < audit.rollup.log \
 	    | tee -a audit.run.log | tee -a audit.rollup.log
 	@utils/envcheck > envcheck.log
 

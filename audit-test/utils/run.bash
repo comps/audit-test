@@ -81,6 +81,7 @@ opt_timeout=30
 opt_width=$(stty size 2>/dev/null | cut -d' ' -f2)
 [[ -n $opt_width ]] || opt_width=80
 header_log="run.info"
+runtime_log="runtime.info"
 
 unset TESTS TNUMS
 unset pass fail error total
@@ -145,13 +146,6 @@ function llmsg {
 function msg {
     llmsg "$@"
     colorize "$@"
-}
-
-function vmsg {
-    lmsg "$@"
-    if $opt_verbose || $opt_debug; then
-	colorize "$@"
-    fi
 }
 
 function dmsg {
@@ -544,7 +538,7 @@ function nolog {
 }
 
 function generate_logs {
-    declare pass fail error
+    declare pass fail error runtime
 
     # clear run and rollup logs
     echo -n > $opt_log
@@ -559,7 +553,6 @@ function generate_logs {
     # create total run log
     for log in $(ls $opt_logdir/$opt_log.* | sed 's/\(.*\)\.\(.*\)/\1 \2/g' | sort -k2 -n | tr ' ' '.'); do
         cat $log >> $opt_log
-        echo >> $opt_log
     done
 
     # create total rollup log
@@ -567,16 +560,56 @@ function generate_logs {
         cat $log | sed '1,/--------/d' >> $opt_rollup
     done
 
+    # log current stats, NOT related to displayed/console stats
     pass=$(grep "PASS" $opt_rollup | wc -l)
     fail=$(grep "FAIL" $opt_rollup | wc -l)
     error=$(grep "ERROR" $opt_rollup | wc -l)
+    runtime=$(cat "$opt_logdir/$runtime_log")
+    runtime=$(machine_time "$runtime")
+    noecho totals_printout "$pass" "$fail" "$error" "$runtime"
+}
+
+# expects machine_time format (in seconds, as integer)
+function add_runtime {
+    declare thisrun total
+
+    thisrun="$1"
+
+    # read total accumulated time, if it exists
+    if [ -f "$opt_logdir/$runtime_log" ]; then
+        total=$(cat "$opt_logdir/$runtime_log")
+        total=$(machine_time "$total")
+    else
+        total=0
+    fi
+
+    total=$(( total + thisrun ))
+
+    # write new total time
+    total=$(human_time "$total")
+    echo "$total" > "$opt_logdir/$runtime_log"
+}
+
+function totals_printout {
+    declare total pass fail error runtime
+
+    pass="$1"
+    fail="$2"
+    error="$3"
+    runtime="$4"
+
     (( total = pass + fail + error ))
-    llmsg
+    prf "\n"
     prf "%4d pass (%d%%)\n" $pass $((pass * 100 / total))
     prf "%4d fail (%d%%)\n" $fail $((fail * 100 / total))
     prf "%4d error (%d%%)\n" $error $((error * 100 / total))
     prf "%s\n" "------------------"
-    prf "%4d total\n" $total
+    prf "%4d total" $total
+    if [ "$runtime" ]; then
+        prf " (in %s)\n" $(human_time $runtime)
+    else
+        prf "\n"
+    fi
 }
 
 function rerun_test {
@@ -596,6 +629,7 @@ function run_tests {
     declare TESTNUM output status hee s log stats header
     declare begin_output="<blue>--- begin output -----------------------------------------------------------"
     declare end_output="<blue>--- end output -------------------------------------------------------------"
+    declare total_start_time total_end_time audit_stime audit_etime
 
     nolog prf "%-$((opt_width-7))s %s\n" "Testcase" "Result"
     nolog prf "%-$((opt_width-7))s %s\n" "--------" "------"
@@ -606,6 +640,7 @@ function run_tests {
 	hee=/dev/null
     fi
 
+    total_start_time=$(date +'%s')
     for TESTNUM in "${TNUMS[@]}"; do
 	noecho prf "%-$((opt_width-7))s %s\n" "Testcase" "Result"
 	noecho prf "%-$((opt_width-7))s %s\n" "--------" "------"
@@ -621,7 +656,7 @@ function run_tests {
 	fi
 
 	# get current time
-	stime=$(date +'%H:%M:%S')
+	audit_stime=$(date +'%H:%M:%S')
 	output=$(
 # note that putting run_test in the background results in no tty for pam tests
 	    ( exec > >(tee $hee) 2>&1; run_test "$@"; ) # &
@@ -636,7 +671,7 @@ function run_tests {
 #	    wait $pid
 	) 2>&1
 	status=$?
-	etime=$(date +'%H:%M:%S')
+	audit_etime=$(date +'%H:%M:%S')
 
 	if $opt_debug; then
 	    nolog msg "$end_output"
@@ -650,10 +685,6 @@ function run_tests {
 		s=$(sed -n 's/^exit_pass:/       /p' <<<"$output")
 		[[ -n $s ]] && prf "%s\n" "$s"
 	    fi
-	    lmsg "$begin_output"
-	    lmsg "$output"
-	    lmsg "$end_output"
-	    lmsg
 	else
 	    if [[ $status == 1 ]]; then
 		prf "<yellow>%11s\n" "FAIL "
@@ -670,25 +701,29 @@ function run_tests {
 		    [[ -n $s ]] && prf "%s\n" "$s"
 		fi
 	    fi
-	    if $opt_debug; then
-		lmsg "$begin_output"
-		lmsg "$output"
-		lmsg "$end_output"
-		lmsg
-	    else
-		vmsg "$begin_output"
-		vmsg "$output"
-		vmsg "$end_output"
-		vmsg
+
+	    # output to terminal on failure, but only if using verbose WITHOUT debug
+	    # as debug already prints out the output above (in "real" time)
+	    if $opt_verbose && ! $opt_debug; then
+		colorize "$begin_output"
+		colorize "$output"
+		colorize "$end_output"
+		colorize
 	    fi
 	fi
+
+	# log the output regardless of $status
+	lmsg "$begin_output"
+	lmsg "$output"
+	lmsg "$end_output"
+	lmsg
 
 	# print AVCs if requested
 	if $opt_avc; then
 	    msg "<blue>-- Test execution AVC records ----------------------------------------------"
-	    msg "$(ausearch -ts $stime -te $etime -m avc)"
+	    msg "$(ausearch -ts $audit_stime -te $audit_etime -m avc)"
 	    msg "<blue>-- audit2allow -------------------------------------------------------------"
-	    msg "$(ausearch -ts $stime -te $etime -m avc | audit2allow)"
+	    msg "$(ausearch -ts $audit_stime -te $audit_etime -m avc | audit2allow)"
 	fi
 
 	# copy header to run and rollup log
@@ -707,18 +742,17 @@ function run_tests {
 	echo -n > $opt_log
 	echo -n > $opt_rollup
     done
+    total_end_time=$(date +'%s')
 
-    # create current stats
-    (( total = pass + fail + error ))
-    nolog msg
-    nolog prf "%4d pass (%d%%)\n" $pass $((pass * 100 / total))
-    nolog prf "%4d fail (%d%%)\n" $fail $((fail * 100 / total))
-    nolog prf "%4d error (%d%%)\n" $error $((error * 100 / total))
-    nolog prf "%s\n" "------------------"
-    nolog prf "%4d total\n" $total
+    # add runtime of this run to total runtime
+    add_runtime $((total_end_time - total_start_time))
 
-    # create silently run and rollup logs
-    noecho generate_logs
+    # create run and rollup logs
+    generate_logs
+
+    # print current stats, NOT related to logged stats
+    nolog totals_printout "$pass" "$fail" "$error" \
+        $((total_end_time - total_start_time))
 
     return 0
 }

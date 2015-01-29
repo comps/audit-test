@@ -163,6 +163,18 @@ If running on an LSPP/MLS system, relabel test files.
 
 # make -C audit-test/utils/selinux-policy relabel verify
 
+Set entropy generation
+----------------------
+
+The system in evaluated configuration uses SSHD and SSSD daemons configured
+with /dev/random as pseudorandom number generator. This device is blocking.
+On low entropy systems this might cause timeouts while logging in.
+
+It is advised for testing to use rngd to generate enough entropy in the system.
+To seed /dev/random from non-blocking /dev/urandom use this command:
+
+# rngd -r /dev/urandom
+
 Configure the network test server
 ---------------------------------
 
@@ -344,6 +356,9 @@ or
 
 Run the tests
 -------------
+
+Note that before testing is it advised have rngd running for entropy
+generation. See the section "Set entropy generation".
 
 The tests should be run from the top level eal4_testing directory,
 recursing into audit-test and ltp directories:

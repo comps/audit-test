@@ -49,10 +49,6 @@ backup $SSHDCONF
 backup $CCCONF
 ssh_remove_screen $MPROFILE
 
-# setup rngd for entropy generation to /dev/random
-rngd -fr /dev/urandom &
-append_cleanup "kill -9 $!"
-
 # set SSH_USE_STRONG_RNG in config
 if egrep -q "^[^#]*SSH_USE_STRONG_RNG" $SSHDCONF; then
     sed -i 's/^[^#]*SSH_USE_STRONG_RNG.*/SSH_USE_STRONG_RNG=12/' $SSHDCONF

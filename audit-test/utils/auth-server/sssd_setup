@@ -198,7 +198,6 @@ EOF
     # Get keytab and CA
     print_info "Copying keytab and CA"
     mkdir -p $IPA_ETC
-    rpm -q rng-tools &>/dev/null && rngd -r /dev/urandom
     ssh_copy "eal@$IPA_SERVER:$IPA_DLDIR/$IPA_CA $IPA_ETC_CA" > /dev/null || \
         exit_error "Failed to copy CA from IPA server - $IPA_DLDIR/$IPA_CA not found." \
             "\nIPA server does not seem to be correctly setup."
@@ -207,7 +206,6 @@ EOF
         exit_error "Failed to copy keytab from IPA server - keytab for $IPA_SERVER_TOE_ID not found." \
             "\nMake sure ipa_clients on IPA server is correctly setup according to the README.auth_svr."
     restorecon -vvF /etc/krb5.keytab > /dev/null
-    rpm -q rng-tools &>/dev/null && killall rngd
 
     # Create home directories for users
     cmd_start nolog
@@ -249,7 +247,6 @@ function cmd_verify {
 
     # check id nss_sss works
     cmd_start nolog
-    rngd -r /dev/urandom
     for IUSER in $IPA_USER $IPA_STAFF; do
         getent passwd $IUSER > /dev/null || exit_error \
             "Could find user $IUSER via Name Service Switch libraries"
@@ -257,7 +254,6 @@ function cmd_verify {
             "Could not login as $IUSER, sssd does not work correctly"
     done
     cmd_stop nolog
-    killall rngd
 
     print_info "SSSD configuration verification PASSED"
 }

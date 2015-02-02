@@ -79,6 +79,7 @@ fstat			all
 fstatat64		all:32
 ftruncate		all
 futimesat		all
+get_robust_list		all
 getegid			all
 geteuid			all
 getgid			all

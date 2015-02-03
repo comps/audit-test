@@ -66,6 +66,7 @@ create_user(){
 delete_user(){
         echo "Deleting test user $TEST_USER..."
 	killall -9 -u $TEST_USER
+        sleep 1
 	userdel -rf $TEST_USER
         if [ $? != 0 ]
         then

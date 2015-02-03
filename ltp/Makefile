@@ -67,7 +67,7 @@ extract:
 .PHONY: patch
 patch:
 	@for patchfile in $(PATCH_DIR)/*.patch; do \
-		patch -p1 -d $(LTP_BASE) < "$$patchfile"; \
+		patch --batch --forward -p1 -d $(LTP_BASE) < "$$patchfile"; \
 	done
 
 .PHONY: build

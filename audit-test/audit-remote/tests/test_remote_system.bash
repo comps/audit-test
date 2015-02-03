@@ -38,7 +38,11 @@ source audisp-remote_functions.bash || exit 2
 scenario=$1
 test_time_start="`date +'%x %T'`"
 call_remote_function_seq=0
+attempts_limit=5
 
+# Redefine waiting for wait_for_cmd function (see functions.bash)
+WAIT_FOR_SLEEP=2
+WAIT_FOR_MAX=5
 
 #
 # Helper functions
@@ -280,6 +284,7 @@ test_server_basic() {
     check_client_connected || exit_fail "check_client_connected"
 
     call_remote_function generate_audit_log_msg
+
     sleep 2
     check_message_arrived "$remote_client_test_string"  || \
         exit_fail "check_message_arrived"
@@ -346,9 +351,9 @@ test_client_basic(){
 
     seq_num=$RANDOM
     /sbin/auditctl -m "$remote_client_test_string ($seq_num)"
-    sleep 2
-    call_remote_function check_msg_from_client | \
-        grep -e "type=USER.*$remote_client_test_string ($seq_num)" || \
+
+    wait_for_cmd "call_remote_function check_msg_from_client | \
+        grep -e \"type=USER.*$remote_client_test_string ($seq_num)\"" || \
         exit_fail "check_msg_from_client"
 
     call_remote_function stop_remote_auditd
@@ -374,9 +379,9 @@ test_client_disk_full() {
 
     seq_num=$RANDOM
     /sbin/auditctl -m "$remote_client_test_string ($seq_num)"
-    sleep 2
-    call_remote_function check_msg_from_client | \
-        grep -e "type=USER.*$remote_client_test_string ($seq_num)"|| \
+
+    wait_for_cmd "call_remote_function check_msg_from_client | \
+        grep -e \"type=USER.*$remote_client_test_string ($seq_num)\"" || \
         exit_fail "check_msg_from_client"
 
     # We are good to start testing the disk_full action (default is stop)
@@ -405,9 +410,9 @@ test_client_disk_error() {
 
     seq_num=$RANDOM
     /sbin/auditctl -m "$remote_client_test_string ($seq_num)"
-    sleep 2
-    call_remote_function check_msg_from_client | \
-        grep -e "type=USER.*$remote_client_test_string ($seq_num)"|| \
+
+    wait_for_cmd "call_remote_function check_msg_from_client | \
+        grep -e \"type=USER.*$remote_client_test_string ($seq_num)\"" || \
         exit_fail "check_msg_from_client"
 
     # We are good to start testing the disk_full action (default is stop)

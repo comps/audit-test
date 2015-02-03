@@ -97,7 +97,7 @@ runtests:
 
 .PHONY: report
 report:
-	{ \
+	@{ \
 		echo "Summary:"; \
 		echo "--------"; \
 		echo; \

@@ -1,0 +1,15 @@
+diff --git a/runtest/syscalls b/runtest/syscalls
+index 44969f3..8f8290b 100644
+--- a/runtest/syscalls
++++ b/runtest/syscalls
+@@ -449,7 +449,9 @@ fanotify02 fanotify02
+ fanotify03 fanotify03
+ fanotify04 fanotify04
+ fanotify05 fanotify05
+-fanotify06 fanotify06
++# disable for rhel-7.1 CC, which doesn't have a kernel fix
++# this test verifies (not a major or a security fix)
++#fanotify06 fanotify06
+ 
+ ioperm01 ioperm01
+ ioperm02 ioperm02

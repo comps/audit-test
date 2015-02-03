@@ -83,7 +83,7 @@ case $bool in
         # we use rolecall with the user_t domain instead of runcon
         # with a test domain to avoid having to add policy which would
         # allow the ping_t domain to write to the terminal
-        rolecall -t user_t -- ping -c 2 localhost ;;
+        rolecall -t user_t -- '(ping -c 2 localhost)' ;;
     *)  exit_error "no test implemented for $bool" ;;
 esac
 

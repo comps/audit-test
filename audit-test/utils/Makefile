@@ -34,15 +34,7 @@ endif
 
 include $(TOPDIR)/rules.mk
 
-all: screl-parser.py README.augrok chmod_utils
-
-# this script is by default not executable to prevent running it
-# on every rules.mk inclusion prior to the suite being built,
-# ie. by 'make dist'
-# cleaner solution welcome (without hardcoding full paths in rules.mk)
-.PHONY: screl-parser.py
-screl-parser.py:
-	@chmod +x screl-parser.py
+all: README.augrok chmod_utils
 
 .PHONY: chmod_utils
 chmod_utils:

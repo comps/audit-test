@@ -204,9 +204,6 @@ export AUDIT_TEST_DEP
 #
 # syscall relevancy
 #
-# - needs to be here as it may be needed in any bucket,
-#   even when running via ./run.bash
-#
 # note that SCREL_FILE may be overwritten by make(1) args
 
 ifdef DISTRO
@@ -217,12 +214,9 @@ ifeq (,$(SCREL_FILE))
     SCREL_FILE := $(TOPDIR)/utils/bin/relevancy  # fallback
 endif
 
-# the -x check is required, see utils/Makefile
-SCREL_SYSCALLS := $(shell [ -x "$(TOPDIR)/utils/screl-parser.py" ] && \
-                          "$(TOPDIR)/utils/screl-parser.py" \
-                          $(SCREL_FILE) $(MACHINE) $(MODE))
-
-export SCREL_SYSCALLS
+parse_screl = $(eval export SCREL_SYSCALLS := \
+    $(shell "$(TOPDIR)/utils/bin/screl-parser.py" \
+                $(SCREL_FILE) $(MACHINE) $(MODE)))
 
 ##########################################################################
 # Common rules
@@ -397,6 +391,7 @@ subdirs_quiet:
 
 # needs SHELL set to bash (due to printf %q)
 export_env:
+	$(call parse_screl)  # for run.bash
 	@IFS=$$'\n'; for var in $$(env); do \
 		printf 'export %q\n' "$$var"; \
 	done;

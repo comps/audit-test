@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 {
     int fd;
     pid_t pid;
-    char pidstr[6] = {0};
+    char pidstr[24] = {0};  /* for extremely large pid_max */
 
     for (;--argc;argv++) {
         /* check if pidfile exists */

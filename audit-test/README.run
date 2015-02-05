@@ -96,7 +96,7 @@ in as root and add one with the following commands:
 # passwd eal <root's password>
 
 If on an LSPP/MLS system perform the following additional step:
-# semanage login -a -s staff_u -r SystemLow-SystemHigh eal
+# semanage login -a -s staff_u -r s0-s15:c0.c1023 eal
 
 Log into the system as the eal user.
 

@@ -44,9 +44,14 @@ ORIG_MSGMNI := $(shell sysctl -n kernel.msgmni)
 
 # runtest files to run - comma-separated list
 # - provided by upstream ltp
-RUNTESTS := syscalls,containers,fs_perms_simple
-# - additional/custom
-RUNTESTS := $(RUNTESTS),$(CURDIR)/runtest/custom
+RUNTESTS := syscalls fs_perms_simple
+# - additional from runtest/
+RUNTESTS += $(wildcard $(CURDIR)/runtest/*)
+# transform into comma-separated list
+space :=
+space +=
+comma := ,
+RUNTESTS := $(subst $(space),$(comma),$(RUNTESTS))
 
 all: download extract patch build
 run: runtests report

@@ -366,6 +366,8 @@ function ssh_copy_key {
 #                6 if account expired
 #                7 if password change needed
 function ssh_connect_key {
+    local RET=
+
     # check if required params specified
     [ -z "$1" ] && exit_error "Error: no src user for $FUNCNAME"
     [ -z "$2" ] && exit_error "Error: no src user password for $FUNCNAME"
@@ -381,19 +383,28 @@ function ssh_connect_key {
         }
         send -- \"ssh -o PasswordAuthentication=no $3@localhost whoami\r\"
         expect {
-            {yes/no} { exit 1 }
-            -re \"$3\\\r\" { exit 0 }
-            {assword:} { exit 2 }
+            {yes/no} { set ret 1 }
+            -re \"$3\\\r\" { set ret 0 }
+            {*assword:} { set ret 2; send BADPASS\r }
             {passphrase} { send -- $4\r; exp_continue }
-            {Permission denied (publickey)} { exit 5 }
-            {Your account has expired} { exit 6 }
-            {Your password has expired} { exit 7 }
-            default { exit 3 }
+            {Permission denied (publickey)} { set ret 5 }
+            {Your account has expired} { set ret 6 }
+            {Your password has expired} { set ret 7 }
+            default { set ret 3 }
         }
-        exit 4"
+	expect {
+		{*assword:} { send BADPASS\r; exp_continue }
+		{*$1} { send exit\r; exp_continue }
+		eof { exit \$ret }
+	}
+        exit 4"; RET=$?
 
-    # return exit code of expect
-    return $?
+    # make sure faillock is the way
+    faillock --reset --user $1
+    faillock --reset --user $3
+
+    # return set ret code of expect
+    return $RET
 }
 
 # Connect from user1 to user2 with password and test if successful

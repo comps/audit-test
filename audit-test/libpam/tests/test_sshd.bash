@@ -14,9 +14,12 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
-# 
+#
+# SFRs: FIA_USB.2
+#
 # PURPOSE:
-# Verify audit of successful ssh.
+# Verify audit of successful ssh. Also check if all uids are correct after login.
+#
 
 source pam_functions.bash || exit 2
 source tp_ssh_functions.bash || exit 2
@@ -28,17 +31,38 @@ AUDITMARK=$(get_audit_mark)
 # in MLS mode check also for pam_namespace success
 [ "$PPROFILE" = "lspp" ] && PAM_ADDTL="pam_namespace,"
 
-# test
-expect -c "
-    spawn ssh ${TEST_USER}@localhost
-    expect {
-        {continue} {send yes\r; exp_continue}
-        {assword} {send ${TEST_USER_PASSWD}\r}
-    }
-    expect {$TEST_USER} {send exit\r}
-    expect eof
-    exit 0"
+# add TEST_USER to a test group
+groupadd SUPGROUP
+gpasswd -a $TEST_USER SUPGROUP
+prepend_cleanup "groupdel SUPGROUP"
 
+# test
+LOGINLOG=$(
+    expect -c "
+        spawn ssh ${TEST_USER}@localhost
+        expect {
+            {*continue} {send yes\r; exp_continue}
+            {*assword} {send ${TEST_USER_PASSWD}\r}
+        }
+        expect {*$TEST_USER} {send \"ps -eo ruid,euid,fsuid,rgid,egid,fsgid --no-headers -q \$\$\r\"}
+        expect {*$TEST_USER} {send \"groups\r\"}
+        expect {*$TEST_USER} {send \"exit\r\"}
+        expect eof
+        exit 0"
+)
+
+# FIA_USB.2
+# check if all ruid,euid,fsuid,rgid,egid,fsgid correct after login
+TUID=$(id -u $TEST_USER)
+TGID=$(id -g $TEST_USER)
+echo "$LOGINLOG" | egrep "([[:space:]]*$TUID){3}([[:space:]]*$TGID){3}" || \
+    exit_fail "Unexpected UIDs after login"
+# check if user in correct groups after login
+TGROUPS=$(groups $TEST_USER | sed "s/$TEST_USER : //")
+echo "$LOGINLOG" | egrep "$TGROUPS" || \
+    exit_fail "Unexpected groups after login"
+
+# expected audit events
 DATA="USER_AUTH authentication pam_faillock,pam_unix
       USER_ACCT accounting pam_faillock,pam_unix,pam_localuser
       CRED_ACQ setcred pam_env,pam_faillock,pam_unix

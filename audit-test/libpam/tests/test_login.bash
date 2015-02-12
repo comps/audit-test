@@ -18,19 +18,27 @@
 # 
 # PURPOSE:
 # Verify audit of successful and failed console login for local and IPA user.
+# Also check if all uids match
 #
-# SFRs: FIA_UAU.1(HU)
+# SFRs: FIA_UAU.1(HU), FIA_USB.2
 #
 
 source pam_functions.bash || exit 2
 
+
+
 do_login() {
-    local PTS= LINE= EVENT= GRANTORS= PAMOP=
+    local PTS= LINE= EVENT= GRANTORS= PAMOP= LOGINLOG=
     local TUSR=$1
     local TPASS=$2
 
+    # add TUSR to a test group
+    grep -q SUPGROUP /etc/group || groupadd SUPGROUP
+    gpasswd -a $TUSR SUPGROUP
+    prepend_cleanup "groupdel SUPGROUP"
+
     # test
-    (
+    LOGINLOG=$(
         runcon -u system_u -r system_r expect -c "
             set timeout 20
             spawn login
@@ -43,11 +51,27 @@ do_login() {
             }
             send \"PS1=:\\::\r\"
             expect {:::$} {send \"tty > $localtmp\r\"}
-            expect {:::$} {close; wait}"
+            expect {:::$} {send \"ps -eo ruid,euid,fsuid,rgid,egid,fsgid --no-headers -q \$\$\r\"}
+            expect {:::$} {send \"groups\r\"}
+            expect {:::$} {send \"exit\r\"}
+            expect eof
+            close; wait"
     )
 
     PTS=$(<$localtmp)
     PTS=${PTS##*/}
+
+    # FIA_USB.2
+    # check if all ruid,euid,fsuid,rgid,egid,fsgid correct after login
+    TUID=$(id -u $TUSR)
+    TGID=$(id -g $TUSR)
+    echo "$LOGINLOG" | egrep "([[:space:]]*$TUID){3}([[:space:]]*$TGID){3}" || \
+        exit_fail "Unexpected UIDs after login"
+    # check if user in correct groups after login
+    TGROUPS=$(groups $TUSR | sed "s/$TUSR : //")
+    echo "$LOGINLOG" | egrep "$TGROUPS" || \
+        exit_fail "Unexpected groups after login"
+
 
     while read LINE; do
         read EVENT PAMOP GRANTORS <<< "$LINE"

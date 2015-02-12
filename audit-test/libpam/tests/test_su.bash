@@ -15,6 +15,8 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
+#
+# SFRs: FIA_USB.2
 # 
 # PURPOSE:
 # Verify audit of successful and unsuccessful login via su
@@ -38,8 +40,8 @@ positive_test() {
         AUDITMARK=$(get_audit_mark)
 
         # setup
-        # allow USR to write to tmpfile created by root
-        chmod 666 $tmp1
+        # allow USR to write to tmp files created by root
+        chmod 666 $tmp1 $tmp2
 
         # turn off screen in /etc/profile
         backup /etc/profile
@@ -49,7 +51,7 @@ positive_test() {
         # rerun this script as USR.  Confine the exports to a subshell
         # We must be in group 'wheel' to execute /bin/su.
         (
-            export tmp1=$tmp1
+            export tmp1=$tmp1 tmp2=$tmp2
             local TEST_EUID=$(id -u "$USR")
             local WHEEL_GID=$(grep wheel /etc/group | cut -d: -f3)
             # add test user to wheel group - needed for sssd su
@@ -60,6 +62,7 @@ positive_test() {
         # returned from test, collect results
         pts=$(<$tmp1)
         pts=${pts##*/}
+        uids=$(<$tmp2)
 
         # check for expected audit events
         while read LINE; do
@@ -70,6 +73,13 @@ positive_test() {
                 msg_1=~"op=PAM:$PAMOP grantors=$GRANTORS $msg_1" || \
                 exit_fail "Successful authentication attempt not audited correctly for: $LINE"
         done <<< "$EPG"
+
+        # check if all ruid,euid,fsuid,rgid,egid,fsgid correct after login
+        # FIA_USB.2
+        TUID=$(id -u $USR)
+        TGID=$(id -g $USR)
+        echo "$uids" | egrep "([[:space:]]*$TUID){3}([[:space:]]*$TGID){3}" || \
+            exit_fail "Unexpected UIDs after login"
     else
         # This is reached through the perl -e 'system...' above
         expect -c "
@@ -77,6 +87,7 @@ positive_test() {
             expect {*assword:} {send $USRPASS\r}
             expect {*$USR} {send PS1=:::\r}
             expect {:::$} {send \"tty > $tmp1\r\"}
+            expect {:::$} {send \"ps -eo ruid,euid,fsuid,rgid,egid,fsgid --no-headers -q \$\$ > $tmp2\r\"}
             expect {:::$} {close; wait}"
     fi
 }

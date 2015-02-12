@@ -26,6 +26,10 @@
 # Note: any other component of sudoers or the request which are not
 # tested are set such that the request is allowed
 #
+# Note that this test also includes test for FIA_USB.2 in the test_uids
+# function. This test checks if after running expected *uids and *gids
+# are set
+#
 # Testing User_Alias
 #User		User		Operation	Test
 #requesting	configured	allowed?	case
@@ -306,18 +310,37 @@ testloop() {
 
 }
 
+# test FIA_USB.2
+# Uids are expected when using sudo
+test_uids() {
+    USER_EXEC_p2=$USERG
+    RUN_SUDO_p2=$USERT
+    RUN_EXEC_p2=$USERT
+    CMD_SUDO_p2="/usr/bin/id"
+    CMD_EXEC_p2="/usr/bin/id -u"
+
+    setup_sudoers $TEST_USER root "/usr/bin/ps"
+    cat /etc/sudoers
+    cmd="ps -eo ruid,euid,fsuid,rgid,egid,fsgid --no-headers -q \$\$"
+    res=$(su -c "echo $TEST_USER_PASSWD | sudo -S -u root $cmd 2>/dev/null" $TEST_USER)
+
+    TUID=$(id -u $TEST_USER)
+    TGID=$(id -g $TEST_USER)
+    echo "$res" | egrep "([[:space:]]*$TUID){3}([[:space:]]*$TGID){3}" || \
+        exit_fail "Unexpected UIDs after login"
+}
+
 main() {
 	setup_cleanup
 
 	gen_user
 	backup /etc/sudoers
 
-	testloop
-	if [ $? -gt 0 ]; then
-		exit_fail
-	else
-		exit_pass
-	fi
+	testloop || exit_fail "Functional test failed"
+
+	test_uids || exit_fail "Uids test failed"
+
+	exit_pass
 }
 
 main

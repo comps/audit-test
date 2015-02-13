@@ -30,7 +30,8 @@
 #
 ##########################################################################
 
-NATIVE		= $(strip $(shell file /bin/bash | awk -F'[ -]' '{print $$3}'))
+MACHINE		:= $(strip $(shell uname -m))
+NATIVE		:= $(strip $(shell file /bin/bash | awk -F'[ -]' '{print $$3}'))
 MODE		?= $(NATIVE)
 ifneq ($(MODE), $(NATIVE))
 	ifeq ($(MODE), 32)

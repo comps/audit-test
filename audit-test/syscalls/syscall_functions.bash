@@ -113,6 +113,21 @@ function test_su_default {
     fi
 }
 
+function test_dropcap {
+    declare testargs testuser
+
+    # setup args for test operation
+    if [[ $# == 0 ]]; then
+	# don't quote so empty args disappear
+	set -- $op $dirname $source $target $flag
+    fi
+
+    # do the test
+    [[ "$user" != "super" ]] && exit_error "user has to be super in this test"
+    read testres exitval pid <<< \
+        "$(/usr/sbin/capsh --drop=$caps -- -c "do_$syscall "$@" 2>&1 1>/dev/null")"
+}
+
 function test_su_fork {
     declare testuser
 

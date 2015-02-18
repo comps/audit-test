@@ -125,6 +125,9 @@ clean:
 	rm -f $(LTP_TARBALL)
 	rm -rf $(LTP_BASE)
 
+.PHONY: distclean
+distclean: clean
+
 .PHONY: dist
 dist:
 	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \

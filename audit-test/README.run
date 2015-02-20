@@ -154,7 +154,7 @@ Build the tests.
 
 Or if re-building the tests to run the 32-bit tests on an x86_64 system do:
 
-# make clean
+# make clean    # or make distclean to remove all previous test logs
 # make MODE=32
 
 If running on an LSPP/MLS system, relabel test files.

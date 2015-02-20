@@ -108,7 +108,7 @@ for (my $i=0; $i<@test; $i++) {
   $Expect::Log_Stdout = 1;
 
 # Set the system time ahead 2 days
-  my $current_time = advance_system_time(2);
+  `chage -d \$(date -d "24 hours ago" '+%Y-%m-%d') $username1`;
 
   print("\n-> Test \#$i : Trying $test[$i][2] for user [$username1] with new password [$test[$i][3]]\n");
 # Attempt to change the password, save the exit status
@@ -116,7 +116,7 @@ for (my $i=0; $i<@test; $i++) {
   my $status1 = change_password($username1, $initial_password, $test[$i][3]);
   if ($i == 10) {
 # if we're testing password reuse, change password twice in a row
-    advance_system_time(2);
+    `chage -d \$(date -d "24 hours ago" '+%Y-%m-%d') $username1`;
     $status1 = change_password($username1, $good_password1, $good_password2);
     $status1 = change_password($username1, $good_password2, $good_password1);
     $initial_password = $good_password2;
@@ -142,9 +142,6 @@ for (my $i=0; $i<@test; $i++) {
     $exit_code = 1;
   }
   print($result[$i]);
-
-# Set system time back
-  revert_system_time($current_time);
 
 # Delete the users that was created for this test
   $Expect::Log_Stdout = 0;

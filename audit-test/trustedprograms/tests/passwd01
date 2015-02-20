@@ -99,8 +99,9 @@ for (my $i=0; $i<@test; $i++) {
   set_encrypted_password($username2, $initial_encrypted_password2);
   $Expect::Log_Stdout = 1;
 
-# Set the system time ahead 2 days
-  my $current_time = advance_system_time(2);
+# Modify last change of password
+  `chage -d \$(date -d "2 days ago" '+%Y-%m-%d') $username1`;
+
 
   print("\n-> Test \#$i : Trying $test[$i][1] for user [$username1]: `$test[$i][2]`\n");
   my $status = run_as_user($username1, $initial_password1, $test[$i][2]);
@@ -121,7 +122,6 @@ for (my $i=0; $i<@test; $i++) {
   delete_user($username2);
   $Expect::Log_Stdout = 1;
 
-  revert_system_time($current_time);
 
 }
 

@@ -139,8 +139,8 @@ if (($lower != 0) || ($upper != 0)) {
   $error += 2;
 }
 
-# Set system time ahead 31 days
-my $current_time = advance_system_time(31);
+# Set last password change ahead 31 days
+`chage -d \$(date -d "31 days ago" '+%Y-%m-%d') $username1`;
 
 # Login as username1, must change password
 print("Login as $username1 again, and must change password...\n");
@@ -149,9 +149,6 @@ if ($status != 0) {
   print("($status)\n");
   $error += 8;
 }
-
-# Set system time back
-  revert_system_time($current_time);
 
 # Delete the users that were created for this test
 print("Deleting the users that were created...\n");
@@ -210,8 +207,8 @@ if (($lower != 1) || ($upper != 0)) {
   $error += 4;
 }
 
-# Set system time ahead 31 days
-$current_time = advance_system_time(31);
+# Set last password change ahead 31 days
+`chage -d \$(date -d "31 days ago" '+%Y-%m-%d') $username1`;
 
 # Login as username1 and attempt to change password
 print("Attempting to change password...\n");
@@ -222,9 +219,6 @@ if ($status != 0) {
   print("$status\n");
   $error += 16;
 }
-
-# Set system time back
-revert_system_time($current_time);
 
 # Delete the users that were created for this test
 print("Deleting the users that were created...\n");

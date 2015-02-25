@@ -1,0 +1,39 @@
+diff --git a/testcases/kernel/containers/sysvipc/sem_comm.c b/testcases/kernel/containers/sysvipc/sem_comm.c
+index 5d4136e..a3abeab 100644
+--- a/testcases/kernel/containers/sysvipc/sem_comm.c
++++ b/testcases/kernel/containers/sysvipc/sem_comm.c
+@@ -60,6 +60,14 @@ static void setup(void)
+ 	TST_CHECKPOINT_CREATE(&checkpoint2);
+ }
+ 
++/* arg for semctl system calls. */
++union semun {
++        int val;                        /* value for SETVAL */
++        struct semid_ds *buf;   /* buffer for IPC_STAT & IPC_SET */
++        unsigned short *array;  /* array for GETALL & SETALL */
++        struct seminfo *__buf;  /* buffer for IPC_INFO */
++        void *__pad;
++} smun;
+ int chld1_sem(void *arg)
+ {
+ 	int id;
+@@ -71,7 +79,8 @@ int chld1_sem(void *arg)
+ 		return 2;
+ 	}
+ 
+-	if (semctl(id, 0, SETVAL, 1) == -1) {
++	smun.val = 1;
++	if (semctl(id, 0, SETVAL, smun) == -1) {
+ 		perror("semctl");
+ 		semctl(id, 0, IPC_RMID);
+ 		return 2;
+@@ -119,7 +128,8 @@ int chld2_sem(void *arg)
+ 		return 2;
+ 	}
+ 
+-	if (semctl(id, 0, SETVAL, 1) == -1) {
++	smun.val = 1;
++	if (semctl(id, 0, SETVAL, smun) == -1) {
+ 		perror("semctl");
+ 		semctl(id, 0, IPC_RMID);
+ 		return 2;

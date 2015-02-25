@@ -345,6 +345,13 @@ environment variables:
 # export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
 # export PASSWD=<root/admin user password>
 
+Optionally, you may set eal user password for the network test server. It is
+needed during network set-up as well as during the testing. Otherwise, it is
+presumed that eal user passwords for both TOE and the network server are the
+same.
+
+# export NS_PASSWD=<eal user password on the network test server>
+
 Verify that the time on the test system is synchronized with the time
 on the network test server.
 

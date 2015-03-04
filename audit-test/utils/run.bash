@@ -37,8 +37,6 @@ export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 #   ./run.bash, so read them (in either case) manually here
 if [[ -f Makefile ]]; then
     eval "$(make --no-print-directory -f Makefile export_env)"
-    # explicitly unset make-specific variables to avoid test confusion
-    unset MAKELEVEL MAKEFILES MAKEFLAGS MFLAGS
     # convert TOPDIR to absolute path
     [ "$TOPDIR" ] && export TOPDIR=$(cd "$TOPDIR"; pwd)
 else

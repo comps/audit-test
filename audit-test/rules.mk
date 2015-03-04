@@ -389,9 +389,14 @@ subdirs_quiet:
 # Various helper rules
 ##########################################################################
 
-# needs SHELL set to bash (due to printf %q)
+# needs SHELL set to bash (due to printf %q),
+# also avoid MAKE-specific variables
 export_env:
 	$(call parse_screl)  # for run.bash
-	@IFS=$$'\n'; for var in $$(env); do \
-		printf 'export %q\n' "$$var"; \
-	done;
+	@while IFS= read -r -d '' line; do \
+		var=$${line%%=*}; \
+		case "$$var" in \
+			MAKELEVEL|MAKEFILES|MAKEFLAGS|MFLAGS) continue ;; \
+		esac; \
+		printf 'export %q\n' "$$line"; \
+	done < <(env -0)

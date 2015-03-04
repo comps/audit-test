@@ -166,7 +166,8 @@ AUDIT_TEST_DEP_NATIVE := \
 	ebtables \
 	patch \
 	nmap-ncat \
-	psmisc
+	psmisc \
+	xinetd
 
 # ie. pkgname.i686 on x86_64 or pkgname.s390 on s390x
 AUDIT_TEST_DEP_MULTILIB := \
@@ -180,10 +181,12 @@ AUDIT_TEST_DEP_MULTILIB := \
 	dbus-devel
 
 # special cases
-# libseccomp only on x86
+# libseccomp only on x86,
+# kvm virt stuff only on x86 (for now)
 ifneq (,$(findstring $(MACHINE),x86_64 i686))
     AUDIT_TEST_DEP_NATIVE += libseccomp libseccomp-devel
     AUDIT_TEST_DEP_MULTILIB += libseccomp libseccomp-devel
+    AUDIT_TEST_DEP_NATIVE += libvirt qemu-kvm virt-install
 endif
 
 AUDIT_TEST_DEP := \

@@ -37,6 +37,9 @@ export PATH=$PATH:$TOPDIR/utils/
 
 source audisp-remote_functions.bash || exit 2
 
+# make sure environment variables are exported
+eval "$(make -C $TOPDIR --no-print-directory -f Makefile export_env)"
+
 action="$1"
 mode="$2"
 caller_ipv4="$3"
@@ -91,7 +94,7 @@ write_client_configs() {
 
     # Netserver is a client and TOE is acting as a server in this case
     write_config -s "$audisp_remote_conf" \
-	mode=$mode \
+        mode=$mode \
         remote_ending_action=reconnect \
         remote_server=$caller_ipv4
         # queue_depth = 4096 # Possible to increase queue for mode=forward
@@ -220,7 +223,7 @@ call_generate_audit_log_msg_sequence() {
         ((m=$i%25))
         if [ $m == 0 ] ; then
             sleep 1
-	    /sbin/auditctl -s
+            /sbin/auditctl -s
         fi
     done
     sleep 3 # Give it some time appear in audit.log
@@ -371,7 +374,12 @@ call_ns_simulate_disk_full() {
 
     # each record is at least 80 bytes (based on empirical evidence), so writing
     # 65 records should always take us over (65 * 80 =~ 5k)
-    write_local_records 65 || logger "write_local_records failed"
+    # on powerpc it will take 875 80 byte records to get to the 70K
+    if [[ $MACHINE != "ppc64le" && $MACHINE != "ppc64" && $MACHINE != "ppc" ]]; then
+       write_local_records 65 || logger "write_local_records failed"
+    else
+       write_local_records 875 || logger "write_local_records failed"
+    fi
 }
 
 
@@ -394,5 +402,3 @@ else
     logger "Failed to execute action ${action}"
     exit 2
 fi
-
-

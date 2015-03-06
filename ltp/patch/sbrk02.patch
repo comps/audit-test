@@ -1,0 +1,12 @@
+diff --git a/runtest/syscalls b/runtest/syscalls
+index 7703825..af5dcd2 100644
+--- a/runtest/syscalls
++++ b/runtest/syscalls
+@@ -872,7 +872,6 @@ rt_sigqueueinfo01 rt_sigqueueinfo01
+ rt_sigsuspend01 rt_sigsuspend01
+ 
+ sbrk01 sbrk01
+-sbrk02 sbrk02
+ 
+ sched_get_priority_max01 sched_get_priority_max01
+ sched_get_priority_max02 sched_get_priority_max02

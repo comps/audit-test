@@ -125,6 +125,7 @@ void test_freezer(int fd)
     write(fd, "freezer1\n", 9);
     pause();
     write(fd, "freezer2\n", 9);
+    pause();
 }
 
 int main(int argc, char **argv)

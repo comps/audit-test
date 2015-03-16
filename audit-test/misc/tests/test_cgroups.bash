@@ -210,8 +210,10 @@ case "$cgroup" in
         # reference: run without freeze restrictions
         coproc timeout 60 ./cgroup_limits freezer
         freezer1=$(head -n1 <&"${COPROC[0]}")
-        kill -INT "$!"  # continue
-        freezer2=$(timeout 2 head -n1 <&"${COPROC[0]}") || kill "$!"
+        pid=$(pgrep -P $!)  # the actual cgroups_limits, child of `timeout'
+        kill -INT "$pid"  # continue
+        freezer2=$(timeout 2 head -n1 <&"${COPROC[0]}") || kill "$pid"
+        kill -INT "$pid"  # continue
         wait "$!"
         [ $? -eq 0 -a "$freezer1" = "freezer1" -a "$freezer2" = "freezer2" ] || \
             exit_fail "reference run failed"
@@ -219,9 +221,11 @@ case "$cgroup" in
         # limited: freeze before signalling the process to continue
         coproc timeout 60 ./cgroup_exec "$base"/tasks ./cgroup_limits freezer
         freezer1=$(head -n1 <&"${COPROC[0]}")
+        pid=$(pgrep -P $!)  # the actual cgroups_limits, child of `timeout'
         echo FROZEN > "$base"/freezer.state
-        kill -INT "$!"  # continue
-        freezer2=$(timeout 2 head -n1 <&"${COPROC[0]}") || kill "$!"
+        kill -INT "$pid"  # continue
+        freezer2=$(timeout 2 head -n1 <&"${COPROC[0]}") || kill "$pid"
+        kill -INT "$pid"  # continue
         echo THAWED > "$base"/freezer.state
         wait "$!"
         [ $? -eq 143 -a "$freezer1" = "freezer1" -a "$freezer2" = "" ] || \

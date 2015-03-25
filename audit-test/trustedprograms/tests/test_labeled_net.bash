@@ -21,6 +21,7 @@
 # "network/system" directory as directed by the test plan.  Failure to
 # configure the system correctly will result in test failures.
 #
+## Tests: xinetd, systemd
 ## PROGRAM:     xinetd/systemd
 ## PURPOSE:
 ## Verify that the xinetd/systemd daemon correctly runs child servers at the
@@ -39,8 +40,14 @@
 ## TESTCASE:    connect to a xinetd/systemd controlled server at "s5"
 ## TESTCASE:    connect to a xinetd/systemd controlled server at "s5:c1"
 ## TESTCASE:    connect to a xinetd/systemd controlled server at "s5:c1.c5"
+##
+## 
+## Test: sshd
+## PROGRAM:     sshd
+## PURPOSE:     see sshd_test function documentation
 
 source testcase.bash || exit 2
+source tp_ssh_functions.bash || exit 2
 
 # be verbose
 set -x
@@ -110,6 +117,88 @@ function labeled_test {
 }
 
 #
+# This test exercises via localhost:
+#
+# 1. Socket activated, labeled networking aware sshd spawned by systemd
+# on port 222. The security level of the logged in user must correspond
+# to the security level of the incomming connection. It cannot be overriden.
+# Note that this test scenario requires "allow init_t lo_netif_t:netif ingress;"
+# SELinux rule to work - included # via lspp_test policy. This policy is
+# not included in the default policy as it is not an usual scenario and is
+# useful only for testing.
+#
+# 2. Login at different security level via "Traditional" SSH instance running
+# on port 22. This is not related to labeled networking in any way, but is really
+# close in testing scenario thus is included here.
+#
+sshd_test() {
+    local SSH_MLS_PORT=222
+    local SSH_PORT=22
+    local SUSER="ssh_mls_user"
+    local SOUT=
+
+    # check if systemd listening on port 222
+    ss -tlnp | grep -q "$SSH_MLS_PORT.*systemd" || \
+        exit_error "Systemd not listening on port $SSH_MLS_PORT"
+
+    # make sure we cleanup netlabel config on the end
+    prepend_cleanup "systemctl restart netlabel"
+
+    # faillock cleanup
+    prepend_cleanup "faillock --reset --user $SUSER"
+
+    # add test user
+    useradd -G wheel $SUSER || exit_error "Error adding user $SUSER"
+    prepend_cleanup "userdel -r $SUSER"
+    echo "$PASSWD" | passwd --stdin $SUSER
+    semanage login -a -s staff_u -r s0-s10 $SUSER || exit_error \
+        "Error adding selinux user $SUSER"
+    prepend_cleanup "semanage login -d $SUSER"
+
+    # test scenario 1. - systemd spawned sshd with labeling network
+    for level in s3 s8 s10; do
+        # setup labelling from localhost
+        netlabelctl unlbl add default address:127.0.0.1/32 \
+            label:"system_u:system_r:init_t:$level"
+
+        # try to connect via ssh
+        SOUT=$(ssh_mls_cmd_user "id -Z" $SUSER "-p 222")
+        grep -q "staff_u:staff_r:staff_t:$level" <<< "$SOUT" || exit_fail \
+            "Expected context 'staff_u:staff_r:staff_t:$level' not found"
+
+        # cleanup netlabel rules
+        netlabelctl unlbl del default address:127.0.0.1/32 \
+label:\"system_u:system_r:init_t:$level\"
+    done
+
+    # test if security level cannot be overriden
+    netlabelctl unlbl add default address:127.0.0.1/32 \
+        label:"system_u:system_r:init_t:s10"
+
+    # try to connect via ssh with overriden security level
+    SOUT=$(ssh_mls_cmd_user "id -Z" ${SUSER}/staff_r/s3 "-p 222")
+    grep -q "staff_u:staff_r:staff_t:$level" <<< "$SOUT" || \
+        exit_fail "Expected context 'staff_u:staff_r:staff_t:s10' not found"
+
+    # cleanup
+    netlabelctl unlbl del default address:127.0.0.1/32 \
+label:\"system_u:system_r:init_t:s10\"
+
+    # test scenario 2. - connect with specified security level to "ordinary"
+    # ssh daemon
+    for level in s3 s8 s10; do
+        SOUT=$(ssh_mls_cmd_user "id -Z" ${SUSER}/staff_r/$level)
+        grep -q "staff_u:staff_r:staff_t:$level" <<< "$SOUT" || exit_fail \
+            "Expected context 'staff_u:staff_r:staff_t:$level' not found"
+    done
+
+    # try to login with invalid security level
+    SOUT=$(ssh_mls_cmd_user "id -Z" ${SUSER}/staff_r/s11)
+    grep -q "staff_u:staff_r:staff_t:s11" <<< "$SOUT" && exit_fail \
+        "Unexpected login with invalid security level s11"
+}
+
+#
 # setup_systemd_labeled - create testing service in port 4002
 #
 setup_systemd_labeled() {
@@ -145,20 +234,31 @@ EOF
     systemctl start labeled.socket
 }
 
-# setup audit
-auditctl -a entry,always -S execve
-prepend_cleanup "auditctl -d entry,always -S execve"
+#
+# setup audit rules for systemd/xinetd tests
+#
+setup_audit_rules() {
+    auditctl -a entry,always -S execve
+    prepend_cleanup "auditctl -d entry,always -S execve"
+}
 
-case $1 in
+case "$1" in
     systemd)
+        setup_audit_rules
         setup_systemd_labeled
         port=4002
         ;;
     xinetd)
+        setup_audit_rules
         port=4201
         ;;
+    sshd)
+        disable_ssh_strong_rng 
+        sshd_test
+        exit_pass
+        ;;
     *)
-        exit_error "Unknown test $2"
+        exit_error "Unknown test $1"
         ;;
 esac
 

@@ -277,6 +277,50 @@ function ssh_mls_cmd {
     return 0
 }
 
+# Run command via ssh in mls mode.
+# $1 - cmd
+# $2 - user (optional)
+# $3 - opts (optional)
+function ssh_mls_cmd_user {
+    local CUSR= 
+    local COPTS="$3"
+
+    # check if required params specified
+    [ -z "$1" ] && exit_error "Error: no comamnd for $FUNCNAME"
+    [ -z "$2" ] && CUSR="eal" || CUSR="$2"
+
+    local M="${RANDOM}${RANDOM}${RANDOM}"
+
+    # when expecting user disregard MLS user specification
+    # i.e. eal/staff_r/s3 .. expect only eal
+    expect -c "set timeout $TIMEOUT
+      set ret 5     
+      spawn ssh $COPTS $CUSR@127.0.0.1
+      expect {
+        {*yes/no} { send -- yes\r; exp_continue }
+        {*assword} { send -- $PASSWD\r }
+        default { exit 1 }
+      }
+      expect {
+        {*${CUSR%%/*}} { send -- \"$1 && (echo -n $M && echo PASS) || (echo -n $M && echo FAIL); exit\r\" }
+        default { exit 2 }
+      }
+      expect {
+        {${M}PASS} { set ret 0 }
+        {${M}FAIL} { set ret 1 }
+        default { exit 3 }
+      }
+      expect {
+        eof { exit \$ret }
+        default { exit 4 }
+      }
+      "
+
+    [ $? -ne 0 ] && exit_fail "Failed to run $1 as $CUSR in mls mode" && return 1
+
+    return 0
+}
+
 # Check permissions and selinux context of the .ssh directory and the
 # underlying public and private key
 # $1 - user

@@ -65,9 +65,12 @@ gen_require(`
 	type aide_exec_t;
 	# needed for timedatectl testing
 	type systemd_timedated_t;
+	# needed for trustedprograms/labeled_net sshd
+	type init_t;
 	class dbus send_msg;
 	# for lspp_harness_t -> lspp_test_generic_exec_t via runcon
 	class file entrypoint;
+	# needed for trustedprograms/labeled_net sshd test
 ')
 ###
 #
@@ -352,6 +355,10 @@ allow netlabel_peer_t unlabeled_t:netif ingress;
 allow netlabel_peer_t node_t:node recvfrom;
 allow netlabel_peer_t lo_netif_t:netif ingress;
 allow kernel_t unlabeled_t:netif egress;
+
+# Required for trustedprograms/labeled_net sshd
+# Makes it possible to test via localhost interface
+allow init_t lo_netif_t:netif ingress;
 
 # network controls for the test harness and tests
 

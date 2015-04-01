@@ -30,10 +30,10 @@ restart_service auditd || exit 2
 
 # Fill the filesystem hosting audit.log, leaving 5k available
 # On power systems the page size is 64k so leave slightly more than that
-if [[ $MACHINE != "ppc64le" && $MACHINE != "ppc64" && $MACHINE != "ppc" ]]; then
-   fill_disk ${audit_log%/*} 5 || exit 2
-else
+if [[ "$MACHINE" =~ "ppc" || "$MACHINE" =~ "aarch" ]]; then
    fill_disk ${audit_log%/*} 70 || exit 2
+else
+   fill_disk ${audit_log%/*} 5 || exit 2
 fi
 # each record is at least 80 bytes (based on empirical evidence), so writing
 # 65 records should always take us over (65 * 80 =~ 5k)

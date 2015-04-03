@@ -15,105 +15,29 @@
 ###############################################################################
 
 source testcase.bash || exit 2
+source namespace_functions.bash || exit 2
 
 #
-# small generic helpers
+# simplified functions for generic namespacing
+# - abstract ns set parameter, use global exported var
 #
 
-#
-# functions useful for linux namespace testing
-#
-
-# unshare a namespace, create a persistent handle and schedule its removal
-#
-# exports global array NS_HANDLES, which contains list of mounted namespace
-# handles and therefore defines a "set" of namespaces, to be used by exec_ns
 create_ns()
 {
-    local ns="$1" tmp= pid=
-
-    [ "$ns" ] || exit_error "$FUNCNAME: no namespace specified"
-
-    # unshare the namespace in a new background process, to get its handle
-    # under known /proc/pid/ns/$ns
-    # - the `sleep 60' is a dummy process, anything that can stay alive
-    #   until we kill it would do
-    case "$ns" in
-        mnt)  unshare --mount sleep 60 & pid="$!" ;;
-        uts)  unshare --uts sleep 60 & pid="$!" ;;
-        ipc)  unshare --ipc sleep 60 & pid="$!" ;;
-        net)  unshare --net sleep 60 & pid="$!" ;;
-        pid)
-            # special case - namespace is unshared only *after* additional fork
-            # (or clone) and pids 0 and 1 need to be running for the ns to exist
-            # - the ns itself exists since the second forked process, so we need
-            #   to get pid of it, instead of our child
-            unshare --pid initwrap sleep 3600 & pid="$!"
-            # wait for unshare to exec initwrap
-            wait_for_pname "$pid" "initwrap" || exit_error
-            # wait for initwrap to fork
-            pid=$(wait_for_child "$pid") || exit_error
-            ;;
-        #user) unshare --user sleep 60 & pid="$!" ;;
-        *)    exit_error "$FUNCNAME: unknown namespace: $ns"
-    esac
-
-    [ "$pid" ] || exit_error "$FUNCNAME: child pid empty"
-
-    # wait for unshare/initwrap to exec sleep
-    wait_for_pname "$pid" "sleep" || exit_error
-
-    # mount the handle somewhere
-    tmp=$(mktemp)
-
-    # the mountpoint needs to be private to this ("parent") namespace,
-    # due to RH bug 1098632, hence the initial --bind magic - to make
-    # the file into a mountpoint, which can be made private
-    prepend_cleanup "umount \"$tmp\"; umount \"$tmp\"; rm -f \"$tmp\";"
-    mount --bind "$tmp" "$tmp" || exit_error
-    mount --make-private "$tmp" || exit_error
-    mount --bind "/proc/$pid/ns/$ns" "$tmp" || \
-        exit_error "$FUNCNAME: handle mounting failed"
-
-    # kill the (now useless) handle-creating process
-    if [ "$ns" = "pid" ]; then
-        # don't kill init of the new pid namespace right now,
-        # schedule it for cleanup
-        prepend_cleanup "kill -9 \"$pid\"; wait \"$pid\" 2>/dev/null;"
-    else
-        kill -9 "$pid"
-        wait "$pid" 2>/dev/null
-    fi
-
-    # store the handle location in a global array
-    declare -g -a NS_HANDLES
-    NS_HANDLES+=("$tmp")
-
+    declare -g -x NS_SET
+    NS_SET=$(create_nsset "$@") || exit_error "create_nsset failed"
+    prepend_cleanup "kill -9 \"$NS_SET\""
     return 0
 }
-
-# execute given command in namespaces defined by the current NS_HANDLES set
 exec_ns()
 {
-    local handle_args=() i=
-
-    [ "$1" ] || exit_error "$FUNCNAME: no command specified"
-
-    # transform all handles into "-a handle1 -a handle2 ..."
-    for i in $(seq 0 $((${#NS_HANDLES[*]}-1))); do
-        handle_args+=("-a")
-        handle_args+=("${NS_HANDLES[$i]}")
-    done;
-
-    # execute the command
-    setns "${handle_args[@]}" "$@"
-
+    exec_nsset "$NS_SET" "$@"
     return $?
 }
 
 #
 # environment preparation functions
-# (NOTE: these functions need already created namespace sets! (NS_HANDLES))
+# (NOTE: these functions need already created namespace set! (NS_SET))
 #
 
 # prepare environment for mnt namespace testing

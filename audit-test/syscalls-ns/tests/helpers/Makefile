@@ -18,7 +18,7 @@ TOPDIR		= ../../..
 
 include $(TOPDIR)/rules.mk
 
-ALL_EXE		= setns initwrap dropcap vm_transfer_dummy
+ALL_EXE		= dropcap vm_transfer_dummy
 
 dropcap: LDLIBS += -lcap
 

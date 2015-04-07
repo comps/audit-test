@@ -1,0 +1,26 @@
+RELRO (and others) system-wide scanner
+======================================
+
+This tool scans the entire system (excl. /dev, /proc, /sys) for ELF binaries
+and analyzes them for various security-related ELF-specific features, mainly
+relro ("relocation read-only"). See the (simple) source for more info.
+
+To generate out.log and out.err, simply:
+
+make run
+
+To clean the generated log outputs:
+
+make clean
+
+Note that the outputs may (will) contain false relro positives, which can be
+ignored based on your specific needs, for example:
+
+- kernel modules (/lib/modules)
+- grub2 modules (/boot/grub2)
+- object files (*.o)
+- binary "archives" (*.a)
+- firmware / alsa firmware blobs
+- etc.
+
+# vim: syntax=off :

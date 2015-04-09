@@ -694,6 +694,33 @@ wait_for_cmd()
     return 1
 }
 
+# (efficiently) wait for a process to start listening on a tcp/udp socket
+# proto is 'tcp', 'udp', 'tcp6', 'udp6' or any glob matching these,
+# ie. 'tcp*' (for tcp,tcp6) or even '*' (for any of the 4 mentioned)
+# note: this func is linux namespace aware, uses ns of the target pid
+wait_for_listen()
+{
+    local i="$WAIT_FOR_MAX" socks= sock=
+    local pid="$1" proto="$2" port="$3"
+    # glob translation
+    # FIXME: rewrite `(tcp|..)' back to `tcp|..)', RHBZ#1212775
+    proto=$(cd "/proc/${pid}/net/" && for i in $(eval echo "$proto"); do \
+            case "$i" in (tcp|tcp6|udp|udp6) echo -n "$PWD/$i ";; esac; done; )
+    [ "$proto" ] || return 1
+    # sock grepping
+    port=$(printf "%04X" "$port")
+    for ((;i>0;i--)); do
+        [ -d "/proc/$pid" ] || return 1
+        for sock in $(cat $proto 2>/dev/null | \
+                        awk "/^ +[0-9]+: [^:]+:${port}/ {print \$10}"); do
+            readlink "/proc/${pid}/fd/"* | grep -q "^socket:\[${sock}\]$" && \
+                return 0
+        done
+        sleep "$WAIT_FOR_SLEEP"
+    done
+    return 1
+}
+
 # wait for pid $1 to have at least 1 child (fork done) and return its pid
 #
 # use case - simple command wrapper, which does something and spawns a child,

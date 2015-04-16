@@ -163,8 +163,8 @@ function ssh_create_key {
         expect -c "set timeout $TIMEOUT
             spawn ssh $1@localhost \"ssh-keygen -t $3 -b $4 -N '$5' -f \\\$(pwd)/.ssh/id_$3\"
             expect {
-                {yes/no} { send -- \"yes\r\"; exp_continue }
-                {assword:} { send -- \"$2\r\"; exp_continue }
+                {yes/no} { after 100; send -- \"yes\r\"; exp_continue }
+                {assword:} { after 100; send -- \"$2\r\"; exp_continue }
                 {randomart} {
                     expect eof { exit 0 }
                     default { exit 1 }
@@ -207,8 +207,8 @@ function ssh_cmd {
     expect -c "set timeout $TIMEOUT
         spawn ssh $1@localhost \"$3\"
         expect {
-            {yes/no} { send -- yes\r; exp_continue }
-            {assword:} { send -- $2\r }
+            {yes/no} { after 100; send -- yes\r; exp_continue }
+            {assword:} { after 100; send -- $2\r }
             eof { catch wait result; exit [lindex \$result 3] }
         }
         expect {
@@ -260,7 +260,7 @@ function ssh_mls_cmd {
       expect {
         {*root} { 
           after 1000 {
-            send -- \"$1 && (echo -n $M && echo PASS) || (echo -n $M && echo FAIL)\r\" 
+            send -- \"$1 && (echo -n $M && echo PASS) || (echo -n $M && echo FAIL)\r\"
           }
         }
         default { exit 6 }
@@ -297,12 +297,12 @@ function ssh_mls_cmd_user {
       set ret 5     
       spawn ssh $COPTS $CUSR@127.0.0.1
       expect {
-        {*yes/no} { send -- yes\r; exp_continue }
-        {*assword} { send -- $PASSWD\r }
+        {*yes/no} { after 100; send -- yes\r; exp_continue }
+        {*assword} { after 100; send -- $PASSWD\r }
         default { exit 1 }
       }
       expect {
-        {*${CUSR%%/*}} { send -- \"$1 && (echo -n $M && echo PASS) || (echo -n $M && echo FAIL); exit\r\" }
+        {*${CUSR%%/*}} { after 100; send -- \"$1 && (echo -n $M && echo PASS) || (echo -n $M && echo FAIL); exit\r\" }
         default { exit 2 }
       }
       expect {
@@ -393,21 +393,21 @@ function ssh_copy_key {
         if {\"$SUSR\" ne \"\"} {
             spawn ssh $1@localhost
             expect {
-                {yes/no} { send -- yes\r; exp_continue }
-                {assword:} { send -- $2\r; exp_continue }
+                {yes/no} { after 100; send -- yes\r; exp_continue }
+                {assword:} { after 100; send -- $2\r; exp_continue }
                 {$1}
             }
-            send -- \"ssh-copy-id -i $PRIVKEY $DUSR@localhost\r\"
+            after 100; send -- \"ssh-copy-id -i $PRIVKEY $DUSR@localhost\r\"
         } else {
             spawn ssh-copy-id -i $PRIVKEY $DUSR@localhost
         }
         expect {
-            {yes/no} { send -- yes\r; exp_continue }
-            {assword:} { send -- $DPASS\r }
+            {yes/no} { after 100; send -- yes\r; exp_continue }
+            {assword:} { after 100; send -- $DPASS\r }
             default { exit 1 }
         }
         expect {try logging}
-        send -- \"exit\r\"
+        after 100; send -- \"exit\r\"
         expect eof { exit 0 }
         exit 2"
 
@@ -439,16 +439,16 @@ function ssh_connect_key {
     expect -c "set timeout $TIMEOUT
         spawn ssh $1@localhost
         expect {
-            {yes/no} { send -- yes\r; exp_continue }
-            {assword:} { send -- $2\r; exp_continue }
+            {yes/no} { after 100; send -- yes\r; exp_continue }
+            {assword:} { after 100; send -- $2\r; exp_continue }
             {$1}
         }
-        send -- \"ssh -o PasswordAuthentication=no $3@localhost whoami\r\"
+        after 100; send -- \"ssh -o PasswordAuthentication=no $3@localhost whoami\r\"
         expect {
             {yes/no} { set ret 1 }
             -re \"$3\\\r\" { set ret 0 }
             {*assword:} { set ret 2; send BADPASS\r }
-            {passphrase} { send -- $4\r; exp_continue }
+            {passphrase} { after 100; send -- $4\r; exp_continue }
             {Permission denied (publickey)} { set ret 5 }
             {Your account has expired} { set ret 6 }
             {Your password has expired} { set ret 7 }
@@ -499,18 +499,17 @@ function ssh_connect_pass {
         spawn ssh $1@localhost
         expect {
             {Read from socket failed} { exit 9 }
-            {yes/no} { send -- yes\r; exp_continue }
-            {assword:} { send -- $2\r; exp_continue }
+            {yes/no} { after 100; send -- yes\r; exp_continue }
+            {assword:} { after 100; send -- $2\r; exp_continue }
             {no matching mac found} { exit 5 }
             eof { exit 10 }
             {$1}
         }
-        after 100
-        send -- \"ssh $5 $3@localhost whoami\r\"
+        after 100; send -- \"ssh $5 $3@localhost whoami\r\"
         expect {
-            {yes/no} { send -- yes\r; exp_continue }
-            {assword:} { send -- $4\r }
-            {passphrase} { send -- INCORRECTPASS\r; exp_continue }
+            {yes/no} { after 100; send -- yes\r; exp_continue }
+            {assword:} { after 100; send -- $4\r }
+            {passphrase} { after 100; send -- INCORRECTPASS\r; exp_continue }
             {Unable to negotiate a key exchange method} { exit 3 }
             {Your password has expired} { exit 4 }
             {You are required to change} { exit 11 }
@@ -527,7 +526,7 @@ function ssh_connect_pass {
             {Password expired} { exit 4 }
             {Your password has expired} { exit 11 }
             {You are required to change your password} { exit 11 }
-            {assword:} { send -- $4\r; exp_continue }
+            {assword:} { after 100; send -- $4\r; exp_continue }
             {Permission denied} { exit 2 }
             -re \"$3\\\r\" { exit 0 }
         }"

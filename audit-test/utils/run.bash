@@ -246,6 +246,7 @@ function startup {
 	log_format=RAW \
 	flush=SYNC \
 	max_log_file_action=ROTATE \
+	max_log_file=100 \
 	    || return 2
     # remove the configuration for the audit dispatcher
     write_config -r "$auditd_conf" dispatcher DISP_qos || return 2

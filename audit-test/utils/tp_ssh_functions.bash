@@ -461,6 +461,7 @@ function ssh_connect_pass {
             eof { exit 10 }
             {$1}
         }
+        after 100
         send -- \"ssh $5 $3@localhost whoami\r\"
         expect {
             {yes/no} { send -- yes\r; exp_continue }

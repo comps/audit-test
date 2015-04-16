@@ -201,6 +201,19 @@ function backup {
     done
 }
 
+# backup_data - backup file contents, with automatic restore on exit
+#
+# useful for backing up values in /proc or /sys or when you just need
+# the original file to retain its inode number
+function backup_data {
+    declare tmp
+    for f in "$@"; do
+        tmp=$(mktemp) || exit_error
+        cat "$f" > "$tmp" || exit_error
+        prepend_cleanup "cat '$tmp' > '$f'; rm -f '$tmp'"
+    done
+}
+
 # human_time - given a number of seconds, prints out a human-readable format
 #
 # note: date(1) cannot do this as it heavily relies on the concept of wall

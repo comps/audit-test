@@ -228,33 +228,51 @@ function ssh_mls_cmd {
     [ -z "$1" ] && exit_error "Error: no comamnd for $FUNCNAME"
 
     local M="${RANDOM}${RANDOM}${RANDOM}"
+    local rc=0
 
     expect -c "set timeout $TIMEOUT
-      spawn ssh eal@localhost
+      spawn -nottycopy -nottyinit ssh eal@localhost
       expect {
-        {yes/no} { send -- yes\r; exp_continue }
-        {assword} { send -- $PASSWD\r }
-        default { exit 1 }
+        {*yes/no} { 
+          after 1000 { send -- yes\r }
+          exp_continue 
+        }
+        {*assword} { after 1000 { send -- $PASSWD\r } }
+        default { exit 2 }
       }
       expect {
-        {get default type} { exit 1 }
-        {eal} { send -- \"newrole -r lspp_test_r\n\"; exp_continue }
-        {assword} { send -- \"$PASSWD\r\" }
-        default { exit 1 }
+        {*get default type} { exit 3 }
+        {*eal} { 
+          after 1000 { send -- \"newrole -r lspp_test_r\n\" }
+          exp_continue 
+        }
+        {*assword} { after 1000 { send -- \"$PASSWD\r\" } }
+        default { exit 4 }
       }
       expect {
-        {eal} { send -- \"/bin/su -\r\"; exp_continue }
-        {assword} { send -- \"$PASSWD\r\" }
-        default { exit 1 }
+        {*eal} {
+          after 1000 { send -- \"/bin/su -\r\" }
+          exp_continue 
+        }
+        {*assword} { after 1000 { send -- \"$PASSWD\r\" } }
+        default { exit 5 }
       }
-      expect {root} { send -- \"$1 && (echo -n $M && echo PASS) || (echo -n $M && echo FAIL)\r\" }
+      expect {
+        {*root} { 
+          after 1000 {
+            send -- \"$1 && (echo -n $M && echo PASS) || (echo -n $M && echo FAIL)\r\" 
+          }
+        }
+        default { exit 6 }
+      }
       expect {
         {${M}PASS} { exit 0 }
         {${M}FAIL} { exit 1 }
       }
-      exit 2"
+      exit 7"
 
-    [ $? -ne 0 ] && exit_fail "Failed to run $1 as root in mls mode" && return 1
+    rc=$?
+    [ $rc -ne 0 ] && exit_fail "Failed to run $1 as root in mls mode (rc=$rc)" && return 1
 
     return 0
 }

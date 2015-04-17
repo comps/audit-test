@@ -1,0 +1,13 @@
+diff --git a/testcases/kernel/syscalls/readahead/readahead02.c b/testcases/kernel/syscalls/readahead/readahead02.c
+index f567037..f82480a 100644
+--- a/testcases/kernel/syscalls/readahead/readahead02.c
++++ b/testcases/kernel/syscalls/readahead/readahead02.c
+@@ -51,7 +51,7 @@
+ char *TCID = "readahead02";
+ int TST_TOTAL = 1;
+ 
+-#if defined(__NR_readahead)
++#if defined(__NR_readahead) && __WORDSIZE == 64
+ static const char testfile[] = "testfile";
+ static const char drop_caches_fname[] = "/proc/sys/vm/drop_caches";
+ static const char meminfo_fname[] = "/proc/meminfo";

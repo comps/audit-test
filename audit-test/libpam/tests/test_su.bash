@@ -83,11 +83,11 @@ positive_test() {
         # This is reached through the perl -e 'system...' above
         expect -c "
             spawn /bin/su - $USR
-            expect {*assword:} {send $USRPASS\r}
-            expect {*$USR} {send PS1=:::\r}
-            expect {:::$} {send \"tty > $tmp1\r\"}
-            expect {:::$} {send \"ps -eo ruid,euid,fsuid,rgid,egid,fsgid --no-headers -q \$\$ > $tmp2\r\"}
-            expect {:::$} {close; wait}"
+            expect {*assword:} {after 100; send $USRPASS\r}
+            expect {*$USR} {after 100; send PS1=:::\r}
+            expect {:::$} {after 100; send \"tty > $tmp1\r\"}
+            expect {:::$} {after 100; send \"ps -eo ruid,euid,fsuid,rgid,egid,fsgid --no-headers -q \$\$ > $tmp2; exit\r\"}
+            expect {eof} {close; wait}"
     fi
 }
 
@@ -113,7 +113,7 @@ negative_test() {
     else
         expect -c "
             spawn /bin/su - $USR
-            expect {*assword:} {send badpassword\r}
+            expect {*assword:} {after 100; send badpassword\r}
             expect {incorrect password} {close; wait}"
     fi
 }
@@ -138,18 +138,18 @@ mls_test() {
             set timeout 60
             spawn ssh ${TEST_USER}@localhost
             expect {
-                {*yes/no} { send yes\r; exp_continue }
-                {*assword} { send $TEST_USER_PASSWD\r }
+                {*yes/no} { after 100; send yes\r; exp_continue }
+                {*assword} { after 100; send $TEST_USER_PASSWD\r }
                 default { exit 1 }
             }
             expect {
-                {*${TEST_USER}} { send \"newrole -r sysadm_r\r\"; exp_continue }
-                {*assword} { send $TEST_USER_PASSWD\r }
+                {*${TEST_USER}} { after 100; send \"newrole -r sysadm_r\r\"; exp_continue }
+                {*assword} { after 100; send $TEST_USER_PASSWD\r }
                 default { exit 3 }
             }
             expect {
-                {*/sysadm_r} { send \"/bin/su - -c 'id -Z'; exit\r\"; exp_continue}
-                {*assword} { send $PASSWD\r }
+                {*/sysadm_r} { after 100; send \"/bin/su - -c 'id -Z'; exit\r\"; exp_continue}
+                {*assword} { after 100; send $PASSWD\r }
             }
             expect {*logout} { exit 0 }
             exit 4

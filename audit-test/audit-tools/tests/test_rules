@@ -27,6 +27,7 @@
 source testcase.bash || exit 2
 
 bin_path="../../utils/bin"
+audit_log="/var/log/audit/audit.log"
 
 # 0. Type of audit event
 # ======================
@@ -141,6 +142,16 @@ filters[16]="-x do_fork"
 
 # Initial clean-up.
 auditctl -D >/dev/null
+prepend_cleanup "auditctl -D >/dev/null"
+
+# backup audit log
+backup "$audit_log"
+
+# Mitigate issues with full backlog
+auditctl -b 8192
+
+# Final clean-up.
+append_cleanup "restart_service auditd"
 
 for t in $([[ $PPROFILE == lspp ]] && seq 0 16 || seq 0 13); do
 
@@ -151,9 +162,10 @@ for t in $([[ $PPROFILE == lspp ]] && seq 0 16 || seq 0 13); do
     # Adding audit rule.
     date_mark="$(date +%T)"
     auditctl -A never,exit -F arch=b${MODE} $(echo ${rules[$t]})
+    sleep 0.1
 
     # Trigger the rule.
-    eval ${triggers[$t]} >/dev/null 2>&1
+    eval ${triggers[$t]}
 
     # Filter audit record.
     ausearch -ts "$date_mark" $(echo ${filters[$t]}) 2>/dev/null && \
@@ -161,7 +173,7 @@ for t in $([[ $PPROFILE == lspp ]] && seq 0 16 || seq 0 13); do
 
     # Clean-up.
     auditctl -D >/dev/null
-    sleep 1
+    rm -f $audit_log && restart_service "auditd"
 
     ##########
     # ALWAYS #
@@ -170,20 +182,27 @@ for t in $([[ $PPROFILE == lspp ]] && seq 0 16 || seq 0 13); do
     # Adding audit rule.
     date_mark="$(date +%T)"
     auditctl -a always,exit -F arch=b${MODE} $(echo ${rules[$t]})
+    sleep 0.1
 
     # Trigger the rule.
-    eval ${triggers[$t]} >/dev/null 2>&1
+    eval ${triggers[$t]}
 
     # Filter audit record.
-    ausearch -ts "$date_mark" $(echo ${filters[$t]}) 2>/dev/null || \
-        exit_fail "Missing event (test #${t})"
+    # Actively retry up to 5s. We were able to hit a race 
+    # condition here with "backlog 0"
+    passed=
+    for i in {1..50}; do
+        if ausearch -ts "$date_mark" $(echo ${filters[$t]}) 2>/dev/null; then
+            passed=1
+            break
+        fi
+        sleep 0.1
+    done
+    [ -z "$passed" ] && exit_fail "Missing event (test #${t}) after 5s"
 
     # Clean-up.
     auditctl -D >/dev/null
-    sleep 1
+    rm -f $audit_log && restart_service "auditd"
 done
-
-# Final clean-up.
-restart_service "auditd"
 
 exit_pass

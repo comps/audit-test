@@ -88,6 +88,9 @@ function configure {
     echo $IPA_PASS | kinit ${IPA_ADMIN}@$IPA_REALM >/dev/null
     klist -s || exit_error "Could not get valid credentials for ${IPA_ADMIN}@$IPA_REALM"
 
+    # passwords expire in 20000 days
+    ipa pwpolicy-mod --maxlife=20000 global_policy
+
     # set default mapping to user_u
     print_info "Setting default SELinux user mapping"
     ipa config-mod --ipaselinuxusermapdefault="user_u:s0" >/dev/null

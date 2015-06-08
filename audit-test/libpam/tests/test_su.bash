@@ -82,6 +82,7 @@ positive_test() {
     else
         # This is reached through the perl -e 'system...' above
         expect -c "
+            set timeout 30
             spawn /bin/su - $USR
             expect {*assword:} {after 100; send $USRPASS\r}
             expect {*$USR} {after 100; send PS1=:::\r}

@@ -268,6 +268,11 @@ check_suite() {
         local context=$(stat -c%C "$AUDITDIR")
         check "[ \"$context\" = \"system_u:object_r:lspp_test_dir_t:SystemLow\" ]" 0 \
             "$AUDITDIR has correct context"
+
+        # check if suite files correctly labeled
+        local inclab
+        inclab=$(restorecon -FRvn "$AUDITDIR" | wc -l)
+        check "[ $inclab  -eq 0 ]" 0 "$AUDITDIR has files correctly labeled"
     fi
 
     if [ "$CHECK_FAILED" ]; then

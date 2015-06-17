@@ -1,0 +1,105 @@
+This bucket asserts that each tested syscall is affected by appropriate
+Linux namespaces (as defined in run.conf). It intentionally doesn't go far
+beyond this simple verification.
+
+The structure of this bucket is as follows, from high (top) to low (bottom)
+level code:
+
+  - run.conf - what should be tested for which namespaces
+  - cmdline.conf - how it should be tested (generic cmdlines)
+  - tests/$nsname/test_* - how it should be tested (exceptions)
+  - tests/syscalls_ns_functions - included by tests/$nsname/*, various
+    backend (helper) functions
+
+IOW, the actual namespace setup (backend) and test environment preparation
+is done by helpers in syscalls_ns_functions.bash, which are used either by
+the generic.bash test (sourcing cmdline.conf) or per-exception tests
+(test_$scname.bash), which are scheduled to run by the run_test and `+' logic
+in run.conf, which transforms the actual user-specified tests (in run.conf).
+
+To add a new syscall, modify cmdline.conf and specify how its wrapper should
+be called, then add it to run.conf and declare which namespaces it should be
+tested against. If the syscall cannot be tested by one of the per-namespace
+generic tests (tests/*/generic.bash) due to special setup/verification
+requirements, copy the generic.bash in respective namespace to
+test_$syscallname.bash and modify this test accordingly, preserving the
+original test cases specified by generic.bash (also declared below).
+When testing a syscall using the test_$syscallname.bash method, you only need
+to specify it in run.conf (to call the test), cmdline.conf should remain
+unmodified.
+
+Test "matrix" for each namespace supported by this bucket:
+
+MNT:
+- 3 possible test combinations, all revolving around a parent process with two
+  unmounted directories ("A", containing directory "a" with file "a", "B",
+  containing directory "b" with file "b", both having directory "c" with
+  file "c" inside and owner/mode set to bin/000 on both in "B") and its child
+  process, which immediately mounts "B" over "A" (bindmount)
+  - IOW:
+    - $path/a (dir) or $path/a/a (file) should exist only in the original ns
+    - $path/b (dir) or $path/b/b (file) should exist only in the new ns
+    - $path/c (dir) or $path/c/c (file) should exist in both, but should be
+      readable only in the original namespace
+
+  - MNT-1A: syscall from parent on "A/a" should succeed
+            (parent namespace unaffected)
+  - MNT-1B: (sanity) syscall from child on "A/a" should fail (no such file)
+
+  - MNT-2A: syscall from parent on "A/b" should fail
+            (child namespace unreachable)
+  - MNT-2B: (sanity) syscall from child on "A/b" should succeed (file exists)
+
+  - MNT-3A: syscall from parent on "A/c" (with dropped cap_dac_override) should
+            succeed (parent namespace unaffected)
+  - MNT-3B: (sanity) syscall from child on "A/c" (with dropped
+            cap_dac_override) should fail (permission denied)
+
+UTS:
+- 1 possible test combination, with parent in the default environment and child
+  changing system hostname and domainname
+
+  - UTS-1A: syscall from parent should return the original unchanged uts
+  - UTS-1B: (sanity) syscall from child should return the changed uts
+
+IPC:
+- 3 possible test combinations (objects), a parent-created one ("a"),
+  a child-created one ("b") and a shared one ("c") with 000 perms and bin
+  as owner in the child
+
+  - IPC-1A: syscall from parent on "a" should succeed
+            (parent namespace unaffected)
+  - IPC-1B: (sanity) syscall from child on "a" should fail (no such key)
+
+  - IPC-2A: syscall from parent on "b" should fail (child namespace unreachable)
+  - IPC-2B: (sanity) syscall from child on "b" should succeed (key exists)
+
+- since sysv ipc ids (msqid, semid, shmid) are allocated by the operating system
+  in a non-deterministic fashion, the following test cases are limited only to
+  syscalls using ipc keys (which can be created with predictable values)
+
+  - IPC-3A: syscall from parent on "c" (with dropped cap_dac_override) should
+            succeed (parent namespace unaffected)
+  - IPC-3B: (sanity) syscall from child on "c" (with dropped cap_dac_override)
+            should fail (permission denied)
+
+PID:
+- 2 possible test combinations for kill()-like syscalls (since pid namespaces
+  have "hierarchy")
+
+  - PID-1A: syscall from parent on parent's pid of the "placeholder C" process
+            should succeed (parent can affect child)
+  - PID-1B: (sanity) syscall from child on child's pid of the "placeholder C"
+            process should succeed (process exists)
+
+  - PID-2A: syscall from child on parent's pid of the "placeholder P" process
+            should fail (child cannot affect parent)
+  - PID-2B: (sanity) syscall from parent on parent's pid of the "placeholder P"
+            process should succeed (process exists)
+
+- 1 possible test combination for getpid()-like syscalls that provide only pid,
+  tid or sid
+
+  - PID-3A: syscall from parent should return pid value >= 100, due to how
+            pid re-use works on Linux (and similar Unix-like systems)
+  - PID-3B: syscall from child should return pid < 100

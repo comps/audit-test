@@ -29,7 +29,7 @@ ALL_EXE		= $(UTILS_EXE)
 
 SUB_DIRS	= bin
 ifdef LSM_SELINUX
-SUB_DIRS	+= network-server
+SUB_DIRS	+= network-server ns2
 endif
 
 include $(TOPDIR)/rules.mk

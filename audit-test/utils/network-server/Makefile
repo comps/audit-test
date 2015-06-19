@@ -32,3 +32,4 @@ install: $(SRVR_EXE)
 	install -o root -g root -m 0644 lblnet_tst-tcp /etc/xinetd.d
 	chkconfig xinetd on
 	service xinetd restart
+	make -C $(UTILSDIR)/ns2 install

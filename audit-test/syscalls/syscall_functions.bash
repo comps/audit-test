@@ -670,10 +670,18 @@ function create_fs_objects_cap {
 	    [[ $tag == *fail* ]]  && augrokfunc=augrok_default
 	    ;;
 
-	module_load)
-	    target=/lib/modules/$(uname -r)/kernel/drivers/net/dummy.ko
-	    augrokfunc=augrok_default
-	    ;;
+        module_load)
+            create_file target mode=$all
+            local kmod=/lib/modules/$(uname -r)/kernel/drivers/net/dummy.ko
+            if [ -f "$kmod" ]; then
+                cat "$kmod" > "$target"
+            elif [ -f "${kmod}.xz" ]; then
+                xz -d < "${kmod}.xz" > "$target"
+            else
+                exit_error "dummy.ko not found"
+            fi
+            augrokfunc=augrok_default
+            ;;
 
 	module_unload)
 	    target=dummy

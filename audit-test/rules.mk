@@ -183,12 +183,13 @@ AUDIT_TEST_DEP_BOTH := \
 	dbus-devel
 
 # special cases
-# libseccomp only on x86,
-# kvm virt stuff only on x86 (for now)
 ifneq (,$(findstring $(MACHINE),x86_64 i686))
+    # libseccomp
     AUDIT_TEST_DEP_NATIVE += libseccomp libseccomp-devel
     AUDIT_TEST_DEP_MULTILIB += libseccomp libseccomp-devel
-    AUDIT_TEST_DEP_NATIVE += libvirt qemu-kvm virt-install
+    # kvm virt stuff only on x86 (for now)
+    AUDIT_TEST_DEP_NATIVE += libvirt qemu-kvm
+    AUDIT_TEST_DEP_NOARCH += virt-install
 endif
 
 # add pkg name suffixes

@@ -89,7 +89,7 @@ or
 Ensure that all files in the target directory have the correct ownership:
 
 # chown -R root:root /usr/local/eal4_testing
-# chmod a+rX /usr/local/eal4_testing
+# chmod -R a+rX /usr/local/eal4_testing
 
 Install package requirements / dependencies
 -------------------------------------------

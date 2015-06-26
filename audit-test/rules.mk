@@ -157,7 +157,8 @@ AUDIT_TEST_DEP_NATIVE := \
 	patch \
 	nmap-ncat \
 	psmisc \
-	xinetd
+	xinetd \
+	rsyslog
 
 # ie. pkgname.i686 on x86_64 or pkgname.s390 on s390x
 AUDIT_TEST_DEP_MULTILIB :=

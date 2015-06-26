@@ -72,8 +72,6 @@ run:
 	done
 	@$(check_set_PPROFILE); \
 	$(check_set_PASSWD); \
-	$(check_set_LBLNET_SVR_IPV4); \
-	$(check_set_LBLNET_SVR_IPV6); \
 	$(check_TTY); \
 	$(MAKE) all && \
 	for x in $(RUN_DIRS); do make -C $$x $(MAKECMDGOALS); done

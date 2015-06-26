@@ -258,30 +258,6 @@ check_set_PASSWD = \
 	    trap - 1 2; \
 	done
 
-ifeq (, $(findstring network, $(RUN_DIRS)))
-check_set_LBLNET_SVR_IPV4 = true
-else
-check_set_LBLNET_SVR_IPV4 = \
-	while [[ -z $$LBLNET_SVR_IPV4 ]]; do \
-	    trap 'stty echo; exit' 1 2; \
-	    read -p "Remote test server IPv4 address: " LBLNET_SVR_IPV4; \
-		echo; export LBLNET_SVR_IPV4; \
-	    trap - 1 2; \
-	done
-endif
-
-ifeq (, $(findstring network, $(RUN_DIRS)))
-check_set_LBLNET_SVR_IPV6 = true
-else
-check_set_LBLNET_SVR_IPV6 = \
-	while [[ -z $$LBLNET_SVR_IPV6 ]]; do \
-	    trap 'stty echo; exit' 1 2; \
-	    read -p "Remote test server IPv6 address: " LBLNET_SVR_IPV6; \
-		echo; export LBLNET_SVR_IPV6; \
-	    trap - 1 2; \
-	done
-endif
-
 check_TTY = \
 	if [[ -f /etc/selinux/mls/contexts/securetty_types ]]; then \
 	    tty=`/usr/bin/tty`; \

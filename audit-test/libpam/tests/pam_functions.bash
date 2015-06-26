@@ -21,7 +21,7 @@ source testcase.bash || exit 2
 # global variables
 ######################################################################
 
-if [[ "$DISTRO" != "RHEL" ]] ; then
+if [ "$DISTRO" = "SUSE" ]; then
     if [ -f /etc/vsftpd/vsftpd.conf ]; then
         vsftpd_conf=/etc/vsftpd/vsftpd.conf
     elif [ -f /etc/vsftpd.conf ]; then

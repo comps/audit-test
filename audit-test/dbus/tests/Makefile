@@ -18,9 +18,9 @@ TOPDIR		= ../..
 
 include $(TOPDIR)/rules.mk
 
-DBUS_EXE = dbus_test_server
-$(DBUS_EXE): LDLIBS += `pkg-config --libs dbus-1`
-$(DBUS_EXE): CFLAGS += `pkg-config --cflags dbus-1`
+ALL_EXE		= dbus_test_server
 
-ALL_EXE += $(DBUS_EXE)
-all: $(ALL_EXE)
+dbus_test_server: LDLIBS += `pkg-config --libs dbus-1`
+dbus_test_server: CFLAGS += `pkg-config --cflags dbus-1`
+
+executables: $(ALL_EXE)

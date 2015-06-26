@@ -21,7 +21,7 @@ include $(TOPDIR)/rules.mk
 
 ALL_EXE		= ausearch-test
 
-all: $(ALL_EXE)
-
 ausearch-test: CFLAGS += -D_GNU_SOURCE
 ausearch-test: LDLIBS += -lauparse -laudit
+
+executables: $(ALL_EXE)

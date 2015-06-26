@@ -18,20 +18,21 @@ TOPDIR		= ../..
 
 include $(TOPDIR)/rules.mk
 
-EXECUTABLE=do_tty devfileperm dirperm fileperm namedpipes_fifoperm suid_sgid unixdomainsocketperm semperm shmperm msqperm \
-	sys_procperms \
-	objreuse-brk objreuse-ftruncate objreuse-lseek objreuse-mmap objreuse-msg objreuse-sem objreuse-shm \
-	checkaccess sparse_file cgroup_limits cgroup_exec
+ALL_EXE		= do_tty devfileperm dirperm fileperm namedpipes_fifoperm \
+		suid_sgid unixdomainsocketperm semperm shmperm msqperm \
+		sys_procperms objreuse-brk objreuse-ftruncate objreuse-lseek \
+		objreuse-mmap objreuse-msg objreuse-sem objreuse-shm \
+		checkaccess sparse_file cgroup_limits cgroup_exec
 
 # seccomp only on x86
 ifneq (,$(findstring $(MACHINE),x86_64 i686))
-    EXECUTABLE += seccomp
+    ALL_EXE += seccomp
 endif
 
-all: $(EXECUTABLE)
+executables: $(ALL_EXE)
 
 namedpipes_fifoperm: LDLIBS += -pthread
 seccomp: LDLIBS += -lseccomp
 
 clean:
-	rm -f $(EXECUTABLE) extract_dir/* *.log
+	rm -f extract_dir/* *.log

@@ -22,4 +22,4 @@ ALL_EXE		= setns initwrap dropcap vm_transfer_dummy
 
 dropcap: LDLIBS += -lcap
 
-all: $(ALL_EXE)
+executables: $(ALL_EXE)

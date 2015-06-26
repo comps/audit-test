@@ -26,7 +26,7 @@ include $(TOPDIR)/rules.mk
 
 $(SRVR_EXE): LDLIBS += -lselinux
 
-all: $(ALL_EXE)
+executables: $(ALL_EXE)
 
 install: $(SRVR_EXE)
 	install -o root -g root -m 0644 lblnet_tst-tcp /etc/xinetd.d

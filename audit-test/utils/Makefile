@@ -17,28 +17,23 @@
 
 TOPDIR		= ..
 UTILSDIR	= .
+
+include $(TOPDIR)/rules.mk
+
 CPPFLAGS 	+= -I$(UTILSDIR)/include
 ifdef LSM_SELINUX
 LDLIBS		+= -lselinux
 
-UTILS_EXE	= test_context \
-		  test_setcon
+ALL_EXE		= test_context test_setcon
 endif
-
-ALL_EXE		= $(UTILS_EXE)
 
 SUB_DIRS	= bin
 ifdef LSM_SELINUX
 SUB_DIRS	+= network-server ns2
 endif
 
-include $(TOPDIR)/rules.mk
-
-all: README.augrok chmod_utils
-
-.PHONY: chmod_utils
-chmod_utils:
-	@chmod -R a+rX $$PWD
+all: README.augrok
+executables: $(ALL_EXE)
 
 README.augrok: augrok
 	pod2text augrok > $@

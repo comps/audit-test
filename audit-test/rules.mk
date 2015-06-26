@@ -225,14 +225,66 @@ parse_screl = $(eval export SCREL_SYSCALLS := \
 # Common rules
 ##########################################################################
 
-.PHONY: all run \
+.PHONY: all executables run rerun \
 	clean distclean verify _clean _distclean _verify
 
-all: deps subdirs $(ALL_AR) $(ALL_EXE) $(ALL_SO)
+all: deps subdirs executables
+
+executables:
+	@[ -z "$^" ] || chmod a+rX $^
 
 run:
 
 rerun:
+
+ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard run.conf)),)
+all: run.bash
+
+run.bash:
+	@[ -f run.bash ] || ln -svfn $(TOPDIR)/utils/run.bash run.bash
+
+run: all
+	@$(check_set_PPROFILE); \
+	$(check_set_PASSWD); \
+	./run.bash --header; \
+	./run.bash
+
+rerun: all
+	@$(check_set_PPROFILE); \
+	$(check_set_PASSWD); \
+	./run.bash --rerun
+endif
+
+_clean:
+	@if [[ "$(MAKECMDGOALS)" == clean ]]; then \
+	    for x in $(SUB_DIRS); do \
+		make -C $$x clean; \
+	    done; \
+	fi
+	$(RM) -r .deps
+	$(RM) $(ALL_OBJ) $(ALL_EXE) $(ALL_AR) $(ALL_SO)
+
+clean: _clean
+
+ALL_LOGS += run.log rollup.log logs
+_distclean: clean
+	@if [[ "$(MAKECMDGOALS)" == distclean ]]; then \
+	    for x in $(SUB_DIRS); do \
+		make -C $$x distclean; \
+	    done; \
+	fi
+	$(RM) -r $(ALL_LOGS)
+	if [[ -L run.bash ]]; then $(RM) run.bash; fi
+
+distclean: _distclean
+
+_verify:
+
+verify: _verify
+
+##########################################################################
+# Checks
+##########################################################################
 
 # Re-used in toplevel Makefile
 check_set_PPROFILE = \
@@ -274,52 +326,6 @@ check_TTY = \
 	        exit 1; \
 	    } \
 	fi
-
-ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard run.conf)),)
-all: run.bash
-
-run.bash:
-	[[ -f run.bash ]] || ln -sfn $(TOPDIR)/utils/run.bash run.bash
-
-run: all
-	@$(check_set_PPROFILE); \
-	$(check_set_PASSWD); \
-	./run.bash --header; \
-	./run.bash
-
-rerun: all
-	@$(check_set_PPROFILE); \
-	$(check_set_PASSWD); \
-	./run.bash --rerun
-endif
-
-_clean:
-	@if [[ "$(MAKECMDGOALS)" == clean ]]; then \
-	    for x in $(SUB_DIRS); do \
-		make -C $$x clean; \
-	    done; \
-	fi
-	$(RM) -r .deps
-	$(RM) $(ALL_OBJ)
-	$(RM) $(ALL_EXE) $(ALL_AR) $(ALL_SO)
-
-clean: _clean
-
-ALL_LOGS += run.log rollup.log logs
-_distclean: clean
-	@if [[ "$(MAKECMDGOALS)" == distclean ]]; then \
-	    for x in $(SUB_DIRS); do \
-		make -C $$x distclean; \
-	    done; \
-	fi
-	$(RM) -r $(ALL_LOGS)
-	if [[ -L run.bash ]]; then $(RM) run.bash; fi
-
-distclean: _distclean
-
-_verify:
-
-verify: _verify
 
 ##########################################################################
 # Dependency rules

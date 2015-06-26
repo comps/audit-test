@@ -20,4 +20,4 @@ include $(TOPDIR)/rules.mk
 
 ALL_EXE		= dummy_process dummy_group get_seconds get_timezone
 
-all: $(ALL_EXE)
+executables: $(ALL_EXE)

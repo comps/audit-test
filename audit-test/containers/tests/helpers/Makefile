@@ -22,4 +22,4 @@ ALL_EXE		= dummy
 
 dummy: LDFLAGS += -static
 
-all: $(ALL_EXE)
+executables: $(ALL_EXE)

@@ -58,4 +58,4 @@ do_capset: LDLIBS += -lcap
 $(call parse_screl)
 ALL_EXE	:= $(addprefix do_,$(SCREL_SYSCALLS))
 
-all: $(ALL_EXE)
+executables: $(ALL_EXE)

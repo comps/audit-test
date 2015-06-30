@@ -95,7 +95,7 @@ int access_check(mode_t access[]) {
         printf(result);
 
         if (dir != NULL) {
-            if ((rc == closedir(dir)) == -1) {
+            if ((rc = closedir(dir)) == -1) {
                 goto EXIT;
             }
         }
@@ -112,7 +112,7 @@ int access_check(mode_t access[]) {
         printf(result);
 
         if (fd != -1) {
-            if ((rc == unlink(filename)) == -1) {
+            if ((rc = unlink(filename)) == -1) {
                 goto EXIT;
             }
         }

@@ -85,7 +85,7 @@ int access_check(mode_t access[]) {
         printf(result);
 
         if (fd != -1) {
-            if ((rc == close(fd)) == -1) {
+            if ((rc = close(fd)) == -1) {
                 goto EXIT;
             }
         }
@@ -102,7 +102,7 @@ int access_check(mode_t access[]) {
         printf(result);
 
         if (fd != -1) {
-            if ((rc == close(fd)) == -1) {
+            if ((rc = close(fd)) == -1) {
                 goto EXIT;
             }
         }
@@ -194,10 +194,10 @@ int main(int argc, char *argv[]) {
         rc = fd;
         goto EXIT;
     }
-    if ((rc == write(fd, command, strlen(command))) == -1) {
+    if ((rc = write(fd, command, strlen(command))) == -1) {
         goto EXIT;
     }
-    if ((rc == close(fd)) == -1) {
+    if ((rc = close(fd)) == -1) {
         goto EXIT;
     }
 

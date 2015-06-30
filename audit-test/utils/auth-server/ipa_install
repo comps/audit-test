@@ -23,7 +23,7 @@
 #
 # Suited only for RHEL and clones
 #
-# Refer to README.auth_svr for more information
+# Refer to README.ipa for more information
 #
 # Author: Miroslav Vadkerti <mvadkert@redhat.com>
 # Date: 08/2014
@@ -59,9 +59,9 @@ function sanity {
 
     # check if ipa_clients exits and contains at least one host
     [ -f $AUTHSRV_DIR/ipa_clients ] || exit_error \
-        "The ipa_clients file found. See README.auth_svr for details."
+        "The ipa_clients file found. See README.ipa for details."
     [ $(cat $AUTHSRV_DIR/ipa_clients | wc -l) -eq 0 ] && exit_error \
-        "The ipa_clients file is empty. See README.auth_svr for details."
+        "The ipa_clients file is empty. See README.ipa for details."
 }
 
 # Install ipa-server
@@ -200,7 +200,7 @@ function uninstall {
 
 function help {
 cat <<EOF
-    usage: $(basename $0) [-h] all|install|configure
+    usage: $(basename $0) [-h] COMMAND
 
     This script installs and configures IPA server on a machine
     installed via Common Criteria kickstart in Base mode.
@@ -208,7 +208,7 @@ cat <<EOF
     Options:
       -h         Print this help.
 
-    Available commands:
+    Available COMMANDs:
       install    Install IPA server
       configure  Configure IPA server for audit-test suite
       verify     Verify that IPA server configuration is intact for audit-test tests

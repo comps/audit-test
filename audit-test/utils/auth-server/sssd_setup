@@ -204,7 +204,7 @@ EOF
     restorecon -vvF $IPA_ETC > /dev/null
     ssh_copy "eal@$IPA_SERVER:$IPA_DLDIR/${IPA_SERVER_TOE_ID}.keytab /etc/krb5.keytab" > /dev/null || \
         exit_error "Failed to copy keytab from IPA server - keytab for $IPA_SERVER_TOE_ID not found." \
-            "\nMake sure ipa_clients on IPA server is correctly setup according to the README.auth_svr."
+            "\nMake sure ipa_clients on IPA server is correctly setup according to the README.ipa."
     restorecon -vvF /etc/krb5.keytab > /dev/null
 
     # Create home directories for users

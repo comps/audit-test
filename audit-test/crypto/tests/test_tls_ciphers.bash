@@ -146,7 +146,7 @@ function tls_client_connect {
     [ -z "$tls_port" ] && exit_error "TLS port is missing!"
     [ -z "$cipher"   ] && exit_error "TLS ciphers are missing!"
 
-    /usr/lib64/nss/unsupported-tools/tstclnt -v -x -o \
+    /usr/lib64/nss/unsupported-tools/tstclnt -v -o \
         -h $LOCAL_IPV4   \
         -p $tls_port     \
         -d $nss_db       \
@@ -286,31 +286,31 @@ ciphers["key_exchange_rsa"]="         AES128-SHA                    \
                                       DES-CBC3-SHA                  \
                                       AES128-GCM-SHA256             \
                                       AES128-SHA256                 \
-                                     -AES256-GCM-SHA384             \
+                                      AES256-GCM-SHA384             \
                                       AES256-SHA256                 "
 
 # Key agreement Diffie-Hellman (RSA).
 ciphers["key_agreement_dh_rsa"]="     DHE-RSA-AES128-SHA            \
                                       DHE-RSA-AES256-SHA            \
                                       EDH-RSA-DES-CBC3-SHA          \
-                                     -DHE-RSA-AES256-GCM-SHA384     \
                                       DHE-RSA-AES256-SHA256         \
                                       DHE-RSA-AES128-GCM-SHA256     \
-                                      DHE-RSA-AES128-SHA256         "
+                                      DHE-RSA-AES128-SHA256         \
+                                      DHE-RSA-AES256-GCM-SHA384     "
 
 # Key agreement Diffie-Hellman (DSA).
 ciphers["key_agreement_dh_dsa"]="     DHE-DSS-AES128-SHA            \
-                                      EDH-DSS-DES-CBC3-SHA          \
                                       DHE-DSS-AES256-SHA            \
-                                     -DHE-DSS-AES256-GCM-SHA384     \
-                                     -DHE-DSS-AES256-SHA256         \
-                                     -DHE-DSS-AES128-GCM-SHA256     \
-                                     -DHE-DSS-AES128-SHA256         "
+                                      EDH-DSS-DES-CBC3-SHA          \
+                                      DHE-DSS-AES256-SHA256         \
+                                      DHE-DSS-AES128-GCM-SHA256     \
+                                      DHE-DSS-AES256-GCM-SHA384     \
+                                      DHE-DSS-AES128-SHA256         "
 
 # Key agreement EC Diffie-Hellman (RSA).
 ciphers["key_agreement_ecdh_rsa"]="   ECDH-RSA-AES128-SHA           \
-                                      ECDH-RSA-DES-CBC3-SHA         \
                                       ECDH-RSA-AES256-SHA           \
+                                      ECDH-RSA-DES-CBC3-SHA         \
                                      -ECDH-RSA-AES128-GCM-SHA256    \
                                      -ECDH-RSA-AES128-SHA256        \
                                      -ECDH-RSA-AES256-GCM-SHA384    \
@@ -332,7 +332,7 @@ ciphers["key_agreement_ecdhe_rsa"]="  ECDHE-RSA-AES128-SHA          \
                                       ECDHE-RSA-AES128-GCM-SHA256   \
                                       ECDHE-RSA-AES128-SHA256       \
                                       ECDHE-RSA-AES256-GCM-SHA384   \
-                                     -ECDHE-RSA-AES256-SHA384       "
+                                      ECDHE-RSA-AES256-SHA384       "
 
 # Key agreement EC Diffie-Hellman Ephemeral (ECDSA).
 ciphers["key_agreement_ecdhe_ecdsa"]="ECDHE-ECDSA-AES128-SHA        \
@@ -341,7 +341,7 @@ ciphers["key_agreement_ecdhe_ecdsa"]="ECDHE-ECDSA-AES128-SHA        \
                                       ECDHE-ECDSA-AES128-GCM-SHA256 \
                                       ECDHE-ECDSA-AES128-SHA256     \
                                       ECDHE-ECDSA-AES256-GCM-SHA384 \
-                                     -ECDHE-ECDSA-AES256-SHA384     "
+                                      ECDHE-ECDSA-AES256-SHA384     "
 
 # Mapping of key types to test scenarios.
 case "$scenario" in

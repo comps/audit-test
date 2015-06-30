@@ -1,73 +1,93 @@
-Authentication Server
----------------------
+IPA Server
+----------
 
-Some of the tests require an external authentication server - IPA server for
-providing identity and authentication [1]. IPA server uses Kerberos and LDAP
-to achieve this functionality. On the testing machine the authentication
-is done by pam_sss module and the sssd daemon. The authentication server
-is another separate machine from TOE and NS The IPA cannot be installed
-in MLS mode, so it's not possible to have it installed on the NS. The server
-needs to be reachable via network from the TOE.
+Note that this README is applicable only for RHEL OS.
 
-This guide is only applicable for RHEL as IPA is only available in this
-distribution.
+Some of the tests in the audit-test suite require a specially configured
+external authentication server - IPA server - for their correct functionality.
+
+IPA is an integrated Identity and Authentication solution for Linux/UNIX
+networked environments. A IPA server provides centralized authentication,
+authorization and account information by storing data about user, groups,
+hosts and other objects necessary to manage the security aspects of
+a network of computers. 
+
+IPA server consists from Kerberos, LDAP and some other services and specific
+management tools. The identity and authentication on the client machines
+is provided by the pam_sss PAM module, a NSS module and the SSSD daemon.
+See the online documentation for more information [1].
+
+The IPA server must be a separate machine from TOE and NS. One IPA server
+can be used for multiple TOEs. The IPA server cannot be installed in MLS
+mode, so it's not possible to have it installed on the NS.
+
+The server needs to be reachable via network from the TOE via a DNS or
+`/etc/hosts' resolvable hostname. Note that also all TOE hostnames need
+to be resolvable via DNS or `/etc/hosts' for correct functionality.
+When using `/etc/hosts', make sure that all records are identical
+on the IPA server and the TOE(s).
+
+IPA server has no relation to the NS, i.e. they do not know about each other.
 
 
-Installation
-------------
+Installation and configuration
+------------------------------
 
-To install and setup the authentication server:
+To install and setup the authentication server follow these steps:
 
-1. Kickstart a separate machine (physical or virtual) in Base mode or as RHEL7 minimal installation.
+1. Kickstart a separate machine (physical or virtual) in Base mode or as RHEL7
+   minimal installation. This machine needs to be different from TOE and NS.
 
-2. After the installation login to the machine as root and setup a yum repository
+2. After the installation login to the machine as root and setup a yum
+   repository to be able to install new packages.
 
-3. If installing on top of a RHEL7 minimal installation add an administrative eal user. Set the eal user password to the same password as for the eal/root on the TOE machines.
+3. If you are installing the IPA server on a RHEL7 minimal installation,
+   also add an administrative `eal' user and set his password to the
+   same password as for the eal/root users on the TOE machines.
 
 # useradd -m -c "EAL Test User" -G wheel eal
 # passwd eal <TOE root's password>
 
-4. Install tools for extracting archives (if needed in the next step) and executing make
+4. Install tools for extracting archives and make
 
 # yum -y install make bzip2 gzip
 
-5. Clone the audit-test suite repository or extract the archive to the root
-home directory. Move the contents of the repository to the test suite folder
-`/usr/local/eal4_testing' via make dist - see README.run.
+5. Clone the audit-test suite repository or extract the audit-test archive
+   to the root's home directory. Move the contents of the repository to the
+   test suite folder `/usr/local/eal4_testing' via make dist - see README.run.
 
-6. Create ipa_clients file in `audit-test/utils/auth-server/'
-with resolvable FQDNs of the TOE machines used for testing, one per line. Please note
-there cannot be any other content (comments, etc.) in the file. For example
-below is a configuration with four TOE machines:
+6. Create ipa_clients file in `audit-test/utils/auth-server/' with resolvable
+   hostnames of the TOE machines used for testing, one per line. Please note
+   there cannot be any other content (comments, newlines etc.) in the file.
+   For example this is a configuration with two TOE machines:
 
-# cd /usr/local/eal4_testing/audit-test/utils/auth-server/
-# cat ipa_clients
+# cat /usr/local/eal4_testing/audit-test/utils/auth-server/ipa_clients
 toe1.cctest.com
 toe2.cctest.com
 
-7. Run the the autentication server installation and configuration via the
+7. Run the autentication server installation and configuration via the
 auth-server Makefile target:
 
 # cd /usr/local/eal4_testing/audit-test/
 # make auth-server
 
 Note that this might take a while to complete, depending on your installation.
-The IPA server consists from a lot of services.
+The IPA server consists from a lot of additional packages.
 
-The makefile actually calls the ipa-install.sh script in `utils/auth-server'
+The Makefile actually calls the `ipa-install.sh' script in `utils/auth-server'
 subfolder. The script configures IPA with settings from ipa_env file located
 also in the `utils/auth-server/' folder. Please note that this file is also
-sourced by the related tests so it must be the same on the authentication server
-as on the TOE. You should not need to change the default values.
+sourced by the related tests so it must be the same on the authentication
+server as on the TOE. You should not need to change the default values.
 
-You will need to note down the server's FQDN which you will need to add to
-the exports file on TOE for the tests to work.
+You will need to note down the server's resolvable hostname which you will
+need to add to the exports file on TOE for the IPA related tests to work.
 
 During the first run of the command you should see no error messages and
 after the installation you should get PASSED result at the end of the
 verification phase.
 
-Please note that you can run "verify" phase anytime to check if the
+Please note that you can run `verify' phase anytime to check if the
 IPA configuration is intact via
 
 # cd /usr/local/eal4_testing/audit-test/
@@ -86,15 +106,15 @@ server 107.170.242.27, stratum 0, offset 0.000000, delay 0.00000
 
 In the case above the pool is unreachable meaning that your private network
 firewall is probably blocking UTP that is used for time synchronization.
-You need to add a reachable ntp server in /etc/ntp.conf and restart ntpd:
+You need to add a reachable NTP server in `/etc/ntp.conf' and restart ntpd:
 
 # vim /etc/ntp.conf
 # systemctl restart ntp
 
-8. Note the FQDN of the authentication server that needs to be exported
-on TOE. You can check the FQDN of your server by running the command below.
-Please note that this FQDN needs to be resolvable by your DNS system or via
-/etc/hosts file.
+8. Note the resolvable hostname of the authentication server that needs to
+be exported on TOE. You can check the hostname of your server by running the
+command below. Please note that this hostname needs to be resolvable by your
+DNS system or via `/etc/hosts'.
 
 # hostname
 
@@ -105,20 +125,42 @@ via the auth-server-uninstall Makefile target:
 # make auth-server-uninstall
 
 
+Adding a new TOE to the IPA server
+----------------------------------
+
+Note that during the execution of `make auth-server' one of the procedures
+is to generate keytabs which will be used for manual enrolling the TOE(s)
+to the IPA server. After adding a new TOE hostname to the `ipa_clients'
+file it is required to trigger manually the generation by calling the
+`auth-server-configure' makefile target:
+
+# cd /usr/local/eal4_testing/audit-test/
+# make auth-server-configure
+
+Note that all errors not related to the keytab generation and shown while
+running the above command can be safely ignored.
+
+This step needs to be done BEFORE executing `make sssd-configure' on the TOE.
+
+
 IPA Ports
 ---------
-If you have your IPA server located in another network which is subject to packet
-filtering, note that you need to open these ports for the IPA to work:
 
-https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Linux_Domain_Identity_Authentication_and_Policy_Guide/prerequisites.html#prereq-ports
+If you have your IPA server located in another network which is subject to packet
+filtering, note that you need to open these ports for the IPA to work [2].
 
 
 Default configuration
 ---------------------
-The installation adds three IPA users intended for testing. These users are
-defined in the IPA_USER, IPA_STAFF and IPA_USER_EXPIRED variables in ipa_env file.
-Both users are added with password set in the IPA_PASS variable. Both users should
-be able to login to all machines enrolled to IPA.
+
+The installation script adds three IPA users intended for testing. These users are
+defined by the IPA_USER, IPA_STAFF and IPA_USER_EXPIRED variables in `ipa_env' file
+located in the `/usr/local/eal4_testing/audit-test/utils/auth-server' directory.
+All users are added with password set in the IPA_PASS variable. Users defined by
+the variables IPA_USER and IPA_STAFF should be able to login to TOE(s) and the IPA
+server. The IPA_USER_EXPIRED should ask for password change uppon login. Please do
+not change the password for this user as he is used in tests which expect the
+password expiration.
 
 The IPA_USER user maps to the default SELinux user, usually user_u with
 security level s0. This dependes on the SELinux configuration set on the
@@ -130,5 +172,70 @@ The IPA_STAFF user has a default SELinux mapping to the staff_u user with
 s0-s0:c0.c1023 range.
 
 
-[1] FreeIPA, opensourced IPA server: http://www.freeipa.org/page/Main_Page
-    IPA is a part of the RedHat Enterprise Server
+Implementation details
+----------------------
+
+The testing with IPA server is built on the following assumptions:
+
+1. IPA server's OS is installed only once.
+2. IPA server is fully configured only once, after the first
+   installation of underlying OS and the edit of `ipa-clients' file.
+2. IPA server is reconfigured every time a new TOE is added - i.e. the 
+   `ipa_clients' file is altered.
+3. The tests do not alter the IPA server configuration - i.e. IPA server
+   is reusable for unlimited number of test runs.
+4. TOE is manually enrolled to the IPA server and properly setup
+   (via `make sssd-configure') AFTER it has been added to the IPA server.
+
+Below Makefile targets are available on the IPA server and can be called via `make'
+command in the `/usr/local/eal4_testing/audit-test' directory.
+
+ * auth-server - calls install, configure and verify targets below
+ * auth-server-install
+ * auth-server-configure
+ * auth-server-verify
+ * auth-server-uninstall
+
+Last three mentioned Makefile targets on the IPA server actually call
+`utils/auth-server/ipa_install' script. The script implements 4 commands:
+ 
+ * install
+Installs all required IPA server packages and runs `ipa-server-install' with
+specific parameters according to the settings in the `ipa_env' file.
+
+ * configure
+Create users for testing and prepare all the required data needed for manual
+enrollment of all the TOEs listed in the `ipa_clients' file. Calling this
+command is also required when adding new TOE to the IPA configuration.
+
+ * verify
+Verify that IPA server configuration looks intact.
+
+ * uninstall
+Completely removes IPA server configuration and the ipa* packages. This
+is also useful for testing as it can cleanup of mis-configured IPA server.
+
+On the TOE side, the below Makefile targets related to the correct setup of SSSD,
+NSS, PAM and manual enrollment can be called via `make' command
+in the `/usr/local/eal4_testing/audit-test' directory.
+
+ * sssd-configure - manually enroll TOE, configure sssd, pam and nss
+ * sssd-reconfigure - call remove, configure and verify 
+ * sssd-remove - remove all configuration
+ * sssd-start - start sssd daemon
+ * sssd-stop - stop sssd deamon
+ * sssd-verify - verify that TOE configuration is intact
+
+All these targets actually call a command of the `sssd_setup' script, that can
+be found in the `utils/auth-server' directory.
+
+
+Links
+-----
+
+[1] https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Linux_Domain_Identity_Authentication_and_Policy_Guide/index.html
+[2] https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Linux_Domain_Identity_Authentication_and_Policy_Guide/prerequisites.html#prereq-ports
+
+#---------------------------------------------------------------
+# prevent shell-like incorrect vim syntax highlight of this file
+# vim: syntax=off :

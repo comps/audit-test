@@ -40,7 +40,7 @@ the best way is to use ntpd for such a synchronization.
 To greatly speed up networking-related test buckets, you can decrease
 the number of TCP retries, to make fail (timeout) verification faster.
 Assuming the testing machine is close to the network server (local network)
-and uses a mostly-reliable link layer (Ethernet), the following should
+and uses a mostly reliable link layer (Ethernet), the following should
 be safe to do:
 
 # echo "net.ipv4.tcp_syn_retries = 2" >> /etc/sysctl.conf
@@ -147,7 +147,8 @@ Or if re-building the tests to run the 32-bit tests on an x86_64 system do:
 # make clean    # or make distclean to remove all previous test logs
 # make MODE=32
 
-If running on an LSPP/MLS system, relabel test files.
+If running on an LSPP/MLS system, relabel test files. Note that needs to
+be done everytime you make the test suite.
 
 # make -C audit-test/utils/selinux-policy relabel verify
 
@@ -178,7 +179,7 @@ Configure the authentication server
 -----------------------------------
 
 Configure the authentication server according to the instructions in the
-README.auth_svr file.
+README.ipa file.
 
 On TOE export the FQDN of the authentication server (ipa.cctest.com in
 this example):
@@ -213,7 +214,7 @@ can use the 'sssd-reconfigure' target to reconfigure sssd anytime.
 
 Please note that sssd is disabled on the system by default. To start sssd
 daemon you can use the 'sssd-start' Makefile target or start sssd via
-service or systemctl commands. Similarly you can use the 'sssd-stop' target
+service or systemctl commands. Similarly, you can use the 'sssd-stop' target
 to stop the daemon.
 
 Configure the KVM tests
@@ -296,7 +297,7 @@ After configuring the labeled networking tests, you can perform an optional
 system reboot to make sure all services start properly with their new
 configuration files.
 This is optional as these services should have been restarted by appropriate
-Makefiles during the above steps and therefore no action should be needed here.
+Makefiles during the above steps and, therefore, no action should be needed here.
 
 Prepare to run the tests
 ------------------------
@@ -360,7 +361,7 @@ recursing into audit-test and ltp directories:
 
 # cd /usr/local/eal4_testing
 
-However you can 'cd' into one of the child directories (audit-test
+However, you can 'cd' into one of the child directories (audit-test
 or ltp) directly if you want to run only tests from that directory.
 You can also 'cd' further into individual audit-test bucket directories
 to run only specific test buckets (syscalls, etc.).
@@ -369,7 +370,7 @@ In any case, execute:
 
 # make run
 
-If the test suite was buitl in 32-bit mode on a 64-bit platform, use
+If the test suite was built in 32-bit mode on a 64-bit platform, use
 the MODE=32 option when running the tests.
 
 # make MODE=32 run
@@ -402,11 +403,20 @@ PPROFILE environment variables.
 To run all variations of a given testcase, e.g. to run all the ptrace() tests:
 # ./run.bash ptrace
 
+To rerun all failed/errored/not executed tests:
+# ./run.bash -r
+
 To list all testcases:
 # ./run.bash --list
 
+To list all testcases that needs to be rerun:
+# ./run.bash --list -r
+
 To run a single testcase by number:
 # ./run.bash <number>
+
+To run multiple testcases by numbers:
+# ./run.bash <number1> <number2> ...
 
 Run manual tests
 ----------------
@@ -424,63 +434,77 @@ Network tests
 
 If you interrupt the network tests, the network test server may be
 left in a locked condition, preventing subsequent network tests
-from running.  To unlock the network test server:
+from running. To unlock the network test server:
 
-# cd /usr/local/eal4_testing/audit-test/network
-# make unlock
+# make -C /usr/local/eal4_testing/audit-test/network unlock
 
 Audit-remote tests
 ------------------
 
-1) TOE and Network Server (NS for short) are have different time set. This
-  causes audit-remote tests to fail when looking for an audit record after
-  set test start time. Tests usually fail with "Missing DAEMON_ACCEPT record".
-  FIX: Sync time on TOE and NS, e.g. by using ntp daemon.
+1) SYMPTOMS: The audit-remote tests start to fail when looking for an audit
+  record after set test start time. Tests usually fail with "Missing
+  DAEMON_ACCEPT record" error message.
 
-2) The tests ask for a password and behave "strangely".
+  CAUSE: TOE and Network Server (NS for short) have most probably different
+  system time.
+
+  FIX: Sync time on TOE and NS, e.g. by using ntp daemon or ntpdate tool.
+
+2) SYMPTOMS: The tests ask for a password and behave "strangely".
+
+  CAUSE: The PASSWD environment variable is not correct on TOE and/or NS
+
   FIX: On TOE make sure that LBLNET_SVR_IPV4 contains IPv4 address of NS and
   that PASSWD contains root / eal / admin password. Moreover, check that
   profile.bash on NS correctly exports PASSWD with root / eal / admin password
   (see README.netwk_svr).
 
-3) Tests hang on a TOE during execution. This can be a side effect when running
-  with SELinux in permissive mode.
+3) SYMPTOMS: Tests "hang" during execution. This can be a side effect when
+  running with SELinux in permissive mode.
+
   FIX: Make sure SELinux is running in enforcing mode.
 
-4) Make sure you have really have correct permissions, owners, and SELinux
-  labels.
-  FIX: Follow related steps in README.run or reinstall if nothing helps :)
+4) SYMPTOMS: TOE or NS unable to reach each other when using virt guests.
 
-5) TOE or NS unable to reach each other when using virt guests. This is
-  probably due to incorrectly set LOCAL_IPV4 environment variable.
-  Use only unicast addresses of global scope (if there are more of them, try
+  CAUSE: Most probably due to incorrectly set LOCAL_IPV4/IPV6 environment variables.
+
+  FIX: Use only unicast addresses of global scope (if there are more of them, try
   them all iteratively).
 
-7) TOE has issues running remote actions on NS.
-  FIX: Suggested is debug you test env with simple action "ns_connection_check"
+5) SYMPTOMS: TOE has issues running remote actions on NS.
+
+  Suggested is to debug you test env with simple action "ns_connection_check"
   # /usr/bin/nc -v $LBLNET_SVR_IPV4 4000 <<< \
     "audit_remote_call:ns_connection_check,no_mode,<TOE IPv4 of global scope>;"
 
-8) Make sure all configuration files related to audit remote logging are in
-  a "default" state before executing tests.
-  FIX: Suggested is to backup and diff orig and current version of following
+6) SYMPTOMS: There are AVC denials on NS side when running the tests. These
+   require addition of following SELinux rule:
+     "allow auditctl_t inetd_t:tcp_socket { read write };".
+
+  CAUSE: Please note that this is just a cosmetic issue and does not cause any
+  audit-remote tests to FAIL. It's due to leaked descriptors passed to
+  the remote_call.bash script when execute by lblnet_tst_server.
+
+  FIX: Uncomment net_hlp_socket_close(&sock) in file lblnet_test_server.c func
+  ctl_audit_remote_call() and rebuild the lblnet_server_binary. As a side-effect
+  you will loose verbosity in netcat on TOE side. Therefore it is not used by
+  default.
+
+7) SYMPTOMS: Unexpected failures appearing and not matching any issue mentioned
+   above.
+
+  CAUSE: Failures in this buckert also might be caused by bad cleanup
+  of configuration files (e.g. after SIGKILL send the tests, etc.).
+
+  FIX: Make sure all configuration files related to audit remote logging are in
+  a "default" state before executing tests. Suggested is to backup and diff
+  orig and current version of following
   config files:
     /etc/audit/auditd.conf
     /etc/audisp/audisp-remote.conf
     /etc/audisp/audispd.conf
     /etc/audisp/plugins.d/au-remote.conf
 
-9) Please note that this is just a cosmetic issue and does not cause any
-   audit-remote tests to FAIL.
-  There are AVC denials on NS side when running the tests. They require
-  addition of following SELinux rule:
-    "allow auditctl_t inetd_t:tcp_socket { read write };".
-  This is a known issue due to leaked descriptors passed to a remote_call.bash
-  script when execute by lblnet_tst_server.
-  FIX: Uncomment net_hlp_socket_close(&sock) in file lblnet_test_server.c func
-  ctl_audit_remote_call() and rebuild the lblnet_server_binary. As a side-effect
-  you will loose verbosity in netcat on TOE side. Therefore it is not used by
-  default.
 
 Tips for running on non-RHEL distros
 ------------------------------------

@@ -480,7 +480,7 @@ check_sssd() {
     if [ "$CHECK_FAILED" ]; then
         echo
         echo "SSSD configuration verification failed - make sure you have:"
-        echo "1. Configured IPA server according to README.auth_svr"
+        echo "1. Configured IPA server according to README.ipa"
         echo "2. Environment variables IPA_SERVER and IPA_SERVER_TOE_ID set correctly."
         echo "3. Executed make sssd-configure in $AUDITDIR"
         return 1

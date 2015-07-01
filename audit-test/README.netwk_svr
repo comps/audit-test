@@ -3,13 +3,12 @@ Installing the Network Test Server
 
 Several of the networking tests require a remote host to either connect to or
 initiate a connection on the local test machine.  This remote machine is
-referred to as the "network test server" and should be installed and
+referred to as the "network test server" or NS and should be installed and
 configured in a manner similar to the test machines.  The installation and
 configuration steps are described below:
 
-Install the network test server as if it were a test machine.  This
-means that it should be in the evaluated configuration in LSPP/MLS
-mode.
+Install the network test server as if it were a test machine. Note that
+it MUST be installed in MLS mode mode.
 
 The network test server can be installed as a Virtual Machine as the essential
 part of it is providing a software (network) reference point for the
@@ -22,7 +21,6 @@ Build and install the lblnet_tst_server daemon as shown below:
 
 # make -C /usr/local/eal4_testing/audit-test/utils/network-server
 # make -C /usr/local/eal4_testing/audit-test/utils/network-server install
-
 
 Create a file /usr/local/eal4_testing/audit-test/profile.bash with
 exported LBLNET_SVR_IPV4 and LBLNET_SVR_IPV6 variables with IP addresses that
@@ -64,20 +62,7 @@ below:
 NOTE: Whenever TOE's IP address changes, the steps above need to be re-done
 (sourcing profile.bash, editing client_list.txt and performing install_server).
 
-
-For the localhost ipsec tests to succeed, check that you have both following
-tunables set to 0:
-
-# cat /proc/sys/net/ipv4/conf/lo/disable_{xfrm,policy}
-
-if not, add sysctl.conf entries to make them 0:
-
-# echo "net.ipv4.conf.lo.disable_xfrm = 0" >> /etc/sysctl.conf
-# echo "net.ipv4.conf.lo.disable_policy = 0" >> /etc/sysctl.conf
-# sysctl -p
-
-
 Now you can perform an optional system reboot to make sure all services start
-properly with their newconfiguration files.
-This is optional as these services should have been restarted by appropriate
-Makefiles during the above steps and therefore no action should be needed here.
+properly with their newconfiguration files. This is optional as these services
+should have been restarted by appropriate Makefiles during the above steps
+and therefore no action should be needed here.

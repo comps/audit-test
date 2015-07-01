@@ -123,16 +123,6 @@ report:
 	    | tee -a audit.run.log | tee -a audit.rollup.log
 	@utils/envcheck > envcheck.log
 
-.PHONY: rpm
-rpm: dist
-	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \
-	cd .. && \
-	rpmbuild -ta audit-test-$$rev.tar.gz && \
-	mv ~/rpmbuild/RPMS/noarch/audit-test-$$rev-1.* . && \
-	mv ~/rpmbuild/SRPMS/audit-test-$$rev-1.* . && \
-	echo && \
-	ls -l audit-test-$$rev-1.*
-
 ifdef AUDIT_TEST_DEP
 .PHONY: deplist
 deplist:

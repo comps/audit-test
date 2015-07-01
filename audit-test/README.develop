@@ -44,7 +44,7 @@ harness, which wants to be able to /dev/null the debug info without losing the
 error messages.
 
 The best way to run individual test cases is by specifying them on the run.bash
-command-line.  However it may be possible to run individual scripts outside of
+command-line.  However, it may be possible to run individual scripts outside of
 the harness.  In that case, you'll need to augment PATH in your shell
 environment:
 
@@ -53,7 +53,7 @@ environment:
 | Writing run.conf
 +-----------------
 
-This configuration file is a bash script that sourced by run.bash.  It
+This configuration file is a bash script that gets sourced by run.bash.  It
 primarily consists of a list of tests to run, but can also contain
 some variable and function settings.
 
@@ -320,7 +320,7 @@ run.bash
     prepend_cleanup() { prepend to test_cleanup }
     trap 'test_cleanup; exit' 0 1 2 15
 
-As we can see, not only append/prepend_cleanup functions get overwriten to
+As we can see, not only append/prepend_cleanup functions get overwritten to
 test_cleanup, but the second trap overrides the first one.
 
 Newer versions of run.bash have the trap definition *after* sourcing run.conf,

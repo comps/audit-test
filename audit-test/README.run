@@ -32,7 +32,7 @@ The tar file will be ../audit-test-<commit>.tar.gz
 Configure the target system
 ---------------------------
 
-Portion of the audit-test suite (network, netfilter, netfitebt, audit-remote)
+Portion of the audit-test suite (network, netfilter, netfilebt, audit-remote)
 require a network test server as well as the target system.
 Verify that the target system and the network test server have the same time,
 the best way is to use ntpd for such a synchronization.

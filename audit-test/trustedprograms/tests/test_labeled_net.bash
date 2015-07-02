@@ -150,7 +150,7 @@ sshd_test() {
     # add test user
     useradd -G wheel $SUSER || exit_error "Error adding user $SUSER"
     prepend_cleanup "userdel -r $SUSER"
-    echo "$PASSWD" | passwd --stdin $SUSER
+    echo "$SUSER:$PASSWD" | chpasswd
     semanage login -a -s staff_u -r s0-s10 $SUSER || exit_error \
         "Error adding selinux user $SUSER"
     prepend_cleanup "semanage login -d $SUSER"

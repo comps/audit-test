@@ -325,15 +325,15 @@ if [ -z "$PARENT_SETUP" ]; then
             # initialize test user's password to some initial value,
             # TEST_OLDPASS is set after every password change for the next
             # password change
-            # - we do not use 'echo oldpass | passwd --stdin $user' before
+            # - we do not use 'echo $user:oldpass | chpasswd' before
             #   every test, because it alters pwhistory and invalidates
             #   the test
             # - use export to propagate it to the spawned child process
             export TEST_OLDPASS="origpass"
-            echo "$TEST_OLDPASS" | passwd --stdin "$TEST_USER" || exit_error
+            echo "$TEST_USER:$TEST_OLDPASS" | chpasswd || exit_error
 
             # restore TEST_USER password after testing
-            append_cleanup "echo \"$TEST_USER_PASSWD\" | passwd --stdin \"$TEST_USER\""
+            append_cleanup "echo \"$TEST_USER:$TEST_USER_PASSWD\" | chpasswd"
 
             # reset faillock before exiting, to prevent further tests from
             # failing

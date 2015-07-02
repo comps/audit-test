@@ -49,7 +49,7 @@ sub clear_oldpassword() {
 sub set_password($$) {
   my $username = shift;
   my $password = shift;
-  `echo '$password' | passwd --stdin '$username'`;
+  `echo '$username:$password' | chpasswd`;
   if ($? != 0) {
     print("ERROR $?: Cannot set password\n");
   }

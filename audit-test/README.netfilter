@@ -148,6 +148,7 @@ IPV6INIT="yes"
 IPV6ADDR="fd00::2"
 IPV6_AUTOCONF="no"
 ONBOOT="yes"
+NM_CONTROLLED=yes
 
 === NS network interfaces configuration ===
 
@@ -162,6 +163,7 @@ IPV6INIT="yes"
 IPV6ADDR=fd00::1
 IPV6_AUTOCONF="no"
 ONBOOT="yes"
+NM_CONTROLLED=yes
 
 For details on configuring the network interfaces via ifcfgs scripts
 in general refer to

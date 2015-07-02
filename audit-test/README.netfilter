@@ -191,6 +191,7 @@ IPV6INIT="yes"
 IPV6ADDR="fd00::2"
 IPV6_AUTOCONF="no"
 ONBOOT="yes"
+NM_CONTROLLED="yes"
 
 # cat /etc/sysconfig/network-scripts/ifcfg-eth4
 DEVICE="eth4"
@@ -198,6 +199,7 @@ TYPE="Ethernet"
 HWADDR="D8:D3:85:81:BE:04"
 BRIDGE="toebr"
 ONBOOT="yes"
+NM_CONTROLLED="yes"
 
 # cat /etc/sysconfig/network-scripts/ifcfg-toebr
 DEVICE="toebr"
@@ -209,6 +211,7 @@ IPV6INIT="yes"
 IPV6ADDR="fd00:1::2"
 IPV6_AUTOCONF="no"
 ONBOOT="yes"
+NM_CONTROLLED="yes"
 
 === NS network interfaces configuration ===
 
@@ -223,6 +226,7 @@ IPV6INIT="yes"
 IPV6ADDR=fd00::1
 IPV6_AUTOCONF="no"
 ONBOOT="yes"
+NM_CONTROLLED="yes"
 
 # cat /etc/sysconfig/network-scripts/ifcfg-eth1
 DEVICE="eth1"
@@ -235,6 +239,7 @@ IPV6INIT="yes"
 IPV6ADDR="fd00:1::1"
 IPV6_AUTOCONF="no"
 ONBOOT="yes"
+NM_CONTROLLED="yes"
 
 For details on configuring the network interfaces in general refer to
 https://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/s1-networkscripts-interfaces.html

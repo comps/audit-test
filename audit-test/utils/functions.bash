@@ -137,6 +137,92 @@ function tstsvr_cleanup {
     nc -w 3 "$1" 4009 </dev/null
 }
 
+# send_ns - send a command string / control cmdline to ns2
+#
+# This function can be used to communicate with both local and remote network
+# servers (2nd generation).
+#
+# usage: send_ns [-46SE] [-s session] [-t timeout] [-r retry] \
+#                <local|remote> "cmd1;cmd2;cmd3"
+function send_ns {
+    local OPTION= OPTARG= OPTIND=
+    local ipv= newsession= endsession= session= timeout=60 retry=3
+    while getopts "t:r:s:46SE" OPTION
+    do
+        case "$OPTION" in
+            4|6)  ipv="$OPTION" ;;
+            S)    newsession=1 ;;
+            E)    endsession=1 ;;
+            s)    [ "$((OPTARG))" -ne 0 ] || return 1; session="$((OPTARG))" ;;
+            t)    timeout="$OPTARG" ;;
+            r)    retry="$((OPTARG+1))" ;;
+            \?)   return 1 ;;
+        esac
+    done
+    shift $((OPTIND-1))
+    local host="$1" cmdline="$2" port="5000"
+
+    [ "$session" ] && port="$session"
+    [ "$((timeout))" -gt 0 ] && cmdline="timeout,$timeout;$cmdline"
+    [ "$newsession" ] && cmdline="SESSION"
+    [ "$endsession" ] && { [ "$session" ] || return 1; cmdline="ctl-end"; }
+
+    case "$host" in
+        remote)
+            if [ "$LBLNET_SVR_NAME" ]; then host="$LBLNET_SVR_NAME"
+            elif [ "$ipv" = "6" ]; then host="$LBLNET_SVR_IPV6"
+            else host="$LBLNET_SVR_IPV4"
+            fi ;;
+        local)
+            host="localhost" ;;
+        *)
+            return 1 ;;
+    esac
+
+    while true; do
+        nc ${ipv:+-$ipv} "$host" "$port" <<<"$cmdline" && break
+        ((--retry)) || break
+        sleep 10
+    done
+    [ "$retry" -gt 0 ] || return 1
+    return 0
+}
+# check_ns - request cmd return lines from ns2, assert their values
+#
+# ns2 sends status lines as '$rc $cmd', ie. '0 echo,a,b,c' and this function
+# asserts that all status lines are expected (match regexp), for ex.:
+#   '0 .*' requires all commands to exit with 0
+#   '1 somecmd' '0 .*' allows somecmd with no args to fail with 1
+#
+# Each status line must match at least 1 check to succeed. Matches are done
+# on entire status lines, eg. from ^ to $, implicitly.
+#
+# Arguments are split by a mandatory `--' into two parts; send_ns specific
+# args **without cmd specification** and checks.
+#
+# usage: check_ns <send_ns args here> -- [check] [check]...
+function check_ns {
+    local retline= args=() chk= out=
+
+    while [ "$#" -gt 0 ]; do
+        # like x=("$@"); ${x[-1]}
+        [ "$1" = "--" ] && { shift; break; }
+        args+=("$1")
+        shift
+    done;
+    [ "$#" -gt 0 ] || return 1  # no separator / not enough args
+
+    out=$(send_ns "${args[@]}" "ctl-status") || return $?
+    while IFS= read retline; do
+        for chk in "$@"; do
+            chk="^${chk}$"
+            [[ $retline =~ $chk ]] && continue 2
+        done
+        echo "unexpected status: $retline" >&2; return 1
+    done <<<"$out"
+    return 0
+}
+
 # parse_named - Parse key=value test arguments
 #
 # INPUT

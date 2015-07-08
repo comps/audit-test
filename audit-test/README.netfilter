@@ -1,4 +1,4 @@
-About netfilter tests
+About Netfilter Tests
 ---------------------
 
 The netfilter tests are located in the netfilter sub-directory of the
@@ -6,25 +6,38 @@ audit-test suite. They are aimed to test claims against network filtering
 using iptables and ip6tables. The use of remote network test server running
 the lblnet_tst_server is required for these tests.
 
-The iptables and ip6tables tests have a large number of the tests that run
-over the local loopback device to a locally running lblnet_tst_server
-process. The rest of the tests are run over the primary Ethernet device
-(identified by an environment variable) against the remote server running
-the lblnet_tst_server process. The lblnet_tst_server on both systems is
-launched from xinetd.
+The iptables and ip6tables tests have a large number of the tests that run over
+the local loopback device to a locally running lblnet_tst_server process. The
+rest of the tests are run over the primary Ethernet device (identified by an
+environment variable) against the remote server running the lblnet_tst_server
+process. The lblnet_tst_server on both systems is launched from xinetd.
 
 The lblnet_tst_server is configured on the TOE during the 'make netconfig'
-procedure described in the README.run file. Refer to the README.netwk_svr
-for instructions on how to setup lblnet_tst_server on the network test
-server.
+procedure described in the README.run file. Refer to the README.netwk_svr for
+instructions on how to setup lblnet_tst_server on the network test server.
 
 
-Network configuration
+Required Configuration Steps
+----------------------------
+These steps expect that you followed README.run first.
+
+To correctly configure your environment for the netfilter tests follow these
+steps:
+
+1. Configure networking as outlined in the section "Network Configuration"
+
+2. Export all required environment variables as outlined in the section
+   "Environmental variables"
+
+3. Return to README.run and continue with the next section.
+
+
+Network Configuration
 ---------------------
 
 For running the netfilter tests you need to have a working network connection
-between the test system (TOE) and the remote network server (NS). This connection
-does not need to be dedicated.
+between the test system (TOE) and the remote network server (NS). This
+connection does not need to be dedicated.
 
 A working network configuration with examples using simple IPv4/IPv6 addresses
 is shown on the picture below. Please note that the interfaces can be connected
@@ -44,15 +57,15 @@ Please be aware that some network cards may be renamed by udev from the
          +----------------+                       +----------------+
 
 
-Please see section "Procedures for configuration" about details how to set
-up the network configuration.
+Please see section 'Network Configuration Example' about details how to set up
+the network configuration via ifcfg scripts.
 
 Important note:
-IPv6 addresses must have global for the tests to work. Using other scopes
+IPv6 addresses must have global scope for the tests to work. Using other scope
 will result in unexpected test failures.
 
 
-Testing strategy
+Testing Strategy
 ----------------
 
 The strategy of the testing is to provide a known and preferable empty
@@ -73,24 +86,26 @@ by inserting such a rule it would not verify that the drop is caused by the
 policy change as opposed to the rule inserted to audit the drop.
 
 
-Environmental variables
+Environmental Variables
 -----------------------
 
 There are a number of environmental variables required in order to provide
-the information needed to set the rules in iptables, ip6tables.
+the information needed to set the rules in iptables and ip6tables.
 Some of these environmental variables are also required by the network
-tests in the audit-test/network directory. These environmental variables
+tests in the 'audit-test/network' directory. These environmental variables
 must be set manually prior to running the tests, see README.run.
 
 Below is a list of the environmental variables required to run all the tests
-as well as an explanation of what they are.
+with detailed explanation. It is a good practice to keep these environment
+variables in a file (for example '/root/exports') and source it before working
+with the test suite.
 
 Variable            Description
---------            ------------------------------------------------------------
-MODE                Usually 64 but could be 32 if the TOE is running a 32-bit OS
+--------            -----------------------------------------------------------
+MODE                32 or 64, depending on the tests build mode
 
-PPROFILE       	    "capp" if the TOE is configured in 'base' mode or "lspp" 
-                    if the TOE is configured in 'mls' mode
+PPROFILE       	    "capp" if the TOE is configured in 'Base' mode or "lspp" 
+                    if the TOE is configured in 'MLS' mode
 
 PASSWD              The root/eal password for the TOE
 
@@ -105,8 +120,8 @@ LBLNET_SVR_IPV4     IPv4 address for the primary network on the NS
 LBLNET_SVR_IPV6     IPv6 address for the primary device on the NS
 
 
-Example of all needed environment variables for TOE
----------------------------------------------------
+Environment Variables Example
+-----------------------------
 
 Example of all environment variables for TOE according to the configuration
 shown in the "Network configuration" section. Please note these are a superset
@@ -120,20 +135,16 @@ export PASSWD="redhat"
 export LOCAL_DEV="eth3"
 export LOCAL_IPV4="10.0.0.2"
 export LOCAL_IPV6="fd00::2"
-export LOCAL_SEC_DEV="eth4"
-export LOCAL_SEC_MAC="78:2B:CB:4B:EB:BC"
-export LOCAL_SEC_IPV4="10.0.1.2"
-export LOCAL_SEC_IPV6="fd00:1::2"
 export LBLNET_SVR_IPV4="10.0.0.1"
 export LBLNET_SVR_IPV6="fd00::1"
 
 
-ifcfg configuration
--------------------
+Network Configuration Example
+-----------------------------
 
 This section lists the required ifcfg network configuration files on RHEL based
 systems that are needed to configure the network interfaces on TOE and NS
-according to the picture shown in section "Network configuration".
+according to the picture shown in the section "Network configuration".
 
 === TOE network interfaces configuration ===
 
@@ -170,21 +181,21 @@ in general refer to
 https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Networking_Guide/sec-Using_the_Command_Line_Interface.html#sec-Configuring_a_Network_Interface_Using_ifcg_Files
 and documentation in `/usr/share/doc/initscripts-*/sysconfig.txt'.
 
-Please note that in the examples above, all interfaces are configured via static
-network address assignment. You may use also DHCP for configuring your devices
-but take into account that DHCP addresses aren't persistent and can change
-depending on you DHCP server settings.
+Please note that in the examples above, all interfaces are configured via
+static network address assignment. You may use also DHCP for configuring your
+devices but take into account that DHCP addresses aren't persistent and can
+change depending on you DHCP server settings.
 
-If DHCP addresses are used and are not persistent, the LBLNET and SECNET
-variables must be updated each time an address on the NS changes, and
-the LOCAL variables must be updated if an address on the TOE changes.
-A change to either server will require re-running 'make netconfig'
-on the TOE and re-running the NS setup procedure described in README.netwk_svr.
+If DHCP addresses are used and are not persistent, the LBLNET variable must be
+updated each time an address on the NS changes, and the LOCAL variables must be
+updated if an address on the TOE changes.  A change to either server will
+require re-running `make netconfig' on the TOE and re-running the NS setup
+procedure described in README.netwk_svr.
 
 After configuring the interfaces you need to restart the NetworkManager daemon
 for the changes to take effect.
 
 # systemctl restart NetworkManager
 
-After restarting the network on the TOE and NS, verify the configuration
-by examining the results of 'ip a' on each system.
+After restarting the network on the TOE and NS, verify the configuration by
+examining the results of `ip a' command on each system.

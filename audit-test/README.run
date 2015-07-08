@@ -1,7 +1,7 @@
 | Quickstart
 +-----------
 
-Create the audit-test tar file
+Create the Audit-Test Tar File
 ------------------------------
 
 The audit-test suite is best installed from a tar file built from the
@@ -29,7 +29,8 @@ the git tree:
 
 The tar file will be ../audit-test-<commit>.tar.gz
 
-Configure the target system
+
+Configure the Target System
 ---------------------------
 
 Portion of the audit-test suite (network, netfilter, audit-remote)
@@ -60,7 +61,8 @@ If on an MLS system perform the following additional step:
 
 Log into the system as the eal user.
 
-Install the audit-test suite
+
+Install the Audit-Test Suite
 ----------------------------
 
 If running on an MLS system, change your role to "sysadm_r".
@@ -91,7 +93,8 @@ Ensure that all files in the target directory have the correct ownership:
 # chown -R root:root /usr/local/eal4_testing
 # chmod a+rX /usr/local/eal4_testing
 
-Install package requirements / dependencies
+
+Install Package Requirements / Dependencies
 -------------------------------------------
 
 # cd /usr/local/eal4_testing/audit-test
@@ -125,7 +128,8 @@ http://koji.fedoraproject.org/koji/packageinfo?packageID=2922
 For tips on installing the test suite on other distros,
 refer to the notes at the end of this README.
 
-Build the audit-test suite
+
+Build the Audit-Test Suite
 --------------------------
 
 # cd /usr/local/eal4_testing
@@ -152,7 +156,8 @@ be done everytime you make the test suite.
 
 # make -C audit-test/utils/selinux-policy relabel verify
 
-Set entropy generation
+
+Set Entropy Generation
 ----------------------
 
 The system in evaluated configuration uses SSHD and SSSD daemons configured
@@ -164,7 +169,8 @@ To seed /dev/random from non-blocking /dev/urandom use this command:
 
 # rngd -r /dev/urandom
 
-Configure the network test server
+
+Configure the Network Test Server
 ---------------------------------
 
 Configure the network test server according to the instructions in the
@@ -175,7 +181,8 @@ Confirm that the
 the network test server contains both the IPv4 and IPv6 addresses of the test
 machine.
 
-Configure the authentication server
+
+Configure the Authentication Server
 -----------------------------------
 
 Configure the authentication server according to the instructions in the
@@ -217,25 +224,16 @@ daemon you can use the 'sssd-start' Makefile target or start sssd via
 service or systemctl commands. Similarly, you can use the 'sssd-stop' target
 to stop the daemon.
 
-Configure the KVM iommu tests
------------------------------
 
-Edit the file
-'/usr/local/eal4_testing/audit-test/kvm-iommu/usb_device.conf'
-and select a USB device to use for USB passthrough testing.
+Configure the Netfilter and Labeled Networking Tests
+----------------------------------------------------
 
-Configure the labeled networking tests
---------------------------------------
+Follow the steps in README.netfilter to make sure to have properly configured
+testing environment before proceeding.
 
-On the test machine:
-
-From the /usr/local/eal4_testing/audit-test directory, perform the following
-commands to setup the required configuration for the labeled networking tests:
-
-# export LOCAL_IPV4="<testing machine IPV4 address on the primary network>"
-# export LOCAL_IPV6="<testing machine IPV6 address on the primary network>"
-# export LBLNET_SVR_IPV4="<network server IPV4 address on the primary network>"
-# export LBLNET_SVR_IPV6="<network server IPV6 address on the primary network>"
+To configure the networking tests execute the command below. Note that this
+expects that you have correctly exported all the required environment variables
+from the previous section.
 
 # make netconfig
 
@@ -250,13 +248,8 @@ if not, add sysctl.conf entries to make them 0:
 # echo "net.ipv4.conf.lo.disable_policy = 0" >> /etc/sysctl.conf
 # sysctl -p
 
-Configure the netfilter tests
------------------------------
 
-Follow the steps in README.netfilter. Make sure to have properly
-configured testing environment before proceeding.
-
-Reboot the test machine or restart network services
+Reboot the Test Machine or Restart Network Services
 ---------------------------------------------------
 
 After configuring the labeled networking tests, you can perform an optional
@@ -265,7 +258,8 @@ configuration files.
 This is optional as these services should have been restarted by appropriate
 Makefiles during the above steps and, therefore, no action should be needed here.
 
-Prepare to run the tests
+
+Prepare to Run the Tests
 ------------------------
 
 Login to the system as the administrative user (eal) using ssh.
@@ -316,7 +310,8 @@ As an additional sanity check, you can run:
 or
 # COLOR=1 make envcheck | less -R
 
-Run the tests
+
+Run the Tests
 -------------
 
 Note that before testing is it advised have rngd running for entropy
@@ -357,7 +352,8 @@ ip_xfrm tests from trustedprograms.
 2) Aide has known issues with FIPS and should be disabled in trustedprograms
 run.conf. For details see https://bugzilla.redhat.com/show_bug.cgi?id=574770
 
-Run individual tests
+
+Run Individual Tests
 --------------------
 
 You can use run.bash to run a set of tests or a single test case. This must be
@@ -384,7 +380,8 @@ To run a single testcase by number:
 To run multiple testcases by numbers:
 # ./run.bash <number1> <number2> ...
 
-Run manual tests
+
+Run Manual Tests
 ----------------
 
 To run manual tests, go into the "manual" bucket (subdirectory) and enter one
@@ -392,7 +389,7 @@ of the test directories. Each manual test has its own README to walk you
 through the process of running it.
 
 
-Workarounds and troubleshooting tips
+Workarounds and Troubleshooting Tips
 ------------------------------------
 
 Network tests

@@ -5,32 +5,31 @@ This README provides an overview of the available documentation in the Audit
 Test Project.
 
 Audit Test Project was initially created as a test suite for testing the kernel
-audit subsystem [1] and related security functionality of software which interacts
-with it. This includes SELinux, PAM, OpenSSH, Libreswan, CUPS, xinetd, KVM,
+audit subsystem [1] and related security functionality of software which
+interacts with it. This includes SELinux, PAM, OpenSSH, Libreswan, CUPS, xinetd
 subsystems of the Linux kernel itself and more. Part of the testing coverage is
 taken from the LTP test suite which is not related to audit in any way.
 
 The documentation is scattered into few files:
 
-* audit-test/README.run
-You should start here if you want to run the tests in this project.
-It will you valuable information how to setup and run all tests
-in audit test suite (including LTP).
+ * audit-test/README.run
+This is the starting point of the documentation. Following this README you will
+be able to configure the test environment, install and configure the audi-test
+suite and LTP suite and execute all the tests.
 
-* audit-test/README.develop
-Development notes worth reading before you start developing new tests.
+ * audit-test/README.netfilter
+Contains specific configuration steps for setting up networking.
 
-* audit-test/README.netfilter
-Networking needs a special setup for some tests to work. You should get
-to this README from README.run.
+ * audit-test/README.netwk_svr
+Dedicated to the installation and configuration of the Network Server - NS.
 
-* audit-test/README.netwk_svr
-Some of the tests require a separate machine for testing. This README
-should help you setting it up.
+ * audit-test/README.ipa
+Installation and configuration of the IPA server is described in this README.
 
-* audit-test/README.ipa
-Some of the tests require a separate IPA server for authentication.
-This README will help you set it up.
+ * audit-test/README.develop
+Various development notes worth reading before you start developing new tests
+for the audit test suite.
 
-* ltp/README.ltp
-If you want to run the LTP tests only, checkout this README.
+ * ltp/README.ltp
+Specific information regarding LTP test suite incorporated into audit-test
+suite.

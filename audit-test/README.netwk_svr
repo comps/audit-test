@@ -7,22 +7,22 @@ referred to as the "network test server" or NS and should be installed and
 configured in a manner similar to the test machines.  The installation and
 configuration steps are described below:
 
-Install the network test server as if it were a test machine. Note that
+1. Install the network test server as if it were a test machine. Note that
 it MUST be installed in MLS mode mode.
 
 The network test server can be installed as a Virtual Machine as the essential
 part of it is providing a software (network) reference point for the
 test machine, meaning its exact hardware requirements are relaxed.
 
-Install the audit-test suite, following the instructions in the README.run
+2. Install the audit-test suite, following the instructions in the README.run
 file, until the "Configure the network test server" step.
 
-Build and install the lblnet_tst_server daemon as shown below:
+3. Build and install the lblnet_tst_server daemon as shown below:
 
 # make -C /usr/local/eal4_testing/audit-test/utils/network-server
 # make -C /usr/local/eal4_testing/audit-test/utils/network-server install
 
-Create a file /usr/local/eal4_testing/audit-test/profile.bash with
+4. Create a file /usr/local/eal4_testing/audit-test/profile.bash with
 exported LBLNET_SVR_IPV4 and LBLNET_SVR_IPV6 variables with IP addresses that
 should be used on NS, ie.:
 
@@ -31,11 +31,11 @@ export LBLNET_SVR_IPV4=10.0.0.1
 export LBLNET_SVR_IPV6=fd00::1
 EOF
 
-Source the profile.bash file, exporting the variables in the current shell:
+5. Source the profile.bash file, exporting the variables in the current shell:
 
 # . /usr/local/eal4_testing/audit-test/profile.bash
 
-Configure the server with the client IP address information.
+6. Configure the server with the client IP address information.
 
 Create a file,
 '/usr/local/eal4_testing/audit-test/network/system/client_list.txt', hereafter
@@ -54,7 +54,7 @@ below:
 # bar.domain.com
 10.0.0.3 fd00::3
 
-Generate and install the system's labeled network configuration as shown
+7. Generate and install the system's labeled network configuration as shown
 below:
 
 # make -C /usr/local/eal4_testing/audit-test/network/system install_server

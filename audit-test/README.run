@@ -359,8 +359,8 @@ Run Individual Tests
 You can use run.bash to run a set of tests or a single test case. This must be
 done in a test sub-directory.  Before running individual tests please do
 all the preparation steps described earlier in this file.  In addition,
-some test directories require manually setting the MODE, DISTRO, and
-PPROFILE environment variables.
+some test directories require manually setting the MODE and PPROFILE
+environment variables.
 
 To run all variations of a given testcase, e.g. to run all the ptrace() tests:
 # ./run.bash ptrace

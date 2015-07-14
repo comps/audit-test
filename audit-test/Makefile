@@ -39,22 +39,11 @@ RUN_DIRS += \
 	crypto \
 	misc \
 	netfilter \
-	netfilebt \
 	dbus \
 	polkit
 
-ifeq ($(MACHINE), x86_64)
-ifeq ($(shell virt-what),)
-RUN_DIRS += \
-	kvm \
-	kvm-cgroups \
-	kvm-iommu
 endif
 endif
-endif
-endif
-
-RUN_DIRS_EXCLUDE := netfilebt kvm kvm-cgroups kvm-iommu
 
 ifneq ($(RUN_DIRS_SET),)
     RUN_DIRS := $(RUN_DIRS_SET)

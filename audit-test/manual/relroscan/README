@@ -5,6 +5,22 @@ This tool scans the entire system (excl. /dev, /proc, /sys) for ELF binaries
 and analyzes them for various security-related ELF-specific features, mainly
 relro ("relocation read-only"). See the (simple) source for more info.
 
+SELinux considerations
+----------------------
+Before running the tool, make sure the system is in SELinux Permissive mode
+or has SELinux disabled, so that the tool can reach all files on the system.
+You can temporarily set SELinux to Permissive with:
+
+setenforce 0
+
+(To enable it back, use "setenforce 1".)
+With SELinux MLS policy and sysadm_secadm module disabled, only the secadm_r
+role can switch enforcing modes. In this case, you need to issue:
+
+newrole -r secadm_r -- -c 'setenforce 0'
+
+Building and execution
+----------------------
 To generate out.log and out.err, simply:
 
 make run

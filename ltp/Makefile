@@ -67,7 +67,7 @@ download:
 .PHONY: extract
 extract:
 	tar xvf $(LTP_TARBALL)
-	mv -f ltp-full-* $(LTP_BASE)
+	mv -f ltp-[0-9]* $(LTP_BASE)
 
 .PHONY: patch
 patch:
@@ -78,6 +78,7 @@ patch:
 .PHONY: build
 build:
 	@cd $(LTP_BASE) && \
+	make autotools && \
 	./configure && \
 	make && \
 	umask 022 && \

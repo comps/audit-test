@@ -129,6 +129,8 @@ endif
 
 # ie. pkgname.noarch everywhere
 AUDIT_TEST_DEP_NOARCH := \
+	autoconf \
+	automake \
 	selinux-policy-devel \
 	perl-Expect
 

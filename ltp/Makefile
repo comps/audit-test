@@ -122,7 +122,6 @@ clean:
 	# remove logs
 	rm -f ltp.rollup.log ltp.run.log
 	# remove downloaded and created files/dirs
-	rm -f $(LTP_TARBALL)
 	rm -rf $(LTP_BASE)
 
 .PHONY: distclean

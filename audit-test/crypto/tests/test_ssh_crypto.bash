@@ -58,8 +58,8 @@ append_cleanup "setsebool ssh_sysadm_login=0"
 # install dracut-fips if needed to have a valid FIPS product
 # when testing with OPENSSL_FORCE_FIPS_MODE env variable
 if ! rpm -q dracut-fips; then
-    yum -y install dracut-fips
-    append_cleanup "yum -y remove dracut-fips"
+    touch /etc/system-fips
+    append_cleanup "rm -f /etc/system-fips"
 fi
 
 function cipher {

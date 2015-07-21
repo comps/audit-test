@@ -126,8 +126,11 @@ check_variables_base() {
     done;
 
     # sanity PPROFILE check
-    check "[ \"$PPROFILE\" = \"capp\" -o \"$PPROFILE\" = \"lspp\" ]" 0 \
-        "Var PPROFILE is either capp or lspp"
+    local eprof="capp"
+    sestatus | grep -qo 'mls$' && eprof="lspp"
+
+    check "[ \"$PPROFILE\" = \"$eprof\" ]" 0 \
+        "Var PPROFILE is $eprof"
 
     if [ "$CHECK_FAILED" ]; then
         echo

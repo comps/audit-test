@@ -17,7 +17,7 @@
 #include <signal.h>
 
 #define BUF_SIZE 2048
-#define ALARM_TIMER 15
+#define ALARM_TIMER 7
 
 #ifndef SOCKCALL_MODULE
 void dummy_handler(int signum) { return; }

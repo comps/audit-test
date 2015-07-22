@@ -16,7 +16,7 @@
 #include "includes.h"
 #include <signal.h>
 
-#define ALARM_TIMER 15
+#define ALARM_TIMER 7
 
 #ifndef SOCKCALL_MODULE
 void dummy_handler(int signum) { return; }

@@ -29,9 +29,18 @@ sync
 ./user debug/smaeptest/smep
 
 
-Notes for RHEL-7.1 CCC
-======================
+RHEL-7.1 instructions
+---------------------
+For RHEL-7.1, only SMEP is expected to work, SMAP is not part of the
+certification (as it's not supported by the certified hardware).
 
-Please ignore SMAP at this point as only SMEP is claimed, therefore skip the
-"test SMAP" command above. Once again, as written above, a successful test PASS
-is considered a machine crash (because the crash prevented unsafe execution).
+Only the x86_64 architecture and only certain Intel processors
+from microarchitecture "Haswell" (or "Ivy Bridge" for Xeon CPUs) onwards
+have this feature.
+
+On these configurations, the SMEP test as described above should freeze
+the machine (OS), preventing unauthorized execution. If it does not,
+ie. if the machine continues to operate normally, the test failed and
+SMEP doesn't work.
+
+# vim: syntax=off :

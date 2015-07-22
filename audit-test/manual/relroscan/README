@@ -39,4 +39,18 @@ ignored based on your specific needs, for example:
 - firmware / alsa firmware blobs
 - etc.
 
+RHEL-7.1 instructions
+---------------------
+For RHEL-7.1, the out.err file should be empty and the following should
+also produce empty output (given non-empty source out.log file):
+
+grep '^ norelro' < out.log | \
+  grep -v -e '\.o$' -e '\.a$' \
+    -e '-- /boot/grub2' -e '-- /usr/lib/grub' \
+    -e '-- /lib/modules' -e '-- /usr/lib/modules' \
+    -e '-- /usr/lib/firmware' \
+    -e '-- /usr/local/eal4_testing' -e '-- /opt/ltp'
+
+on a ***clean evaluated configuration*** (with no extra packages installed).
+
 # vim: syntax=off :

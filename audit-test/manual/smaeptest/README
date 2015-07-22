@@ -27,3 +27,5 @@ sync
 
 # test SMEP
 ./user debug/smaeptest/smep
+
+# vim: syntax=off :

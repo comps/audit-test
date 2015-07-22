@@ -51,12 +51,14 @@ Verify that each ext4 filesystem in /etc/fstab has the 'user_xattr' option.
 Note that with xfs file system, this option is not needed.
 
 If you do not have an administrative eal user other than the root user, log
-in as root and add one with the following commands:
+in as root (in MLS with sysadm_r role) and add one with the following commands:
 
 # useradd -c "EAL Test User" -G wheel eal
 # passwd eal <root's password>
 
-If on an MLS system perform the following additional step:
+If on a MLS system perform the following additional step as root in secamd_r
+role:
+
 # semanage login -a -s staff_u -r s0-s15:c0.c1023 eal
 
 Log into the system as the eal user.
@@ -182,6 +184,30 @@ the network test server contains both the IPv4 and IPv6 addresses of the test
 machine.
 
 
+Configure the Netfilter and Labeled Networking Tests
+----------------------------------------------------
+
+Follow the steps in README.netfilter to make sure to have properly configured
+testing environment before proceeding.
+
+To configure the networking tests execute the command below. Note that this
+expects that you have correctly exported all the required environment variables
+from the previous section.
+
+# make -C audit-test netconfig
+
+For the localhost ipsec tests to succeed, check that you have both following
+tunables set to 0:
+
+# cat /proc/sys/net/ipv4/conf/lo/disable_{xfrm,policy}
+
+if not, add sysctl.conf entries to make them 0:
+
+# echo "net.ipv4.conf.lo.disable_xfrm = 0" >> /etc/sysctl.conf
+# echo "net.ipv4.conf.lo.disable_policy = 0" >> /etc/sysctl.conf
+# sysctl -p
+
+
 Configure the Authentication Server
 -----------------------------------
 
@@ -204,49 +230,26 @@ server.
 To configure sssd run the 'sssd-configure' Makefile target in audit-test root
 directory.
 
-# make sssd-configure
+# cd /usr/local/eal4_testing
+# make -C audit-test sssd-configure
 
 To verify the sssd configuration run the 'sssd-verify' Makefile target in
 the audit-test root directory. If configuration is successful you should see
 PASSED in the output as shown below.
 
-# make sssd-verify
+# make -C audit-test sssd-verify
 :: Verifying SSSD configuration
 :: SSSD configuration verification PASSED
 
 The configuration is done via the 'utils/auth-server/sssd_setup' script. You
 can use the 'sssd-reconfigure' target to reconfigure sssd anytime.
 
-# make sssd-reconfigure
+# make -C audit-test sssd-reconfigure
 
 Please note that sssd is disabled on the system by default. To start sssd
 daemon you can use the 'sssd-start' Makefile target or start sssd via
 service or systemctl commands. Similarly, you can use the 'sssd-stop' target
 to stop the daemon.
-
-
-Configure the Netfilter and Labeled Networking Tests
-----------------------------------------------------
-
-Follow the steps in README.netfilter to make sure to have properly configured
-testing environment before proceeding.
-
-To configure the networking tests execute the command below. Note that this
-expects that you have correctly exported all the required environment variables
-from the previous section.
-
-# make netconfig
-
-For the localhost ipsec tests to succeed, check that you have both following
-tunables set to 0:
-
-# cat /proc/sys/net/ipv4/conf/lo/disable_{xfrm,policy}
-
-if not, add sysctl.conf entries to make them 0:
-
-# echo "net.ipv4.conf.lo.disable_xfrm = 0" >> /etc/sysctl.conf
-# echo "net.ipv4.conf.lo.disable_policy = 0" >> /etc/sysctl.conf
-# sysctl -p
 
 
 Reboot the Test Machine or Restart Network Services
@@ -280,26 +283,12 @@ Change directory to the audit test suite.
 
 # cd /usr/local/eal4_testing/audit-test
 
-If the test suite was configured to run the netfilter tests, create a file named
-profile.bash with exported env variables according to README.netfilter, section
-"Environmental variables" (see Example below it) and source it:
+Create a file (e.g. '/root/exports') with exported environment variables
+according section "Environmental Variables" in README.netfilter and exported
+environment variables for IPA as mentioned in the section "Configure the
+Authentication Server" in this README.run and source it:
 
-# . profile.bash
-
-Otherwise, make sure that the labeled networking tests have been configured
-according to the instructions in the previous section. Set the following
-environment variables:
-
-# export LBLNET_SVR_IPV4="<local network test server IPV4 address>"
-# export LBLNET_SVR_IPV6="<local network test server IPV6 address>"
-# export PASSWD=<root/admin user password>
-
-Optionally, you may set eal user password for the network test server. It is
-needed during network set-up as well as during the testing. Otherwise, it is
-presumed that eal user passwords for both TOE and the network server are the
-same.
-
-# export NS_PASSWD=<eal user password on the network test server>
+# . /root/exports
 
 Verify that the time on the test system is synchronized with the time
 on the network test server.

@@ -18,16 +18,7 @@ run 'make dist' from the top of the git tree:
 # cd audit-test.git
 # make dist
 
-The tar file will be audit-<commit>.tar.gz
-
-Alternatively, you can create a tar file for just the audit-test
-suite by running 'make dist' from the 'audit-test' directory at the top of
-the git tree:
-
-# cd audit-test.git/audit-test
-# make dist
-
-The tar file will be ../audit-test-<commit>.tar.gz
+The tar file will be named 'audit-test.tar.gz'.
 
 Configure the target system
 ---------------------------
@@ -82,14 +73,12 @@ git tree on the target.
 Untar the previously created tar file into the newly created
 /usr/local/eal4_testing directory.
 
-# tar xvf audit-<commit>.tar.gz
-or
-# tar xvf audit-test-<commit>.tar.gz
+# tar xvf audit-test.tar.gz
 
 Ensure that all files in the target directory have the correct ownership:
 
 # chown -R root:root /usr/local/eal4_testing
-# chmod -R a+rX /usr/local/eal4_testing
+# chmod -R u=rwX,go=rX /usr/local/eal4_testing
 
 Install package requirements / dependencies
 -------------------------------------------

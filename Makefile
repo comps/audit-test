@@ -37,7 +37,7 @@ SUB_DIRS	= audit-test ltp
 REPORT		= logs-*.tar.gz
 SYSTEMINFO	= systeminfo.run.log
 SUMMARY		= run.log
-
+EXTRA_DIST_FILES = Makefile README
 
 # generic recursion into all SUB_DIRS
 .PHONY: subdirs
@@ -112,18 +112,5 @@ summary:
 
 .PHONY: dist
 dist:
-	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \
-	tmpdir=$$(mktemp -d) && \
-	into=$$(pwd) && \
-	for DIR in $(SUB_DIRS); do make -C "$$DIR" dist; done && \
-	mv "ltp-$$rev.tar.gz" "audit-test-$$rev.tar.gz" "$$tmpdir" && \
-	cp "Makefile" "$$tmpdir" && \
-	cd "$$tmpdir" && \
-	tar xpzvf "ltp-$$rev.tar.gz" && \
-	tar xpzvf "audit-test-$$rev.tar.gz" && \
-	tar czf "$$into/audit-$$rev.tar.gz" "Makefile" "ltp" "audit-test" && \
-	echo "$$into" && \
-	cd "$$into" && \
-	rm -rf "$$tmpdir" && \
-	echo && \
-	ls -l audit-$$rev.tar.gz
+	tar --owner root --group root --mode u=rwX,go=rX \
+		-cvzf audit-test.tar.gz $(SUB_DIRS) $(EXTRA_DIST_FILES)

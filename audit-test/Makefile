@@ -80,26 +80,6 @@ run:
 .PHONY: rerun
 rerun: run
 
-.PHONY: dist
-dist:
-	deps="audit libcap-devel" && \
-	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \
-	tmpdir=$$(mktemp -d) && \
-	into=$${PWD%/*} && \
-	sed -i "/^Version:/s/[0-9].*/$$rev/; \
-		s/^\(Requires:[         ]*\).*/\1$$deps/" \
-		    audit-test.spec && \
-	mkdir "$$tmpdir/audit-test" && \
-	rsync -a --exclude=.git . "$$tmpdir/audit-test" && \
-	$(MAKE) distclean -C "$$tmpdir/audit-test" && \
-	cd "$$tmpdir" && \
-	chmod -R a+rX audit-test && \
-	tar czf "$$into/audit-test-$$rev.tar.gz" audit-test && \
-	cd "$$into" && \
-	rm -rf "$$tmpdir" && \
-	echo && \
-	ls -l audit-test-$$rev.tar.gz
-
 .PHONY: report
 ALL_LOGS	+= audit.run.log audit.rollup.log
 report:

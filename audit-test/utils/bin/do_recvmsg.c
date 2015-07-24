@@ -19,7 +19,8 @@
 #define BUF_SIZE 2048
 #define ALARM_TIMER 7
 
-#ifndef SOCKCALL_MODULE
+#ifndef SIGNAL_DUMMY_HANDLER
+#define SIGNAL_DUMMY_HANDLER
 void dummy_handler(int signum) { return; }
 #endif
 

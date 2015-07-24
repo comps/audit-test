@@ -18,9 +18,6 @@
 #include <netinet/in.h>
 #include <linux/net.h>
 
-/* for some do_* syscall wrappers */
-void dummy_handler(int signum) { return; }
-
 #define SOCKCALL_MODULE
 #include "do_accept.c"
 #include "do_accept4.c"

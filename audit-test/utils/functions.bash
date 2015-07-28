@@ -146,13 +146,15 @@ function tstsvr_cleanup {
 #                <local|remote> "cmd1;cmd2;cmd3"
 function send_ns {
     local OPTION= OPTARG= OPTIND=
-    local ipv= newsession= endsession= session= timeout=60 retry=3
-    while getopts "t:r:s:46SE" OPTION
+    local ipv= timeout=60 retry=3
+    local session= newsession= endsession= killsession=
+    while getopts "t:r:s:46SEK" OPTION
     do
         case "$OPTION" in
             4|6)  ipv="$OPTION" ;;
             S)    newsession=1 ;;
             E)    endsession=1 ;;
+            K)    killsession=1 ;;
             s)    [ "$((OPTARG))" -ne 0 ] || return 1; session="$((OPTARG))" ;;
             t)    timeout="$OPTARG" ;;
             r)    retry="$((OPTARG+1))" ;;
@@ -162,10 +164,12 @@ function send_ns {
     shift $((OPTIND-1))
     local host="$1" cmdline="$2" port="5000"
 
-    [ "$session" ] && port="$session"
     [ "$((timeout))" -gt 0 ] && cmdline="timeout,$timeout;$cmdline"
-    [ "$newsession" ] && cmdline="SESSION"
+    [ "$newsession" ] && { [ "$session" ] && return 1; cmdline="SESSION"; }
     [ "$endsession" ] && { [ "$session" ] || return 1; cmdline="ctl-end"; }
+    [ "$killsession" ] && { [ "$session" ] || return 1; \
+                            cmdline="ctl-kill,$session"; session= ; }
+    [ "$session" ] && port="$session"
 
     case "$host" in
         remote)

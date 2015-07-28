@@ -157,7 +157,7 @@ function tls_client_connect {
 
     client_pid=$!
 
-    wait_for_cmd "egrep '(Read from server 0 bytes|SSL_ERROR_NO_CYPHER_OVERLAP|PR_Poll returned 0x00)' $client_log"
+    wait_for_cmd "egrep '(Read from server 0 bytes|SSL_ERROR_NO_CYPHER_OVERLAP)' $client_log"
 
     return 0
 }

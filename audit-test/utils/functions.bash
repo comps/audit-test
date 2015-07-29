@@ -137,6 +137,60 @@ function tstsvr_cleanup {
     nc -w 3 "$1" 4009 </dev/null
 }
 
+# host_ns - get hostname or ipv4/ipv6 addr of the network-server
+#
+# usage: host_ns [-46] <local|remote>
+function host_ns {
+    local OPTION= OPTARG= OPTIND= ipv=
+    while getopts "46" OPTION
+    do
+        case "$OPTION" in
+            4|6)  ipv="$OPTION" ;;
+            \?)   return 1 ;;
+        esac
+    done
+    shift $((OPTIND-1))
+    local host="$1" addr=
+    [ "$host" ] || return 1
+
+    # set base (name) for dns resolution
+    case "$host" in
+        remote) addr="$LBLNET_SVR" ;;
+        local)  addr="localhost" ;;
+        *)      return 1 ;;
+    esac
+
+    # try resolution
+    case "$ipv" in
+	4) addr=$(getent ahostsv4 "$addr" | awk '/^.+$/ {print $1;exit}') ;;
+	6) addr=$(getent ahostsv6 "$addr" | \
+                  awk '/^::ffff:/ {next} /^.+$/ {print $1;exit}') ;;
+    esac
+    [ "$addr" ] && { echo "$addr"; return 0; }
+    # new-style LBLNET_SVR set, but resolution failed, unexpected
+    [ "$LBLNET_SVR" ] && { echo "$FUNCNAME resolution failed" >&2; return 1; }
+
+    # if failed, try fallback to old variables
+    case "$host" in
+        remote)
+            case "$ipv" in
+                6) addr="$LBLNET_SVR_IPV6" ;;
+                4) addr="$LBLNET_SVR_IPV4" ;;
+                *) addr="$LBLNET_SVR_IPV4" ;;  # fallback
+            esac ;;
+        local)
+            case "$ipv" in
+                6) addr="::1" ;;
+                4) addr="127.0.0.1" ;;
+                *) addr="127.0.0.1" ;;  # fallback
+            esac ;;
+    esac
+    [ "$addr" ] && { echo "$addr"; return 0; }
+
+    echo "$FUNCNAME resolution failed" >&2
+    return 1
+}
+
 # send_ns - send a command string / control cmdline to ns2
 #
 # This function can be used to communicate with both local and remote network
@@ -171,17 +225,7 @@ function send_ns {
                             cmdline="ctl-kill,$session"; session= ; }
     [ "$session" ] && port="$session"
 
-    case "$host" in
-        remote)
-            if [ "$LBLNET_SVR_NAME" ]; then host="$LBLNET_SVR_NAME"
-            elif [ "$ipv" = "6" ]; then host="$LBLNET_SVR_IPV6"
-            else host="$LBLNET_SVR_IPV4"
-            fi ;;
-        local)
-            host="localhost" ;;
-        *)
-            return 1 ;;
-    esac
+    host=$(host_ns ${ipv:+-$ipv} "$host") || return 1
 
     while true; do
         nc ${ipv:+-$ipv} "$host" "$port" <<<"$cmdline" && break

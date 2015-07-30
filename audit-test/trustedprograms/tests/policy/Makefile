@@ -37,7 +37,7 @@ TEST_BASEDIR := /usr/local/eal4_testing
 #
 # targets
 #
-.PHONY: verify distclean
+.PHONY: verify distclean install uninstall
 
 # base SELinux module targets
 include $(SELINUX_DEV_BASEDIR)/Makefile
@@ -69,3 +69,7 @@ distclean:
 	for file in *.if; do \
 		[ -z "$$(grep -v '<summary></summary>' < $$file)" ] && rm -vf "$$file"; \
 	done;
+
+install:
+
+uninstall:

@@ -41,6 +41,12 @@ SHELL		:= /bin/bash
 CFLAGS		+= -g -O2 -Wall -Werror -D_GNU_SOURCE -fno-strict-aliasing
 
 #
+# generic helper make-based functions
+#
+
+sepol = $(shell sestatus | grep -q '^Loaded policy name: * $(1)$$' && echo 1)
+
+#
 # MACHINE - architecture of this machine
 #
 
@@ -228,7 +234,7 @@ parse_screl = $(eval export SCREL_SYSCALLS := \
 # Common rules
 ##########################################################################
 
-.PHONY: all executables run rerun \
+.PHONY: all executables run rerun install uninstall \
 	clean distclean verify _clean _distclean _verify
 
 all: deps subdirs executables
@@ -239,6 +245,10 @@ executables:
 run:
 
 rerun:
+
+install: all subdirs
+
+uninstall: all subdirs
 
 ifneq ($(if $(filter-out .,$(TOPDIR)),$(wildcard run.conf)),)
 all: run.bash
@@ -259,27 +269,17 @@ rerun: all
 endif
 
 _clean:
-	@if [[ "$(MAKECMDGOALS)" == clean ]]; then \
-	    for x in $(SUB_DIRS); do \
-		make -C $$x clean; \
-	    done; \
-	fi
 	$(RM) -r .deps
 	$(RM) $(ALL_OBJ) $(ALL_EXE) $(ALL_AR) $(ALL_SO)
 
-clean: _clean
+clean: _clean subdirs
 
 ALL_LOGS += run.log rollup.log logs
 _distclean: clean
-	@if [[ "$(MAKECMDGOALS)" == distclean ]]; then \
-	    for x in $(SUB_DIRS); do \
-		make -C $$x distclean; \
-	    done; \
-	fi
 	$(RM) -r $(ALL_LOGS)
 	if [[ -L run.bash ]]; then $(RM) run.bash; fi
 
-distclean: _distclean
+distclean: _distclean subdirs
 
 _verify:
 

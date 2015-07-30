@@ -33,10 +33,11 @@ PATCH_DIR = patch
 
 LTP_TARBALL = ltp-full.tar.bz2
 LTP_SRCURL = https://github.com/linux-test-project/ltp/archive/20150119.tar.gz
+LTP_DESTDIR = /opt/ltp
 
-# set temporary directory to /opt/tmp for tests
+# set temporary directory for tests
 # this is because the default /tmp is mounted noexec in evaluated configuration
-LTP_TMPDIR = /opt/ltp/tmp
+LTP_TMPDIR = $(LTP_DESTDIR)/tmp
 
 # save allow_execmem / msgmni
 ORIG_EXECMEM := $(shell getsebool deny_execmem | cut -d\  -f3)
@@ -79,10 +80,18 @@ patch:
 build:
 	@cd $(LTP_BASE) && \
 	make autotools && \
-	./configure && \
-	make && \
+	./configure --prefix=$(LTP_DESTDIR) && \
+	make
+
+.PHONY: install
+install:
+	@cd $(LTP_BASE) && \
 	umask 022 && \
 	make install
+
+.PHONY: uninstall
+uninstall:
+	rm -rf $(LTP_DESTDIR)
 
 .PHONY: rerun
 rerun:
@@ -95,7 +104,7 @@ runtests:
 	#  http://www.mail-archive.com/ltp-list@lists.sourceforge.net/msg12767.html
 	sysctl kernel.msgmni=700
 	# run tests
-	/opt/ltp/runltp -f $(RUNTESTS) -p -d $(LTP_TMPDIR) -l $(CURDIR)/ltp.rollup.log 2>&1 | tee ltp.run.log
+	$(LTP_DESTDIR)/runltp -f $(RUNTESTS) -p -d $(LTP_TMPDIR) -l $(CURDIR)/ltp.rollup.log 2>&1 | tee ltp.run.log
 	# cleanup
 	setsebool deny_execmem=$(ORIG_EXECMEM)
 	sysctl kernel.msgmni=$(ORIG_MSGMNI)

@@ -77,7 +77,6 @@ run:
 	for x in $(RUN_DIRS); do make -C $$x $(MAKECMDGOALS); done
 	$(MAKE) report
 
-.PHONY: rerun
 rerun: run
 
 .PHONY: report
@@ -130,14 +129,7 @@ endif
 
 .PHONY: policy
 policy:
-	cd utils/selinux-policy && $(MAKE) clean && $(MAKE)
-	@echo "Notice: Need to change role to secadm_r to be able to modify SELinux policy"
-	@if [[ $$(id -Z) =~ .*sysadm_r.* ]]; then \
-		cd utils/selinux-policy && newrole -r secadm_r -- -c "$(MAKE) install"; \
-	else \
-		cd utils/selinux-policy && $(MAKE) install; \
-	fi
-	cd utils/selinux-policy && $(MAKE) relabel
+	$(MAKE) -C utils/selinux-policy install
 
 .PHONY: netconfig
 netconfig:

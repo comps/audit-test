@@ -57,13 +57,18 @@ run: subdirs
 .PHONY: rerun
 rerun: run
 
+.PHONY: install
+install: subdirs
+
+.PHONY: uninstall
+uninstall: subdirs
+
 .PHONY: clean
 clean: subdirs
 
 .PHONY: distclean
 distclean: subdirs
 	rm -f $(REPORT) $(SYSTEMINFO) $(SUMMARY)
-
 
 .PHONY: report
 report: systeminfo summary

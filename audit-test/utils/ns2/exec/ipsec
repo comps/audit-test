@@ -1,59 +1,38 @@
 #!/bin/bash
 
+# for restart_service
+. /usr/local/eal4_testing/audit-test/utils/functions.bash || exit 2
+
 confdir=/etc/ipsec.d
-secrets_file=/etc/ipsec.secrets
 
 # unique toe-to-ns identifier
 unique_id="audit-test-${REMOTE_ADDR}-to-${LOCAL_ADDR}"
 
 reload_rules() {
-    service ipsec restart
+    restart_service ipsec
 }
 
-conf_create() {
-    conf_autoclean
-    cat > "$confdir"/"$unique_id".conf
+create() {
+    autoclean
+    cat > "$confdir"/"$unique_id"."$1"
 }
-conf_remove() {
-    rm -f "$confdir"/"$unique_id".conf
+remove() {
+    rm -f "$confdir"/"$unique_id"."$1"
 }
-conf_autoclean() {
+autoclean() {
     # remove configs older than 3 days
-    find "$confdir" -name "audit-test-*" -mmin +4320 -delete
-}
-
-secrets_add() {
-    secrets_autoclean
-    secrets_remove
-    {
-        echo "# BEGIN $unique_id $(date +%s)"
-        cat
-        echo "# END $unique_id"
-    } >> "$secrets_file"
-}
-secrets_remove() {
-    local id="${1:-$unique_id}"
-    sed "/^# BEGIN $id /,/^# END $id\$/d" -i "$secrets_file"
-}
-secrets_autoclean() {
-    # remove entries older than 3 days
-    local id= stamp= threedaysago=$(( $(date +%s)-259200 ))
-    while IFS= read id stamp; do
-        [ "$stamp" -lt "$threedaysago" ] && secrets_remove "$id"
-    done < <(sed -n '/^# BEGIN audit-test-/s/# BEGIN //p' "$secrets_file")
+    find "$confdir" -name "audit-test-*.*" -mmin +4320 -delete
 }
 
 case "$1" in
-    create)  conf_create; reload_rules ;;
-    secrets) secrets_add ;;
-    cleanup)
-        conf_remove
-        conf_autoclean
-        secrets_remove
-        secrets_autoclean
-        ;;
-    *)
-        exit 1 ;;
+    secrets) create secrets ;;
+    conf)    create conf ;;
+    reload)  reload_rules ;;
+    cleanup) remove secrets; remove conf ;;
+             # don't reload on cleanup as it would require yet another
+             # exclusive lock on the server + cleanup is done /automatically/
+             # after some time
+    *)       exit 1 ;;
 esac
 
 # vim: sts=4 sw=4 et :

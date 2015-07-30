@@ -116,6 +116,18 @@ ifneq (,$(findstring $(DISTRO),RHEL FEDORA))
 endif
 
 #
+# PPROFILE - tested protection profile
+#
+
+ifeq ($(call sepol,mls),1)
+    PPROFILE := lspp
+else ifeq ($(call sepol,targeted),1)
+    PPROFILE := capp
+endif
+
+export PPROFILE
+
+#
 # additional CFLAGS exports for conditional binary compilation
 #
 
@@ -257,14 +269,12 @@ run.bash:
 	@[ -f run.bash ] || ln -svfn $(TOPDIR)/utils/run.bash run.bash
 
 run: all
-	@$(check_set_PPROFILE); \
-	$(check_set_PASSWD); \
+	@$(check_set_PASSWD); \
 	./run.bash --header; \
 	./run.bash
 
 rerun: all
-	@$(check_set_PPROFILE); \
-	$(check_set_PASSWD); \
+	@$(check_set_PASSWD); \
 	./run.bash --rerun
 endif
 
@@ -290,22 +300,6 @@ verify: _verify
 ##########################################################################
 
 # Re-used in toplevel Makefile
-check_set_PPROFILE = \
-	if [[ ! -x /usr/sbin/getenforce ]]; then \
-	  export PPROFILE=capp ; \
-        elif [[ $$PPROFILE != capp && $$PPROFILE != lspp ]]; then \
-	  export PPROFILE=capp ; \
-	  if [[ "$$(getenforce)" == "Enforcing" ]] &&  \
-	        (/usr/sbin/sestatus | grep -q mls); then \
-	    if [[ "$$(secon -r)" != "lspp_test_r" ]]; then \
-	      echo "SELinux MLS policy is enabled but you are not in lspp_test_r" ; \
-	      exit 1; \
-	    else \
-	      export PPROFILE=lspp ; \
-	    fi \
-	  fi \
-	fi
-
 check_set_PASSWD = \
 	while [[ -z $$PASSWD ]]; do \
 	    trap 'stty echo; exit' 1 2; \

@@ -70,8 +70,7 @@ run:
 	@for l in run rollup; do \
 	    echo "audit.$$l.log will be collected from subdirectories when the test completes" >audit.$$l.log; \
 	done
-	@$(check_set_PPROFILE); \
-	$(check_set_PASSWD); \
+	@$(check_set_PASSWD); \
 	$(check_TTY); \
 	$(MAKE) all && \
 	for x in $(RUN_DIRS); do make -C $$x $(MAKECMDGOALS); done
@@ -138,9 +137,8 @@ netconfig:
 
 .PHONY: envcheck
 envcheck:
-	@$(check_set_PPROFILE); \
-	$(check_set_PASSWD);
-	@utils/envcheck
+	@$(check_set_PASSWD); \
+	utils/envcheck
 
 .PHONY: sssd-%
 sssd-%:

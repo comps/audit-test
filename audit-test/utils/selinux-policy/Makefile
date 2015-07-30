@@ -43,8 +43,8 @@ MODULE_DEFTYPE := lspp_harness_t
 # targets
 #
 
-# only in selinux mls mode
-ifeq ($(call sepol,mls),1)
+# only in selinux mls mode / lspp profile
+ifeq ($(PPROFILE),lspp)
 
 all: $(MODULE_NAME).pp
 

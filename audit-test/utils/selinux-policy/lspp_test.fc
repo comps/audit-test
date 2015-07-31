@@ -51,15 +51,14 @@
 
 # base file
 /usr/local/eal4_testing/(.*)?	--	gen_context(system_u:object_r:lspp_test_file_t,s0)
+/usr/local/eal4_testing/(.*)?	-l	gen_context(system_u:object_r:lspp_test_file_t,s0)
+/usr/local/eal4_testing/(.*)?	-p	gen_context(system_u:object_r:lspp_test_file_t,s0)
 
 # configuration files
 /usr/local/eal4_testing/audit-test/(.*)?/run.conf	--	gen_context(system_u:object_r:lspp_test_conf_t,s0)
 
 # log files
 /usr/local/eal4_testing/(.*)?\.log	--	gen_context(system_u:object_r:lspp_test_output_t,s0)
-
-# base pipes
-/usr/local/eal4_testing/(.*)?	-p	gen_context(system_u:object_r:lspp_test_file_t,s0)
 
 ###
 #

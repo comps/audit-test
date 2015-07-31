@@ -179,8 +179,9 @@ mls_trusted_object(lspp_harness_t)
 
 # default file types
 type_transition lspp_domains lspp_test_harness_dir_t:file lspp_harness_exec_t;
-type_transition lspp_domains lspp_test_dir_t:file lspp_test_output_t;
 type_transition lspp_domains lspp_test_exec_dir_t:file lspp_test_generic_exec_t;
+type_transition lspp_domains lspp_test_dir_t:file lspp_test_output_t;
+type_transition lspp_domains lspp_test_dir_t:lnk_file lspp_test_file_t;
 type_transition lspp_domains lspp_test_dir_t:fifo_file lspp_test_file_t;
 
 ###

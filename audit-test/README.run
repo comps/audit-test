@@ -75,10 +75,14 @@ Untar the previously created tar file into the newly created
 
 # tar xvf audit-test.tar.gz
 
-Ensure that all files in the target directory have the correct ownership:
+Preparing the suite
+-------------------
 
-# chown -R root:root /usr/local/eal4_testing
-# chmod -R u=rwX,go=rX /usr/local/eal4_testing
+To fix bad ownership, file mode, selinux contexts and otherwise do general
+post-extraction tasks and prepare the suite for build, issue:
+
+# cd /usr/local/eal4_testing
+# make prepare
 
 Install package requirements / dependencies
 -------------------------------------------

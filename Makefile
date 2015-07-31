@@ -70,6 +70,12 @@ clean: subdirs
 distclean: subdirs
 	rm -f $(REPORT) $(SYSTEMINFO) $(SUMMARY)
 
+.PHONY: prepare
+prepare:
+	chown -R root:root .
+	chmod -R u=rwX,go=rX .
+	restorecon -RF .
+
 .PHONY: report
 report: systeminfo summary
 	@tarball="logs-$$(date +'%m%d%Y_%H%M').tar.xz"; \

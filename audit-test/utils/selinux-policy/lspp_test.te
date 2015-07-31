@@ -117,18 +117,12 @@ typeattribute lspp_test_ipsec_t lspp_test_domains, lspp_domains;
 attribute lspp_directories;
 
 # directory types
-type lspp_test_harness_dir_t, lspp_directories;
-files_type(lspp_test_harness_dir_t)
 type lspp_test_dir_t, lspp_directories;
 files_type(lspp_test_dir_t)
-type lspp_test_exec_dir_t, lspp_directories;
-files_type(lspp_test_exec_dir_t)
 
 # file types
 type lspp_test_file_t;
 files_type(lspp_test_file_t)
-type lspp_test_conf_t;
-files_type(lspp_test_conf_t)
 type lspp_test_output_t;
 files_type(lspp_test_output_t)
 
@@ -178,11 +172,7 @@ mls_trusted_object(lspp_test_output_t)
 mls_trusted_object(lspp_harness_t)
 
 # default file types
-type_transition lspp_domains lspp_test_harness_dir_t:file lspp_harness_exec_t;
-type_transition lspp_domains lspp_test_exec_dir_t:file lspp_test_generic_exec_t;
 type_transition lspp_domains lspp_test_dir_t:file lspp_test_output_t;
-type_transition lspp_domains lspp_test_dir_t:lnk_file lspp_test_file_t;
-type_transition lspp_domains lspp_test_dir_t:fifo_file lspp_test_file_t;
 
 ###
 #

@@ -34,16 +34,6 @@
 # specific directories
 #
 
-# network test driver
-/usr/local/eal4_testing/audit-test/utils/network-server	-d	gen_context(system_u:object_r:lspp_test_harness_dir_t,s0)
-/usr/local/eal4_testing/audit-test/utils/ns2		-d	gen_context(system_u:object_r:lspp_test_harness_dir_t,s0)
-
-# unprivileged tests
-/usr/local/eal4_testing/audit-test/utils/bin			-d	gen_context(system_u:object_r:lspp_test_exec_dir_t,s0)
-/usr/local/eal4_testing/audit-test/syscalls/helpers		-d	gen_context(system_u:object_r:lspp_test_exec_dir_t,s0)
-/usr/local/eal4_testing/audit-test/syscalls-ns/tests/helpers	-d	gen_context(system_u:object_r:lspp_test_exec_dir_t,s0)
-/usr/local/eal4_testing/audit-test/containers/tests/helpers	-d	gen_context(system_u:object_r:lspp_test_exec_dir_t,s0)
-
 ###
 #
 # generic files
@@ -53,12 +43,6 @@
 /usr/local/eal4_testing/(.*)?	--	gen_context(system_u:object_r:lspp_test_file_t,s0)
 /usr/local/eal4_testing/(.*)?	-l	gen_context(system_u:object_r:lspp_test_file_t,s0)
 /usr/local/eal4_testing/(.*)?	-p	gen_context(system_u:object_r:lspp_test_file_t,s0)
-
-# configuration files
-/usr/local/eal4_testing/audit-test/(.*)?/run.conf	--	gen_context(system_u:object_r:lspp_test_conf_t,s0)
-
-# log files
-/usr/local/eal4_testing/(.*)?\.log	--	gen_context(system_u:object_r:lspp_test_output_t,s0)
 
 ###
 #

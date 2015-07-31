@@ -114,6 +114,18 @@ http://koji.fedoraproject.org/koji/packageinfo?packageID=2922
 For tips on installing the test suite on other distros,
 refer to the notes at the end of this README.
 
+Building and loading the selinux policy
+---------------------------------------
+
+If running on an LSPP/MLS system, install the test policy and change to the
+"lspp_test_r" role. Please note that the policy make will require root
+password to be able to load the policy. This is because sysadm_r and secadm_r
+roles are separated in the evaluated configuration.
+
+# cd /usr/local/eal4_testing/audit-test
+# make policy
+# newrole -r lspp_test_r
+
 Build the audit-test suite
 --------------------------
 
@@ -127,19 +139,6 @@ Or if re-building the tests to run the 32-bit tests on an x86_64 system do:
 
 # make clean    # or make distclean to remove all previous test logs
 # make MODE=32
-
-If running on an MLS system, install the test policy and change to the
-"lspp_test_r" role. Please note that the policy make will require root
-password to be able to load the policy. This is because sysadm_r and secadm_r
-roles are separated in the evaluated configuration.
-
-# make -C audit-test policy
-# newrole -r lspp_test_r
-
-This step is *not* needed when building/running the suite multiple times
-on the same installed system (ie. for MODE=32, like mentioned above).
-Simply make sure you remain in the lspp_test_r role or change to it using
-newrole if you lose the login session.
 
 Set entropy generation
 ----------------------
@@ -431,7 +430,7 @@ The suite can be uninstalled by using
 # make uninstall
 
 Note that you have to uninstall the custom SELinux policy module manually
-(when running under LSPP) *after* running the command above *and* logging
+(when running under LSPP/MLS) *after* running the command above *and* logging
 out of lspp_test_r (back to ie. sysadm_r),
 
 # make -C audit-test/utils/selinux-policy uninstall
@@ -444,6 +443,7 @@ Among known leftovers that won't be removed by a reboot are RPM package
 dependencies of the suite (installed by 'make depinstall'), which need to
 be removed manually (if required).
 Also, the suite itself (in eal4_testing) isn't removed automatically.
+
 
 Workarounds and troubleshooting tips
 ------------------------------------

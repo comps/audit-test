@@ -246,13 +246,16 @@ parse_screl = $(eval export SCREL_SYSCALLS := \
 # Common rules
 ##########################################################################
 
-.PHONY: all executables run rerun install uninstall \
+.PHONY: all _build executables run rerun install uninstall \
 	clean distclean verify _clean _distclean _verify
 
-all: deps subdirs executables
+all: _build
+
+_build: deps subdirs executables
+	@restorecon -RF .
+	@chmod a+rX -R .
 
 executables:
-	@[ -z "$^" ] || chmod a+rX $^
 
 run:
 
@@ -268,12 +271,12 @@ all: run.bash
 run.bash:
 	@[ -f run.bash ] || ln -svfn $(TOPDIR)/utils/run.bash run.bash
 
-run: all
+run:
 	@$(check_set_PASSWD); \
 	./run.bash --header; \
 	./run.bash
 
-rerun: all
+rerun:
 	@$(check_set_PASSWD); \
 	./run.bash --rerun
 endif

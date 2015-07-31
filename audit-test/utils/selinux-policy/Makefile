@@ -100,8 +100,7 @@ install: $(MODULE_NAME).pp
 	else \
 		echo $(TEST_STAFFUCONTEXTS) >> $(SELINUX_POLICY_STAFFUCONTEXTS);\
 		echo "added"; \
-	fi; \
-	$(MAKE) relabel
+	fi
 
 uninstall:
 	@echo "$$(ps -AZ)" | grep -q "lspp_test_r" && { echo \

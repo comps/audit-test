@@ -400,18 +400,8 @@ check_services() {
         check "[ -z \"$(ip xfrm state list)\" ]" 0 \
             "ipsec: XFRM state / association database is empty"
 
-        local addr
-        for addr in "$LOCAL_IPV4" "$LOCAL_IPV6" "127.0.0.1" "::1"; do
-            check "grep \"left=$addr\" /etc/ipsec.conf" 0 \
-                "ipsec.conf contains left=$addr"
-        done;
-        for addr in "$LBLNET_SVR_IPV4" "$LBLNET_SVR_IPV6" "127.0.0.1" "::1"; do
-            check "grep \"right=$addr\" /etc/ipsec.conf" 0 \
-                "ipsec.conf contains right=$addr"
-        done;
-        check "egrep -n \"(right|left)=[ \t]*$\" /etc/ipsec.conf" 1 \
-            "ipsec.conf doesn't contain empty left= or right="
-
+        check "grep \"^include /etc/ipsec.d/\*.conf$\" /etc/ipsec.conf" 0 \
+            "ipsec.conf includes ipsec.d/*.conf"
         check "netlabelctl map list | grep \"lspp_test_netlabel_t\"" 0 \
             "netlabel: lspp_test_netlabel_t mapping present"
     fi

@@ -19,14 +19,3 @@ TOPDIR		= ..
 include $(TOPDIR)/rules.mk
 
 SUB_DIRS	= system
-
-.PHONY:	unlock
-
-unlock:
-ifneq ($(DISTRO), SUSE)
-	[[ -n $$LBLNET_SVR_IPV6 ]] && \
-		(echo "lock:release;" | nc -w 3 $$LBLNET_SVR_IPV6 4000)
-else
-	[[ -n $$LBLNET_SVR_IPV6 ]] && \
-		(echo "lock:release;" | nc6 -t 1 -w 3 $$LBLNET_SVR_IPV6 4000)
-endif

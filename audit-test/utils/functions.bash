@@ -196,13 +196,16 @@ function host_ns {
 # This function can be used to communicate with both local and remote network
 # servers (2nd generation).
 #
-# usage: send_ns [-46SE] [-s session] [-t timeout] [-r retry] \
+# Note: do not use -i (interactive mode) with complex cmdlines that can cause
+#       the connection to deterministically fail, ie. 'lock' on timeout
+#
+# usage: send_ns [-46SEKi] [-s session] [-t timeout] [-r retry] \
 #                <local|remote> "cmd1;cmd2;cmd3"
 function send_ns {
     local OPTION= OPTARG= OPTIND=
-    local ipv= timeout=60 retry=3
+    local ipv= timeout=60 retry=3 inter=
     local session= newsession= endsession= killsession=
-    while getopts "t:r:s:46SEK" OPTION
+    while getopts "t:r:s:46SEKi" OPTION
     do
         case "$OPTION" in
             4|6)  ipv="$OPTION" ;;
@@ -212,6 +215,7 @@ function send_ns {
             s)    [ "$((OPTARG))" -ne 0 ] || return 1; session="$((OPTARG))" ;;
             t)    timeout="$OPTARG" ;;
             r)    retry="$((OPTARG+1))" ;;
+            i)    inter=1 ;;
             \?)   return 1 ;;
         esac
     done
@@ -227,12 +231,25 @@ function send_ns {
 
     host=$(host_ns ${ipv:+-$ipv} "$host") || return 1
 
-    while true; do
-        nc ${ipv:+-$ipv} "$host" "$port" <<<"$cmdline" && break
-        ((--retry)) || break
-        sleep 10
-    done
-    [ "$retry" -gt 0 ] || return 1
+    if [ "$inter" ]; then
+        # interactive mode - since we can't easily 'connect' stdin/out
+        # to a new nc instance if a previous one fails on conn error,
+        # closing I/O, we simply check server availability with a noop cmd
+	while true; do
+	    nc ${ipv:+-$ipv} "$host" "$port" <<<"noop" && break
+	    ((--retry)) || break
+	    sleep 10
+	done
+        [ "$retry" -gt 0 ] || return 1
+        { echo "$cmdline"; cat; } | nc ${ipv:+-$ipv} "$host" "$port" || return 1
+    else
+        while true; do
+            nc ${ipv:+-$ipv} "$host" "$port" <<<"$cmdline" && break
+            ((--retry)) || break
+            sleep 10
+        done
+        [ "$retry" -gt 0 ] || return 1
+    fi
     return 0
 }
 # check_ns - request cmd return lines from ns2, assert their values

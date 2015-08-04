@@ -75,24 +75,16 @@ install: $(MODULE_NAME).pp
 	@echo "$$(id -Z)" | egrep -q "(secadm_r|lspp_test_r)" || { echo \
 		"Notice: secadm_r role is needed to install/upgrade SELinux policy module"; \
 		newrole -r secadm_r -- -c "$(MAKE) install"; exit $$?; }; \
-	if semodule -l | grep -q $(MODULE_NAME); then \
-		echo -n "Upgrading $(MODULE_NAME) module ... "; \
-		semodule -u $(MODULE_NAME).pp &> /dev/null && echo "ok" || \
-			echo "failed (check the policy version number)"; \
-	else \
-		echo -n "Loading $(MODULE_NAME) module ... "; \
-		semodule -i $(MODULE_NAME).pp &> /dev/null && echo "ok" || \
-			echo "failed"; \
-		range='s0-s15:c0.c1023'; \
-		existing_roles=$$(semanage user -l | grep "^$(SELINUX_USER)" | awk 'sub("^.*[ \t]"$$5,$$5)'); \
-		if [ "$$existing_roles" ]; then \
-			echo -n "Adding additional role \"$(MODULE_ROLE)\" to user \"$(SELINUX_USER)\" ... "; \
-			semanage user -m -r "$$range" -R "$$existing_roles $(MODULE_ROLE)" $(SELINUX_USER) &> /dev/null && \
-				echo "ok" || \
-				echo "failed (check the SELinux user)"; \
-			echo "Adding role/type to the default_types file"; \
-			echo $(MODULE_ROLE):$(MODULE_DEFTYPE) >> $(SELINUX_POLICY_DEFTYPEFILE); \
-		fi; \
+	echo -n "Loading $(MODULE_NAME) module ... "; \
+	semodule -i $(MODULE_NAME).pp &> /dev/null && echo "ok" || echo "failed"; \
+	range='s0-s15:c0.c1023'; \
+	existing_roles=$$(semanage user -l | grep "^$(SELINUX_USER)" | awk 'sub("^.*[ \t]"$$5,$$5)'); \
+	if [ "$$existing_roles" ]; then \
+		echo -n "Adding additional role \"$(MODULE_ROLE)\" to user \"$(SELINUX_USER)\" ... "; \
+		semanage user -m -r "$$range" -R "$$existing_roles $(MODULE_ROLE)" $(SELINUX_USER) &> /dev/null && \
+			echo "ok" || echo "failed (check the SELinux user)"; \
+		echo "Adding role/type to the default_types file"; \
+		echo $(MODULE_ROLE):$(MODULE_DEFTYPE) >> $(SELINUX_POLICY_DEFTYPEFILE); \
 	fi; \
 	echo -n "Adding test login context ..."; \
 	if grep -q $(MODULE_ROLE) $(SELINUX_POLICY_STAFFUCONTEXTS); then \

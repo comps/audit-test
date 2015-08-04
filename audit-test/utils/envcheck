@@ -266,13 +266,15 @@ check_suite() {
     # check context
     if [ "$PPROFILE" = "lspp" ]; then
         local context=$(stat -c%C "$AUDITDIR")
-        check "[ \"$context\" = \"system_u:object_r:lspp_test_dir_t:SystemLow\" ]" 0 \
+        check "echo \"$context\" | egrep -q \"(staff_u|system_u):object_r:usr_t:SystemLow\"" 0 \
             "$AUDITDIR has correct context"
+        context=$(stat -c%C "$AUDITDIR"/audit-test)
+        check "echo \"$context\" | egrep -q \"(staff_u|system_u):object_r:lspp_test_dir_t:SystemLow\"" 0 \
+            "$AUDITDIR/audit-test has correct context"
 
         # check if suite files correctly labeled
-        local inclab
-        inclab=$(restorecon -FRvn "$AUDITDIR" | wc -l)
-        check "[ $inclab  -eq 0 ]" 0 "$AUDITDIR has files correctly labeled"
+        local incorrect=$(restorecon -FRvn "$AUDITDIR"/audit-test | wc -l)
+        check "[ \"$incorrect\" -eq 0 ]" 0 "$AUDITDIR/audit-test has files correctly labeled"
     fi
 
     if [ "$CHECK_FAILED" ]; then

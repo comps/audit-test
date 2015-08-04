@@ -20,45 +20,23 @@
 #
 #
 
-###
-#
-# generic directories
-#
+## base directories/files
+/usr/local/eal4_testing/audit-test(/.*)?	-d	gen_context(system_u:object_r:lspp_test_dir_t,s0)
+/usr/local/eal4_testing/audit-test/.*		--	gen_context(system_u:object_r:lspp_test_file_t,s0)
+/usr/local/eal4_testing/audit-test/.*		-l	gen_context(system_u:object_r:lspp_test_file_t,s0)
+/usr/local/eal4_testing/audit-test/.*		-p	gen_context(system_u:object_r:lspp_test_file_t,s0)
 
-# base directories
-/usr/local/eal4_testing		-d	gen_context(system_u:object_r:lspp_test_dir_t,s0)
-/usr/local/eal4_testing/(.*)?	-d	gen_context(system_u:object_r:lspp_test_dir_t,s0)
-
-###
-#
-# specific directories
-#
-
-###
-#
-# generic files
-#
-
-# base file
-/usr/local/eal4_testing/(.*)?	--	gen_context(system_u:object_r:lspp_test_file_t,s0)
-/usr/local/eal4_testing/(.*)?	-l	gen_context(system_u:object_r:lspp_test_file_t,s0)
-/usr/local/eal4_testing/(.*)?	-p	gen_context(system_u:object_r:lspp_test_file_t,s0)
-
-###
-#
-# specific files
-#
-
+## privileged executables
 # network test driver
 /usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server	--	gen_context(system_u:object_r:lspp_harness_exec_t,s0)
 /usr/local/eal4_testing/audit-test/utils/network-server/pidfile_kill		--	gen_context(system_u:object_r:lspp_harness_exec_t,s0)
 /usr/local/eal4_testing/audit-test/utils/ns2/ns2				--	gen_context(system_u:object_r:lspp_harness_exec_t,s0)
+# dbus test server
+/usr/local/eal4_testing/audit-test/dbus/tests/dbus_test_server			--	gen_context(system_u:object_r:lspp_harness_exec_t,s0)
 
-# unprivileged test applets
+## unprivileged executables
+# test applets
 /usr/local/eal4_testing/audit-test/utils/bin/do_[a-zA-Z0-9_\-]+			--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
 /usr/local/eal4_testing/audit-test/syscalls/helpers/[a-z0-9_\-]+		--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
 /usr/local/eal4_testing/audit-test/syscalls-ns/tests/helpers/[a-z0-9_\-]+	--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
 /usr/local/eal4_testing/audit-test/containers/tests/helpers/[a-z0-9_\-]+	--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
-
-# dbus test server
-/usr/local/eal4_testing/audit-test/dbus/tests/dbus_test_server	--	gen_context(system_u:object_r:lspp_harness_exec_t,s0)

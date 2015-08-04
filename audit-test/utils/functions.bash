@@ -589,20 +589,17 @@ function start_service {
 	    ;;
     esac
 
-    # systemctl will block service if started to often
-    # clear the failed state of the service
-    systemctl reset-failed $1
-
     if ! pgrep -f $service &>/dev/null; then
 	if [ "$DISTRO" = "SUSE" ]; then
 	    rc${1} start || return 2
 	else
-	    # XXX: fd 63 is left open by something, causing the tests to hang
-	    service $1 start 63>/dev/null || return 2
+	    # systemctl will block service if started to often
+	    # clear the failed state of the service
+	    systemctl reset-failed "$1"
+	    systemctl --quiet start "$1" || return 2
 	fi
     fi
 
-    echo -n "start_service: Waiting for $1 to start"
     if ! wait_for_cmd "pgrep -f $service"; then
 	echo "start_service: timed out, could not start $1" >&2
 	return 2
@@ -669,10 +666,9 @@ function stop_service {
     if [ "$DISTRO" = "SUSE" ]; then
 	rc${1} stop || killall $1
     else
-	service $1 stop || killall $1
+	systemctl --quiet stop "$1" || killall "$1"
     fi
 
-    echo -n "stop_service: Waiting for $1 to stop"
     # wait until pgrep starts failing (process exited)
     if ! wait_for_cmd "pgrep -f $service" not 0; then
         echo "start_service: timed out, could not stop $1" >&2

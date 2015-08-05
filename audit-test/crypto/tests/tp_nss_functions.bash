@@ -41,11 +41,11 @@ nss_serial=1001
 #
 function nss_init {
 
-    eval nss_db=$1
-    [ -z "$1" ] && nss_db=$(mktemp -d)
+    eval nss_db=${1%/}
+    [ -z "$nss_db" ] && nss_db=$(mktemp -d)
 
     if [ -d $nss_db ]; then
-        cp -r $nss_db "/tmp/$(basename $nss_db).backup"
+        cp -anT $nss_db "${nss_db}.audit-test-nss-backup"
         rm -rf $nss_db/*
     fi
 
@@ -68,11 +68,9 @@ function nss_destroy {
 
     [ -d "$nss_db" ] || { echo "NSS DB is not initialized!"; return 1; }
 
-    backup_nss_db="/tmp/$(basename $nss_db).backup"
     rm -rf $nss_db
-    if [ -d $backup_nss_db ]; then
-        mv /tmp/$(basename $nss_db).backup $nss_db
-        restorecon -vFR $nss_db
+    if [ -d "${nss_db}.audit-test-nss-backup" ]; then
+        mv -f "${nss_db}.audit-test-nss-backup" $nss_db
     fi
 
     rm -f *.p12 *.crt *.key
@@ -182,22 +180,24 @@ function nss_generate_pair {
 
 function nss_import {
 
-    local type="$1"
-    local file="$2"
-    local name="$3"
+    local type="$1" file= name=
 
-    [ "$type" == "crt" ] && shift
+    case "$type" in
+        crt)  file="$2"; name="$3"; shift 2 ;;
+        p12)  file="$2"; shift 1 ;;
+        *)    return 1 ;;
+    esac
 
-    [ -z "$3" ] || nss_db="$3"
-    [ -z "$4" ] || nss_secret="$4"
+    [ -z "$2" ] || nss_db="$2"
+    [ -z "$3" ] || nss_secret="$3"
 
     [ -d "$nss_db"     ] || { echo "NSS DB is not initialized!"; return 1; }
     [ -f "$nss_secret" ] || { echo "NSS DB is not initialized!"; return 1; }
 
-    if   [ "$type" == "crt" ]; then
+    if   [ "$type" = "crt" ]; then
         certutil -A -n $name -t ',,' -d $nss_db -i $file || \
             { echo "Cannot import" ; return 1; }
-    elif [ "$type" == "p12" ]; then
+    elif [ "$type" = "p12" ]; then
         pk12util -i $file -d $nss_db -k $nss_secret -w $nss_secret || \
             { echo "Cannot import" ; return 1; }
     else

@@ -108,7 +108,7 @@ function tls_server_start {
 
     server_pid=$!
 
-    wait_for_cmd "nc -w 1 $LOCAL_IPV4 $tls_port <<< ''"
+    wait_for_cmd "nc -w 1 127.0.0.1 $tls_port <<< ''"
 
     if [ "$(pidof openssl)X" != "${server_pid}X" ]; then
         echo "==== BEGIN (server log) ===="
@@ -147,7 +147,7 @@ function tls_client_connect {
     [ -z "$cipher"   ] && exit_error "TLS ciphers are missing!"
 
     /usr/lib64/nss/unsupported-tools/tstclnt -v -o \
-        -h $LOCAL_IPV4   \
+        -h 127.0.0.1     \
         -p $tls_port     \
         -d $nss_db       \
         -n $name         \
@@ -392,7 +392,7 @@ nss_generate_pair "CA" "cn=CA,dc=mydomain,dc=com" "$ca_key_type" || \
 nss_generate_pair "client" "cn=$(hostname)" "$key_type" "CA" || \
     exit_error "Cannot generate keys for client!"
 
-nss_generate_pair "server" "cn=$LOCAL_IPV4" "$key_type" "CA" || \
+nss_generate_pair "server" "cn=127.0.0.1" "$key_type" "CA" || \
     exit_error "Cannot generate keys for server!"
 
 # Server and client logs are used during the test.

@@ -17,9 +17,3 @@
 TOPDIR		= ..
 
 include $(TOPDIR)/rules.mk
-
-.PHONY:	unlock
-
-unlock:
-	[[ -n $$LBLNET_SVR_IPV6 ]] && \
-		(echo "lock:release;" | nc -w 3 $$LBLNET_SVR_IPV6 4000)

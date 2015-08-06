@@ -53,6 +53,7 @@ install_ipsec:
 		echo -e 'version 2.0\ninclude /etc/ipsec.d/*.conf' > /etc/ipsec.conf
 	cp -an /etc/ipsec.secrets /etc/ipsec.secrets.audit-test-backup && \
 		echo 'include /etc/ipsec.d/*.secrets' > /etc/ipsec.secrets
+	chkconfig ipsec on
 	systemctl restart ipsec
 uninstall_ipsec:
 	mv -f /etc/ipsec.conf.audit-test-backup /etc/ipsec.conf

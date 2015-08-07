@@ -73,7 +73,19 @@ function nss_destroy {
         mv -f "${nss_db}.audit-test-nss-backup" $nss_db
     fi
 
-    rm -f *.p12 *.crt *.key
+    return 0
+}
+
+function nss_restore {
+
+    [ -z "$1" ] || nss_db="$1"
+
+    [ -d "$nss_db" ] || { echo "NSS DB is not initialized!"; return 1; }
+
+    if [ -d "${nss_db}.audit-test-nss-backup" ]; then
+        rm -rf $nss_db
+        mv -fT "${nss_db}.audit-test-nss-backup" $nss_db
+    fi
 
     return 0
 }
@@ -160,14 +172,16 @@ function nss_generate_pair {
           }
           exit 1" || return 1
 
-        certutil -d $nss_db -L -n "$name" -a > $name.crt
+        prepend_cleanup "rm -f \"$PWD/${name}.crt\""
+        certutil -d $nss_db -L -n "$name" -a > "${name}.crt"
     else
         certutil -S -n $name -s $subject -c "$ca" -t "u,u,u" \
             -m $nss_serial -v 120 -d $nss_db $key -f $nss_secret -z $nss_seed || return 1
-        pk12util -d $nss_db -o $name.p12 -n $name -w $nss_secret -k $nss_secret
-        openssl pkcs12 -in $name.p12 -out $name.crt -nodes \
+        prepend_cleanup "rm -f \"$PWD/${name}.p12\" \"$PWD/${name}.crt\" \"$PWD/${name}.key\""
+        pk12util -d $nss_db -o "${name}.p12" -n $name -w $nss_secret -k $nss_secret
+        openssl pkcs12 -in "${name}.p12" -out "${name}.crt" -nodes \
             -passin file:$nss_secret -clcerts
-        openssl pkcs12 -in $name.p12 -out $name.key -nodes \
+        openssl pkcs12 -in "${name}.p12" -out "${name}.key" -nodes \
             -nocerts -passin file:$nss_secret
 
         nss_serial=$[$nss_serial+1]

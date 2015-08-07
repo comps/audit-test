@@ -5,29 +5,29 @@
 . /usr/local/eal4_testing/audit-test/crypto/tests/tp_nss_functions.bash || exit 2
 
 init() {
-    nss_init $@
+    nss_init "$@"
 }
-
-destroy() {
-    nss_destroy $@
+restore() {
+    nss_restore "$@"
 }
 
 import() {
-    local tmp= args="$@" rc=
+    local tmp= args=("$@") rc=
     if [ "$2" = "-" ]; then
         tmp=$(mktemp) || return 1
         cat > "$tmp" || return 1
         args[1]="$tmp"
     fi
-    nss_import $@; rc=$?
+    nss_import "${args[@]}"; rc=$?
     [ "$tmp" ] && rm -f "$tmp"
     return $rc
 }
 
-case "$1" in
-    init)    init ;;
-    destroy) destroy ;;
-    import)  import ;;
+type="$1"; shift
+case "$type" in
+    init)    init "$@" ;;
+    restore) restore "$@" ;;
+    import)  import "$@" ;;
     *)       exit 1 ;;
 esac
 

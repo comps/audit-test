@@ -485,11 +485,11 @@ elif [ "$peer_auth" == "RSA" ]; then
     authby="rsasig"
 
     # Init NSS DB.
+    prepend_cleanup "nss_restore"
     nss_init "/etc/ipsec.d/" || exit_error
-    prepend_cleanup "nss_destroy"
 
-    remote_call "nss.bash" "nss_init,/etc/ipsec.d"
-    prepend_cleanup "remote_call nss.bash nss_destroy,/etc/ipsec.d/"
+    prepend_cleanup "send_ns remote \"exec,crypto-nss,restore,/etc/ipsec.d\""
+    send_ns remote "exec,crypto-nss,init,/etc/ipsec.d" || exit_error
 
     # Generate CA pair.
     nss_generate_pair "CA" "cn=CA" "rsa" || exit_error
@@ -498,21 +498,14 @@ elif [ "$peer_auth" == "RSA" ]; then
     nss_generate_pair "toe" "cn=toe" "rsa" "CA" || exit_error
     nss_generate_pair "ns"  "cn=ns"  "rsa" "CA" || exit_error
 
-    # Distribute credentials.
-    [ -z "$NS_PASSWD" ] && NS_PASSWD=$PASSWD
-    cp toe.crt ns.p12 /tmp/
-    chmod a+r /tmp/toe.crt /tmp/ns.p12
-    remote_call "functions.bash" \
-        "scp,eal@${LOCAL_IPV4}:/tmp/toe.crt,/tmp/,$NS_PASSWD"
-    remote_call "functions.bash" \
-        "scp,eal@${LOCAL_IPV4}:/tmp/ns.p12,/tmp/,$NS_PASSWD"
-
     # Import credentials.
     nss_import "crt" "ns.crt" "ns"
     nss_import "p12" "toe.p12"
 
-    remote_call "nss.bash" "nss_import,crt,/tmp/toe.crt,toe,/etc/ipsec.d,/etc/ipsec.d/nsspassword"
-    remote_call "nss.bash" "nss_import,p12,/tmp/ns.p12,/etc/ipsec.d,/etc/ipsec.d/nsspassword"
+    cat toe.crt | send_ns -i -s "$s" remote \
+        "exec,crypto-nss,import,crt,-,toe,/etc/ipsec.d,/etc/ipsec.d/nsspassword" || exit_error
+    cat ns.p12 | send_ns -i -s "$s" remote \
+        "exec,crypto-nss,import,p12,-,/etc/ipsec.d,/etc/ipsec.d/nsspassword" || exit_error
 else
     exit_error "Unexpected peer authentication type!"
 fi

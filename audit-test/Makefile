@@ -128,7 +128,9 @@ endif
 
 .PHONY: policy
 policy:
+ifeq ($(PPROFILE),lspp)
 	$(MAKE) -C utils/selinux-policy install
+endif
 
 .PHONY: netconfig
 netconfig:

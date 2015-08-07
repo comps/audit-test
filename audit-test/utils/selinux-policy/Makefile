@@ -16,7 +16,8 @@
 
 TOPDIR		= ../..
 
-include $(TOPDIR)/rules.mk
+# don't include rules.mk here, its build target would make us do chown + chmod
+# + restorecon as secadm_r (below), which would fail
 
 #######
 #
@@ -43,14 +44,13 @@ MODULE_DEFTYPE := lspp_harness_t
 # targets
 #
 
-# only in selinux mls mode / lspp profile
-ifeq ($(PPROFILE),lspp)
-
+.PHONY: all
 all: $(MODULE_NAME).pp
 
 $(MODULE_NAME).pp:
 	$(MAKE) -f $(SELINUX_DEV_MAKEFILE)
 
+.PHONY: verify
 verify:
 	@echo -n " LSPP test policy module version: "; \
 	if semodule -l | grep -q $(MODULE_NAME); then \
@@ -70,7 +70,7 @@ verify:
 # During this install a role is added to an SELinux user which we use 
 # as a positive test of semanage.  If this did not work correctly the 
 # testing infrastructure would not run.
-
+.PHONY: install
 install: $(MODULE_NAME).pp
 	@echo "$$(id -Z)" | egrep -q "(secadm_r|lspp_test_r)" || { echo \
 		"Notice: secadm_r role is needed to install/upgrade SELinux policy module"; \
@@ -94,6 +94,7 @@ install: $(MODULE_NAME).pp
 		echo "added"; \
 	fi
 
+.PHONY: uninstall
 uninstall:
 	@echo "$$(ps -AZ)" | grep -q "lspp_test_r" && { echo \
 		"Error: lspp_test_r is used by active sessions, cannot remove"; exit 1; } || true
@@ -124,10 +125,12 @@ relabel:
 	@echo "Relabeling LSPP tests"
 	@restorecon -Fr $(TEST_BASEDIR)
 
+.PHONY: clean
 clean:
 	$(MAKE) -f $(SELINUX_DEV_MAKEFILE) clean
 
 # remove only generated files
+.PHONY: distclean
 distclean:
 	@shopt -s nullglob; \
 	for file in *.fc; do \
@@ -136,5 +139,3 @@ distclean:
 	for file in *.if; do \
 		[ -z "$$(grep -v '<summary></summary>' < $$file)" ] && rm -vf "$$file"; \
 	done;
-
-endif

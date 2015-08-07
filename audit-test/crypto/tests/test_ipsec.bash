@@ -28,7 +28,6 @@ source tp_nss_functions.bash || exit 2
 unset ipsec_nc
 unset ipsec_src
 unset ipsec_dst
-unset ipsec_dst_port
 unset ipsec_log_mark
 unset ipsec_conf
 unset remote_script
@@ -95,21 +94,16 @@ function ipsec_normalize_ip {
 #  * ipsec_ip_version (IP version),
 #  * ipsec_src (IP address of TOE),
 #  * ipsec_dst (IP address of NS),
-#  * ipsec_dst_port (lblnet_tst_server port on NS).
 #
 function ipsec_init {
 
     ipsec_ip_ver=$1
     if [ "$ipsec_ip_ver" == "6" ]; then
-        [[ -n $(eval echo \$LBLNET_SVR_IPV6) ]] || exit_error
-        ipsec_src=$LOCAL_IPV6
-        ipsec_dst=$LBLNET_SVR_IPV6
-        ipsec_dst_port=4000
+        ipsec_src=$(send_ns -6 remote 'myaddr') || exit_error
+        ipsec_dst=$(host_ns -6 remote)          || exit_error
     elif [ "$ipsec_ip_ver" == "4" ]; then
-        [[ -n $(eval echo \$LBLNET_SVR_IPV4) ]] || exit_error
-        ipsec_src=$LOCAL_IPV4
-        ipsec_dst=$LBLNET_SVR_IPV4
-        ipsec_dst_port=4201
+        ipsec_src=$(send_ns -4 remote 'myaddr') || exit_error
+        ipsec_dst=$(host_ns -4 remote)          || exit_error
     else
         exit_error "Unexpected IP version (4 or 6 expected)"
     fi
@@ -120,8 +114,6 @@ function ipsec_init {
     ipsec_log_mark=$(stat -c %s $audit_log)
     audit_mark="$(date "+%T")"
     ipsec_nc="nc -${ipsec_ip_ver} -w 30 -v "
-
-    sleep 5
 }
 
 # ipsec_backup_conf
@@ -273,7 +265,7 @@ function ipsec_del_connection {
 # ipsec_add - Attempt to negotiate a new IPsec SA using ipsec
 #
 # INPUT
-# Destination port number
+# Source (TOE-side) port number
 #
 # OUTPUT
 # None
@@ -289,27 +281,20 @@ function ipsec_del_connection {
 # host the connection will fail.
 #
 function ipsec_add_sa {
-    local port=$1
+    local srcport=$1 dstport=
 
-    [ -z "$port" ] && exit_error "Destination port is missing"
+    [ -z "$srcport" ] && exit_error "Source port is missing"
 
-    # Tell NS to listen on desired port.
-    str="detach;recv:ipv${ipsec_ip_ver},tcp,${port},0;"
-    if [ "$PPROFILE" == "lspp" ]; then
-        runcon -t lspp_test_netlabel_t -l SystemLow -- \
-            $ipsec_nc $ipsec_dst $ipsec_dst_port <<< "$str"
-    else
-        $ipsec_nc $ipsec_dst $ipsec_dst_port <<< "$str"
-    fi
+    dstport=$(send_ns -${ipsec_ip_ver} remote "timeout,10;recvx,tcp")
 
     # Create SA by connecting to secured port on NS.
     local result=1
     for attempt in 1 2; do
         if [ "$PPROFILE" == "lspp" ]; then
             runcon -t lspp_test_ipsec_t -l SystemLow -- \
-                $ipsec_nc $ipsec_dst $port <<< "Hello"
+                $ipsec_nc $ipsec_dst -p $srcport $dstport <<< "Hello"
         else
-            $ipsec_nc $ipsec_dst $port <<< "Hello"
+            $ipsec_nc $ipsec_dst -p $srcport $dstport <<< "Hello"
         fi
 
         result=$?
@@ -340,13 +325,13 @@ function ipsec_add_sa {
 #
 function ipsec_add_sa_verify {
 
-    local port=$1
+    local srcport=$1
     local protocol=$2
     local ikev=$3
     local p1_alg=$4
     local p2_alg=$5
 
-    [ -z "$port"     ] && exit_error "Destination port is missing"
+    [ -z "$srcport"  ] && exit_error "Source port is missing"
     [ -z "$protocol" ] && exit_error "Protocol is missing"
     [ -z "$ikev"     ] && exit_error "IKE version is missing"
     [ -z "$p1_alg"   ] && exit_error "Phase1 algorithm is missing"
@@ -388,11 +373,11 @@ function ipsec_add_sa_verify {
     fi
 
     # Check port.
-    ip xfrm state | grep "$src $ipsec_dst dst $ipsec_src" -A 5 | \
-        grep "tcp sport $port" || \
+    ip xfrm state | grep "src $ipsec_dst dst $ipsec_src" -A 5 | \
+        grep "tcp dport $srcport" || \
         exit_fail "Incorrect port detected"
-    ip xfrm state | grep "$src $ipsec_src dst $ipsec_dst" -A 5 | \
-        grep "tcp dport $port" || \
+    ip xfrm state | grep "src $ipsec_src dst $ipsec_dst" -A 5 | \
+        grep "tcp sport $srcport" || \
         exit_fail "Incorrect port detected"
 
     # Protocol check.
@@ -484,8 +469,7 @@ function ipsec_add_sa_verify {
 # will call the exit_fail function to signify failure.
 #
 function ipsec_remove_sa {
-    ip xfrm state flush
-    [[ $? != 0 ]] && exit_fail "Unable to remove the SA"
+    ip xfrm state flush || exit_fail "Unable to remove the SA"
 }
 
 # ipsec_remove_sa_verify - Verify that the SAs have been removed
@@ -506,9 +490,9 @@ function ipsec_remove_sa {
 function ipsec_remove_sa_verify {
 
     # Check that SA were removed.
-    ip xfrm state | grep "$src $ipsec_dst dst $ipsec_src" && \
+    ip xfrm state | grep "src $ipsec_dst dst $ipsec_src" && \
         exit_fail "Failed to remove SA"
-    ip xfrm state | grep "$src $ipsec_src dst $ipsec_dst" && \
+    ip xfrm state | grep "src $ipsec_src dst $ipsec_dst" && \
         exit_fail "Failed to remove SA"
 
     # Check audit event.
@@ -536,7 +520,7 @@ function ipsec_destroy {
 
     # Flush NS SAD.
     if [ "$ipsec_dst" ]; then
-        $ipsec_nc -w 3 "$ipsec_dst" "$ipsec_dst_port" <<< "ipsec:flush;"
+        $ipsec_nc -w 3 "$ipsec_dst" "4000" <<< "ipsec:flush;"
         tstsvr_cleanup $ipsec_dst
     fi
 }
@@ -580,7 +564,7 @@ function ipsec_destroy {
 # Remote testing script.
 remote_script="ipsec.bash"
 
-# Test port.
+# Test (src) port.
 ipsec_test_port="4301"
 
 # Test configuration (see test description).
@@ -688,8 +672,8 @@ ipsec_add_connection "test"               \
      phase2alg=$phase2alg                |\
      labeled_ipsec=$labeled_ipsec        |\
      connaddrfamily=ipv$ipv              |\
-     leftprotoport=tcp                   |\
-     rightprotoport=tcp/$ipsec_test_port |\
+     leftprotoport=tcp/$ipsec_test_port  |\
+     rightprotoport=tcp                  |\
      policy_label=$policy_label          |\
      $leftcert                           |\
      $rightcert                          |"
@@ -719,8 +703,8 @@ remote_call "$remote_script" "ipsec_add_connection,test,        \
      phase2alg=$r_phase2alg              |\
      labeled_ipsec=$labeled_ipsec        |\
      connaddrfamily=ipv$ipv              |\
-     leftprotoport=tcp                   |\
-     rightprotoport=tcp/$ipsec_test_port |\
+     leftprotoport=tcp/$ipsec_test_port  |\
+     rightprotoport=tcp                  |\
      policy_label=$policy_label          |\
      $leftcert                           |\
      $rightcert                          |"

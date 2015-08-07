@@ -29,14 +29,6 @@ unset ipsec_nc
 unset ipsec_src
 unset ipsec_dst
 unset ipsec_log_mark
-unset ipsec_conf
-unset remote_script
-
-# IPsec configuration.
-ipsec_conf="/etc/ipsec.conf"
-
-# IPsec secrets.
-ipsec_secrets="/etc/ipsec.secrets"
 
 # Libreswan log file.
 pluto_log="/var/log/pluto.log"
@@ -99,11 +91,11 @@ function ipsec_init {
 
     ipsec_ip_ver=$1
     if [ "$ipsec_ip_ver" == "6" ]; then
-        ipsec_src=$(send_ns -6 remote 'myaddr') || exit_error
-        ipsec_dst=$(host_ns -6 remote)          || exit_error
+        ipsec_src=$(ipsec_addr_local 6)   || exit_error
+        ipsec_dst=$(ipsec_addr_remote 6)  || exit_error
     elif [ "$ipsec_ip_ver" == "4" ]; then
-        ipsec_src=$(send_ns -4 remote 'myaddr') || exit_error
-        ipsec_dst=$(host_ns -4 remote)          || exit_error
+        ipsec_src=$(ipsec_addr_local 4)   || exit_error
+        ipsec_dst=$(ipsec_addr_remote 4)  || exit_error
     else
         exit_error "Unexpected IP version (4 or 6 expected)"
     fi
@@ -116,153 +108,42 @@ function ipsec_init {
     ipsec_nc="nc -${ipsec_ip_ver} -w 30 -v "
 }
 
-# ipsec_backup_conf
+# ipsec_gen_connection
 #
 # INPUT
-# None
+# * (Global variables)
 #
 # OUTPUT
 # None
 #
 # DESCRIPTION
-# This function backups and reset IPsec configuration file ($ipsec_conf).
+# This function generates a connection specification based on global
+# or environment variables and prints it out to stdout.
 #
-function ipsec_backup_conf {
+function ipsec_gen_connection {
+    cat <<EOF
+conn ${ipsec_src}-to-${ipsec_dst}
+	auto=route
+	authby=$authby
+	type=transport
+	left=$ipsec_src
+	right=$ipsec_dst
+	ikev2=$ikev2
+	ike=${p1_enc}-${p1_auth}
+	phase2=$p2_type
+	phase2alg=$phase2alg
+	labeled_ipsec=$labeled_ipsec
+	connaddrfamily=ipv$ipv
+	leftprotoport=tcp/$ipsec_test_port
+	rightprotoport=tcp
+	policy_label=$policy_label
+	$leftcert
+	$rightcert
 
-    cp $ipsec_conf ${ipsec_conf}.backup
-
-    echo "version 2.0"                               >  $ipsec_conf
-    echo ""                                          >> $ipsec_conf
-    echo "config setup"                              >> $ipsec_conf
-    echo "        protostack=netkey"                 >> $ipsec_conf
-    echo "        nat_traversal=yes"                 >> $ipsec_conf
-    echo "        plutostderrlog=/var/log/pluto.log" >> $ipsec_conf
-    echo ""                                          >> $ipsec_conf
+EOF
 }
 
-# ipsec_restore_conf
-#
-# INPUT
-# None
-#
-# OUTPUT
-# None
-#
-# DESCRIPTION
-# This function restores IPsec configuration file ($ipsec_conf).
-#
-function ipsec_restore_conf {
-
-    cp  ${ipsec_conf}.backup $ipsec_conf
-}
-
-# ipsec_backup_secrets
-#
-# INPUT
-# None
-#
-# OUTPUT
-# None
-#
-# DESCRIPTION
-# This function backups IPsec secrets file ($ipsec_secrets).
-#
-function ipsec_backup_secrets {
-
-    cp $ipsec_secrets ${ipsec_secrets}.backup
-}
-
-# ipsec_set_secrets
-#
-# INPUT
-# Authentication type (PSK or RSA)
-# Secret (for PSK) or private key/token (for RSA)
-#
-# OUTPUT
-# None
-#
-# DESCRIPTION
-# This function removes connection of given name from IPsec
-# configuration file ($ipsec_conf).
-#
-function ipsec_set_secrets {
-
-    echo ": $1 $2" > $ipsec_secrets
-}
-
-# ipsec_restore_secrets
-#
-# INPUT
-# None
-#
-# OUTPUT
-# None
-#
-# DESCRIPTION
-# This function restores IPsec secrets file ($ipsec_secrets).
-#
-function ipsec_restore_secrets {
-
-    cp  ${ipsec_secrets}.backup $ipsec_secrets
-}
-
-# ipsec_add_connection
-#
-# INPUT
-# * Connection name
-# * Connection specification
-#
-# OUTPUT
-# None
-#
-# DESCRIPTION
-# This function adds a connection of given name and specification
-# into IPsec configuration file ($ipsec_conf). Specification
-# format is as follows: "key1=value1|key2=value|...|".
-#
-function ipsec_add_connection {
-
-    local conn=$1
-    shift
-
-    [ -z "$conn" ] && exit_error "Connection name is missing"
-    [ -z "$1"    ] && exit_error "Specification is missing"
-
-    if ! tail -1 $ipsec_conf | egrep -q "^[ ]*$"; then
-        echo "" >> $ipsec_conf
-    fi
-
-    echo "conn $conn" >> $ipsec_conf
-    echo $@ | tr -d ' ' | tr '~' ';' | sed 's/\([^|]*\)|/\t\1\n/g' \
-        >> $ipsec_conf
-
-    # For debugging purposes.
-    echo "The following connection was added to $ipsec_conf:"
-    sed -n "/conn $conn\$/,/^\$/p" $ipsec_conf
-}
-
-# ipsec_del_connection
-#
-# INPUT
-# Connection name
-#
-# OUTPUT
-# None
-#
-# DESCRIPTION
-# This function removes connection of given name from IPsec
-# configuration file ($ipsec_conf).
-#
-function ipsec_del_connection {
-
-    local conn=$1
-
-    [ -z "$conn" ] && exit_error "Connection name is missing"
-
-    sed -i "/conn $conn\$/,/^\$/d" $ipsec_conf
-}
-
-# ipsec_add - Attempt to negotiate a new IPsec SA using ipsec
+# ipsec_add_sa - Attempt to negotiate a new IPsec SA using ipsec
 #
 # INPUT
 # Source (TOE-side) port number
@@ -501,30 +382,6 @@ function ipsec_remove_sa_verify {
         exit_fail "Missing audit record"
 }
 
-# ipsec_destroy - flush both TOE and NS SAD and kill lblnet-tst-server
-#
-# INPUT
-# none
-#
-# OUTPUT
-# none
-#
-# DESCRIPTION
-# This function flush ipsec SAD on TOE and NS and kills the remote lblnet_tst
-# server (if needed). This is needed to reset the state at the beginning and
-# the end of the tests.
-#
-function ipsec_destroy {
-    # Flush TOE SAD.
-    ip xfrm state flush
-
-    # Flush NS SAD.
-    if [ "$ipsec_dst" ]; then
-        $ipsec_nc -w 3 "$ipsec_dst" "4000" <<< "ipsec:flush;"
-        tstsvr_cleanup $ipsec_dst
-    fi
-}
-
 
 ###############################################################################
 #
@@ -561,9 +418,6 @@ function ipsec_destroy {
 # Related SFR(s): FCS_COP.1(NET), FCS_CKM.2(NET-IKE) and FTP_ITC.1.
 #
 
-# Remote testing script.
-remote_script="ipsec.bash"
-
 # Test (src) port.
 ipsec_test_port="4301"
 
@@ -579,7 +433,12 @@ peer_auth=$8
 
 # Test variables initialization.
 ipsec_init "$ipv"
-prepend_cleanup "ipsec_destroy"
+
+# NS session (exclusive access).
+s=$(send_ns -S remote) || exit_error
+prepend_cleanup "send_ns -s \"$s\" -K remote"
+# exclusively lock the NS, for up to 60 seconds
+send_ns -s "$s" remote 'lock,ex;timeout,60' || exit_error
 
 # IKE version enforcement (labeled ipsec is not available for IKEv2 yet).
 labeled_ipsec="no"
@@ -609,8 +468,8 @@ fi
 # Peer Authentication.
 if [ "$peer_auth" == "PSK" ]; then
 
-    ipsec_set_secrets "PSK" "'secret'"
-    remote_call "$remote_script" "ipsec_set_secrets,PSK,'secret'"
+    toe_secrets=": PSK 'secret'"
+    ns_secrets=": PSK 'secret'"
 
     leftcert=""
     rightcert=""
@@ -618,8 +477,8 @@ if [ "$peer_auth" == "PSK" ]; then
 
 elif [ "$peer_auth" == "RSA" ]; then
 
-    ipsec_set_secrets "RSA" "toe"
-    remote_call "$remote_script" "ipsec_set_secrets,RSA,ns"
+    toe_secrets=": RSA toe"
+    ns_secrets=": RSA ns"
 
     leftcert="leftcert=toe"
     rightcert="rightcert=ns"
@@ -659,63 +518,19 @@ else
 fi
 
 # Local configuration.
-stop_service "ipsec"
-ipsec_add_connection "test"               \
-    "auto=route                          |\
-     authby=$authby                      |\
-     type=transport                      |\
-     left=$ipsec_src                     |\
-     right=$ipsec_dst                    |\
-     ikev2=$ikev2                        |\
-     ike=${p1_enc}-${p1_auth}            |\
-     phase2=$p2_type                     |\
-     phase2alg=$phase2alg                |\
-     labeled_ipsec=$labeled_ipsec        |\
-     connaddrfamily=ipv$ipv              |\
-     leftprotoport=tcp/$ipsec_test_port  |\
-     rightprotoport=tcp                  |\
-     policy_label=$policy_label          |\
-     $leftcert                           |\
-     $rightcert                          |"
-
-append_cleanup "restart_service ipsec"
-prepend_cleanup "ipsec_del_connection test"
-
-start_service "ipsec"
+append_cleanup "ipsec_local_cleanup; restart_service ipsec"
+{ ipsec_std_header; ipsec_gen_connection; } | ipsec_local_conf
+echo "$toe_secrets" | ipsec_local_secrets
+restart_service "ipsec"
 
 # Remote configuration.
-remote_call "$remote_script" "ipsec_stop"
+append_cleanup 'send_ns remote "exec,ipsec,cleanup"'
+{ ipsec_std_header; ipsec_gen_connection; } | \
+    send_ns -i -s "$s" remote 'exec,ipsec,conf' || exit_error
+echo "$ns_secrets" | send_ns -i -s "$s" remote 'exec,ipsec,secrets' || exit_error
+send_ns -s "$s" remote 'exec,ipsec,reload' || exit_error
+check_ns -s "$s" remote -- '0 .*' || exit_error
 
-# We have to remove ; from connection specification because it is
-# a control character for lbltst_server.
-r_phase2alg=$(echo $phase2alg | sed 's/;/~/g')
-r_p1_auth=$(echo $p1_auth | sed 's/;/~/g')
-
-remote_call "$remote_script" "ipsec_add_connection,test,        \
-     auto=route                          |\
-     authby=$authby                      |\
-     type=transport                      |\
-     left=$ipsec_src                     |\
-     right=$ipsec_dst                    |\
-     ikev2=$ikev2                        |\
-     ike=${p1_enc}-${r_p1_auth}          |\
-     phase2=$p2_type                     |\
-     phase2alg=$r_phase2alg              |\
-     labeled_ipsec=$labeled_ipsec        |\
-     connaddrfamily=ipv$ipv              |\
-     leftprotoport=tcp/$ipsec_test_port  |\
-     rightprotoport=tcp                  |\
-     policy_label=$policy_label          |\
-     $leftcert                           |\
-     $rightcert                          |"
-
-append_cleanup "remote_call $remote_script ipsec_restart"
-prepend_cleanup "remote_call $remote_script ipsec_del_connection,test"
-
-remote_call "$remote_script" "ipsec_start"
-
-# Wait for SPD to set-up.
-sleep 5
 
 # Attempt to negotiate SA using ipsec and verify the results.
 ipsec_add_sa        "$ipsec_test_port"

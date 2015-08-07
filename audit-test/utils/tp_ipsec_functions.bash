@@ -47,9 +47,9 @@ function ipsec_addr_remote {
 function ipsec_std_header {
 cat <<EOF
 config setup
-        protostack=netkey
-        nat_traversal=yes
-        plutostderrlog=/var/log/pluto.log
+	protostack=netkey
+	nat_traversal=yes
+	plutostderrlog=/var/log/pluto.log
 
 EOF
 }

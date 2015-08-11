@@ -173,7 +173,6 @@ function run_test {
 # +(char *test, char *params)
 # add a test case to the list
 function + {
-    dmsg "Adding TESTS[${#TESTS[@]}]: $*"
     TESTS+=( "$(printf '%q ' "$@")" )
 }
 

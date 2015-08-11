@@ -485,42 +485,6 @@ eval_syscall()
     return 0
 }
 
-# Call remote executable
-#
-# On NS lblnet_test_svr is able to execute any executable in remote_call
-# directory in utils/network-server. It might be either script or a binary
-# executable. This function call lblnet_tst_server to do such remote
-# execution. First parameter is the name of executable and the second
-# (optional) parameter is data to be given to executable. Please see
-# remote_call control message documentation for a format of such data.
-#
-# usage: remote_call <executable> [data]
-#
-function remote_call {
-
-    local executable="$1"
-    local data="$2"
-
-    [ -z "$executable" ] && exit_error "Missing executable"
-    [ -z "$LBLNET_SVR_IPV4" ] && exit_erro "LBLNET_SVR_IPV4 is not exported"
-
-    echo "---- START remote_call ----"
-
-    echo "Executable = $executable"
-    if [ -z "$data" ]; then
-        echo "Data = (no data)"
-    else
-        echo "Data = $data"
-    fi
-    echo ""
-
-    /usr/bin/nc -v $LBLNET_SVR_IPV4 4000 <<< "remote_call:$executable,$data;"
-
-    echo "---- END remote_call ----"
-
-    tstsvr_cleanup $LBLNET_SVR_IPV4
-}
-
 # Check if machine is in FIPS mode
 #
 # return 0 if machine in FIPS mode, 1 otherwise

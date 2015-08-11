@@ -402,8 +402,8 @@ check_services() {
         check "[ -z \"$(ip xfrm state list)\" ]" 0 \
             "ipsec: XFRM state / association database is empty"
 
-        check "grep \"^include /etc/ipsec.d/\*.conf$\" /etc/ipsec.conf" 0 \
-            "ipsec.conf includes ipsec.d/*.conf"
+        check "grep \"^include /etc/ipsec.d/audit-test-\*.conf$\" /etc/ipsec.conf" 0 \
+            "ipsec.conf includes ipsec.d/audit-test-*.conf"
         check "netlabelctl map list | grep \"lspp_test_netlabel_t\"" 0 \
             "netlabel: lspp_test_netlabel_t mapping present"
     fi

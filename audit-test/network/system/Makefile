@@ -50,9 +50,9 @@ uninstall_netlabel:
 .PHONY: install_ipsec uninstall_ipsec
 install_ipsec:
 	cp -an /etc/ipsec.conf /etc/ipsec.conf.audit-test-backup && \
-		echo -e 'version 2.0\ninclude /etc/ipsec.d/*.conf' > /etc/ipsec.conf
+		echo -e 'version 2.0\ninclude /etc/ipsec.d/audit-test-*.conf' > /etc/ipsec.conf
 	cp -an /etc/ipsec.secrets /etc/ipsec.secrets.audit-test-backup && \
-		echo 'include /etc/ipsec.d/*.secrets' > /etc/ipsec.secrets
+		echo 'include /etc/ipsec.d/audit-test-*.secrets' > /etc/ipsec.secrets
 	chkconfig ipsec on
 	systemctl restart ipsec
 uninstall_ipsec:

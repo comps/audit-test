@@ -603,7 +603,7 @@ function start_service {
                 return 2
             fi
             # if there's at least one conn defined, something should be loaded
-            if grep -q '^conn ' /etc/ipsec.d/audit-test-*.conf; then
+            if grep -qs '^conn ' /etc/ipsec.d/audit-test-*.conf; then
                 if ! wait_for_cmd "ip -o xfrm policy | grep -qv -e 'src 0.0.0.0/0 dst 0.0.0.0/0' -e 'src ::/0 dst ::/0'"; then
                     echo "start_service: ipsec: connection defined, but not loaded" >&2
                     return 2

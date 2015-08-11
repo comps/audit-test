@@ -225,14 +225,13 @@ append_cleanup 'ipsec_cleanup'
 
 set -x
 
-[[ -n $LBLNET_SVR_IPV4 ]] || exit_error
 ip xfrm state flush || exit_error
 ip xfrm policy flush || exit_error
 
 # setup the global variables
 ctx=$(secon -RP)
-ip_src=$LOCAL_IPV4
-ip_dst=$LBLNET_SVR_IPV4
+ip_src=1.2.3.4
+ip_dst=5.6.7.8
 spd_entry="src $ip_src dst $ip_dst proto icmp ctx $ctx dir out"
 spd_entry_detail="tmpl proto ah mode transport level required"
 spd_add_cmd="policy add $spd_entry $spd_entry_detail"

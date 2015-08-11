@@ -562,9 +562,7 @@ function start_service {
     local service="sbin/${1}"
 
     case $1 in
-	"ipsec" )
-	    service="ipsec/pluto"
-	    ;;
+	"ipsec" ) service="ipsec/pluto" ;;
     esac
 
     if ! pgrep -f $service &>/dev/null; then
@@ -599,12 +597,21 @@ function start_service {
 	    ;;
 
 	"ipsec")
-	    if ! ipsec status >/dev/null 2>&1; then
+            # basic startup check
+            if ! ipsec status >/dev/null 2>&1; then
                 echo "start_service: cannot start ipsec" >&2
-	    else
-		ip xfrm policy
-	    fi
-	    ;;
+                return 2
+            fi
+            # if there's at least one conn defined, something should be loaded
+            if grep -q '^conn ' /etc/ipsec.d/audit-test-*.conf; then
+                if ! wait_for_cmd "ip -o xfrm policy | grep -qv -e 'src 0.0.0.0/0 dst 0.0.0.0/0' -e 'src ::/0 dst ::/0'"; then
+                    echo "start_service: ipsec: connection defined, but not loaded" >&2
+                    return 2
+                fi
+            fi
+            # wait some more to make sure all (most?) conns are loaded
+            sleep 0.1
+            ;;
 
         "sshd")
             # make sure sshd is listening
@@ -926,3 +933,5 @@ function sssd_disable_strong_rng {
     sed -i 's/^\(NSRAND.*\)/# \1/' $SSSDCONF
     systemctl restart sssd
 }
+
+# vim: sts=4 sw=4 et :

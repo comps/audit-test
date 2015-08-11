@@ -32,13 +32,12 @@
 
 source audisp-remote_functions.bash || exit 2
 
-[ -z "$LBLNET_SVR_IPV4" ] && exit_error "Please, define LBLNET_SVR_IPV4"
-
 # Test scenario to test for by calling corresponding function
 scenario=$1
 test_time_start="`date +'%x %T'`"
 call_remote_function_seq=0
 attempts_limit=5
+ns_server=$(host_ns -4 remote) || exit_error
 
 # Redefine waiting for wait_for_cmd function (see functions.bash)
 WAIT_FOR_SLEEP=2
@@ -50,10 +49,9 @@ WAIT_FOR_MAX=5
 
 call_remote_function() {
     local call_function="$1"
-    local my_ip="$LOCAL_IPV4"
     # the mode variable will get here from audisp-remote_functions.bash
     echo "---- START [$call_remote_function_seq] call_remote_function($call_function) ----"
-    /usr/bin/nc -v $LBLNET_SVR_IPV4 4000 <<< "remote_call:audit-remote.bash,$call_function,$mode,$my_ip;"
+    send_ns -4 -s "$s" remote "exec,audit-remote,$call_function,$mode"
     echo "---- END [$call_remote_function_seq] call_remote_function($call_function)  ----"
     ((call_remote_function_seq+=1))
 }
@@ -62,7 +60,7 @@ call_remote_function() {
 
 ping_netsrv_and_backup_configs() {
     # Make sure server is there waiting for us and backup audit configs
-    /bin/ping -c 3 $LBLNET_SVR_IPV4 || \
+    /bin/ping -c 3 $ns_server || \
         exit_error "Network server not reachable"
     append_cleanup "restart_service auditd"
 
@@ -90,7 +88,7 @@ configure_toe_client() {
         name=REMOTE_LOGGING_CLIENT
 
     write_config -s "$audisp_remote_conf" \
-        remote_server=$LBLNET_SVR_IPV4 \
+        remote_server=$ns_server \
         remote_ending_action=reconnect \
         mode=$mode
 
@@ -133,7 +131,7 @@ configure_toe_client_disk_action() {
         name=REMOTE_LOGGING_CLIENT
 
     write_config -s "$audisp_remote_conf" \
-        remote_server=$LBLNET_SVR_IPV4 \
+        remote_server=$ns_server \
         remote_ending_action=reconnect \
         mode=$mode \
         network_failure_action=IGNORE \
@@ -150,7 +148,7 @@ configure_toe_client_disk_action() {
 }
 
 
-# TOE will act as a server and IP addr is in LOCAL_IPV4 from net profile
+# TOE will act as a server
 configure_toe_server() {
     local msg
 
@@ -184,7 +182,7 @@ configure_toe_server() {
 
 check_client_connected() {
     local rc=0
-    local msg="addr=$LBLNET_SVR_IPV4 port=60 res=success"
+    local msg="addr=$ns_server port=60 res=success"
     /sbin/ausearch -n "REMOTE_LOGGING_SERVER" -m "DAEMON_ACCEPT" \
         -ts $test_time_start | grep "$msg" || { rc=1 ;
         echo "Missing DAEMON_ACCEPT record" ; }
@@ -194,7 +192,7 @@ check_client_connected() {
 
 check_client_disconnected() {
     local rc=0
-    local msg="addr=$LBLNET_SVR_IPV4 port=60 res=success"
+    local msg="addr=$ns_server port=60 res=success"
     /sbin/ausearch -n "REMOTE_LOGGING_SERVER" -m "DAEMON_CLOSE" \
         -ts $test_time_start | grep "$msg" || { rc=1 ;
         echo "Missing DAEMON_CLOSE record" ; }
@@ -219,7 +217,7 @@ check_message_arrived() {
 }
 
 check_server_accepted() {
-    search_syslog " audisp-remote: Connected to $LBLNET_SVR_IPV4"
+    search_syslog " audisp-remote: Connected to $ns_server"
 }
 
 check_server_stop_service() {
@@ -249,7 +247,7 @@ check_client_disk_error_stop() {
       # Sometimes it might happen that connection to remote server is lost because
       # of disk error, this is very rare and after restarting audit the connection
       # is re-established. This is not a bug of audit daemon.
-      if search_syslog "audisp-remote: Error connecting to $LBLNET_SVR_IPV4"; then
+      if search_syslog "audisp-remote: Error connecting to $ns_server"; then
           sleep 10
           restart_service auditd || exit_error "restart_service auditd"
       fi
@@ -427,6 +425,11 @@ test_client_disk_error() {
 #
 # Run specified test
 #
+
+# lock the server, exclusively
+s=$(send_ns -4 -S remote) || exit_error
+prepend_cleanup "send_ns -4 -s \"$s\" -K remote"
+send_ns -4 -s "$s" remote 'lock,ex;timeout,600' || exit_error
 
 if [ "$(type -t test_$scenario)a" == "functiona" ] ; then
     test_$scenario

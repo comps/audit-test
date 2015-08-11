@@ -28,16 +28,14 @@
 #  Both server and client will use TCP port 60 for remote connections.
 #
 
-
-# if called by xinetd, we will have trouble getting to our function files
-export TOPDIR=/usr/local/eal4_testing/audit-test/
-export PATH=$PATH:$TOPDIR
+export TOPDIR=/usr/local/eal4_testing/audit-test
 export PATH=$PATH:$TOPDIR/audit-remote/tests/
 export PATH=$PATH:$TOPDIR/utils/
 
 source audisp-remote_functions.bash || exit 2
 
 # make sure environment variables are exported
+# TODO: why? any variable in particular?
 eval "$(make -C $TOPDIR --no-print-directory -f Makefile export_env)"
 
 action="$1"
@@ -118,7 +116,7 @@ call_ns_connection_check() {
 
 call_configure_netsrv_client() {
     mark_syslog
-    # TOE will act as a server and IP addr is in LOCAL_IPV4 from net profile
+    # TOE will act as a server
     ns_service_auditd_stop || \
         logger "ERROR: ns_service_auditd_stop(): auditd is still runnning"
     # Save current configuration before any changes

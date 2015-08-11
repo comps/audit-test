@@ -56,7 +56,7 @@ total_written=0
 # Variables used by basic connection for TOE acting as server and client
 
 # used only on the test machine for local auditd
-local_audit_server_ip="$LOCAL_IPV4"
+local_audit_server_ip="127.0.0.1"
 
 auditd_conf="/etc/audit/auditd.conf"
 audisp_remote_conf="/etc/audisp/audisp-remote.conf"
@@ -108,36 +108,6 @@ ns_service_auditd_rotate() {
     /sbin/service auditd rotate && rc=0
     /sbin/service auditd status
     return ${rc:-1}
-}
-
-
-# System configuration functions.
-# NOTE: Make sure there is a backup of all relevant audit config files
-# before calling this functions.
-
-# remote-server-ipv4, mode
-configure_audit_client() {
-    audit_server_ipv4=${1:-$LBLNET_SVR_IPV4}
-    write_config -s $audisp_remote_conf remote_server=$audit_server_ipv4
-    write_config -s $audisp_remote_conf local_port=60
-    write_config -s $audisp_remote_conf mode=${2:-"immediate"}
-}
-
-configure_audit_server() {
-    stop_service auditd
-
-    # Update the config to accept connections
-    write_config -s $auditd_conf tcp_listen_port=60
-    write_config -s $auditd_conf tcp_client_ports=61
-
-    if [ "${1}a" == "audispda" ] ; then
-        write_config -s $auditd_conf "dispatcher=/sbin/audispd"
-    else
-        # Do not use dispatcher for auditd at all
-        write_config -r $auditd_conf "dispatcher"
-    fi
-
-    start_service auditd || exit_error "Failed to start auditd service"
 }
 
 

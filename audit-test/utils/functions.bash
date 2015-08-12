@@ -572,7 +572,8 @@ function start_service {
 	    # systemctl will block service if started to often
 	    # clear the failed state of the service
 	    systemctl reset-failed "$1"
-	    systemctl --quiet start "$1" || return 2
+            local cmd_out=$(service "$1" start 2>&1) || \
+                { echo "$cmd_out"; return 2; }
 	fi
     fi
 
@@ -651,7 +652,8 @@ function stop_service {
     if [ "$DISTRO" = "SUSE" ]; then
 	rc${1} stop || killall $1
     else
-	systemctl --quiet stop "$1" || killall "$1"
+        local cmd_out=$(service "$1" stop 2>&1) || \
+            { echo "$cmd_out"; killall "$1"; return 2; }
     fi
 
     # wait until pgrep starts failing (process exited)

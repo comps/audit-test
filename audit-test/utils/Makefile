@@ -29,12 +29,12 @@ endif
 
 SUB_DIRS	= bin namespaces
 ifdef LSM_SELINUX
-SUB_DIRS	+= network-server ns2
+SUB_DIRS	+= ns2
 endif
 
-all: README.augrok
 executables: $(ALL_EXE)
 
+# not built by default
 README.augrok: augrok
 	pod2text augrok > $@
 

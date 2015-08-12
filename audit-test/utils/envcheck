@@ -142,10 +142,8 @@ check_variables_net() {
     local CHECK_FAILED
     local vars
 
-    vars="LOCAL_DEV LOCAL_IPV4 LOCAL_IPV6"
-    vars="$vars LOCAL_SEC_MAC LOCAL_SEC_IPV4 LOCAL_SEC_IPV6 BRIDGE_FILTER"
-    vars="$vars LBLNET_SVR_IPV4 LBLNET_SVR_IPV6"
-    vars="$vars SECNET_SVR_MAC SECNET_SVR_IPV4 SECNET_SVR_IPV6"
+    # TODO: possible either LBLNET_SVR (hostname) or LBLNET_SVR_IPV[46]
+    vars="LBLNET_SVR_IPV4 LBLNET_SVR_IPV6"
 
     for i in $vars; do
         check "env | grep \"^$i=\"" 0 "Var $i is present in environment"
@@ -154,7 +152,7 @@ check_variables_net() {
     if [ "$CHECK_FAILED" ]; then
         echo
         echo "Some or all networking-related variables are missing,"
-        echo "sure to export them according to README.run and README.netfilter."
+        echo "sure to export them according to README.run."
         return 1
     else
         check_variables_net_ok=1
@@ -289,80 +287,40 @@ check_suite() {
 }
 
 
-### NETWORKING - interfaces
-check_networking_if() {
-    local CHECK_FAILED
-
-    # requires for this check
-    [ "$check_variables_net_ok" ] || return 2
-
-    # interface checks
-    check "ip -o link show dev $LOCAL_DEV" 0 \
-        "Device $LOCAL_DEV exists"
-    check "ip -o link show dev $LOCAL_SEC_DEV" 0 \
-        "Device $LOCAL_SEC_DEV exists"
-    check "ip -o link show dev $BRIDGE_FILTER" 0 \
-        "Device $BRIDGE_FILTER exists"
-    check "brctl show $BRIDGE_FILTER | grep $LOCAL_SEC_DEV" 0 \
-        "Device $LOCAL_SEC_DEV is enslaved in bridge $BRIDGE_FILTER"
-
-    check "ip -o -4 addr show dev $LOCAL_DEV | grep \"$LOCAL_IPV4\"" 0 \
-        "Device $LOCAL_DEV has IPv4 address: $LOCAL_IPV4"
-    check "ip -o -6 addr show dev $LOCAL_DEV | grep \"$LOCAL_IPV6\"" 0 \
-        "Device $LOCAL_DEV has IPv6 address: $LOCAL_IPV6"
-    check "ip -o link show dev $BRIDGE_FILTER | grep \"$(sed 's/\(.*\)/\L\1/' <<<$LOCAL_SEC_MAC)\"" 0 \
-        "Device $BRIDGE_FILTER has MAC address: $LOCAL_SEC_MAC"
-    check "ip -o -4 addr show dev $BRIDGE_FILTER | grep \"$LOCAL_SEC_IPV4\"" 0 \
-        "Device $BRIDGE_FILTER has IPv4 address: $LOCAL_SEC_IPV4"
-    check "ip -o -6 addr show dev $BRIDGE_FILTER | grep \"$LOCAL_SEC_IPV6\"" 0 \
-        "Device $BRIDGE_FILTER has IPv6 address: $LOCAL_SEC_IPV6"
-
-    check "ip -o -6 addr show dev $LOCAL_DEV | grep \"$LOCAL_IPV6\" | grep -v deprecated" 0 \
-        "IPv6 address $LOCAL_IPV6 on $LOCAL_DEV is not deprecated"
-    check "ip -o -6 addr show dev $BRIDGE_FILTER | grep \"$LOCAL_SEC_IPV6\" | grep -v deprecated" 0 \
-        "IPv6 address $LOCAL_SEC_IPV6 on $BRIDGE_FILTER is not deprecated"
-
-    if [ "$CHECK_FAILED" ]; then
-        echo
-        echo "Network interfaces are not configured correctly."
-        echo "Make sure the networking is set up according to README.netfilter"
-        echo "(including the bridge) and that all addresses assigned to"
-        echo "network interfaces match those exported in env variables."
-        return 1
-    else
-        check_networking_if_ok=1
-    fi
-}
-
-
 ### NETWORKING - probe
 check_networking_probe() {
     local CHECK_FAILED
 
     # requires for this check
-    [ "$check_variables_net_ok" -a "$check_networking_if_ok" ] || return 2
+    [ "$check_variables_net_ok" ] || return 2
 
     check "ping -I lo -q -c1 127.0.0.1" 0 \
         "127.0.0.1 reachable via lo"
     check "ping6 -I lo -q -c1 ::1" 0 \
         "::1 reachable via lo"
-    check "ping -I $LOCAL_DEV -q -c1 $LBLNET_SVR_IPV4" 0 \
-        "$LBLNET_SVR_IPV4 reachable via $LOCAL_DEV"
-    check "ping6 -I $LOCAL_DEV -q -c1 $LBLNET_SVR_IPV6" 0 \
-        "$LBLNET_SVR_IPV6 reachable via $LOCAL_DEV"
-    check "ping -I $BRIDGE_FILTER -q -c1 $SECNET_SVR_IPV4" 0 \
-        "$SECNET_SVR_IPV4 reachable via $BRIDGE_FILTER"
-    check "ping6 -I $BRIDGE_FILTER -q -c1 $SECNET_SVR_IPV6" 0 \
-        "$SECNET_SVR_IPV6 reachable via $BRIDGE_FILTER"
 
-    check "nc $LOCAL_IPV4 4000 <<<\"echo:testme;\" | grep -a testme" 0 \
-        "lblnet_tst_server on TOE responds over unlabeled IPv4"
-    check "nc $LOCAL_IPV6 4000 <<<\"echo:testme;\" | grep -a testme" 0 \
-        "lblnet_tst_server on TOE responds over unlabeled IPv6"
-    check "nc $LBLNET_SVR_IPV4 4000 <<<\"echo:testme;\" | grep -a testme" 0 \
-        "lblnet_tst_server on NS responds over unlabeled IPv4"
-    check "nc $LBLNET_SVR_IPV6 4000 <<<\"echo:testme;\" | grep -a testme" 0 \
-        "lblnet_tst_server on NS responds over unlabeled IPv6"
+    local svr4= svr6=
+    if [ "$LBLNET_SVR" ]; then
+        svr4="$LBLNET_SVR"
+        svr6="$LBLNET_SVR"
+    else
+        svr4="$LBLNET_SVR_IPV4"
+        svr6="$LBLNET_SVR_IPV6"
+    fi
+
+    check "ping -q -c1 $svr4" 0 \
+        "$svr4 pingable"
+    check "ping6 -q -c1 $svr6" 0 \
+        "$svr6 pingable"
+
+    check "nc -4 127.0.0.1 5000 <<<\"echo,testme;\" | grep -a testme" 0 \
+        "ns2 on TOE responds over unlabeled IPv4"
+    check "nc -6 ::1 5000 <<<\"echo,testme;\" | grep -a testme" 0 \
+        "ns2 on TOE responds over unlabeled IPv6"
+    check "nc -4 $svr4 5000 <<<\"echo,testme;\" | grep -a testme" 0 \
+        "ns2 on NS responds over unlabeled IPv4"
+    check "nc -6 $svr6 5000 <<<\"echo,testme;\" | grep -a testme" 0 \
+        "ns2 on NS responds over unlabeled IPv6"
 
     if [ "$CHECK_FAILED" ]; then
         echo
@@ -385,7 +343,7 @@ check_services() {
 
     local daem daems
     daems="auditd rsyslogd mcstransd"
-    [ "$PPROFILE" = "lspp" ] && daems="$daems xinetd pluto"
+    [ "$PPROFILE" = "lspp" ] && daems="$daems pluto"
     for daem in $daems; do
         check "pidof \"$daem\"" 0 \
             "Daemon \"$daem\" is running"
@@ -491,7 +449,6 @@ check_variables_sssd
 check_rpm_deps
 check_user_session
 check_suite
-check_networking_if
 check_networking_probe
 check_services
 check_kvm

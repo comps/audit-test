@@ -186,7 +186,7 @@ check_rpm_deps() {
         return 2
     }
 
-    # use rpm names from rules.mk / depinstall
+    # use rpm names from rules.mk / deplist
     local rpms="$AUDIT_TEST_DEP"
     [ "$rpms" ] || {
         echo "list of rpm dependencies not available, skipping dep check"

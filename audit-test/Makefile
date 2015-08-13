@@ -129,14 +129,6 @@ depmissing:
 	@for pkg in $(AUDIT_TEST_DEP); do \
 		rpm --quiet -q "$$pkg" || echo "$$pkg"; \
 	done
-.PHONY: depinstall
-depinstall:
-	@# install only non-installed pkgs, prevents upgrading existing versions
-	@for pkg in $(AUDIT_TEST_DEP); do \
-		rpm --quiet -q "$$pkg" || toinstall+=" $$pkg"; \
-	done; \
-	if [ "$$toinstall" ]; then yum -y install $$toinstall; \
-	else echo "all dependencies already installed"; fi
 endif
 
 #

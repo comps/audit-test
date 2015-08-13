@@ -47,7 +47,7 @@ also produce empty output (given non-empty source out.log file):
 grep '^ norelro' < out.log | \
   grep -v -e '\.o$' -e '\.a$' \
     -e '-- /boot/grub2' -e '-- /usr/lib/grub' \
-    -e '-- /lib/modules' -e '-- /usr/lib/modules' \
+    -e '-- /lib/modules' -e '-- /usr/lib/modules' -e '/boot/vmlinuz-' \
     -e '-- /usr/lib/firmware' \
     -e '-- /usr/local/eal4_testing' -e '-- /opt/ltp'
 

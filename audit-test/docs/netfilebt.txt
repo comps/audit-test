@@ -1,0 +1,105 @@
+How to run netfilebt tests
+--------------------------
+
+These tests are not run by default and require additional environment setup,
+hence this simple intro.
+
+The tests assert various functionality of the netfilter/bridge filtering kernel
+functionality, using the 'ebtables' tool.
+
+The setup described in this file is ***in addition*** to the setup required
+in general by the suite (described in README.run). This file doesn't replace
+README.run.
+
+Network configuration
+---------------------
+
+Since the filtering works only on bridges, you need a secondary NIC in
+a secondary network with the NS (network server). This NIC is to be put inside
+a brctl-created bridge (alternatively, `ip link add name somebr type bridge'
+if brctl is not available) and IP addresses (ipv4/ipv6) configured on top
+of the bridge.
+This configuration is necessary only on TOE, no bridge is needed on NS, just
+the secondary network connection.
+
+Environment variables
+---------------------
+
+The tests need additional variables specifying details about the secondary
+network, namely:
+
+BRIDGE_FILTER - bridge (interface) name, with enslaved LOCAL_SEC_DEV
+LOCAL_SEC_DEV - enslaved interface name (bridge port)
+LOCAL_SEC_MAC - MAC address of the enslaved iface (and also the bridge)
+LOCAL_SEC_IPV4 - IPv4 address assigned to the bridge
+LOCAL_SEC_IPV6 - IPv6 address assigned to the bridge
+SECNET_SVR_IPV4 - IPv4 address of the NS (on the secondary network)
+SECNET_SVR_IPV6 - IPv6 address of the NS (on the secondary network)
+SECNET_SVR_MAC - MAC address of the NS (on the secondary network)
+
+(As you can see, both TOE and NS also need to be on the same network segment,
+ otherwise you have to specify gateway's MAC address as SECNET_SVR_MAC.)
+
+An example could be:
+
+BRIDGE_FILTER="somebr"
+LOCAL_SEC_DEV="eth1"
+LOCAL_SEC_MAC="00:11:22:33:44:55"
+LOCAL_SEC_IPV4="10.0.1.2"
+LOCAL_SEC_IPV6"fd00:1::2"
+SECNET_SVR_IPV4="10.0.1.1"
+SECNET_SVR_IPV6="fd00:1::1"
+SECNET_SVR_MAC="77:66:55:44:33:22"
+
+Note that in addition to these, you also need to meet other suite requirements
+not specific to the netfilebt bucket, like NS hostname/address specification
+over primary network. See README.run for more.
+
+ifcfg configuration examples
+----------------------------
+
+To help you make the network changes (described above) permanent, you can use,
+on a RHEL-based distro, the following snippets as templates:
+
+=== TOE ===
+
+# cat /etc/sysconfig/network-scripts/ifcfg-somebr
+DEVICE="somebr"
+TYPE="Bridge"
+BOOTPROTO="static"
+IPADDR="10.0.1.2"
+PREFIX="24"
+IPV6INIT="yes"
+IPV6ADDR="fd00:1::2"
+IPV6_AUTOCONF="no"
+ONBOOT="yes"
+NM_CONTROLLED="yes"
+
+# cat /etc/sysconfig/network-scripts/ifcfg-eth1
+DEVICE="eth1"
+TYPE="Ethernet"
+HWADDR="00:11:22:33:44:55"
+BRIDGE="somebr"
+ONBOOT="yes"
+NM_CONTROLLED="yes"
+
+=== NS ===
+
+# cat /etc/sysconfig/network-scripts/ifcfg-eth1
+DEVICE="eth1"
+TYPE="Ethernet"
+HWADDR="77:66:55:44:33:22"
+BOOTPROTO="static"
+IPADDR="10.0.1.1"
+PREFIX="24"
+IPV6INIT="yes"
+IPV6ADDR="fd00:1::1"
+IPV6_AUTOCONF="no"
+ONBOOT="yes"
+NM_CONTROLLED="yes"
+
+(For reference, see /usr/share/doc/initscripts-*/sysconfig.txt.)
+
+Note that the examples above use a static configuration, but you're free to use
+DHCP as well if you can configure it to provide stable addresses. The only part
+the tests care about are the exported variables.

@@ -19,6 +19,10 @@ TOPDIR		= .
 
 include $(TOPDIR)/rules.mk
 
+#
+# subdirs to run tests in
+#
+
 RUN_DIRS := \
 	syscalls \
 	syscalls-ns \
@@ -54,6 +58,7 @@ endif
 endif
 endif
 
+# customization logic to modify RUN_DIRS using external vars
 ifneq ($(RUN_DIRS_SET),)
     RUN_DIRS := $(RUN_DIRS_SET)
 endif
@@ -65,6 +70,10 @@ ifneq ($(RUN_DIRS_INCLUDE),)
 endif
 
 SUB_DIRS := $(RUN_DIRS) utils
+
+#
+# common targets
+#
 
 run:
 	@for l in run rollup; do \
@@ -107,6 +116,10 @@ rpm: dist
 	echo && \
 	ls -l audit-test-$$rev-1.*
 
+#
+# suite rpm dependency listing
+#
+
 ifdef AUDIT_TEST_DEP
 .PHONY: deplist
 deplist:
@@ -126,16 +139,20 @@ depinstall:
 	else echo "all dependencies already installed"; fi
 endif
 
+#
+# user-friendly 'aliases' to utils/
+#
+
 .PHONY: policy
 policy:
 ifeq ($(PPROFILE),lspp)
 	$(MAKE) -C utils/selinux-policy install
 endif
 
-.PHONY: netconfig
-netconfig:
-	cd network/system && $(MAKE) install
-	cd utils/network-server && $(MAKE) install
+.PHONY: ns_install
+ns_install:
+	$(MAKE) -C network/system install
+	$(MAKE) -C utils/ns2 install
 
 .PHONY: envcheck
 envcheck:

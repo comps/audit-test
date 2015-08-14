@@ -37,6 +37,6 @@
 ## unprivileged executables
 # test applets
 /usr/local/eal4_testing/audit-test/utils/bin/do_[a-zA-Z0-9_\-]+			--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
-/usr/local/eal4_testing/audit-test/syscalls/helpers/[a-z0-9_\-]+		--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
-/usr/local/eal4_testing/audit-test/syscalls-ns/tests/helpers/[a-z0-9_\-]+	--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
-/usr/local/eal4_testing/audit-test/containers/tests/helpers/[a-z0-9_\-]+	--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
+# test-specific helper executables
+/usr/local/eal4_testing/audit-test/[^\/]+/helpers/[a-z0-9_\-]+		--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)
+/usr/local/eal4_testing/audit-test/[^\/]+/tests/helpers/[a-z0-9_\-]+		--	gen_context(system_u:object_r:lspp_test_generic_exec_t,s0)

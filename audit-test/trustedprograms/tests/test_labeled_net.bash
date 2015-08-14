@@ -56,6 +56,8 @@ set -x
 # global variables
 ######################################################################
 
+mycon_path=/usr/local/eal4_testing/audit-test/trustedprograms/tests/helpers/mycon
+
 ######################################################################
 # functions
 ######################################################################
@@ -85,7 +87,6 @@ set -x
 function labeled_test {
     declare log_mark
     declare subj=$1 rem_subj
-    declare cmd_str="getcon:mls;"
     declare port=$2
 
     # determine the netcat variant
@@ -102,7 +103,7 @@ function labeled_test {
 
     # connect through xinetd/systemd
     rem_subj="$(runcon -t lspp_test_netlabel_t -l $subj \
-	        $cmd_nc 127.0.0.1 $port <<< $cmd_str)"
+        $cmd_nc 127.0.0.1 $port <<<'')"
     [[ $? != 0 ]] && exit_error "unable to connect to localhost"
 
     # verify label
@@ -111,7 +112,7 @@ function labeled_test {
     # verify audit record
     augrok --seek=$log_mark type==SYSCALL success=yes \
 	syscall=$(ausyscall execve | awk '{print $2}') \
-	comm=lblnet_tst_serv \
+	comm=$(basename "$mycon_path") \
 	subj=system_u:system_r:lspp_harness_t:$subj || \
 	exit_fail "missing audit record"
 }
@@ -197,21 +198,56 @@ label:\"system_u:system_r:init_t:s10\"
     grep -q "staff_u:staff_r:staff_t:s11" <<< "$SOUT" && exit_fail \
         "Unexpected login with invalid security level s11"
 }
+#
+# setup_xinetd_labeled - create testing service using xinetd
+#
+setup_xinetd_labeled() {
+    prepend_cleanup "restart_service xinetd"
+    prepend_cleanup "rm -f /etc/xinetd.d/lbltest"
+    chcon -t lspp_harness_exec_t "$mycon_path"
+
+    cat > /etc/xinetd.d/lbltest << EOF
+service lbltest
+{
+	id	    	= lbltest
+	type		= UNLISTED
+	flags		= REUSE IPv4 LABELED
+	wait		= no
+	user		= root
+	disable		= no
+
+	instances	= 1
+
+	socket_type	= stream
+	protocol	= tcp
+    bind        = 127.0.0.1
+	port		= $port
+
+    env         = UNDER_INETD=1
+	server		= $mycon_path
+	server_args	= range
+}
+EOF
+
+    restart_service xinetd
+}
 
 #
-# setup_systemd_labeled - create testing service in port 4002
+# setup_systemd_labeled - create testing service using systemd
 #
 setup_systemd_labeled() {
+    prepend_cleanup "systemctl daemon-reload"
     prepend_cleanup "rm -f /etc/systemd/system/labeled.socket"
     prepend_cleanup "rm -f /etc/systemd/system/labeled@.service"
     prepend_cleanup "systemctl stop labeled.socket"
+    chcon -t lspp_harness_exec_t "$mycon_path"
 
     cat > /etc/systemd/system/labeled.socket << EOF
 [Unit]
 Description=lbltest
 
 [Socket]
-ListenStream=4002
+ListenStream=127.0.0.1:$port
 Accept=yes
 SELinuxContextFromNet=true
 
@@ -225,8 +261,10 @@ Description=lbltest
 
 [Service]
 LimitCORE=infinity
-ExecStart=-/usr/local/eal4_testing/audit-test/utils/network-server/lblnet_tst_server -i -l /var/log/lblnet_tst_server.log -f /var/run/lblnet_tst_server6.pid -vv
+Environment="UNDER_INETD=1"
+ExecStart=-$mycon_path range
 StandardInput=socket
+StandardOutput=socket
 StandardError=journal
 EOF
 
@@ -244,13 +282,14 @@ setup_audit_rules() {
 
 case "$1" in
     systemd)
+        port=4202
         setup_audit_rules
         setup_systemd_labeled
-        port=4002
         ;;
     xinetd)
-        setup_audit_rules
         port=4201
+        setup_audit_rules
+        setup_xinetd_labeled
         ;;
     sshd)
         disable_ssh_strong_rng 

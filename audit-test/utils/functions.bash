@@ -323,7 +323,7 @@ function backup {
     for f in "$@"; do
     # if the path/file does not exist - skip backup
     if [ -e "$f" ]; then
-        b=$(mktemp "$f.XXXXXX") || exit_error
+        b=$(mktemp "${f}.audit-test-backup.XXXXXX") || exit_error
         cp -a "$f" "$b" || exit_error
         prepend_cleanup "mv -f '$b' '$f'"
     fi

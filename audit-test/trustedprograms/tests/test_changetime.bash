@@ -68,8 +68,17 @@ testcase() {
     echo "Saving time: $(print_time)"
     save_time
 
+    # disable NTP if running
+    if grep 'NTP enabled: yes' <<< $(timedatectl); then
+        NTP_ENABLE=y
+        timedatectl set-ntp false
+    fi
+
     su -c "$DCMD" $1; RET=$?
     SET_TIME=$(date +%s)
+
+    # re-enable NTP
+    [ -n "$NTP_ENABLE" ] && timedatectl set-ntp true
 
     # restore time
     restore_time

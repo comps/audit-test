@@ -27,7 +27,7 @@ create_ns pid
 
 # as the wrapper is immediately killed, no retval/errno checking can be done,
 # therefore simply execute the wrapper
-exec_ns initwrap do_reboot
+exec_ns do_reboot
 
 exit_pass
 

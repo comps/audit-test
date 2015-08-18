@@ -18,6 +18,6 @@ TOPDIR		= ../..
 
 include $(TOPDIR)/rules.mk
 
-ALL_EXE		= setns initwrap pause
+ALL_EXE		= clonens setns
 
 all: $(ALL_EXE)

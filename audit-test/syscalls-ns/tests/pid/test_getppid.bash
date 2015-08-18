@@ -39,12 +39,12 @@ create_env_pid
 # always be 0 in the child, unless the process is collected by pid 1
 
 # PID-3A
-eval_syscall pass 0 initwrap do_getppid
+eval_syscall pass 0 do_getppid
 ppid="${EVAL_SYSCALL_RESULT[1]}"
-[ "$ppid" -ge "100" ] || exit_fail  # ppid of do_getppid = initwrap
+[ "$ppid" -ge "100" ] || exit_fail  # ppid of do_getppid = setns
 
 # PID-3B
-eval_syscall pass 0 exec_ns initwrap do_getppid
+eval_syscall pass 0 exec_ns do_getppid
 ppid="${EVAL_SYSCALL_RESULT[1]}"
 [ "$ppid" -eq "0" ] || exit_fail  # 0 < 100
 

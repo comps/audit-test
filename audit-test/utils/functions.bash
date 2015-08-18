@@ -822,9 +822,9 @@ wait_for_listen()
 # wait for pid $1 to have at least 1 child (fork done) and return its pid
 #
 # use case - simple command wrapper, which does something and spawns a child,
-# doing execve in it, like "initwrap" from syscalls-ns -- note that this
-# function waits only for the fork, not the execve, ie.
-#   ./initwrap nc -l 1234 &
+# doing execve in it -- note that this function waits only for the fork,
+# not the execve, ie.
+#   ./forker nc -l 1234 &
 #   ncpid=$(wait_for_child $!) || exit_error "timed out"
 wait_for_child()
 {

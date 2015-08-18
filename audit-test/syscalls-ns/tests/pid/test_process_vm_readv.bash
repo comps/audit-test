@@ -39,13 +39,13 @@ eval eval_syscall pass 0 do_process_vm_readv "$arg" "$addr_c"
 
 arg="${PID_INFO[2]}"
 # PID-1B
-eval eval_syscall pass 0 exec_ns initwrap do_process_vm_writev "$arg" "$addr_c"
-eval eval_syscall pass 0 exec_ns initwrap do_process_vm_readv "$arg" "$addr_c"
+eval eval_syscall pass 0 exec_ns do_process_vm_writev "$arg" "$addr_c"
+eval eval_syscall pass 0 exec_ns do_process_vm_readv "$arg" "$addr_c"
 
 arg="${PID_INFO[0]}"
 # PID-2A, errno 3 = ESRCH
-eval eval_syscall fail 3 exec_ns initwrap do_process_vm_writev "$arg" "$addr_p"
-eval eval_syscall fail 3 exec_ns initwrap do_process_vm_readv "$arg" "$addr_p"
+eval eval_syscall fail 3 exec_ns do_process_vm_writev "$arg" "$addr_p"
+eval eval_syscall fail 3 exec_ns do_process_vm_readv "$arg" "$addr_p"
 # PID-2B
 eval eval_syscall pass 0 do_process_vm_writev "$arg" "$addr_p"
 eval eval_syscall pass 0 do_process_vm_readv "$arg" "$addr_p"

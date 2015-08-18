@@ -39,12 +39,12 @@ create_env_pid
 # have sid == 0 in the child as well
 
 # PID-3A
-eval_syscall pass 0 initwrap do_getsid
+eval_syscall pass 0 do_getsid
 sid="${EVAL_SYSCALL_RESULT[1]}"
 [ "$sid" -ge "100" ] || exit_fail
 
 # PID-3B
-eval_syscall pass 0 exec_ns initwrap do_getsid
+eval_syscall pass 0 exec_ns do_getsid
 sid="${EVAL_SYSCALL_RESULT[1]}"
 [ "$sid" -eq "0" ] || exit_fail  # 0 < 100
 

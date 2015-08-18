@@ -35,11 +35,11 @@ eval eval_syscall pass 0 "${cmdline[$sc]}"
 
 arg="${PID_INFO[2]}"
 # PID-1B
-eval eval_syscall pass 0 exec_ns initwrap "${cmdline[$sc]}"
+eval eval_syscall pass 0 exec_ns "${cmdline[$sc]}"
 
 arg="${PID_INFO[0]}"
 # PID-2A, errno 3 = ESRCH
-eval eval_syscall fail 3 exec_ns initwrap "${cmdline[$sc]}"
+eval eval_syscall fail 3 exec_ns "${cmdline[$sc]}"
 # PID-2B
 eval eval_syscall pass 0 "${cmdline[$sc]}"
 

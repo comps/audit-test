@@ -39,12 +39,12 @@ create_env_pid
 # programs, pid == tid
 
 # PID-3A
-eval_syscall pass 0 initwrap do_gettid
+eval_syscall pass 0 do_gettid
 tid="${EVAL_SYSCALL_RESULT[1]}"
 [ "$tid" -ge "100" ] || exit_fail
 
 # PID-3B
-eval_syscall pass 0 exec_ns initwrap do_gettid
+eval_syscall pass 0 exec_ns do_gettid
 tid="${EVAL_SYSCALL_RESULT[1]}"
 [ "$tid" -eq "3" ] || exit_fail  # 3 < 100
 

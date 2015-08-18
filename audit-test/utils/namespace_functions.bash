@@ -24,53 +24,13 @@ PATH="$TOPDIR/utils/namespaces:$PATH"
 #
 # example:
 #   $ local pid=
-#   $ pid=$(create_ns mnt ipc net) || error "creating nsset failed"
-#   $ exec_ns $pid cat /some/file
+#   $ pid=$(create_nsset mnt ipc net) || error "creating nsset failed"
+#   $ exec_nsset $pid cat /some/file
 
 # unshare a set of namespaces, storing it in a dummy process (returning its pid)
 create_nsset()
 {
-    local unshare_args= ns= pid=
-    declare -A nspaces
-
-    for ns in "$@"; do
-        case "$ns" in
-            mnt|uts|ipc|net|pid|user)  nspaces["$ns"]=1 ;;
-            mount)    nspaces['mnt']=1 ;;
-            network)  nspaces['net']=1 ;;
-            usr)      nspaces['user']=1 ;;
-            *) return 1 ;;
-        esac
-    done
-
-    for ns in "${!nspaces[@]}"; do
-        case "$ns" in
-            mnt)  unshare_args+="--mount " ;;
-            *)    unshare_args+="--${ns} " ;;
-        esac
-    done
-
-    if [ "${nspaces['pid']}" ]; then
-        # special case - namespace is unshared only *after* additional fork
-        # (or clone) and pids 0 and 1 need to be running for the ns to exist
-        # - the ns itself exists since the second forked process, so we need
-        #   to get pid of it, instead of our child
-        unshare $unshare_args initwrap pause >/dev/null &
-        # wait for unshare to exec initwrap / to fork pause
-        pid=$(wait_for_child_pname "$!" pause) || \
-            { [ "$!" ] && kill "$!"; return 1; }
-    else
-        # just spawn a dummy proces in the new namespaces
-        # - redirect stdout to stop subshell running this func from waiting
-        unshare $unshare_args pause >/dev/null &
-        # wait for unshare to exec pause
-        wait_for_pname "$!" pause || \
-            { [ "$!" ] && kill "$!"; return 1; }
-        pid="$!"
-    fi
-
-    echo "$pid"
-    return 0
+    clonens "$@"
 }
 
 # execute given command in a namespace set defined a pid ($1)
@@ -78,10 +38,7 @@ exec_nsset()
 {
     local pid="$1"
     shift
-
-    setns -p "$pid" "$@"
-
-    return $?
+    setns -c -p "$pid" "$@"
 }
 
 # vim: sts=4 sw=4 et :

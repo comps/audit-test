@@ -259,17 +259,18 @@ create_env_pid()
     PID_INFO+=("$pid")
 
     # "placeholder C"
-    eval "exec_ns initwrap "$holder_c_bin" &"
+    eval "exec_ns "$holder_c_bin" &"
     pid="$!"
     # the `&' spawns the exec_ns function itself in a subshell,
-    # which then calls setns on initwrap, which forks the placeholder,
-    # therefore the placeholder is child of initwrap, which itself is
-    # child of the subshell
+    # which launches (fork+exec) setns,
+    # which then forks a new process (to make new pidns active),
+    # which finally executes the placeholder,
+    # therefore the placeholder is a child of setns, which itself is
+    # a child of the subshell
     #
-    # wait for bash (subshell) to fork setns, which calls execve initwrap
-    # (therefore wait for the subshell to have an "initwrap" child)
-    pid=$(wait_for_child_pname "$pid" "initwrap") || exit_error
-    # wait for the initwrap to fork and execve a "placeholder" child
+    # wait for bash (subshell) to fork setns
+    pid=$(wait_for_child_pname "$pid" "setns") || exit_error
+    # wait for the setns process to fork and execve a "placeholder" child
     holder_c_bin=$(eval echo "$holder_c_bin") # simplify for ps
     pid=$(wait_for_child_pname "$pid" "$holder_c_bin" full) || exit_error
     # "pid" now contains outside (namespace-wise) pid of the placeholder

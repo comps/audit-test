@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sched.h>
+#include <sys/wait.h>
 
 /* this could be reduced to less than half the code if we did setns() right
  * after open() and didn't keep any metadata - however that has a disadvantage
@@ -45,6 +46,7 @@ void print_help(void)
         "Options:\n"
         "    -f file   setns() to handle mounted on file\n"
         "    -p pid    setns() all namespaces of a pid\n"
+        "    -c        fork and call execve() in a child (ie. for pidns)\n"
         "\n"
         "Multiple occurences of -f and/or combination with -p are allowed,\n"
         "namespaces are setns()'ed from left to right.\n"
@@ -111,6 +113,7 @@ void add_ns_pid(struct nsholder *nsh, pid_t pid)
 int main(int argc, char **argv)
 {
     int c;
+    int dofork = 0, status;
     struct nsholder *ns_set;
 
     /* alloc list head */
@@ -120,13 +123,16 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    while ((c = getopt(argc, argv, "+f:p:")) != -1) {
+    while ((c = getopt(argc, argv, "+f:p:c")) != -1) {
         switch (c) {
             case 'f':
                 add_ns_handle(ns_set, optarg);
                 break;
             case 'p':
                 add_ns_pid(ns_set, atoi(optarg));
+                break;
+            case 'c':
+                dofork = 1;
                 break;
             case ':':
             case '?':
@@ -155,13 +161,32 @@ int main(int argc, char **argv)
         ns_set = advance_and_free(ns_set);
     }
 
-    if (execvp(argv[1], argv+1) == -1) {
-        perror("execvp");
-        exit(EXIT_FAILURE);
+    if (dofork) {
+        switch (fork()) {
+            case -1:
+                perror("fork");
+                exit(EXIT_FAILURE);
+            case 0:
+                if (execvp(argv[1], argv+1) == -1) {
+                    perror("execvp");
+                    exit(EXIT_FAILURE);
+                }
+                return EXIT_FAILURE;
+            default:
+                if (wait(&status) == -1) {
+                    perror("wait");
+                    exit(EXIT_FAILURE);
+                }
+                return WEXITSTATUS(status);
+        }
+    } else {
+        if (execvp(argv[1], argv+1) == -1) {
+            perror("execvp");
+            exit(EXIT_FAILURE);
+        }
+        /* execve shouldn't return */
+        return EXIT_FAILURE;
     }
-
-    /* execve shouldn't return */
-    return EXIT_FAILURE;
 }
 
 /* vim: set sts=4 sw=4 et : */

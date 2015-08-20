@@ -1,0 +1,44 @@
+Assuming the original /etc/sysconfig/network-scripts/ifcfg-eth0 looked like
+
+DEVICE="eth0"
+TYPE="Ethernet"
+HWADDR="00:11:22:33:44:55"
+BOOTPROTO="static"
+IPADDR="10.0.0.2"
+PREFIX="24"
+IPV6INIT="yes"
+IPV6ADDR="fd00::2"
+IPV6_AUTOCONF="no"
+ONBOOT="yes"
+NM_CONTROLLED="yes"
+
+transform this file into two, ifcfg-testbr with IP addresses and leave only
+minimal skeleton in ifcfg-eth0
+
+# ifcfg-testbr
+DEVICE="testbr"
+TYPE="Bridge"
+BOOTPROTO="static"
+IPADDR="10.0.0.2"
+PREFIX="24"
+IPV6INIT="yes"
+IPV6ADDR="fd00::2"
+IPV6_AUTOCONF="no"
+ONBOOT="yes"
+NM_CONTROLLED="yes"
+
+# ifcfg-eth0
+DEVICE="eth0"
+TYPE="Ethernet"
+HWADDR="00:11:22:33:44:55"
+BRIDGE="testbr"
+ONBOOT="yes"
+NM_CONTROLLED="yes"
+
+and ideally reboot the system (or perform 'service NetworkManager restart').
+
+(For reference, see /usr/share/doc/initscripts-*/sysconfig.txt.)
+
+Note that the examples above use a static configuration, but you're free to use
+DHCP as well if you can configure it to provide stable addresses. The only part
+the tests care about is eth0 enslaved in a bridge, so that 'ebtables' work.

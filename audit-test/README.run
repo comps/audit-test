@@ -236,6 +236,17 @@ daemon you can use the 'sssd-start' Makefile target or start sssd via
 service or systemctl commands. Similarly, you can use the 'sssd-stop' target
 to stop the daemon.
 
+Configure the netfilebt tests
+-----------------------------
+
+Simply make sure that the network interface used for communication with the NS
+("ip route get to $ns_addr", look for 'dev') is enslaved to a bridge, being
+the only interface in said bridge, with IP addresses being configured on the
+bridge interface itself instead of the enslaved device.
+The bucket configuration automatically finds this bridge and uses it.
+
+For an example configuration, take a look at docs/ifcfg-redhat.txt.
+
 Configure the KVM tests
 -----------------------
 

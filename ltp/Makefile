@@ -137,8 +137,8 @@ dist:
 	$(MAKE) clean -C "$$tmpdir/ltp" && \
 	cd "$$tmpdir" && \
 	chmod -R a+rX ltp && \
-	tar czf "$$into/ltp-$$rev.tar.gz" ltp && \
+	tar cJf "$$into/ltp-$$rev.tar.xz" ltp && \
 	cd "$$into" && \
 	rm -rf "$$tmpdir" && \
 	echo && \
-	ls -l ltp-$$rev.tar.gz
+	ls -l ltp-$$rev.tar.xz

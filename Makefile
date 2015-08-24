@@ -34,7 +34,7 @@ TOPDIR		= .
 
 SUB_DIRS	= audit-test ltp
 
-REPORT		= logs-*.tar.gz
+REPORT		= logs-*.tar.xz
 SYSTEMINFO	= systeminfo.run.log
 SUMMARY		= run.log
 
@@ -116,14 +116,14 @@ dist:
 	tmpdir=$$(mktemp -d) && \
 	into=$$(pwd) && \
 	for DIR in $(SUB_DIRS); do make -C "$$DIR" dist; done && \
-	mv "ltp-$$rev.tar.gz" "audit-test-$$rev.tar.gz" "$$tmpdir" && \
-	cp "Makefile" "$$tmpdir" && \
+	mv "ltp-$$rev.tar.xz" "audit-test-$$rev.tar.xz" "$$tmpdir" && \
+	cp "Makefile" "README" "$$tmpdir" && \
 	cd "$$tmpdir" && \
-	tar xpzvf "ltp-$$rev.tar.gz" && \
-	tar xpzvf "audit-test-$$rev.tar.gz" && \
-	tar czf "$$into/audit-$$rev.tar.gz" "Makefile" "ltp" "audit-test" && \
+	tar xpJvf "ltp-$$rev.tar.xz" && \
+	tar xpJvf "audit-test-$$rev.tar.xz" && \
+	tar cJf "$$into/audit-$$rev.tar.xz" "Makefile" "README" "ltp" "audit-test" && \
 	echo "$$into" && \
 	cd "$$into" && \
 	rm -rf "$$tmpdir" && \
 	echo && \
-	ls -l audit-$$rev.tar.gz
+	ls -l audit-$$rev.tar.xz

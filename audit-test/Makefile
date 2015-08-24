@@ -87,11 +87,11 @@ dist:
 	$(MAKE) distclean -C "$$tmpdir/audit-test" && \
 	cd "$$tmpdir" && \
 	chmod -R a+rX audit-test && \
-	tar czf "$$into/audit-test-$$rev.tar.gz" audit-test && \
+	tar cJf "$$into/audit-test-$$rev.tar.xz" audit-test && \
 	cd "$$into" && \
 	rm -rf "$$tmpdir" && \
 	echo && \
-	ls -l audit-test-$$rev.tar.gz
+	ls -l audit-test-$$rev.tar.xz
 
 .PHONY: report
 ALL_LOGS	+= audit.run.log audit.rollup.log

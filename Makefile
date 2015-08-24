@@ -34,7 +34,7 @@ TOPDIR		= .
 
 SUB_DIRS	= audit-test ltp
 
-REPORT		= logs-*.tar.gz
+REPORT		= logs-*.tar.xz
 SYSTEMINFO	= systeminfo.run.log
 SUMMARY		= run.log
 EXTRA_DIST_FILES = Makefile README
@@ -124,4 +124,4 @@ summary:
 .PHONY: dist
 dist:
 	tar --owner root --group root --mode u=rwX,go=rX \
-		-cvzf audit-test.tar.gz $(SUB_DIRS) $(EXTRA_DIST_FILES)
+		-cvJf audit-test.tar.xz $(SUB_DIRS) $(EXTRA_DIST_FILES)

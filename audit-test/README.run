@@ -381,6 +381,35 @@ through the process of running it.
 Workarounds and Troubleshooting Tips
 ------------------------------------
 
+Crypto tests
+------------
+The following tests can return ERROR or FAIL results under specific
+circumstances:
+
+1) tests 16 - 20 in crypto bucket in both BASE and MLS, 32 and 64 bit, with and
+without disk encryption can ERROR:
+
+  [16] tls_ciphers key_exchange_rsa
+  [17] tls_ciphers key_agreement_dh_rsa
+  [18] tls_ciphers key_agreement_dh_dsa
+  [19] tls_ciphers key_agreement_ecdhe_rsa
+  [20] tls_ciphers key_agreement_ecdhe_ecdsa
+
+Errors “TLS client was not started!!” are caused by a race condition. Issue can be fixed by changing line 160 in audit-test/crypto/tests/test_tls_ciphers.bash from wait_for_cmd "egrep '(Read from server 0 bytes|SSL_ERROR_NO_CYPHER_OVERLAP|PR_Poll returned 0x00)' $client_log" to wait_for_cmd "egrep '(Read from server 0 bytes|SSL_ERROR_NO_CYPHER_OVERLAP)' $client_log".
+
+2) tests 34 - 35 and 38 - 39 in network bucket in MLS, in both 32 and 64 bit, with and without disk encryption can FAIL
+
+  [34] accept__remote_ipsec_ipv6_fail_subj_incomp_obj
+  [35] socketcall_accept__remote_ipsec_ipv6_fail_subj_incomp_obj
+  [38] accept__remote_ipsec_ipv6_fail_subj_domby_obj
+  [39] socketcall_accept__remote_ipsec_ipv6_fail_subj_domby_obj
+
+Failures “missing audit record” are caused by incomplete clean-up either on TOE
+or on NS or on both of them. The issues can be fixed by restarting ipsec
+service on TOE and NS. It is also possible that a testing port 4300 is kept
+open, please make sure it’s closed. Moreover, verify that do_accept binary is
+not running on TOE and NS.
+
 Network tests
 -------------
 
@@ -456,6 +485,16 @@ Audit-remote tests
     /etc/audisp/audisp-remote.conf
     /etc/audisp/audispd.conf
     /etc/audisp/plugins.d/au-remote.conf
+
+Envcheck issues
+---------------
+
+The ‘make envcheck’ command will fail in test ‘/usr/local/eal4_testing has
+files correctly labeled’ after a finished test suite execution. To workaround
+this problem relabel all files before running the environment check via
+command:
+
+    # make -C audit-test/utils/selinux-policy relabel verify
 
 
 Tips for running on non-RHEL distros

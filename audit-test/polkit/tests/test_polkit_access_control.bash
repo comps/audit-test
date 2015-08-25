@@ -48,12 +48,12 @@ function policy_setup {
 
     [ -z "$allow_any" ] && exit_error "Missing allow_any argument"
 
-    cat >$POLKIT_CONF<<EOF
+    tee $POLKIT_CONF<<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
         "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
 <policyconfig>
-  <action id="$POLKIT_A_ID">
+  <action id="${POLKIT_A_ID}.$allow_any">
     <description>Testing policy</description>
     <defaults>
       <allow_any>$allow_any</allow_any>
@@ -115,12 +115,12 @@ function pkexec_wrapper {
                   }
                 }
               }
-              exit 1;" || exit_fail "Incorrect result for 'auth_self'"
+              exit 1" || exit_fail "Incorrect result for 'auth_self'"
             ;;
         "auth_self_keep")
             expect -c "
               spawn runuser --user $POLKIT_USER /bin/bash
-              expect -re \"[testuser.*\$\" {
+              expect -re \"testuser.*\$\" {
                 send \"pkexec $POLKIT_PATH\r\"
                 expect {
                   {root} {exit 1}
@@ -130,8 +130,7 @@ function pkexec_wrapper {
                         send \"$TEST_USER_PASSWD\r\";
                         expect {AUTHENTICATION COMPLETE} {
                           expect {root} {
-                            expect -re \"[testuser.*\$\" {
-                              send \"sleep 5\r\"
+                            expect -re \"testuser.*\$\" {
                               send \"pkexec $POLKIT_PATH\r\"
                                 expect {root} {send \"logout\r\"; exit 0}
                             }
@@ -142,7 +141,7 @@ function pkexec_wrapper {
                   }
                 }
               }
-              exit 1;" || exit_fail "Incorrect result for 'auth_self_keep'"
+              exit 1" || exit_fail "Incorrect result for 'auth_self_keep'"
             ;;
         "auth_admin")
             expect -c "
@@ -166,7 +165,7 @@ function pkexec_wrapper {
         "auth_admin_keep")
             expect -c "
               spawn runuser --user $POLKIT_USER /bin/bash
-              expect -re \"[testuser.*\$\" {
+              expect -re \"testuser.*\$\" {
                 send \"pkexec $POLKIT_PATH\r\"
                 expect {
                   {root} {exit 1}
@@ -177,10 +176,9 @@ function pkexec_wrapper {
                         send \"$TEST_ADMIN_PASSWD\r\";
                         expect {AUTHENTICATION COMPLETE} {
                           expect {root} {
-                            expect -re \"[testuser.*\$\" {
-                              send \"sleep 5\r\"
+                            expect -re \"testuser.*\$\" {
                               send \"pkexec $POLKIT_PATH\r\"
-                                expect {root} {send \"logout\r\"; exit 0}
+                              expect {root} {send \"logout\r\"; exit 0}
                             }
                           }
                         }
@@ -209,10 +207,18 @@ function test_pkexec_allow {
 
         policy_setup "$allow_any"
 
-        # Wait for polkitd to "reload" the policy.
-        sleep 5
-
+        # Wait for polkitd to load the action
+	wait_for_cmd "pkaction | grep -q ${POLKIT_A_ID}.$allow_any" || exit_error \
+		"Timeout loading polkit action"
+	
         pkexec_wrapper "$allow_any"
+
+	# wait for polkit to remove the action
+	rm -f $POLKIT_CONF
+
+        # Wait for polkitd to load the action
+	wait_for_cmd "! pkaction | grep -q ${POLKIT_A_ID}.$allow_any" || exit_error \
+		"Timeout removing polkit action"
     done
 
     return 0

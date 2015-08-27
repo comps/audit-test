@@ -161,12 +161,16 @@ test_banner() {
     backup /etc/issue
     echo "$BANNER_TXT" >> /etc/issue
 
+    # in MLS simulate as run by staff_u sysadm_t, so that .screen
+    # gets labeled correctly
+    [ "$PPROFILE" = "lspp" ] && \
+        RUNCON="runcon staff_u:sysadm_r:sysadm_t:SystemLow-SystemHigh bash -c"
     # banner is displayed via agetty, run it in screen as it hijacks
     # the given (current) tty
     EXP_OUT=$(
         expect -c "
             set timeout 2
-            spawn screen
+            spawn $RUNCON screen
             expect {
                 {*root} { send \"/sbin/agetty --noclear 9600 \\\$(sed 's|/dev/||' <<< \\\$(tty))\r\" }
                 timeout { exit 1 }

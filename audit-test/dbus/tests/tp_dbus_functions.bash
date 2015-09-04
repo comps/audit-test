@@ -126,6 +126,9 @@ dbus_restart() {
     # make sure new config is applied
     systemctl reset-failed messagebus
     systemctl restart messagebus
+    # need to restart systemd-logind at least
+    # due to BZ#1258557 (CLOSED_WONTFIX)
+    systemctl restart systemd-logind
 }
 
 dbus_server_restart() {

@@ -475,6 +475,7 @@ function show_header {
     # Create header file
     {
         echo
+        printf "%-32s %s\n" Bucket: "$(basename $PWD)"
         printf "%-32s %s\n" Started: "$(date)"
         printf "%-32s %s\n" Kernel: "$(uname -r)"
         printf "%-32s %s\n" Architecture: "$(uname -m)"

@@ -48,6 +48,15 @@ int reaper(void)
     return 0;
 }
 
+long fork_ns(unsigned long flags)
+{
+#if defined(__s390__) || defined(__s390x__)
+    return syscall(__NR_clone, NULL, flags, NULL, NULL, NULL);
+#else
+    return syscall(__NR_clone, flags, NULL, NULL, NULL, NULL);
+#endif
+}
+
 int main(int argc, char **argv)
 {
     int flags, ch;
@@ -79,7 +88,7 @@ int main(int argc, char **argv)
     }
 
     flags |= SIGCHLD;
-    switch (ch = syscall(__NR_clone, flags, NULL, NULL, NULL, NULL)) {
+    switch (ch = fork_ns(flags)) {
         case -1:
             perror("clone");
             exit(EXIT_FAILURE);

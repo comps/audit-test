@@ -1,0 +1,12 @@
+%!
+% Sample of printing text
+
+/Times-Roman findfont	% Get the basic font
+20 scalefont		% Scale the font to 20 points
+setfont			% Make it the current font
+
+newpath			% Start a new path
+72 72 moveto		% Lower left corner of text at (72, 72)
+(Hello, world!) show    % Typeset "Hello, world!"
+
+showpage

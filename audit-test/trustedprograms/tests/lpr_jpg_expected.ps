@@ -1,0 +1,1195 @@
+%!PS-Adobe-3.0
+%%LanguageLevel: 1
+%%DocumentData: Clean7Bit
+%%DocumentSuppliedResources: procset bannerprint/1.0
+%%DocumentNeededResources: font Helvetica Helvetica-Bold Times-Roman
+
+
+
+
+%RBINumCopies: 1
+%%Pages: (atend)
+%%BoundingBox: (atend)
+%%EndComments
+%%BeginProlog
+userdict/ESPshowpage/showpage load put
+userdict/showpage{}put
+%%BeginResource procset bannerprint 1.1 0
+%
+%   PostScript banner page for the Common UNIX Printing System ("CUPS").
+%
+%   Copyright 1993-2005 by Easy Software Products
+%
+%   These coded instructions, statements, and computer programs are the
+%   property of Easy Software Products and are protected by Federal
+%   copyright law.  Distribution and use rights are outlined in the file
+%   "LICENSE.txt" which should have been included with this file.  If this
+%   file is missing or damaged please contact Easy Software Products
+%   at:
+%
+%       Attn: CUPS Licensing Information
+%       Easy Software Products
+%       44141 Airport View Drive, Suite 204
+%       Hollywood, Maryland 20636 USA
+%
+%       Voice: (301) 373-9600
+%       EMail: cups-info@cups.org
+%         WWW: http://www.cups.org
+%
+/CENTER {			% Draw centered text
+				% (name) CENTER -
+  dup stringwidth pop		% Get the width of the string
+  0.5 mul neg 0 rmoveto		% Shift left 1/2 of the distance
+  show				% Show the string
+} bind def
+/RIGHT {			% Draw right-justified text
+				% (name) RIGHT -
+  dup stringwidth pop		% Get the width of the string
+  neg 0 rmoveto			% Shift left the entire distance
+  show				% Show the string
+} bind def
+/NUMBER {			% Draw a number
+				% power n NUMBER -
+  1 index 1 eq {		% power == 1?
+    round cvi exch pop		% Convert "n" to integer
+  } {
+    1 index mul round exch div	% Truncate extra decimal places
+  } ifelse
+  100 string cvs show		% Convert to a string and show it...
+} bind def
+/CUPSLOGO {			% Draw the CUPS logo
+				% height CUPSLOGO
+  % Start with a big C...
+  /Helvetica findfont 1 index scalefont setfont
+  0 setgray
+  0 0 moveto
+  (C) show
+
+  % Then "UNIX Printing System" much smaller...
+  /Helvetica-Bold findfont 1 index 9 div scalefont setfont
+  0.25 mul
+  dup dup 2.0 mul moveto
+  (UNIX) show
+  dup dup 1.6 mul moveto
+  (Printing) show
+  dup 1.2 mul moveto
+  (System) show
+} bind def
+/ESPLOGO {			% Draw the ESP logo
+				% height ESPLOGO
+  % Compute the size of the logo...
+  0 0
+  2 index 1.5 mul 3 index
+
+  % Do the "metallic" fill from 10% black to 40% black...
+  1 -0.001 0 {
+    dup			% loopval
+    -0.15 mul		% loopval * -0.15
+    0.9 add		% 0.9 - loopval * 0.15
+    setgray		% set gray shade
+
+    0			% x
+    1 index neg		% loopval
+    1 add		% 1 - loopval
+    3 index		% height
+    mul			% height * (1 - loopval)
+    moveto		% starting point
+
+    dup			% loopval
+    3 index		% width
+    mul			% loopval * width
+    2 index		% height
+    lineto		% Next point
+
+    0			% x
+    2 index		% height
+    lineto		% Next point
+
+    closepath
+    fill
+
+    dup			% loopval
+    0.15 mul		% loopval * 0.15
+    0.6 add		% 0.6 + loopval * 0.15
+    setgray
+
+    dup			% loopval
+    neg 1 add		% 1 - loopval
+    3 index		% width
+    mul			% (1 - loopval) * width
+    0			% y
+    moveto		% Starting point
+
+    2 index		% width
+    exch		% loopval
+    2 index		% height
+    mul			% loopval * height
+    lineto		% Next point
+
+    1 index		% width
+    0			% y
+    lineto		% Next point
+
+    closepath
+    fill
+  } for
+
+  0 setgray rectstroke
+
+  /Helvetica-BoldOblique findfont 1 index 3 div scalefont setfont
+  dup 40 div
+
+  dup 4 mul 1 index 25 mul moveto (E) show
+  dup 10 mul 1 index 15 mul moveto (S) show
+  dup 16 mul 1 index 5 mul moveto (P) show
+
+  /Helvetica-BoldOblique findfont 2 index 5 div scalefont setfont
+  dup 14 mul 1 index 29 mul moveto (asy) show
+  dup 20 mul 1 index 19 mul moveto (oftware) show
+  dup 26 mul 1 index 9 mul moveto (roducts) show
+
+  pop
+} bind def
+%%EndResource
+%%EndProlog
+%%BeginSetup
+% Disable CTRL-D as an end-of-file marker...
+userdict dup(\004)cvn{}put (\004\004)cvn{}put
+[{
+%%BeginFeature: *Duplex None
+<</Duplex false>>setpagedevice
+%%EndFeature
+} stopped cleartomark
+[{
+%%BeginFeature: *InputSlot Default
+%%EndFeature
+} stopped cleartomark
+[{
+%%BeginFeature: *Option1 False
+%%EndFeature
+} stopped cleartomark
+% x y w h ESPrc - Clip to a rectangle.
+userdict/ESPrc/rectclip where{pop/rectclip load}
+{{newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
+neg 0 rlineto closepath clip newpath}bind}ifelse put
+% x y w h ESPrf - Fill a rectangle.
+userdict/ESPrf/rectfill where{pop/rectfill load}
+{{gsave newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
+neg 0 rlineto closepath fill grestore}bind}ifelse put
+% x y w h ESPrs - Stroke a rectangle.
+userdict/ESPrs/rectstroke where{pop/rectstroke load}
+{{gsave newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
+neg 0 rlineto closepath stroke grestore}bind}ifelse put
+userdict/ESPpa(SystemLow-SystemHigh)put
+userdict/ESPlf /Nimbus-Mono findfont 12 scalefont put
+userdict/ESPwl{
+  ESPlf setfont
+  ESPpa stringwidth pop dup 12 add exch -0.5 mul 306 add
+ 
+  1 setgray
+  dup 6 sub 10 3 index 22 ESPrf
+  dup 6 sub 758 3 index 20 ESPrf
+  0 setgray
+  dup 6 sub 10 3 index 22 ESPrs
+  dup 6 sub 758 3 index 20 ESPrs
+  dup 18 moveto ESPpa show
+  766 moveto ESPpa show
+  pop
+}bind put
+%%EndSetup
+%%Page: 1 1
+%%PageBoundingBox: 0 0 612 792
+%%BeginPageSetup
+%%EndPageSetup
+gsave
+
+  % Determine the imageable area and device resolution...
+  initclip newpath clippath pathbbox	% Get bounding rectangle
+  72 div /pageTop exch def		% Get top margin in inches
+  72 div /pageRight exch def		% Get right margin in inches
+  72 div /pageBottom exch def		% Get bottom margin in inches
+  72 div /pageLeft exch def		% Get left margin in inches
+
+  /pageWidth pageRight pageLeft sub def	% pageWidth = pageRight - pageLeft
+  /pageHeight pageTop pageBottom sub def% pageHeight = pageTop - pageBottom
+
+  /boxWidth				% width of text box
+  pageWidth pageHeight lt
+  { pageWidth 54 mul }
+  { pageHeight 42 mul }
+  ifelse def
+
+  newpath				% Clear bounding path
+
+  % Create fonts...
+  /bigFont /Helvetica-Bold findfont	% bigFont = Helvetica-Bold
+  pageHeight 3 mul scalefont def	% size = pageHeight * 3 (nominally 33)
+
+  /mediumFont /Helvetica findfont	% mediumFont = Helvetica
+  pageHeight 1.5 mul scalefont def	% size = pageHeight * 1.5 (nominally 16.5)
+
+  % Offset page to account for lower-left margin...
+  pageLeft 72 mul
+  pageBottom 72 mul
+  translate
+
+  % Job information box...
+  pageWidth 36 mul 9 add		% x = pageWidth * 1/2 * 72 + 9
+  boxWidth 0.5 mul sub			% x-= 1/2 box width
+  pageHeight 30 mul 9 sub		% y = pageHeight * 1/2 * 72 - 9
+  boxWidth				% w = box width
+  pageHeight 14 mul			% h = pageHeight * 1/2 * 72
+  0.5 setgray rectfill			% Draw a shadow
+
+  pageWidth 36 mul			% x = pageWidth * 1/2 * 72
+  boxWidth 0.5 mul sub			% x-= 1/2 box width
+  pageHeight 30 mul			% y = pageHeight * 1/4 * 72
+  boxWidth				% w = box width
+  pageHeight 14 mul			% h = pageHeight * 1/2 * 72
+
+  4 copy 1 setgray rectfill		% Clear the box to white
+  0 setgray rectstroke			% Draw a black box around it...
+
+  % Job information text...
+  mediumFont setfont			% Medium sized font
+
+  pageWidth 36 mul			% x = pageWidth * 1/2 * 72
+  pageHeight 36 mul			% y = pageHeight * 1/2 * 72
+  pageHeight 5 mul add			% y += 2 lines
+  2 copy				% Copy X & Y
+  moveto
+  (Job ID: ) RIGHT
+  moveto
+  (tests-41) show
+
+  pageWidth 36 mul			% x = pageWidth * 1/2 * 72
+  pageHeight 36 mul			% y = pageHeight * 1/2 * 72
+  pageHeight 2 mul add			% y += 1 line
+  2 copy				% Copy X & Y
+  moveto
+  (Title: ) RIGHT
+  moveto
+  (lpr_jpg_input.jpg) show
+
+  pageWidth 36 mul			% x = pageWidth * 1/2 * 72
+  pageHeight 36 mul			% y = pageHeight * 1/2 * 72
+  pageHeight -1 mul add			% y -= 1 line
+  2 copy				% Copy X & Y
+  moveto
+  (Requesting User: ) RIGHT
+  moveto
+  (root) show
+
+  pageWidth 36 mul			% x = pageWidth * 1/2 * 72
+  pageHeight 36 mul			% y = pageHeight * 1/2 * 72
+  pageHeight -4 mul add			% y -= 2 lines
+  2 copy				% Copy X & Y
+  moveto
+  (Billing Info: ) RIGHT
+  moveto
+  () show
+
+  % Then the CUPS logo....
+  gsave
+    pageWidth 4 mul
+    pageWidth 6 mul
+    translate
+    pageWidth 9 mul CUPSLOGO
+  grestore
+
+  % And the ESP logo....
+  gsave
+    pageWidth 59 mul
+    pageWidth 6 mul
+    translate
+    pageWidth 6 mul ESPLOGO
+  grestore
+% Show the page...
+grestore
+showpage
+%
+% End of "$Id: mls_template,v 1.1 2005/06/27 18:44:46 colmo Exp $".
+%
+gsave
+ESPwl
+grestore
+ESPshowpage
+userdict/showpage/ESPshowpage load put
+
+%%Trailer
+%%Pages: 1
+%%BoundingBox: 0 0 612 792
+%%EOF
+%!PS-Adobe-3.0
+%Produced by poppler pdftops version: 0.26.5 (http://poppler.freedesktop.org)
+%%LanguageLevel: 2
+%%DocumentSuppliedResources: (atend)
+%%DocumentMedia: 207x270mm 588 768 0 () ()
+
+
+%RBINumCopies: 1
+%%Pages: (atend)
+%%BoundingBox: (atend)
+%%EndComments
+%%BeginProlog
+userdict/ESPshowpage/showpage load put
+userdict/showpage{}put
+%%BeginResource: procset xpdf 3.00 0
+%%Copyright: Copyright 1996-2011 Glyph & Cog, LLC
+/xpdf 75 dict def xpdf begin
+% PDF special state
+/pdfDictSize 15 def
+/pdfSetup {
+  /setpagedevice where {
+    pop 2 dict begin
+      /Policies 1 dict dup begin /PageSize 6 def end def
+      { /Duplex true def } if
+    currentdict end setpagedevice
+  } {
+    pop
+  } ifelse
+} def
+/pdfSetupPaper {
+  % Change paper size, but only if different from previous paper size otherwise
+  % duplex fails. PLRM specifies a tolerance of 5 pts when matching paper size
+  % so we use the same when checking if the size changes.
+  /setpagedevice where {
+    pop currentpagedevice
+    /PageSize known {
+      2 copy
+      currentpagedevice /PageSize get aload pop
+      exch 4 1 roll
+      sub abs 5 gt
+      3 1 roll
+      sub abs 5 gt
+      or
+    } {
+      true
+    } ifelse
+    {
+      2 array astore
+      2 dict begin
+        /PageSize exch def
+        /ImagingBBox null def
+      currentdict end
+      setpagedevice
+    } {
+      pop pop
+    } ifelse
+  } {
+    pop
+  } ifelse
+} def
+/pdfStartPage {
+  pdfDictSize dict begin
+  /pdfFillCS [] def
+  /pdfFillXform {} def
+  /pdfStrokeCS [] def
+  /pdfStrokeXform {} def
+  /pdfFill [0] def
+  /pdfStroke [0] def
+  /pdfFillOP false def
+  /pdfStrokeOP false def
+  /pdfLastFill false def
+  /pdfLastStroke false def
+  /pdfTextMat [1 0 0 1 0 0] def
+  /pdfFontSize 0 def
+  /pdfCharSpacing 0 def
+  /pdfTextRender 0 def
+  /pdfPatternCS false def
+  /pdfTextRise 0 def
+  /pdfWordSpacing 0 def
+  /pdfHorizScaling 1 def
+  /pdfTextClipPath [] def
+} def
+/pdfEndPage { end } def
+% PDF color state
+/cs { /pdfFillXform exch def dup /pdfFillCS exch def
+      setcolorspace } def
+/CS { /pdfStrokeXform exch def dup /pdfStrokeCS exch def
+      setcolorspace } def
+/sc { pdfLastFill not { pdfFillCS setcolorspace } if
+      dup /pdfFill exch def aload pop pdfFillXform setcolor
+     /pdfLastFill true def /pdfLastStroke false def } def
+/SC { pdfLastStroke not { pdfStrokeCS setcolorspace } if
+      dup /pdfStroke exch def aload pop pdfStrokeXform setcolor
+     /pdfLastStroke true def /pdfLastFill false def } def
+/op { /pdfFillOP exch def
+      pdfLastFill { pdfFillOP setoverprint } if } def
+/OP { /pdfStrokeOP exch def
+      pdfLastStroke { pdfStrokeOP setoverprint } if } def
+/fCol {
+  pdfLastFill not {
+    pdfFillCS setcolorspace
+    pdfFill aload pop pdfFillXform setcolor
+    pdfFillOP setoverprint
+    /pdfLastFill true def /pdfLastStroke false def
+  } if
+} def
+/sCol {
+  pdfLastStroke not {
+    pdfStrokeCS setcolorspace
+    pdfStroke aload pop pdfStrokeXform setcolor
+    pdfStrokeOP setoverprint
+    /pdfLastStroke true def /pdfLastFill false def
+  } if
+} def
+% build a font
+/pdfMakeFont {
+  4 3 roll findfont
+  4 2 roll matrix scale makefont
+  dup length dict begin
+    { 1 index /FID ne { def } { pop pop } ifelse } forall
+    /Encoding exch def
+    currentdict
+  end
+  definefont pop
+} def
+/pdfMakeFont16 {
+  exch findfont
+  dup length dict begin
+    { 1 index /FID ne { def } { pop pop } ifelse } forall
+    /WMode exch def
+    currentdict
+  end
+  definefont pop
+} def
+% graphics state operators
+/q { gsave pdfDictSize dict begin } def
+/Q {
+  end grestore
+  /pdfLastFill where {
+    pop
+    pdfLastFill {
+      pdfFillOP setoverprint
+    } {
+      pdfStrokeOP setoverprint
+    } ifelse
+  } if
+} def
+/cm { concat } def
+/d { setdash } def
+/i { setflat } def
+/j { setlinejoin } def
+/J { setlinecap } def
+/M { setmiterlimit } def
+/w { setlinewidth } def
+% path segment operators
+/m { moveto } def
+/l { lineto } def
+/c { curveto } def
+/re { 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
+      neg 0 rlineto closepath } def
+/h { closepath } def
+% path painting operators
+/S { sCol stroke } def
+/Sf { fCol stroke } def
+/f { fCol fill } def
+/f* { fCol eofill } def
+% clipping operators
+/W { clip newpath } def
+/W* { eoclip newpath } def
+/Ws { strokepath clip newpath } def
+% text state operators
+/Tc { /pdfCharSpacing exch def } def
+/Tf { dup /pdfFontSize exch def
+      dup pdfHorizScaling mul exch matrix scale
+      pdfTextMat matrix concatmatrix dup 4 0 put dup 5 0 put
+      exch findfont exch makefont setfont } def
+/Tr { /pdfTextRender exch def } def
+/Tp { /pdfPatternCS exch def } def
+/Ts { /pdfTextRise exch def } def
+/Tw { /pdfWordSpacing exch def } def
+/Tz { /pdfHorizScaling exch def } def
+% text positioning operators
+/Td { pdfTextMat transform moveto } def
+/Tm { /pdfTextMat exch def } def
+% text string operators
+/xyshow where {
+  pop
+  /xyshow2 {
+    dup length array
+    0 2 2 index length 1 sub {
+      2 index 1 index 2 copy get 3 1 roll 1 add get
+      pdfTextMat dtransform
+      4 2 roll 2 copy 6 5 roll put 1 add 3 1 roll dup 4 2 roll put
+    } for
+    exch pop
+    xyshow
+  } def
+}{
+  /xyshow2 {
+    currentfont /FontType get 0 eq {
+      0 2 3 index length 1 sub {
+        currentpoint 4 index 3 index 2 getinterval show moveto
+        2 copy get 2 index 3 2 roll 1 add get
+        pdfTextMat dtransform rmoveto
+      } for
+    } {
+      0 1 3 index length 1 sub {
+        currentpoint 4 index 3 index 1 getinterval show moveto
+        2 copy 2 mul get 2 index 3 2 roll 2 mul 1 add get
+        pdfTextMat dtransform rmoveto
+      } for
+    } ifelse
+    pop pop
+  } def
+} ifelse
+/cshow where {
+  pop
+  /xycp {
+    0 3 2 roll
+    {
+      pop pop currentpoint 3 2 roll
+      1 string dup 0 4 3 roll put false charpath moveto
+      2 copy get 2 index 2 index 1 add get
+      pdfTextMat dtransform rmoveto
+      2 add
+    } exch cshow
+    pop pop
+  } def
+}{
+  /xycp {
+    currentfont /FontType get 0 eq {
+      0 2 3 index length 1 sub {
+        currentpoint 4 index 3 index 2 getinterval false charpath moveto
+        2 copy get 2 index 3 2 roll 1 add get
+        pdfTextMat dtransform rmoveto
+      } for
+    } {
+      0 1 3 index length 1 sub {
+        currentpoint 4 index 3 index 1 getinterval false charpath moveto
+        2 copy 2 mul get 2 index 3 2 roll 2 mul 1 add get
+        pdfTextMat dtransform rmoveto
+      } for
+    } ifelse
+    pop pop
+  } def
+} ifelse
+/Tj {
+  fCol
+  0 pdfTextRise pdfTextMat dtransform rmoveto
+  currentpoint 4 2 roll
+  pdfTextRender 1 and 0 eq {
+    2 copy xyshow2
+  } if
+  pdfTextRender 3 and dup 1 eq exch 2 eq or {
+    3 index 3 index moveto
+    2 copy
+    currentfont /FontType get 3 eq { fCol } { sCol } ifelse
+    xycp currentpoint stroke moveto
+  } if
+  pdfTextRender 4 and 0 ne {
+    4 2 roll moveto xycp
+    /pdfTextClipPath [ pdfTextClipPath aload pop
+      {/moveto cvx}
+      {/lineto cvx}
+      {/curveto cvx}
+      {/closepath cvx}
+    pathforall ] def
+    currentpoint newpath moveto
+  } {
+    pop pop pop pop
+  } ifelse
+  0 pdfTextRise neg pdfTextMat dtransform rmoveto
+} def
+/TJm { 0.001 mul pdfFontSize mul pdfHorizScaling mul neg 0
+       pdfTextMat dtransform rmoveto } def
+/TJmV { 0.001 mul pdfFontSize mul neg 0 exch
+        pdfTextMat dtransform rmoveto } def
+/Tclip { pdfTextClipPath cvx exec clip newpath
+         /pdfTextClipPath [] def } def
+/Tclip* { pdfTextClipPath cvx exec eoclip newpath
+         /pdfTextClipPath [] def } def
+% Level 2/3 image operators
+/pdfImBuf 100 string def
+/pdfImStr {
+  2 copy exch length lt {
+    2 copy get exch 1 add exch
+  } {
+    ()
+  } ifelse
+} def
+/skipEOD {
+  { currentfile pdfImBuf readline
+    not { pop exit } if
+    (%-EOD-) eq { exit } if } loop
+} def
+/pdfIm { image skipEOD } def
+/pdfImM { fCol imagemask skipEOD } def
+/pr { 2 index 2 index 3 2 roll putinterval 4 add } def
+/pdfImClip {
+  gsave
+  0 2 4 index length 1 sub {
+    dup 4 index exch 2 copy
+    get 5 index div put
+    1 add 3 index exch 2 copy
+    get 3 index div put
+  } for
+  pop pop rectclip
+} def
+/pdfImClipEnd { grestore } def
+% shading operators
+/colordelta {
+  false 0 1 3 index length 1 sub {
+    dup 4 index exch get 3 index 3 2 roll get sub abs 0.004 gt {
+      pop true
+    } if
+  } for
+  exch pop exch pop
+} def
+/funcCol { func n array astore } def
+/funcSH {
+  dup 0 eq {
+    true
+  } {
+    dup 6 eq {
+      false
+    } {
+      4 index 4 index funcCol dup
+      6 index 4 index funcCol dup
+      3 1 roll colordelta 3 1 roll
+      5 index 5 index funcCol dup
+      3 1 roll colordelta 3 1 roll
+      6 index 8 index funcCol dup
+      3 1 roll colordelta 3 1 roll
+      colordelta or or or
+    } ifelse
+  } ifelse
+  {
+    1 add
+    4 index 3 index add 0.5 mul exch 4 index 3 index add 0.5 mul exch
+    6 index 6 index 4 index 4 index 4 index funcSH
+    2 index 6 index 6 index 4 index 4 index funcSH
+    6 index 2 index 4 index 6 index 4 index funcSH
+    5 3 roll 3 2 roll funcSH pop pop
+  } {
+    pop 3 index 2 index add 0.5 mul 3 index  2 index add 0.5 mul
+    funcCol sc
+    dup 4 index exch mat transform m
+    3 index 3 index mat transform l
+    1 index 3 index mat transform l
+    mat transform l pop pop h f*
+  } ifelse
+} def
+/axialCol {
+  dup 0 lt {
+    pop t0
+  } {
+    dup 1 gt {
+      pop t1
+    } {
+      dt mul t0 add
+    } ifelse
+  } ifelse
+  func n array astore
+} def
+/axialSH {
+  dup 0 eq {
+    true
+  } {
+    dup 8 eq {
+      false
+    } {
+      2 index axialCol 2 index axialCol colordelta
+    } ifelse
+  } ifelse
+  {
+    1 add 3 1 roll 2 copy add 0.5 mul
+    dup 4 3 roll exch 4 index axialSH
+    exch 3 2 roll axialSH
+  } {
+    pop 2 copy add 0.5 mul
+    axialCol sc
+    exch dup dx mul x0 add exch dy mul y0 add
+    3 2 roll dup dx mul x0 add exch dy mul y0 add
+    dx abs dy abs ge {
+      2 copy yMin sub dy mul dx div add yMin m
+      yMax sub dy mul dx div add yMax l
+      2 copy yMax sub dy mul dx div add yMax l
+      yMin sub dy mul dx div add yMin l
+      h f*
+    } {
+      exch 2 copy xMin sub dx mul dy div add xMin exch m
+      xMax sub dx mul dy div add xMax exch l
+      exch 2 copy xMax sub dx mul dy div add xMax exch l
+      xMin sub dx mul dy div add xMin exch l
+      h f*
+    } ifelse
+  } ifelse
+} def
+/radialCol {
+  dup t0 lt {
+    pop t0
+  } {
+    dup t1 gt {
+      pop t1
+    } if
+  } ifelse
+  func n array astore
+} def
+/radialSH {
+  dup 0 eq {
+    true
+  } {
+    dup 8 eq {
+      false
+    } {
+      2 index dt mul t0 add radialCol
+      2 index dt mul t0 add radialCol colordelta
+    } ifelse
+  } ifelse
+  {
+    1 add 3 1 roll 2 copy add 0.5 mul
+    dup 4 3 roll exch 4 index radialSH
+    exch 3 2 roll radialSH
+  } {
+    pop 2 copy add 0.5 mul dt mul t0 add
+    radialCol sc
+    encl {
+      exch dup dx mul x0 add exch dup dy mul y0 add exch dr mul r0 add
+      0 360 arc h
+      dup dx mul x0 add exch dup dy mul y0 add exch dr mul r0 add
+      360 0 arcn h f
+    } {
+      2 copy
+      dup dx mul x0 add exch dup dy mul y0 add exch dr mul r0 add
+      a1 a2 arcn
+      dup dx mul x0 add exch dup dy mul y0 add exch dr mul r0 add
+      a2 a1 arcn h
+      dup dx mul x0 add exch dup dy mul y0 add exch dr mul r0 add
+      a1 a2 arc
+      dup dx mul x0 add exch dup dy mul y0 add exch dr mul r0 add
+      a2 a1 arc h f
+    } ifelse
+  } ifelse
+} def
+end
+%%EndResource
+%%EndProlog
+%%BeginSetup
+% Disable CTRL-D as an end-of-file marker...
+userdict dup(\004)cvn{}put (\004\004)cvn{}put
+[{
+%%BeginFeature: *Duplex None
+<</Duplex false>>setpagedevice
+%%EndFeature
+} stopped cleartomark
+[{
+%%BeginFeature: *InputSlot Default
+%%EndFeature
+} stopped cleartomark
+[{
+%%BeginFeature: *Option1 False
+%%EndFeature
+} stopped cleartomark
+% x y w h ESPrc - Clip to a rectangle.
+userdict/ESPrc/rectclip where{pop/rectclip load}
+{{newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
+neg 0 rlineto closepath clip newpath}bind}ifelse put
+% x y w h ESPrf - Fill a rectangle.
+userdict/ESPrf/rectfill where{pop/rectfill load}
+{{gsave newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
+neg 0 rlineto closepath fill grestore}bind}ifelse put
+% x y w h ESPrs - Stroke a rectangle.
+userdict/ESPrs/rectstroke where{pop/rectstroke load}
+{{gsave newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
+neg 0 rlineto closepath stroke grestore}bind}ifelse put
+userdict/ESPpa(SystemLow-SystemHigh)put
+userdict/ESPlf /Nimbus-Mono findfont 12 scalefont put
+userdict/ESPwl{
+  ESPlf setfont
+  ESPpa stringwidth pop dup 12 add exch -0.5 mul 306 add
+ 
+  1 setgray
+  dup 6 sub 10 3 index 22 ESPrf
+  dup 6 sub 758 3 index 20 ESPrf
+  0 setgray
+  dup 6 sub 10 3 index 22 ESPrs
+  dup 6 sub 758 3 index 20 ESPrs
+  dup 18 moveto ESPpa show
+  766 moveto ESPpa show
+  pop
+}bind put
+xpdf begin
+false pdfSetup
+%%EndSetup
+%%Page: 1 1
+%%PageBoundingBox: 0 0 588 768
+%%BeginPageSetup
+%%EndPageSetup
+588 768 pdfSetupPaper
+pdfStartPage
+-12 -12 translate
+12 12 588 768 re W
+%%EndPageSetup
+[] 0 d
+1 i
+0 j
+0 J
+10 M
+1 w
+/DeviceGray {} cs
+[0] sc
+/DeviceGray {} CS
+[0] SC
+false op
+false OP
+{} settransfer
+q
+[0 1 -1 0 612 0] cm
+[1 0 0 1 12 114] cm
+[768 0 0 384 0 0] cm
+/DeviceRGB setcolorspace
+<<
+  /ImageType 1
+  /Width 2
+  /Height 1
+  /ImageMatrix [2 0 0 -1 0 1]
+  /BitsPerComponent 8
+  /Decode [0 1 0 1 0 1]
+  /DataSource currentfile
+    /ASCII85Decode filter
+>>
+pdfIm
+!!)uu!<*<~>
+%-EOD-
+Q
+showpage
+%%PageTrailer
+pdfEndPage
+gsave
+ESPwl
+grestore
+ESPshowpage
+userdict/showpage/ESPshowpage load put
+
+%%Trailer
+end
+%%DocumentSuppliedResources:
+%%Pages: 1
+%%BoundingBox: 0 0 588 768
+%%EOF
+%!PS-Adobe-3.0
+%%LanguageLevel: 1
+%%DocumentData: Clean7Bit
+%%DocumentSuppliedResources: procset bannerprint/1.0
+%%DocumentNeededResources: font Helvetica Helvetica-Bold Times-Roman
+
+
+
+
+%RBINumCopies: 1
+%%Pages: (atend)
+%%BoundingBox: (atend)
+%%EndComments
+%%BeginProlog
+userdict/ESPshowpage/showpage load put
+userdict/showpage{}put
+%%BeginResource procset bannerprint 1.1 0
+%
+%   PostScript banner page for the Common UNIX Printing System ("CUPS").
+%
+%   Copyright 1993-2005 by Easy Software Products
+%
+%   These coded instructions, statements, and computer programs are the
+%   property of Easy Software Products and are protected by Federal
+%   copyright law.  Distribution and use rights are outlined in the file
+%   "LICENSE.txt" which should have been included with this file.  If this
+%   file is missing or damaged please contact Easy Software Products
+%   at:
+%
+%       Attn: CUPS Licensing Information
+%       Easy Software Products
+%       44141 Airport View Drive, Suite 204
+%       Hollywood, Maryland 20636 USA
+%
+%       Voice: (301) 373-9600
+%       EMail: cups-info@cups.org
+%         WWW: http://www.cups.org
+%
+/CENTER {			% Draw centered text
+				% (name) CENTER -
+  dup stringwidth pop		% Get the width of the string
+  0.5 mul neg 0 rmoveto		% Shift left 1/2 of the distance
+  show				% Show the string
+} bind def
+/RIGHT {			% Draw right-justified text
+				% (name) RIGHT -
+  dup stringwidth pop		% Get the width of the string
+  neg 0 rmoveto			% Shift left the entire distance
+  show				% Show the string
+} bind def
+/NUMBER {			% Draw a number
+				% power n NUMBER -
+  1 index 1 eq {		% power == 1?
+    round cvi exch pop		% Convert "n" to integer
+  } {
+    1 index mul round exch div	% Truncate extra decimal places
+  } ifelse
+  100 string cvs show		% Convert to a string and show it...
+} bind def
+/CUPSLOGO {			% Draw the CUPS logo
+				% height CUPSLOGO
+  % Start with a big C...
+  /Helvetica findfont 1 index scalefont setfont
+  0 setgray
+  0 0 moveto
+  (C) show
+
+  % Then "UNIX Printing System" much smaller...
+  /Helvetica-Bold findfont 1 index 9 div scalefont setfont
+  0.25 mul
+  dup dup 2.0 mul moveto
+  (UNIX) show
+  dup dup 1.6 mul moveto
+  (Printing) show
+  dup 1.2 mul moveto
+  (System) show
+} bind def
+/ESPLOGO {			% Draw the ESP logo
+				% height ESPLOGO
+  % Compute the size of the logo...
+  0 0
+  2 index 1.5 mul 3 index
+
+  % Do the "metallic" fill from 10% black to 40% black...
+  1 -0.001 0 {
+    dup			% loopval
+    -0.15 mul		% loopval * -0.15
+    0.9 add		% 0.9 - loopval * 0.15
+    setgray		% set gray shade
+
+    0			% x
+    1 index neg		% loopval
+    1 add		% 1 - loopval
+    3 index		% height
+    mul			% height * (1 - loopval)
+    moveto		% starting point
+
+    dup			% loopval
+    3 index		% width
+    mul			% loopval * width
+    2 index		% height
+    lineto		% Next point
+
+    0			% x
+    2 index		% height
+    lineto		% Next point
+
+    closepath
+    fill
+
+    dup			% loopval
+    0.15 mul		% loopval * 0.15
+    0.6 add		% 0.6 + loopval * 0.15
+    setgray
+
+    dup			% loopval
+    neg 1 add		% 1 - loopval
+    3 index		% width
+    mul			% (1 - loopval) * width
+    0			% y
+    moveto		% Starting point
+
+    2 index		% width
+    exch		% loopval
+    2 index		% height
+    mul			% loopval * height
+    lineto		% Next point
+
+    1 index		% width
+    0			% y
+    lineto		% Next point
+
+    closepath
+    fill
+  } for
+
+  0 setgray rectstroke
+
+  /Helvetica-BoldOblique findfont 1 index 3 div scalefont setfont
+  dup 40 div
+
+  dup 4 mul 1 index 25 mul moveto (E) show
+  dup 10 mul 1 index 15 mul moveto (S) show
+  dup 16 mul 1 index 5 mul moveto (P) show
+
+  /Helvetica-BoldOblique findfont 2 index 5 div scalefont setfont
+  dup 14 mul 1 index 29 mul moveto (asy) show
+  dup 20 mul 1 index 19 mul moveto (oftware) show
+  dup 26 mul 1 index 9 mul moveto (roducts) show
+
+  pop
+} bind def
+%%EndResource
+%%EndProlog
+%%BeginSetup
+% Disable CTRL-D as an end-of-file marker...
+userdict dup(\004)cvn{}put (\004\004)cvn{}put
+[{
+%%BeginFeature: *Duplex None
+<</Duplex false>>setpagedevice
+%%EndFeature
+} stopped cleartomark
+[{
+%%BeginFeature: *InputSlot Default
+%%EndFeature
+} stopped cleartomark
+[{
+%%BeginFeature: *Option1 False
+%%EndFeature
+} stopped cleartomark
+% x y w h ESPrc - Clip to a rectangle.
+userdict/ESPrc/rectclip where{pop/rectclip load}
+{{newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
+neg 0 rlineto closepath clip newpath}bind}ifelse put
+% x y w h ESPrf - Fill a rectangle.
+userdict/ESPrf/rectfill where{pop/rectfill load}
+{{gsave newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
+neg 0 rlineto closepath fill grestore}bind}ifelse put
+% x y w h ESPrs - Stroke a rectangle.
+userdict/ESPrs/rectstroke where{pop/rectstroke load}
+{{gsave newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
+neg 0 rlineto closepath stroke grestore}bind}ifelse put
+userdict/ESPpa(SystemLow-SystemHigh)put
+userdict/ESPlf /Nimbus-Mono findfont 12 scalefont put
+userdict/ESPwl{
+  ESPlf setfont
+  ESPpa stringwidth pop dup 12 add exch -0.5 mul 306 add
+ 
+  1 setgray
+  dup 6 sub 10 3 index 22 ESPrf
+  dup 6 sub 758 3 index 20 ESPrf
+  0 setgray
+  dup 6 sub 10 3 index 22 ESPrs
+  dup 6 sub 758 3 index 20 ESPrs
+  dup 18 moveto ESPpa show
+  766 moveto ESPpa show
+  pop
+}bind put
+%%EndSetup
+%%Page: 1 1
+%%PageBoundingBox: 0 0 612 792
+%%BeginPageSetup
+%%EndPageSetup
+gsave
+
+  % Determine the imageable area and device resolution...
+  initclip newpath clippath pathbbox	% Get bounding rectangle
+  72 div /pageTop exch def		% Get top margin in inches
+  72 div /pageRight exch def		% Get right margin in inches
+  72 div /pageBottom exch def		% Get bottom margin in inches
+  72 div /pageLeft exch def		% Get left margin in inches
+
+  /pageWidth pageRight pageLeft sub def	% pageWidth = pageRight - pageLeft
+  /pageHeight pageTop pageBottom sub def% pageHeight = pageTop - pageBottom
+
+  /boxWidth				% width of text box
+  pageWidth pageHeight lt
+  { pageWidth 54 mul }
+  { pageHeight 42 mul }
+  ifelse def
+
+  newpath				% Clear bounding path
+
+  % Create fonts...
+  /bigFont /Helvetica-Bold findfont	% bigFont = Helvetica-Bold
+  pageHeight 3 mul scalefont def	% size = pageHeight * 3 (nominally 33)
+
+  /mediumFont /Helvetica findfont	% mediumFont = Helvetica
+  pageHeight 1.5 mul scalefont def	% size = pageHeight * 1.5 (nominally 16.5)
+
+  % Offset page to account for lower-left margin...
+  pageLeft 72 mul
+  pageBottom 72 mul
+  translate
+
+  % Job information box...
+  pageWidth 36 mul 9 add		% x = pageWidth * 1/2 * 72 + 9
+  boxWidth 0.5 mul sub			% x-= 1/2 box width
+  pageHeight 30 mul 9 sub		% y = pageHeight * 1/2 * 72 - 9
+  boxWidth				% w = box width
+  pageHeight 14 mul			% h = pageHeight * 1/2 * 72
+  0.5 setgray rectfill			% Draw a shadow
+
+  pageWidth 36 mul			% x = pageWidth * 1/2 * 72
+  boxWidth 0.5 mul sub			% x-= 1/2 box width
+  pageHeight 30 mul			% y = pageHeight * 1/4 * 72
+  boxWidth				% w = box width
+  pageHeight 14 mul			% h = pageHeight * 1/2 * 72
+
+  4 copy 1 setgray rectfill		% Clear the box to white
+  0 setgray rectstroke			% Draw a black box around it...
+
+  % Job information text...
+  mediumFont setfont			% Medium sized font
+
+  pageWidth 36 mul			% x = pageWidth * 1/2 * 72
+  pageHeight 36 mul			% y = pageHeight * 1/2 * 72
+  pageHeight 5 mul add			% y += 2 lines
+  2 copy				% Copy X & Y
+  moveto
+  (Job ID: ) RIGHT
+  moveto
+  (tests-41) show
+
+  pageWidth 36 mul			% x = pageWidth * 1/2 * 72
+  pageHeight 36 mul			% y = pageHeight * 1/2 * 72
+  pageHeight 2 mul add			% y += 1 line
+  2 copy				% Copy X & Y
+  moveto
+  (Title: ) RIGHT
+  moveto
+  (lpr_jpg_input.jpg) show
+
+  pageWidth 36 mul			% x = pageWidth * 1/2 * 72
+  pageHeight 36 mul			% y = pageHeight * 1/2 * 72
+  pageHeight -1 mul add			% y -= 1 line
+  2 copy				% Copy X & Y
+  moveto
+  (Requesting User: ) RIGHT
+  moveto
+  (root) show
+
+  pageWidth 36 mul			% x = pageWidth * 1/2 * 72
+  pageHeight 36 mul			% y = pageHeight * 1/2 * 72
+  pageHeight -4 mul add			% y -= 2 lines
+  2 copy				% Copy X & Y
+  moveto
+  (Billing Info: ) RIGHT
+  moveto
+  () show
+
+  % Then the CUPS logo....
+  gsave
+    pageWidth 4 mul
+    pageWidth 6 mul
+    translate
+    pageWidth 9 mul CUPSLOGO
+  grestore
+
+  % And the ESP logo....
+  gsave
+    pageWidth 59 mul
+    pageWidth 6 mul
+    translate
+    pageWidth 6 mul ESPLOGO
+  grestore
+% Show the page...
+grestore
+showpage
+%
+% End of "$Id: mls_template,v 1.1 2005/06/27 18:44:46 colmo Exp $".
+%
+gsave
+ESPwl
+grestore
+ESPshowpage
+userdict/showpage/ESPshowpage load put
+
+%%Trailer
+%%Pages: 1
+%%BoundingBox: 0 0 612 792
+%%EOF
+

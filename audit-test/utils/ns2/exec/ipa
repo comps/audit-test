@@ -1,0 +1,25 @@
+#!/bin/sh
+AUTHSRV_DIR="/usr/local/eal4_testing/audit-test/utils/auth-server"
+
+function exit_error() {
+    echo "Error: $@"
+    exit 1
+}
+
+# source ipa defaults
+source $AUTHSRV_DIR/ipa_env 2>&1 || exit
+
+[ -z "$@" ] && exit_error "No hosts given"
+
+for HOST in "$@"; do
+    if ! ipa host-show $HOST &>/dev/null; then
+        echo $IPA_PASS | kinit ${IPA_ADMIN}@$IPA_REALM &>/dev/null || \
+            exit_error "Failed to get kerbertos ticket for admin"
+        ipa host-add --force $HOST 2>&1 || exit
+        ipa-getkeytab -s $(hostname) -p host/$HOST -k $IPA_DLDIR/${HOST}.keytab 2>&1 || exit
+        chown eal:eal $IPA_DLDIR/${HOST}.keytab 2>&1 || exit
+        echo "OK"
+    else
+        echo "SKIP"
+    fi
+done

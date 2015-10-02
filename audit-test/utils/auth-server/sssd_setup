@@ -131,6 +131,18 @@ function cmd_configure {
         exit
     fi
 
+    # Add host to IPA server
+    print_info "Adding host to IPA server $IPA_SERVER"
+    LOG=$(nc $IPA_SERVER 5000 <<< "exec,ipa,$IPA_SERVER_TOE_ID")
+    [ $? -ne 0 ] && exit_error "Error communicating with ns2 on IPA server"
+    if grep -q "^SKIP$" <<< "$LOG"; then
+        print_info "Host already added - skipping"
+    elif grep -q "^OK$" <<< "$LOG"; then
+        print_info "Host successfully added"
+    else
+        exit_error "Failed to add host\n$LOG"
+    fi
+
     # Setup kerberos configuration
     print_info "Setting up Kerberos"
     [ -e $KRBCONF ] && mv -f $KRBCONF $KRBCONFBP

@@ -12,14 +12,19 @@ source $AUTHSRV_DIR/ipa_env 2>&1 || exit
 [ -z "$@" ] && exit_error "No hosts given"
 
 for HOST in "$@"; do
+    STATUS="SKIP"
     if ! ipa host-show $HOST &>/dev/null; then
         echo $IPA_PASS | kinit ${IPA_ADMIN}@$IPA_REALM &>/dev/null || \
-            exit_error "Failed to get kerbertos ticket for admin"
+            exit_error "Failed to get kerberos ticket for admin"
         ipa host-add --force $HOST 2>&1 || exit
+	STATUS="OK"
+    fi
+
+    if [ ! -f $IPA_DLDIR/${HOST}.keytab ]; then
         ipa-getkeytab -s $(hostname) -p host/$HOST -k $IPA_DLDIR/${HOST}.keytab 2>&1 || exit
         chown eal:eal $IPA_DLDIR/${HOST}.keytab 2>&1 || exit
-        echo "OK"
-    else
-        echo "SKIP"
+        STATUS="OK"
     fi
+
+    echo $STATUS
 done

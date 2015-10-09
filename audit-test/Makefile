@@ -108,7 +108,7 @@ report:
 
 .PHONY: show-rerun
 show-rerun:
-	for x in $(RUN_DIRS); do \
+	@for x in $(RUN_DIRS); do \
 		output=$$(cd $$x && ./run.bash -r --list); \
 		[ "$$output" == "no matching tests" ] && continue; \
 		printf "::: %s\n%s" "$$x" "$$output"; \

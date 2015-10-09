@@ -106,6 +106,15 @@ report:
 	    | tee -a audit.run.log | tee -a audit.rollup.log
 	@utils/envcheck > envcheck.log
 
+.PHONY: show-rerun
+show-rerun:
+	for x in $(RUN_DIRS); do \
+		output=$$(cd $$x && ./run.bash -r --list); \
+		[ "$$output" == "no matching tests" ] && continue; \
+		printf "::: %s\n%s" "$$x" "$$output"; \
+		echo; \
+	done
+
 .PHONY: rpm
 rpm: dist
 	rev=$$(git log | head -n 1| awk '/^commit/{print $$2}' | cut -b 1-6 ) && \

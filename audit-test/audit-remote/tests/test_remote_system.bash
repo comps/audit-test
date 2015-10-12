@@ -284,7 +284,7 @@ test_server_basic() {
     call_remote_function generate_audit_log_msg
 
     sleep 2
-    check_message_arrived "$remote_client_test_string"  || \
+    wait_for_cmd "check_message_arrived \"$remote_client_test_string\"" || \
         exit_fail "check_message_arrived"
     # cleanup
     call_remote_function restore_audit_backup
@@ -319,8 +319,8 @@ test_server_msg_sequence() {
 
     for i in `seq 1 $max_audit_log_dump_seq` ; do
         #echo -n "[$i]"  >> /tmp/seq.l g #  Uncomment for easier debugging
-        check_message_arrived  "$remote_client_test_string SEQ_NUM=$i:?" || \
-        ((missing_count+=1))
+        wait_for_cmd "check_message_arrived \"$remote_client_test_string SEQ_NUM=$i:?\"" || \
+            ((missing_count+=1))
     done
     [ $missing_count -gt 0 ] && exit_error \
         "Missing $missing_count msgs out of $max_audit_log_dump_seq expected"

@@ -498,8 +498,8 @@ function show_header {
 function fmt_test {
     declare i s indent width
 
-    # longest result is " ERROR (255)" == 12 chars
-    width=$((opt_width - 12))
+    # longest result is " ERROR " == 7 chars
+    width=$((opt_width - 7))
 
     # Each time through this loop, display as much of the line as fits in $width,
     # then remove displayed args from positional parameter list.
@@ -695,7 +695,7 @@ function run_tests {
 		    [[ -n $s ]] && prf "%s\n" "$s"
 		fi
 	    else
-		prf "<red>%11s\n" "ERROR ($status)"
+		prf "<red>%11s\n" "ERROR "
 		(( error++ ))
 		if ! $opt_quiet; then
 		    s=$(sed -n 's/^exit_error:/       /p' <<<"$output")

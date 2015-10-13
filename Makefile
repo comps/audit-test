@@ -34,9 +34,6 @@ TOPDIR		= .
 
 SUB_DIRS	= audit-test ltp
 
-REPORT		= logs-*.tar.xz
-SYSTEMINFO	= systeminfo.run.log
-SUMMARY		= run.log
 EXTRA_DIST_FILES = Makefile README
 
 # generic recursion into all SUB_DIRS
@@ -65,10 +62,11 @@ uninstall: subdirs
 
 .PHONY: clean
 clean: subdirs
+	rm -rf systeminfo
 
 .PHONY: distclean
 distclean: subdirs
-	rm -f $(REPORT) $(SYSTEMINFO) $(SUMMARY)
+	rm -rf logs-*.tar.xz systeminfo
 
 .PHONY: prepare
 prepare:
@@ -77,51 +75,39 @@ prepare:
 	restorecon -RF .
 
 .PHONY: report
-report: systeminfo summary
+report: systeminfo
 	@tarball="logs-$$(date +'%m%d%Y_%H%M').tar.xz"; \
-	logs="audit-test/*/run.log audit-test/*/rollup.log"; \
-	logs+=" audit-test/audit.*.log ltp/ltp.*.log"; \
-	logs+=" audit-test/envcheck.log systeminfo.run.log"; \
-	eval tar --ignore-failed-read -cvJf "$$tarball" "$$logs"; \
-	ls -l "$$tarball"
+	logs=; \
+	logs+=" audit-test/*/logs/run.log.* audit-test/*/rollup.log"; \
+	logs+=" audit-test/audit.rollup.log"; \
+	logs+=" ltp/logs/ ltp/ltp.rollup.log"; \
+	logs+=" audit-test/envcheck.log"; \
+	logs+=" systeminfo/"; \
+	eval tar --ignore-failed-read --owner root --group root \
+		--mode u=rwX,go=rX -cJf "$$tarball" "$$logs"; \
+	ls -lh "$$tarball"
 
 .PHONY: systeminfo
 systeminfo:
-	echo "==> date <==" > $(SYSTEMINFO)
-	date >> $(SYSTEMINFO)
-	echo "" >> $(SYSTEMINFO)
-	echo "==> uname -a <==" >> $(SYSTEMINFO)
-	uname -a >> $(SYSTEMINFO)
-	echo "" >> $(SYSTEMINFO)
-	echo "==> uptime <==" >> $(SYSTEMINFO)
-	uptime >> $(SYSTEMINFO)
-	echo "" >> $(SYSTEMINFO)
-	echo "==> cat /proc/cpuinfo <==" >> $(SYSTEMINFO)
-	cat /proc/cpuinfo >> $(SYSTEMINFO)
-	echo "" >> $(SYSTEMINFO)
-	echo "==> rpm -qai <==" >> $(SYSTEMINFO)
-	rpm -qai >> $(SYSTEMINFO)
-
-.PHONY: summary
-summary:
-	@echo "Test Report Summary ($$(date))" > $(SUMMARY)
-	@echo "" >> $(SUMMARY)
-	@for dir_iter in $(SUB_DIRS); do \
-		if ls $$dir_iter/*rollup.log > /dev/null 2>&1; then \
-			log_iter=$$(ls $$dir_iter/*rollup.log); \
-		elif ls $$dir_iter/run.log > /dev/null 2>&1; then \
-			log_iter=$$(ls $$dir_iter/run.log); \
-		else \
-			continue; \
-		fi; \
-		echo " looking at report: $$log_iter"; \
-		echo "####### Log File: $$log_iter" >> $(SUMMARY); \
-		cat $$log_iter >> $(SUMMARY); \
-		echo "####### Log End" >> $(SUMMARY); \
-		echo "" >> $(SUMMARY); \
-	done
+	@mkdir -p systeminfo; cd systeminfo || exit 1; \
+	date > date.txt; \
+	rpm -qa | sort > rpms.txt; \
+	uname -a > uname.txt; \
+	hostname --fqdn > host.txt; \
+	cat /proc/cpuinfo > cpuinfo.txt; \
+	cat /proc/meminfo > meminfo.txt; \
+	sysctl -a > sysctl.txt; \
+	which dmidecode &>/dev/null && dmidecode > dmidecode.txt; \
+	which lspci &>/dev/null && lspci > lspci.txt; \
+	{ ip addr show; echo -e "\n--\n"; ip route show; echo -e "\n--\n"; \
+		ip link show; echo -e "\n--\n"; ip rule show; } > network.txt; \
+	{ iptables-save; echo -e "\n--\n"; ip6tables-save; } > firewall.txt; \
+	dmsetup table > dmsetup.txt; \
+	cat /proc/self/mounts > mounts.txt; \
+	df -h > df.txt;
 
 .PHONY: dist
 dist:
 	tar --owner root --group root --mode u=rwX,go=rX \
-		-cvJf audit-test.tar.xz $(SUB_DIRS) $(EXTRA_DIST_FILES)
+		-cJf audit-test.tar.xz $(SUB_DIRS) $(EXTRA_DIST_FILES)
+	@ls -lh audit-test.tar.xz

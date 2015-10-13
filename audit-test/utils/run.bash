@@ -680,7 +680,7 @@ function run_tests {
 	fi
 
 	if [[ $status == 0 ]]; then
-	    prf "<green>%11s\n" "PASS "
+	    prf "<green>%s\n" "PASS"
 	    (( pass++ ))
 	    if $opt_verbose; then
 		s=$(sed -n 's/^exit_pass:/       /p' <<<"$output")
@@ -688,14 +688,14 @@ function run_tests {
 	    fi
 	else
 	    if [[ $status == 1 ]]; then
-		prf "<yellow>%11s\n" "FAIL "
+		prf "<yellow>%s\n" "FAIL"
 		(( fail++ ))
 		if ! $opt_quiet; then
 		    s=$(sed -n 's/^exit_fail:/       /p' <<<"$output")
 		    [[ -n $s ]] && prf "%s\n" "$s"
 		fi
 	    else
-		prf "<red>%11s\n" "ERROR "
+		prf "<red>%s\n" "ERROR"
 		(( error++ ))
 		if ! $opt_quiet; then
 		    s=$(sed -n 's/^exit_error:/       /p' <<<"$output")

@@ -52,7 +52,8 @@ commands below.
 # make MODE=32
 # make MODE=32 run
 
-The logs from each test run are stored in the run.log and rollup.log files.
+The logs from each test run are stored in the logs/ dir and the
+ltp.rollup.log file.
 
 Expected test results for RHEL6.2 / LTP 20110915
 ------------------------------------------------

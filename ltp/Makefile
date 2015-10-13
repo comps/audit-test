@@ -104,7 +104,12 @@ runtests:
 	#  http://www.mail-archive.com/ltp-list@lists.sourceforge.net/msg12767.html
 	sysctl kernel.msgmni=700
 	# run tests
-	$(LTP_DESTDIR)/runltp -f $(RUNTESTS) -p -d $(LTP_TMPDIR) -l $(CURDIR)/ltp.rollup.log 2>&1 | tee ltp.run.log
+	mkdir logs
+	$(LTP_DESTDIR)/runltp -f $(RUNTESTS) -p -d $(LTP_TMPDIR) -l $(CURDIR)/ltp.rollup.log 2>&1 | \
+		awk ' \
+		/<<<test_start>>>/ { getline; if (match($$0, /tag=([^ ]+)/, arr)) { f = arr[1] } else { f = "" } } \
+		/<<<test_end>>>/ { f = "" } \
+		f { print > ("logs/" f ".log") }; { print }'
 	# cleanup
 	setsebool deny_execmem=$(ORIG_EXECMEM)
 	sysctl kernel.msgmni=$(ORIG_MSGMNI)
@@ -130,7 +135,7 @@ clean:
 	# remove installed ltp
 	rm -rf /opt/ltp
 	# remove logs
-	rm -f ltp.rollup.log ltp.run.log
+	rm -rf ltp.rollup.log logs
 	# remove downloaded and created files/dirs
 	rm -f $(LTP_TARBALL)
 	rm -rf $(LTP_BASE)

@@ -104,7 +104,7 @@ runtests:
 	#  http://www.mail-archive.com/ltp-list@lists.sourceforge.net/msg12767.html
 	sysctl kernel.msgmni=700
 	# run tests
-	mkdir logs
+	mkdir -p logs
 	$(LTP_DESTDIR)/runltp -f $(RUNTESTS) -p -d $(LTP_TMPDIR) -l $(CURDIR)/ltp.rollup.log 2>&1 | \
 		awk ' \
 		/<<<test_start>>>/ { getline; if (match($$0, /tag=([^ ]+)/, arr)) { f = arr[1] } else { f = "" } } \

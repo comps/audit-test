@@ -498,9 +498,13 @@ function show_header {
 function fmt_test {
     declare i s indent width
 
+    # first part - easy to parse log output
+    noecho prf "%s %s " "$1" "${*:2}"
+
+    # second part (further below) - nice formatting on console
+
     # longest result is " ERROR " == 7 chars
     width=$((opt_width - 7))
-
     # Each time through this loop, display as much of the line as fits in $width,
     # then remove displayed args from positional parameter list.
     i=$#
@@ -508,7 +512,7 @@ function fmt_test {
 	s="$indent${*:1:i}"
 	# if the last arg is still too big, print it anyway
 	if (( ${#s} <= width || i == 1 )); then
-	    prf "%-${width}s " "$s"
+	    nolog prf "%-${width}s " "$s"
 	    # try to be smart about the indent for lines 2..N.
 	    if [[ -z $indent ]]; then
 		indent='        '          # max indent = 8
@@ -517,7 +521,7 @@ function fmt_test {
 	    shift $i
 	    i=$#
 	    # need a newline if we have more args to display
-	    (( i > 0 )) && prf '\n'
+	    (( i > 0 )) && nolog prf '\n'
 	else
 	    (( i-- ))
 	fi

@@ -562,7 +562,7 @@ function generate_logs {
 
     # create total rollup log
     for log in $(ls $opt_logdir/$opt_rollup.* | sed 's/\(.*\)\.\(.*\)/\1 \2/g' | sort -k2 -n | tr ' ' '.'); do
-        cat $log | sed '1,/--------/d' >> $opt_rollup
+        cat $log >> $opt_rollup
     done
 
     # log current stats, NOT related to displayed/console stats
@@ -647,9 +647,6 @@ function run_tests {
 
     total_start_time=$(date +'%s')
     for TESTNUM in "${TNUMS[@]}"; do
-	noecho prf "%-$((opt_width-7))s %s\n" "Testcase" "Result"
-	noecho prf "%-$((opt_width-7))s %s\n" "--------" "------"
-
 	eval "set -- ${TESTS[TESTNUM]}"
 
 	if $opt_debug; then

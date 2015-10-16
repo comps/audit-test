@@ -160,7 +160,7 @@ To build the tests, issue
 # cd /usr/local/eal4_testing
 # make
 
-Or if re-building the tests to run the 32-bit tests on an x86_64 system do:
+Or if re-building the tests to run the 32-bit tests:
 
 # make clean    # or make distclean to remove all previous test logs
 # make MODE=32

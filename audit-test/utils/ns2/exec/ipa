@@ -26,5 +26,11 @@ for HOST in "$@"; do
         STATUS="OK"
     fi
 
+    if ! ipa selinuxusermap-show | grep -q $HOST; then
+        # set mapping of $IPA_STAFF to staff_u:s0-s0:c0.c1023 for given host
+        ipa selinuxusermap-add-host staff --hosts=$HOST >/dev/null
+	STATUS="OK"
+    fi
+
     echo $STATUS
 done

@@ -328,11 +328,16 @@ function prepend_cleanup {
 	$(type cleanup | sed '1,3d;$d')
     }"
 }
-
 function append_cleanup {
     eval "function cleanup {
 	$(type cleanup | sed '1,3d;$d')
 	$*
+    }"
+}
+# careful, will remove run.bash-defined stuff, use only in subshells
+function clear_cleanup {
+    eval "function cleanup {
+        true
     }"
 }
 

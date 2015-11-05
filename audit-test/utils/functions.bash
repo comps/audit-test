@@ -401,6 +401,15 @@ function machine_time {
     echo "$out"
 }
 
+# trap_termination - call trap on any termination signals
+# http://www.gnu.org/software/libc/manual/html_node/Termination-Signals.html
+# also trap shell exit, but ensure the cmdline is not executed twice when
+# a "real" signal is received (un-trap exit prior to cmdline exit)
+function trap_termination {
+    # exit in trap is special: it uses $? of the last cmd before trap
+    trap "${1}; trap - EXIT; exit" EXIT HUP INT QUIT TERM
+}
+
 ######################################################################
 # testing helpers
 ######################################################################

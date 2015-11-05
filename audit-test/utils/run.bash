@@ -225,6 +225,7 @@ function startup {
 
     # Check for password
     if [[ -z $PASSWD ]]; then
+	    # XXX: this breaks cleanup on 1 (HUP) and 2 (INT)
 	    trap 'stty echo; exit' 1 2;
 	    read -sp "Login user password: " PASSWD; echo; export PASSWD;
 	    trap - 1 2;
@@ -765,7 +766,7 @@ parse_cmdline "$@"
 # - no cleanup execution in cases like --list, no users added yet, no log open
 # - run.conf is sourced in parse_cmdline and may define its own traps, possibly
 #   overriding our cleanup - don't allow that, run.conf is not supposed to trap
-trap 'cleanup; close_log; exit' 0 1 2 3 15
+trap_termination 'cleanup; close_log'
 startup || die "startup failed"
 run_tests
 exit $?

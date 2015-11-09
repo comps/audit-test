@@ -83,7 +83,8 @@ report: subdirs systeminfo
 	logs+=" audit-test/envcheck.log"; \
 	logs+=" systeminfo/"; \
 	eval tar --ignore-failed-read --owner root --group root \
-		--mode u=rwX,go=rX -cJf "$$tarball" "$$logs"; \
+		--mode u=rwX,go=rX --backup=numbered \
+		-cJf "$$tarball" "$$logs"; \
 	ls -lh "$$tarball"
 
 .PHONY: systeminfo

@@ -49,7 +49,6 @@ all: subdirs
 
 .PHONY: run
 run: subdirs
-	$(MAKE) report
 
 .PHONY: rerun
 rerun: run
@@ -66,7 +65,7 @@ clean: subdirs
 
 .PHONY: distclean
 distclean: subdirs
-	rm -rf logs-*.tar.xz systeminfo
+	rm -rf logs.tar.xz systeminfo
 
 .PHONY: prepare
 prepare:
@@ -75,8 +74,8 @@ prepare:
 	restorecon -RF .
 
 .PHONY: report
-report: systeminfo
-	@tarball="logs-$$(date +'%m%d%Y_%H%M').tar.xz"; \
+report: subdirs systeminfo
+	@tarball="logs.tar.xz"; \
 	logs=; \
 	logs+=" audit-test/*/logs/run.log.* audit-test/*/rollup.log"; \
 	logs+=" audit-test/audit.rollup.log"; \

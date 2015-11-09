@@ -395,6 +395,16 @@ To run manual tests, go into the "manual" bucket (subdirectory) and enter one
 of the test directories. Each manual test has its own README to walk you
 through the process of running it.
 
+Gather results
+--------------
+
+To collect all relevant logs from all tests in a single tarball, execute
+
+# cd /usr/local/eal4_testing
+# make report
+
+This will create (or overwrite!) a 'logs.tar.xz' archive in the CWD.
+
 Uninstalling the suite
 ----------------------
 

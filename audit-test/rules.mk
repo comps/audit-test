@@ -38,7 +38,7 @@ export TOPDIR
 #
 
 SHELL		:= /bin/bash
-CFLAGS		+= -g -O2 -Wall -Werror -D_GNU_SOURCE -fno-strict-aliasing
+CFLAGS		+= -g -O2 -Wall -D_GNU_SOURCE -fno-strict-aliasing
 
 #
 # generic helper make-based functions

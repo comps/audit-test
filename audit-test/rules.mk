@@ -242,6 +242,13 @@ parse_screl = $(eval export SCREL_SYSCALLS := \
     $(shell "$(TOPDIR)/utils/bin/screl-parser.py" \
                 $(SCREL_FILE) $(MACHINE) $(MODE)))
 
+#
+# network timeout defaults
+#
+
+export TCP_SYN_RETRIES ?= 2  # 7 secs
+export LISTEN_TIMEOUT  ?= 8  # needs to be > syn retries in secs
+
 ##########################################################################
 # Common rules
 ##########################################################################

@@ -304,8 +304,8 @@ function sanity {
 
     source /etc/os-release &> /dev/null || exit_error \
         "Could not detect distribution as /etc/os-release file not found"
-    [ "$ID" != "rhel" ] && exit_error \
-        "RHEL system could not be detected. IPA is available only in RHEL"
+    [[ "$ID" =~ (rhel|fedora) ]] || exit_error \
+        "RHEL/Fedora system not detected, SSSD not available"
 
     # source ipa defaults
     source $AUTHSRV_DIR/ipa_env || \

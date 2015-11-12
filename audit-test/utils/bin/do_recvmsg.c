@@ -14,15 +14,9 @@
  */
 
 #include "includes.h"
-#include <signal.h>
+#include "nethelpers.h"
 
 #define BUF_SIZE 2048
-#define ALARM_TIMER 7
-
-#ifndef SIGNAL_DUMMY_HANDLER
-#define SIGNAL_DUMMY_HANDLER
-void dummy_handler(int signum) { return; }
-#endif
 
 int do_recvmsg(int argc, char **argv,
                ssize_t (*recvmsgfunc)(int, struct msghdr *, int))
@@ -41,10 +35,6 @@ int do_recvmsg(int argc, char **argv,
     fprintf(stderr, "Usage:\n%s ipv4|ipv6 <port>\n", argv[0]);
     return TEST_ERROR;
   }
-
-  signal(SIGALRM, dummy_handler);
-  siginterrupt(SIGALRM, 1);
-  alarm(ALARM_TIMER);
 
   memset(&msg, 0, sizeof(msg));
   memset(&msg_buf, 0, sizeof(msg_buf));
@@ -71,6 +61,8 @@ int do_recvmsg(int argc, char **argv,
   rc = bind(sock, (struct sockaddr *)&sock_addr, sizeof(sock_addr));
   if (rc < 0)
     return TEST_ERROR;
+
+  set_listen_timeout();
 
   errno = 0;
   rc = recvmsgfunc(sock, &msg, 0);

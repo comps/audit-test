@@ -14,15 +14,9 @@
  */
 
 #include "includes.h"
-#include <signal.h>
+#include "nethelpers.h"
 
 #define BUF_SIZE 2048
-#define ALARM_TIMER 7
-
-#ifndef SIGNAL_DUMMY_HANDLER
-#define SIGNAL_DUMMY_HANDLER
-void dummy_handler(int signum) { return; }
-#endif
 
 int do_recvfrom(int argc, char **argv,
                 ssize_t (*recvfromfunc)(int, void *, size_t, int,
@@ -42,10 +36,6 @@ int do_recvfrom(int argc, char **argv,
     return TEST_ERROR;
   }
 
-  signal(SIGALRM, dummy_handler);
-  siginterrupt(SIGALRM, 1);
-  alarm(ALARM_TIMER);
-
   memset(&sock_addr, 0, sizeof(sock_addr));
   if (strcasecmp(argv[1], "ipv4") == 0) {
     sock_addr.ss_family = AF_INET;
@@ -64,6 +54,8 @@ int do_recvfrom(int argc, char **argv,
   rc = bind(sock, (struct sockaddr *)&sock_addr, sizeof(sock_addr));
   if (rc < 0)
     return TEST_ERROR;
+
+  set_listen_timeout();
 
   errno = 0;
   rc = recvfromfunc(sock, buf, buf_len, 0, NULL, NULL);

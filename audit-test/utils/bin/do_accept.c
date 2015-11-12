@@ -14,14 +14,7 @@
  */
 
 #include "includes.h"
-#include <signal.h>
-
-#define ALARM_TIMER 7
-
-#ifndef SIGNAL_DUMMY_HANDLER
-#define SIGNAL_DUMMY_HANDLER
-void dummy_handler(int signum) { return; }
-#endif
+#include "nethelpers.h"
 
 int do_accept(int argc, char **argv,
               int (*acceptfunc)(int, struct sockaddr *, socklen_t *))
@@ -33,17 +26,10 @@ int do_accept(int argc, char **argv,
   int sock;
   int bool_true = 1;
 
-  if (argc < 3 || argc > 4) {
-    fprintf(stderr, "Usage:\n%s ipv4|ipv6 <port> <alarmv>\n", argv[0]);
+  if (argc != 3) {
+    fprintf(stderr, "Usage:\n%s ipv4|ipv6 <port>\n", argv[0]);
     return TEST_ERROR;
   }
-
-  signal(SIGALRM, dummy_handler);
-  siginterrupt(SIGALRM, 1);
-  if (argc == 4) {
-     alarm(atoi(argv[3]));
-  } else
-      alarm(ALARM_TIMER);
 
   memset(&sock_addr, 0, sizeof(sock_addr));
   if (strcasecmp(argv[1], "ipv4") == 0) {
@@ -66,6 +52,8 @@ int do_accept(int argc, char **argv,
   rc = listen(sock, 1);
   if (rc < 0)
     return TEST_ERROR;
+
+  set_listen_timeout();
 
   errno = 0;
   rc = acceptfunc(sock, NULL, 0);

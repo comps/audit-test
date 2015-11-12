@@ -14,47 +14,10 @@
  */
 
 #include "includes.h"
+#include "nethelpers.h"
 
 #define MSG_STRING "NetLabel is awesome!"
 #define MSG_LEN    (strlen(MSG_STRING) + 1)
-
-#ifndef BIND_SRCPORT
-#define BIND_SRCPORT
-int bind_srcport(int sock, int port, int family)
-{
-    int rc;
-    union {
-        struct sockaddr sa;
-        struct sockaddr_in in;
-        struct sockaddr_in6 in6;
-    } saddr;
-    socklen_t slen;
-
-    memset(&saddr, 0, sizeof(saddr));
-    saddr.sa.sa_family = family;
-    switch (family) {
-        case AF_INET:
-            slen = sizeof(struct sockaddr_in);
-            saddr.in.sin_port = htons(port);
-            break;
-        case AF_INET6:
-            slen = sizeof(struct sockaddr_in6);
-            saddr.in6.sin6_port = htons(port);
-            break;
-        default:
-            return -1;
-    }
-
-    rc = 1;
-    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &rc, sizeof(rc)) == -1)
-        return -1;
-
-    if (bind(sock, &saddr.sa, slen) == -1)
-        return -1;
-
-    return sock;
-}
-#endif
 
 int do_sendto(int argc, char **argv,
               ssize_t (*sendtofunc)(int, const void *, size_t, int,
@@ -102,10 +65,11 @@ int do_sendto(int argc, char **argv,
   if (sock < 0)
     return TEST_ERROR;
 
-  /* bind to srcport if specified */
   if (srcport)
     if (bind_srcport(sock, atoi(srcport), host->ai_family) == -1)
         return TEST_ERROR;
+
+  set_syn_retries(sock);
 
   /* connect if stream */
   if (host->ai_socktype == SOCK_STREAM) {

@@ -14,15 +14,9 @@
  */
 
 #include "includes.h"
-#include <signal.h>
+#include "nethelpers.h"
 
 #define BUF_SIZE 2048
-#define ALARM_TIMER 7
-
-void sig_handler(int sig_num)
-{
-  return;
-}
 
 int main(int argc, char **argv)
 {
@@ -40,10 +34,6 @@ int main(int argc, char **argv)
     fprintf(stderr, "Usage:\n%s ipv4|ipv6 <port>\n", argv[0]);
     return TEST_ERROR;
   }
-
-  signal(SIGALRM, sig_handler);
-  siginterrupt(SIGALRM, 1);
-  alarm(ALARM_TIMER);
 
   memset(&sock_addr, 0, sizeof(sock_addr));
   if (strcasecmp(argv[1], "ipv4") == 0) {
@@ -63,6 +53,8 @@ int main(int argc, char **argv)
   rc = bind(sock, (struct sockaddr *)&sock_addr, sizeof(sock_addr));
   if (rc < 0)
     return TEST_ERROR;
+
+  set_listen_timeout();
 
   errno = 0;
   read_len = read(sock, buf, buf_len);

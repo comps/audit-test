@@ -31,6 +31,7 @@ disable_ssh_strong_rng
 
 FILENAME=$1
 
+set -o pipefail
 ./$FILENAME |& tee $FILENAME.log
 [ $? -eq 0 ] || exit_fail "Test program failed to execute"
 

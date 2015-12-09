@@ -32,7 +32,7 @@ LTP_BASE = ltp-full
 PATCH_DIR = patch
 
 LTP_TARBALL = ltp-full.tar.bz2
-LTP_SRCURL = https://github.com/linux-test-project/ltp/archive/20150119.tar.gz
+LTP_SRCURL = https://github.com/linux-test-project/ltp/releases/download/20160126/ltp-full-20160126.tar.bz2
 LTP_DESTDIR = /opt/ltp
 
 # set temporary directory for tests
@@ -68,13 +68,15 @@ download:
 .PHONY: extract
 extract:
 	tar xvf $(LTP_TARBALL)
-	mv -f ltp-[0-9]* $(LTP_BASE)
+	mv -f ltp-full-[0-9]* $(LTP_BASE)
 
 .PHONY: patch
 patch:
-	@for patchfile in $(PATCH_DIR)/*.patch; do \
-		patch --batch --forward -p1 -d $(LTP_BASE) < "$$patchfile"; \
-	done
+	@if ls $(PATCH_DIR)/*.patch 2>/dev/null; then \
+		for patchfile in $(PATCH_DIR)/*.patch; do \
+			patch --batch --forward -p1 -d $(LTP_BASE) < "$$patchfile"; \
+		done \
+	fi
 
 .PHONY: build
 build:

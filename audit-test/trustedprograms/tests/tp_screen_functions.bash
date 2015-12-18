@@ -240,7 +240,7 @@ function screen_check_sequences {
     # + control sequences (CTRL-C, CTRL-D, CTRL-A d)
     #   do not work when screen locked
     cat > $EXPSCRIPT << EOT
-set timeout 3
+set timeout 5
 spawn screen
 sleep 1
 expect {
@@ -257,7 +257,7 @@ expect {
 }
 expect {
     {$1} { exit 4 }
-    default { send -- \\x04d }
+    default { send -- \\x01d }
 }
 expect {
     {$1} { exit 5 }

@@ -32,9 +32,13 @@ disable_ssh_strong_rng
 FILENAME=$1
 
 set -o pipefail
+if [ "$FILENAME" = "passwd02" ]; then
+        # we need to enable CHFN_RESTRICT for the tests to work
+        backup /etc/login.defs
+        echo "CHFN_RESTRICT no" >> /etc/login.defs
+fi
 ./$FILENAME |& tee $FILENAME.log
 [ $? -eq 0 ] || exit_fail "Test program failed to execute"
-
 retval=`grep "FAIL" $FILENAME.log | wc -l`
 echo "TEST PASSED = " `grep "PASS" $FILENAME.log | wc -l` ", FAILED = " $retval >> $FILENAME.log
 

@@ -65,7 +65,9 @@ function cipher_code {
 function other_codes {
     local codes=""
     for cipher in ${ciphers[${scenario}]}; do
-        [ "$1" != "$cipher" ] && codes="$codes$(cipher_code $cipher)"
+        [[ $cipher =~ ^-.*$  ]] && continue
+        [[ "$1" == "$cipher" ]] && continue
+        codes="$codes$(cipher_code $cipher)"
     done
     echo $codes
 }

@@ -78,7 +78,8 @@ function test_host {
         exit_fail "Connection passed without host keys"
 
     # generate host keys with all key sizes and try to connect via scricthost checking
-    local KEY_TYPES="dsa rsa ecdsa"
+    # local KEY_TYPES="dsa rsa ecdsa"
+    local KEY_TYPES="rsa ecdsa"
     for KEY_TYPE in $KEY_TYPES; do
         local KEY_TYPE_CAP="${KEY_TYPE^^}"
         for KEY_SIZE in $(eval echo \$${KEY_TYPE_CAP}_KEY_SIZE); do

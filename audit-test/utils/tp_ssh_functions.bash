@@ -502,6 +502,7 @@ function ssh_connect_pass {
             {yes/no} { after 100; send -- yes\r; exp_continue }
             {assword:} { after 100; send -- $2\r; exp_continue }
             -nocase {no matching mac found} { exit 5 }
+            {no matching key exchange method found} { exit 3 }
             eof { exit 10 }
             {$1}
         }
@@ -511,6 +512,7 @@ function ssh_connect_pass {
             {assword:} { after 100; send -- $4\r }
             {passphrase} { after 100; send -- INCORRECTPASS\r; exp_continue }
             {Unable to negotiate a key exchange method} { exit 3 }
+            {no matching key exchange method found} { exit 3 }
             {Your password has expired} { exit 4 }
             {You are required to change} { exit 11 }
             {You are required to change your password} { exit 11 }

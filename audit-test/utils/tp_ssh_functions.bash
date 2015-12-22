@@ -501,7 +501,7 @@ function ssh_connect_pass {
             {Read from socket failed} { exit 9 }
             {yes/no} { after 100; send -- yes\r; exp_continue }
             {assword:} { after 100; send -- $2\r; exp_continue }
-            {no matching mac found} { exit 5 }
+            -nocase {no matching mac found} { exit 5 }
             eof { exit 10 }
             {$1}
         }
@@ -514,7 +514,7 @@ function ssh_connect_pass {
             {Your password has expired} { exit 4 }
             {You are required to change} { exit 11 }
             {You are required to change your password} { exit 11 }
-            {no matching mac found} { exit 5 }
+            -nocase {no matching mac found} { exit 5 }
             {Unknown cipher type} { exit 8 }
             {no matching cipher found} { exit 6 }
             -re \"No.*host key is known\" { exit 7 }

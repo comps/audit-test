@@ -376,6 +376,9 @@ To run all variations of a given testcase, e.g. to run all the ptrace() tests:
 To rerun all failed/errored/not executed tests:
 # ./run.bash -r
 
+To rerun only failed/errored tests:
+# ./run.bash -r --failed
+
 To list all testcases:
 # ./run.bash --list
 

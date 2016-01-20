@@ -70,6 +70,7 @@ logging=false
 opt_avc=false
 opt_verbose=false
 opt_debug=false
+opt_failed_only=false
 opt_quiet=false
 opt_config=run.conf
 opt_list=false
@@ -362,6 +363,7 @@ function usage {
 Usage: ${0##*/} [OPTION]...
 Run a set of test cases, reporting pass/fail and tallying results.
 
+    -e --failed       Skip rerun of tests that were not executed before
     -f --config=FILE  Use a config file other than run.conf
     -g --generate     Generate run.log and rollup.log from $opt_logdir
        --header       Don't run anything, just create and output the log header
@@ -389,8 +391,8 @@ function parse_cmdline {
     declare args conf x
 
     # Use /usr/bin/getopt which supports GNU-style long options
-    args=$(getopt -o adf:ghl:qro:vw: \
-        --long config:,avc,debug,generate,help,header,list,log:,logdir:,quiet,rerun,rollup:,nocolor,verbose,width: \
+    args=$(getopt -o adef:ghl:qro:vw: \
+        --long config:,avc,debug,failed,generate,help,header,list,log:,logdir:,quiet,rerun,rollup:,nocolor,verbose,width: \
         -n "$0" -- "$@") || die
     eval set -- "$args"
 
@@ -398,6 +400,7 @@ function parse_cmdline {
         case $1 in
             -a|--avc) opt_avc=true; shift ;;
             -d|--debug) opt_debug=true; opt_verbose=true; shift ;;
+            -e|--failed) opt_failed_only=true; shift ;;
             -f|--config) opt_config=$2; shift 2 ;;
             -g|--generate) logging=true; generate_logs; exit 0 ;;
             -h|--help) usage; exit 0 ;;
@@ -627,8 +630,11 @@ function rerun_test {
     # if not in rerun mode - always run
     $opt_rerun || return 0
 
-    # run test if it did not run yet
-    [ ! -f "$opt_logdir/rollup.log.$1" ] && return 0
+    # run test if it did not run yet, only if -e/--failed not specified
+    if [ ! -f "$opt_logdir/rollup.log.$1" ]; then
+       $opt_failed_only && return 1
+       return 0
+    fi
 
     # if test passed do not run
     grep -q ".*PASS[[:space:]]*$" $opt_logdir/rollup.log.$1 && return 1

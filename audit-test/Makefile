@@ -106,11 +106,23 @@ report:
 	    | tee -a audit.run.log | tee -a audit.rollup.log
 	@utils/envcheck > envcheck.log
 
+.PHONY: show-failed
+show-failed:
+	@for x in $(RUN_DIRS); do \
+        [[ "$$x" =~ (network|netfilebt|netfilter) ]] && make -C $$x unlock &> /dev/null; \
+        output=$$(cd $$x && ./run.bash -re --list); \
+        [ "$$output" == "no matching tests" ] && continue; \
+        [[ "$$output" =~ run.bash:\ error: ]] && continue; \
+        printf "::: %s\n%s" "$$x" "$$output"; \
+        echo; \
+    done
+
 .PHONY: show-rerun
 show-rerun:
 	@for x in $(RUN_DIRS); do \
 		output=$$(cd $$x && ./run.bash -r --list); \
 		[ "$$output" == "no matching tests" ] && continue; \
+		[[ "$$output" =~ run.bash:\ error: ]] && continue; \
 		printf "::: %s\n%s" "$$x" "$$output"; \
 		echo; \
 	done

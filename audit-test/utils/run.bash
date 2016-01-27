@@ -245,7 +245,7 @@ function startup {
     cp -a "$auditd_conf" "$auditd_orig" || return 2
     write_config -s "$auditd_conf" \
 	log_format=RAW \
-	flush=SYNC \
+	flush=INCREMENTAL \
 	max_log_file_action=ROTATE \
 	max_log_file=100 \
 	    || return 2

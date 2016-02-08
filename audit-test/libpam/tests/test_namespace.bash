@@ -85,9 +85,9 @@ auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S open \
         sleep 1
         expect -nocase {login: $} {send "$env(TEST_USER)\r"}
         expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
-	expect -nocase {level} {send "Y\r"}
-	expect -nocase {role:} {send "\r"}
-	expect -nocase {level:} {send "s0\r"}
+        expect -nocase {level} {send "Y\r"}
+        expect -nocase {role:} {send "\r"}
+        expect -nocase {level:} {send "s0\r"}
         send "PS1=:\\::\r"
         expect {:::$} {send "id -Z > $env(tmpnewfile)\r"}
         expect {:::$} {send exit\r}
@@ -109,9 +109,9 @@ log_mark=$(stat -c %s $audit_log)
         sleep 1
         expect -nocase {login: $} {send "$env(TEST_USER)\r"}
         expect -nocase {password: $} {send "$env(TEST_USER_PASSWD)\r"}
-	expect -nocase {level} {send "Y\r"}
-	expect -nocase {role:} {send "\r"}
-	expect -nocase {level:} {send "s2\r"}
+        expect -nocase {level} {send "Y\r"}
+        expect -nocase {role:} {send "\r"}
+        expect -nocase {level:} {send "s2\r"}
         send "PS1=:\\::\r"
         expect {:::$} {send "id -Z > $env(tmpnewfile)\r"}
         expect {:::$} {send exit\r}

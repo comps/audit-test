@@ -73,8 +73,9 @@ rm -rf $tmpinstdir/*_$TEST_USER
 # Force the audit log to rotate; add our rule.
 rotate_audit_logs || exit_error "log rotate failed"
 prepend_cleanup "auditctl -D"
-auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S open -F uid=$auid || \
-	exit_error "audit rule failed"
+auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S open \
+    -F uid=$auid -F dir=/tmp-parent || \
+    exit_error "audit rule failed"
 
 # Login as s0 and write the user's context to a file in /tmp.
 (
@@ -88,8 +89,9 @@ auditctl -a entry,always ${MODE:+-F arch=b$MODE} -S open -F uid=$auid || \
 	expect -nocase {role:} {send "\r"}
 	expect -nocase {level:} {send "s0\r"}
         send "PS1=:\\::\r"
-	expect {:::$} {send "id -Z > $env(tmpnewfile)\r"}
-        expect {:::$} {close; wait}'
+        expect {:::$} {send "id -Z > $env(tmpnewfile)\r"}
+        expect {:::$} {send exit\r}
+        expect eof'
 )
 # Check the path and context in the audit record.
 augrok type==SYSCALL \
@@ -111,8 +113,9 @@ log_mark=$(stat -c %s $audit_log)
 	expect -nocase {role:} {send "\r"}
 	expect -nocase {level:} {send "s2\r"}
         send "PS1=:\\::\r"
-	expect {:::$} {send "id -Z > $env(tmpnewfile)\r"}
-        expect {:::$} {close; wait}'
+        expect {:::$} {send "id -Z > $env(tmpnewfile)\r"}
+        expect {:::$} {send exit\r}
+        expect eof'
 )
 
 # Check the path and context in the audit record.

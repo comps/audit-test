@@ -77,8 +77,8 @@ case $1 in
 	*) exit_error "test must specify valid context component"
 esac
 
-auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S open -F $aurule
-prepend_cleanup "auditctl -d exit,always ${MODE:+-F arch=b$MODE} -S open -F $aurule"
+auditctl -a exit,always ${MODE:+-F arch=b$MODE} -S open -F $aurule -F dir=/tmp
+prepend_cleanup "auditctl -d exit,always ${MODE:+-F arch=b$MODE} -S open -F $aurule -F dir=/tmp"
 
 # audit log marker
 log_mark=$(stat -c %s $audit_log)

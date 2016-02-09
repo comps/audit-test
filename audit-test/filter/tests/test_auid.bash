@@ -38,8 +38,10 @@ if [[ ${MACHINE} = "aarch64" ]]; then
 else
     syscall_name="open"
 fi
-auditctl -a exit,always -F arch=b$MODE -S $syscall_name -F auid=$user_auid
-prepend_cleanup "auditctl -d exit,always -F arch=b$MODE -S $syscall_name -F auid=$user_auid"
+auditctl -a exit,always -F arch=b$MODE -S $syscall_name -F auid=$user_auid \
+    -F dir=/tmp
+prepend_cleanup "auditctl -d exit,always -F arch=b$MODE -S $syscall_name \
+    -F auid=$user_auiD -F dir=/tmp"
 
 # audit log marker
 log_mark=$(stat -c %s $audit_log)

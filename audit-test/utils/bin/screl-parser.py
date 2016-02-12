@@ -20,134 +20,178 @@
 # AUTHOR: Jiri Jaburek <jjaburek@redhat.com>
 #
 # This is a parser for the 'syscall relevancy' file, which specifies relevant
-# (existing) syscalls on various architectures. Based on such info, this parser
-# prints out (to stdout) a list of syscall names that are relevant to the
-# current architecture.
+# (existing) syscalls on various architectures.
 #
 # For more, see docs/syscall-relevancy.txt.
 #
 
+# This parser uses non-recursive alias resolution - it unwraps aliases on each
+# archlist during processing and thus never needs to resolve more than one level
+# of nested aliases - this also takes care of the alias-aliasing-itself infinite
+# recursion as it never happens - the alias name for itself won't be resolved as
+# an alias and it's thus left intact as an archspec name.
+
 import sys
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
+from collections import namedtuple
 
-#
-# helpers functions
-#
+# syscall relevancy "data types" (refer to docs/, syntax desc.)
+# - ArchList / ArchListItem / ArchSpec separation is because of nesting
+#   (resolved aliases), ie. arch1,!(arch2,!arch3),!arch4
 
-# fatal error
-def syntaxerr(msg):
-    print >> sys.stderr, "syntax error on line %d:" % linenr, msg
-    sys.exit(2)
+#comma-separated list of archspecs (or nested archlists)
+ArchList = list
+ArchListItem = namedtuple('ArchListItem', ['neg', 'archspec'])
+#arch/bitness specification itself
+ArchSpec = namedtuple('ArchSpec', ['arch', 'bits'])
 
-# strip whitespaces, cut off comments
-def sanitize_line(line):
-    return line.strip().split('#')[0]
+# for passing match metadata
+MatchTarget = namedtuple('MatchTarget', ['syscall', 'arch', 'bits'])
 
-#
-# parsing (recursive) functions
-#
+class Parser():
+    """Parse an existing relevancy file and match against its rules.
 
-def parse_archspec(tok):
-    tok = tok.split(':', 2)
-    if len(tok) > 2:
-        syntaxerr("unexpected extra %s" % '`:\'')
+    To use, first parse() an input relevancy file, then match() or filter()
+    against the loaded rules.
 
-    arch = bits = None
-    if len(tok) == 2:
-        (arch, bits) = tok
-    else:
-        (arch,) = tok
+    Compared to an unprocessed relevancy file, this class doesn't store
+    aliases - it instead resolves them at parse-time as nested lists.
+    """
+    def __init__(self, infile=None):
+        self.lineno = 0
+        self.syscalls = dict()
+        if infile:
+            self.parse(infile)
+    def __iter__(self):
+        return iter(self.syscalls)
 
-    # matching
-    if fnmatch(in_arch, arch) or arch == 'all':
-        if bits:
-            return (bits == in_mode)
-        else:
+    def _synerr(self, msg=None):
+        """Syntax error handling wrapper.
+        """
+        line = "syntax error on line {0}".format(self.lineno)
+        if msg:
+            line += ": {0}".format(msg)
+        raise AssertionError(line)
+
+    def _parse_archspec(self, spec):
+        spec = spec.split(':', 1)
+        arch = spec[0]
+        bits = spec[1] if len(spec) > 1 else None
+        return ArchSpec(arch, bits)
+
+    def _parse_neg(self, tok):
+        if tok and tok[0] == '!':
+            return (tok[1:], True)
+        return (tok, False)
+
+    def _parse_archlist(self, aliases, archstr):
+        for archspec in archstr.split(','):
+            # negation sign - outside of archspec
+            (archspec, neg) = self._parse_neg(archspec)
+            # is an alias, use its target value instead
+            if archspec in aliases:
+                archspec = aliases[archspec]
+            else:
+                archspec = self._parse_archspec(archspec)
+            yield ArchListItem(neg, archspec)
+
+    def parse(self, infile):
+        """Parse an input file using the syscall relevancy definitions syntax
+        and create an internal representation of the (parsed) rules.
+        """
+        aliases = dict()
+        with open(infile, 'r') as f:
+            for lineno, line in enumerate(f):
+                self.lineno = lineno+1;
+
+                # sanitize, remove comments
+                line = line.strip().split('#')[0]
+                if not line:
+                    continue
+
+                line = line.split(None, 3)
+
+                # if it's an alias, store it for later
+                if line[0] == 'alias':
+                    if len(line) != 3:
+                        self._synerr("missing/extra columns for alias")
+                    (name, archlist) = line[1:]
+                    aliases[name] = \
+                        ArchList(self._parse_archlist(aliases, archlist))
+                    continue
+
+                if len(line) < 2:
+                    # valid - just syscall name specified, skip it - it won't
+                    # appear in the result & will be treated as not relevant
+                    continue
+                elif len(line) > 2:
+                    self._synerr("unexpected extra column(s)")
+
+                (syscall, archlist) = line
+                self.syscalls[syscall] = \
+                    ArchList(self._parse_archlist(aliases, archlist))
+
+    def _match_arch(self, name, pattern):
+        if not name:
+            return False
+        if pattern == 'all':
             return True
-    else:
-        return False
+        return fnmatchcase(name, pattern)
 
-def parse_neg(tok):
-    if tok and tok[0] == '!':
-        return (tok[1:], True)
-    return (tok, False)
+    def _match_archspec(self, target, archspec):
+        if not self._match_arch(target.arch, archspec.arch):
+            return False
+        if archspec.bits:
+            return fnmatchcase(target.bits, archspec.bits)
+        return True
 
-def parse_archlist(toklist, aliases):
-    for tok in toklist.split(','):
-        # negation
-        (tok, neg) = parse_neg(tok)
+    def _match_archlistitem(self, target, archlist):
+        for architem in archlist:
+            (neg, archspec) = architem
+            if isinstance(archspec, ArchList):
+                (match, verdict) = self._match_archlistitem(target, archspec)
+                if match:
+                    return (True, neg ^ verdict)
+            else:
+                match = self._match_archspec(target, archspec)
+                if match:
+                    return (True, not neg)  # technically neg ^ match
+        return (False, False)
 
-        if not tok:
-            syntaxerr("empty archspec")
+    def match(self, syscall, arch, bits=None):
+        """Match a syscall/arch/bits against a previously-parsed ruleset.
 
-        # if archspec is alias, recurse into it, if it matches, stop
-        if aliases.has_key(tok):
-            (match, verdict) = parse_archlist(aliases[tok], aliases)
-            if match:
-                return (match, (verdict ^ neg))
-            continue
+        If 'bits' is not specified, return True only if all bit variations
+        of the given 'arch' are relevant, eg. if the rules don't specify
+        bitness either.
+        """
+        rules = self.syscalls.get(syscall)
+        if not rules:
+            return False
+        target = MatchTarget(syscall, arch, bits)
+        (match, verdict) = self._match_archlistitem(target, rules)
+        return True if match and verdict else False
 
-        # if archspec matches current arch, stop
-        if parse_archspec(tok):
-            return (True, not neg)
+    def filter(self, arch, bits=None):
+        """Iterate over syscalls relevant on given 'arch' with 'bits'.
 
-    return (False, False)
+        This is equivalent to listing all syscalls and applying match().
+        """
+        for sc in self.syscalls.iterkeys():
+            if self.match(sc, arch, bits):
+                yield sc
 
-def parse_line_syscall(line, aliases):
-    # line with only syscall - not relevant anywhere, skip
-    if len(line) == 1:
-        return
-    if len(line) > 2:
-        syntaxerr("syscall definition has >2 columns")
+def main():
+    #from pprint import PrettyPrinter
+    #pp = PrettyPrinter(indent=4)
 
-    (syscall, archlist) = line
+    if len(sys.argv) < 4:
+        print >> sys.stderr, \
+            "usage: {0} <filename> <arch> <mode>".format(sys.argv[0])
+        sys.exit(2)
+    (infile, arch, mode) = sys.argv[1:]
+    p = Parser(infile)
+    print '\n'.join(p.filter(arch, mode))
 
-    # if the syscall matched the archlist *and* is relevant
-    # (not matched -> exclude, matched negative archspec -> exclude)
-    (matched, verdict) = parse_archlist(archlist, aliases)
-    if matched and verdict == True:
-        print syscall
-
-def parse_line_alias(line):
-    # line with only word ('alias')
-    if len(line) == 1:
-        syntaxerr("missing alias name")
-    if len(line) > 3:
-        syntaxerr("alias definition >3 columns")
-
-    (name, archlist) = line[1:]
-    return dict(((name, archlist),))
-
-def parse_line(line):
-    if not hasattr(parse_line, "aliases"):
-        parse_line.aliases = {}
-
-    line = sanitize_line(line)
-    # line without any useful content
-    if not line:
-        return
-
-    # len(line) > 0 due to ^^^
-    line = line.split(None, 3)
-
-    if line[0] == 'alias':
-        alias = parse_line_alias(line)
-        parse_line.aliases.update(alias)
-    else:
-        parse_line_syscall(line, parse_line.aliases)
-
-#
-# main
-#
-
-if len(sys.argv) < 4:
-    print >> sys.stderr, "usage: %s <filename> <arch> <mode>" % sys.argv[0]
-    sys.exit(2)
-
-(in_file, in_arch, in_mode) = sys.argv[1:]
-linenr = 0
-
-with open(in_file, 'r') as f:
-    for line in f:
-        linenr += 1
-        parse_line(line)
+if __name__ == '__main__':
+    main()

@@ -51,6 +51,8 @@ In addition,
    - arch is a shell glob, ie. it can contain shell-like wildcards (not regexp),
      ie. 'i*86' or 'i?86' or 'i[3456]86' or 'i[3-6]86'
      - yes, this essentially means that '*' is equivalent to 'all', by logic
+   - bits (if specified) is also a shell glob, same rules apply
+   - glob matching (fnmatch) is case-sensitive
 
 aliases
 -------
@@ -66,7 +68,7 @@ Aliases can refer to other aliases:
   alias nointel !x86_64,!intel32,!ia64
   syscall1    nointel,all          # relevant everywhere except any intel
 
-(or even to themselves, which unfortunately leads to infinite loop/recursion)
+(or even to themselves, with implementation-specific behavior - avoid)
 
 Note, however, that an alias within an archlist is equivalent to archspec,
 not to arch directly, therefore:

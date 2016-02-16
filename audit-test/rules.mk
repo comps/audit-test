@@ -240,7 +240,7 @@ endif
 
 parse_screl = $(eval export SCREL_SYSCALLS := \
     $(shell "$(TOPDIR)/utils/bin/screl-parser.py" \
-                $(SCREL_FILE) $(MACHINE) $(MODE)))
+            lookup --rel $(SCREL_FILE) --list $(MACHINE),$(MODE)))
 
 #
 # network timeout defaults

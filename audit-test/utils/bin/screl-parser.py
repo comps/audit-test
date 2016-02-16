@@ -31,7 +31,10 @@
 # recursion as it never happens - the alias name for itself won't be resolved as
 # an alias and it's thus left intact as an archspec name.
 
-import sys
+import sys, os
+import argparse
+import time
+import textwrap
 from fnmatch import fnmatchcase
 from collections import namedtuple
 
@@ -48,7 +51,7 @@ ArchSpec = namedtuple('ArchSpec', ['arch', 'bits'])
 # for passing match metadata
 MatchTarget = namedtuple('MatchTarget', ['syscall', 'arch', 'bits'])
 
-class Parser():
+class Relevancy():
     """Parse an existing relevancy file and match against its rules.
 
     To use, first parse() an input relevancy file, then match() or filter()
@@ -64,6 +67,8 @@ class Parser():
             self.parse(infile)
     def __iter__(self):
         return iter(self.syscalls)
+    def __len__(self):
+        return len(self.syscalls)
 
     def _synerr(self, msg=None):
         """Syntax error handling wrapper.
@@ -172,7 +177,7 @@ class Parser():
         (match, verdict) = self._match_archlistitem(target, rules)
         return True if match and verdict else False
 
-    def filter(self, arch, bits=None):
+    def list(self, arch, bits=None):
         """Iterate over syscalls relevant on given 'arch' with 'bits'.
 
         This is equivalent to listing all syscalls and applying match().
@@ -181,17 +186,246 @@ class Parser():
             if self.match(sc, arch, bits):
                 yield sc
 
-def main():
-    #from pprint import PrettyPrinter
-    #pp = PrettyPrinter(indent=4)
+class Generator():
+    """Load and look up syscalls from multiple files/architectures.
+    """
+    def __init__(self):
+        # a dict() indexed by syscall name, with each value pointing to another
+        # dict(), indexed by arch, where each value is a set() of bits
+        self.syscalls = dict()
+        # all arch/bits seen during syscall processing
+        # - structure same as the values of self.syscalls, for easy comparison
+        self.arches = dict()
+    def __iter__(self):
+        return iter(self.syscalls)
+    def __len__(self):
+        return len(self.syscalls)
 
-    if len(sys.argv) < 4:
-        print >> sys.stderr, \
-            "usage: {0} <filename> <arch> <mode>".format(sys.argv[0])
-        sys.exit(2)
-    (infile, arch, mode) = sys.argv[1:]
-    p = Parser(infile)
-    print '\n'.join(p.filter(arch, mode))
+    def loadfile(self, arch, bits, infile):
+        """Load a list of newline-separated syscall names from a file.
+        """
+        with open(infile, 'r') as f:
+            # record arch bitnesses for later
+            try:
+                self.arches[arch].update([bits])
+            except KeyError:
+                self.arches[arch] = set([bits])
+            # add arch bitness for the syscall
+            for sc in f:
+                sc = sc.strip()
+                if not sc in self.syscalls:
+                    self.syscalls[sc] = dict()
+                try:
+                    self.syscalls[sc][arch].update([bits])
+                except KeyError:
+                    self.syscalls[sc][arch] = set([bits])
+
+    def loaddir(self, indir):
+        """Like loadfile, but use directory contents automagically.
+
+        The file names are used as architecture names, with `:' in file name
+        delimiting the arch name and bitness.
+        """
+        for infile in os.listdir(indir):
+            try:
+                (arch, bits) = infile.split(':')
+            except ValueError:
+                raise ValueError("file {0} has no or extra `:' in name"
+                                 .format(infile))
+            if not arch or not bits:
+                raise ValueError("arch or bits empty for {0}".format(infile))
+            self.loadfile(arch, bits, os.path.join(indir, infile))
+
+    def _relevant(self, relevancy, syscall):
+        """Test if the list of relevant / all arches matches relevancy rules.
+        """
+        relevant = dict()
+        for arch, bits in self.arches.iteritems():
+            for bit in bits:
+                if relevancy.match(syscall, arch, bit):
+                    try:
+                        relevant[arch].update([bit])
+                    except KeyError:
+                        relevant[arch] = set([bit])
+        return self.syscalls[syscall] == relevant
+
+    def _arches_to_list(self, arches):
+        """Given a dict() with set()s of bits as values, return a relevancy
+        rules-like comma-separated string.
+        """
+        rules = list()
+        for arch, bits in arches.iteritems():
+            for bit in bits:
+                rules.append('{0}:{1}'.format(arch, bit))
+        return rules
+
+    def _arches_to_list_smart(self, arches):
+        """Like _arches_to_list, but take self.arches into consideration - use it
+        as the reference for 'all' - as if self.arches defined all in existence.
+        """
+        # all arches: relevant everywhere
+        if arches == self.arches:
+            return ['all']
+
+        if sorted(arches.iterkeys()) == sorted(self.arches.iterkeys()):
+            # one bitness on all arches: relevant everywhere on that bitness
+            if all(len(x) == 1 for x in arches.itervalues()):
+                bits = next(arches.itervalues())
+                bit = next(iter(bits))
+                if all(next(iter(x)) == bit for x in arches.itervalues()):
+                    return ['all:{0}'.format(bit)]
+
+            # everywhere except one arch + one bitness: use negation
+            diff = [(arch,bit) for arch,bits in self.arches.iteritems() \
+                                for bit in bits
+                                 if bit not in arches[arch]]
+            (darches, dbits) = zip(*diff)
+            if len(set(darches)) == 1 and len(set(dbits)) == 1:
+                return ['!{0}:{1},all'
+                        .format(next(iter(darches)), next(iter(dbits)))]
+
+        # everywhere except one arch: use negation
+        if len(arches) == len(self.arches)-1 and len(self.arches) > 2:
+            setar = set(arches.iterkeys())
+            setsar = set(self.arches.iterkeys())
+            if setar.issubset(setsar):
+                diff = next(iter(setsar.difference(setar)))
+                arsame = self.arches.copy()
+                del arsame[diff]
+                if arches == arsame:
+                    return ['!{0},all'.format(diff)]
+
+        rules = list()
+
+        # matching bits for arch: relevant everywhere on that arch
+        arches = arches.copy()
+        for arch in list(arches.keys()):
+            if arches[arch] == self.arches[arch]:
+                rules.append(arch)
+                del arches[arch]
+
+        # fallback: just enumerate arch:bits
+        rules += self._arches_to_list(arches)
+        return rules
+
+    def mkrelevancy(self, oldrel=None, dumb=False):
+        """Generate a relevancy ruleset based on loaded arch/bits metadata.
+
+        If old (reference) relevancy is provided, show only the diff.
+        With dumb=True, don't do smart arch/bits list optimizations.
+        """
+        # like str().ljust(), but with tabs + extra space if too long
+        def tabljust(text, tcnt, tsize=8):
+            tabs = tcnt - int(len(text) / tsize)
+            tabs = 0 if tabs < 0 else tabs
+            space = ' ' if not tabs else ''
+            return text+space+'\t'*tabs
+
+        text = "# relevancy auto-generated on {0}\n#\n"\
+               .format(time.strftime("%F %T"))
+
+        tw = textwrap.TextWrapper(initial_indent='#   ',
+                                  subsequent_indent='#   ',
+                                  break_long_words=False,
+                                  break_on_hyphens=False)
+        text += "# all architectures:\n"
+        text += tw.fill(', '.join(sorted(self.arches.iterkeys())))
+        text += "\n"
+        text += "# all bitnesses:\n"
+        text += tw.fill(', '.join(sorted(self._arches_to_list(self.arches))))
+        text += "\n#"
+
+        for syscall, arches in sorted(self.syscalls.iteritems()):
+            # skip syscalls exactly matching existing relevancy
+            if oldrel and self._relevant(oldrel, syscall):
+                continue
+            text += "\n{0}".format(tabljust(syscall, 3))
+            if dumb:
+                text += ','.join(sorted(self._arches_to_list(arches)))
+            else:
+                text += ','.join(sorted(self._arches_to_list_smart(arches)))
+
+        return text
+
+def parse_args(cmdline):
+    def xsplit(arg, sep, cnt):
+        res = arg.split(sep, cnt+1)
+        if len(res) != cnt+1:
+            raise ValueError("wrong `{0}' count, expected {1}, got {2}"
+                             .format(sep, cnt, arg.count(sep)))
+        return res
+
+    p = argparse.ArgumentParser(prog=cmdline[0])
+    subp = p.add_subparsers(dest='subcmd')
+
+    lookup = subp.add_parser('lookup', help="Look up relevancy info from a file")
+    desc = """
+    When specified multiple times,
+      --match does AND between specifications, uses exitval as result,
+      --list prints out union of syscalls that match all specifications.
+    """
+    g = lookup.add_argument_group('Relevancy lookup', desc)
+    g.add_argument('--rel', type=str, metavar='<rules>', required=True, help="Input file with relevancy rules")
+    x = g.add_mutually_exclusive_group()
+    x.add_argument('--match', type=lambda x: xsplit(x, ',', 2), action='append', metavar='<s,a,b>', help="Match syscall `s' against arch `a' / bitness `b'")
+    x.add_argument('--list', type=lambda x: xsplit(x, ',', 1), action='append', metavar='<a,b>', help="List all syscalls for arch `a' / bitness `b'")
+
+    gen = subp.add_parser('gen', help="Generate a reference relevancy file")
+    desc = """
+    When specified multiple times, both --load and --loaddir simply make
+    a union of all found syscalls, architectures and bitnesses.
+    """
+    g = gen.add_argument_group('Relevancy generation', desc)
+    g.add_argument('--rel', type=str, metavar='<rules>', help="Use existing relevancy rules, produce diff")
+    g.add_argument('--load', type=lambda x: xsplit(x, ',', 2), action='append', metavar='<f,a,b>', help="Load syscalls from file `f' as arch `a' / bitness `b'")
+    g.add_argument('--loaddir', type=str, action='append', metavar='<dir>', help="Load syscalls from arch:bits files in `dir'")
+    g.add_argument('--dumb', action='store_true', help="Don't do smart arch/bits optimizations")
+
+    (opts, nonopts) = p.parse_known_args(cmdline[1:])
+
+    # additional post-processing: treat unknown option-like arguments before
+    # `--' as errors (like getopt)
+    for arg in nonopts:
+        if arg == '--':
+            break
+        if arg.startswith('-'):
+            raise ValueError("unknown option argument: {0}".format(arg))
+
+    # strip possible leading `--' from non-opt args
+    if len(nonopts) > 0 and nonopts[0] == '--':
+        nonopts.pop(0)
+
+    return (opts, nonopts)
+
+def main():
+    (opts, nonopts) = parse_args(sys.argv)
+
+    if opts.subcmd == 'lookup':
+        rel = Relevancy(opts.rel)
+        if opts.match:
+            if all(rel.match(sc,arch,bits) for sc,arch,bits in opts.match):
+                sys.exit(0)
+            else:
+                sys.exit(2)
+        elif opts.list:
+            res = set().union(*(rel.list(arch,bits) for arch,bits in opts.list))
+            if res:
+                print '\n'.join(sorted(res))
+
+    elif opts.subcmd == 'gen':
+        gen = Generator()
+        if opts.load:
+            for f in opts.load:
+                (f, arch, bits) = f
+                gen.loadfile(arch, bits, f)
+        if opts.loaddir:
+            for d in opts.loaddir:
+                gen.loaddir(d)
+        rel = None
+        if opts.rel:
+            rel = Relevancy(opts.rel)
+        if len(gen) > 0:
+            print gen.mkrelevancy(rel, opts.dumb)
 
 if __name__ == '__main__':
     main()

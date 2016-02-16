@@ -193,3 +193,79 @@ files (with DISTRO-based logic in rules.mk) may offer a cleaner solution.
 unwanted build/execution errors due to the syscall not existing on a given
 architecture / bitness as defined in /usr/include/asm/unistd_*.h generated from
 syscall tables present in the kernel sources under arch/.
+
+Updating relevancy
+==================
+
+Due to its static nature, the relevancy file will get out-of-date over time
+and needs updating (new syscalls, new architectures, etc.). This would be
+a very tedious manual task, which is why the parser also provides a generator
+mode, able to generate a reference relevancy file from a set of syscall lists.
+
+Note that 'reference' is a key word - don't use the relevancy as-is, because
+
+  - the existence of a syscall in unistd.h doesn't make it functional (ENOSYS)
+  - the rules aren't well optimized for readability, the generator tries its
+    best, but human is still better at combining negations or making aliases
+
+Therefore use the reference relevancy as a base for the final one.
+The generator can also skip syscalls that exactly match the current relevancy
+(essentially generating a "diff").
+
+Gathering syscall lists
+-----------------------
+
+On each target architecture, get its list of syscalls for every bitness
+(ie. 64/32 on x86, 64/31 on s390, etc.),
+
+  bits="64 32"
+  for bit in $bits; do
+    gcc -dM -E /usr/include/asm/unistd.h -m${bit} \
+      | sed -rn 's/[^ ]+ __NR_([^ ]+).*/\1/p' | sort -u \
+        > "$(uname -m):${bit}"
+  done
+
+and copy the files over to your workstation.
+
+Remember to adjust bitness in file name where appropriate, ie. s390x has
+31-bit mode, which makes 's390x:31', however audit-test suite uses MODE=32
+for it and adjusts for 31-bit in rules.mk, so the file needs to be renamed
+to 's390x:32'.
+
+To filter them according to what's currently in utils/bin/ (so you don't get
+a huge relevancy file to maintain),
+
+  suite="path/to/suite"
+  mkdir filtered
+  filter=$(find "$suite"/audit-test/utils/bin \
+    -name 'do_*.c' -exec basename {} \; | sed -r 's/do_([^\.]+).*/^\1$/' )
+  for i in *:*; do grep "$filter" < "$i" > filtered/"$i"; done
+
+Generating
+----------
+
+At this point, call (from utils/bin)
+
+  ./screl-parser.py gen --loaddir path/to/filtered --rel relevancy > newrel
+
+and observe new reference relevancy in newrel.
+
+You can now hand-edit the original relevancy file according to newrel.
+
+Cleaning up
+-----------
+
+The relevancy file might also have old nonexistent syscalls that aren't detected
+by the generation logic as they're simply left unused. To remove those, you
+essentially need to match each syscall to what utils/bin/ contains.
+
+We can use the filtering logic from above if we transform the syscalls specified
+by relevancy into a simple syscall list. In utils/bin/,
+
+sclist=$(grep -v -e '^#' -e '^alias ' -e '^$' relevancy \
+  | awk '{print $1}' | sort -u)
+filter=$(find . \
+    -name 'do_*.c' -exec basename {} \; | sed -r 's/do_([^\.]+).*/^\1$/' )
+diff -u <(echo "$sclist") <(grep "$filter" <<<"$sclist")
+
+and hand-modify the relevancy file accordingly (if appropriate).

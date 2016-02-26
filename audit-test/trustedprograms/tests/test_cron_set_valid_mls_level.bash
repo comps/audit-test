@@ -32,6 +32,9 @@
 source testcase.bash || exit 2
 source cron_functions.bash || exit 2
 
+# be verbose
+set -x
+
 DEF_SEC_LEVEL_sysadm_u="SystemLow-SystemHigh"
 DEF_SEC_LEVEL_staff_u="SystemLow-SystemHigh"
 DEF_SEC_LEVEL_user_u="SystemLow"

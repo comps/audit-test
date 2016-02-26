@@ -111,7 +111,7 @@ function labeled_test {
 
     # verify audit record
     augrok --seek=$log_mark type==SYSCALL success=yes \
-	syscall=$(ausyscall execve | awk '{print $2}') \
+	syscall=$(ausyscall --exact execve) \
 	comm=$(basename "$mycon_path") \
 	subj=system_u:system_r:lspp_harness_t:$subj || \
 	exit_fail "missing audit record"

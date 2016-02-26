@@ -33,7 +33,9 @@ mntcontext=staff_u:object_r:lspp_harness_tmpfs_t:s1:c1
 ######################################################################
 
 function get_fsobj_context {
-    ls --scontext -d "$1" | awk '{print $1}'
+    # try --scontext (RHEL) and fallback to upstream --context
+    ls --scontext -d "$1" 2>/dev/null || ls --context -d "$1" | \
+        awk '{print $1}'
 }
 
 ######################################################################

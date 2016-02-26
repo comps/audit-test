@@ -424,7 +424,8 @@ function get_context_user {
 
 # get the context for a filesystem object
 function get_fsobj_context {
-    echo $(ls --scontext -d $1 | awk '{print $1}')
+    echo $(ls --scontext -d $1 2>/dev/null || ls --context -d $1 | \
+        awk '{print $1}')
 }
 
 # query system policy for the type that will be used for new tempfiles

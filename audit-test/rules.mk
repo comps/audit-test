@@ -153,6 +153,7 @@ AUDIT_TEST_DEP_NOARCH := \
 	perl-Expect
 
 # ie. pkgname.x86_64 on x86_64 or pkgname.s390x on s390x
+# NOTES: vim-common because of xxd
 AUDIT_TEST_DEP_NATIVE := \
 	tar \
 	bzip2 \
@@ -180,7 +181,8 @@ AUDIT_TEST_DEP_NATIVE := \
 	psmisc \
 	xinetd \
 	rsyslog \
-	mcstrans
+	mcstrans \
+	vim-common
 
 # ie. pkgname.i686 on x86_64 or pkgname.s390 on s390x
 AUDIT_TEST_DEP_MULTILIB :=

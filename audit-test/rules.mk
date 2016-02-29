@@ -176,6 +176,7 @@ AUDIT_TEST_DEP_NATIVE := \
 	ebtables \
 	patch \
 	nmap-ncat \
+	screen \
 	psmisc \
 	xinetd \
 	rsyslog \

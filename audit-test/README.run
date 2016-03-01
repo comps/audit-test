@@ -164,6 +164,7 @@ Or if re-building the tests to run the 32-bit tests:
 
 # make clean    # or make distclean to remove all previous test logs
 # make MODE=32
+# make install
 
 Set entropy generation
 ----------------------

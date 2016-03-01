@@ -107,9 +107,9 @@ runtests:
 	mkdir -p logs
 	$(LTP_DESTDIR)/runltp -f $(RUNTESTS) -p -d $(LTP_TMPDIR) -l $(CURDIR)/ltp.rollup.log 2>&1 | \
 		awk ' \
-		/<<<test_start>>>/ { getline; if (match($$0, /tag=([^ ]+)/, arr)) { f = arr[1] } else { f = "" } } \
-		/<<<test_end>>>/ { f = "" } \
-		f { print > ("logs/" f ".log") }; { print }'
+		/<<<test_start>>>/ { getline; if (match($$0, /tag=([^ ]+)/, arr)) { f = ("logs/" arr[1] ".log") } else { close(f); f = "" } } \
+		/<<<test_end>>>/ { close(f); f = "" } \
+		f { print > f }; { print }'
 	# cleanup
 	setsebool deny_execmem=$(ORIG_EXECMEM)
 	sysctl kernel.msgmni=$(ORIG_MSGMNI)

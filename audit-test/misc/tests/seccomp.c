@@ -120,7 +120,9 @@ int add_scmp_exceptions(scmp_filter_ctx *ctx, int *scalls, int size)
 int allow_tester_exit(scmp_filter_ctx *ctx)
 {
     int scalls[] = { SCMP_SYS(fstat),         /* printf */
+                     SCMP_SYS(fstat64),       /* printf, 32bit */
                      SCMP_SYS(mmap),          /* printf */
+                     SCMP_SYS(mmap2),         /* printf, 32bit */
                      SCMP_SYS(write),         /* printf */
                      SCMP_SYS(sigreturn),     /* return from sigsys handler */
                      SCMP_SYS(rt_sigreturn),  /* return from sigsys handler */
@@ -150,8 +152,8 @@ int dup2_setup(struct syscall_info *si)
     si->arg_val = 0;
 
     /* allow fcntl in check */
-    int scalls[] = { SCMP_SYS(fcntl) };
-    if (add_scmp_exceptions(si->ctx, scalls, 1) < 0)
+    int scalls[] = { SCMP_SYS(fcntl), SCMP_SYS(fcntl64) };
+    if (add_scmp_exceptions(si->ctx, scalls, 2) < 0)
         return -1;
 
     close(42);

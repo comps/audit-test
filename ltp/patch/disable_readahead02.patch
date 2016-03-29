@@ -1,0 +1,12 @@
+diff --git a/runtest/syscalls b/runtest/syscalls
+index 44969f3..f5ff92c 100644
+--- a/runtest/syscalls
++++ b/runtest/syscalls
+@@ -801,7 +801,6 @@ read03 read03
+ read04 read04
+ 
+ readahead01 readahead01
+-readahead02 readahead02
+ 
+ readdir01 readdir01
+ readdir02 readdir02

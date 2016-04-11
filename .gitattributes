@@ -1,0 +1,14 @@
+# LF <-> CRLF based on platform
+* text=auto
+
+# whitespaces
+*         whitespace=tab-in-indent,tabwidth=4
+*.patch   whitespace=-tab-in-indent,-space-before-tab,-blank-at-eol
+*.ps      whitespace=-tab-in-indent,-space-before-tab,-blank-at-eol
+
+# - allow both (spaces for logic, tabs for targets)
+Makefile  whitespace=-tab-in-indent
+rules.mk  whitespace=-tab-in-indent
+
+# - tab-indented ipsec configs
+audit-test/crypto/tests/test_ipsec.bash whitespace=-tab-in-indent

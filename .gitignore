@@ -1,0 +1,6 @@
+# temp files
+*~
+*.swp
+*.swo
+*.orig
+*.rej

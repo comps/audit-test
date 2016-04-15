@@ -254,10 +254,10 @@ function ipsec_add_sa_verify {
     fi
 
     # Check port.
-    ip xfrm state | grep "src $ipsec_dst dst $ipsec_src" -A 5 | \
+    ip -o xfrm state | grep "src $ipsec_dst dst $ipsec_src" | \
         grep "tcp dport $srcport" || \
         exit_fail "Incorrect port detected"
-    ip xfrm state | grep "src $ipsec_src dst $ipsec_dst" -A 5 | \
+    ip -o xfrm state | grep "src $ipsec_src dst $ipsec_dst" | \
         grep "tcp sport $srcport" || \
         exit_fail "Incorrect port detected"
 
@@ -265,11 +265,11 @@ function ipsec_add_sa_verify {
     egrep "(PARENT|IPsec) SA established" $pluto_log | grep -i $protocol || \
         exit_fail "Incorrect protocol detected"
 
-    ip xfrm state | grep "src $ipsec_src dst $ipsec_dst" -A 5 | \
-        sed -n '2p' | grep "proto $mode" || \
+    ip -o xfrm state | grep "src $ipsec_src dst $ipsec_dst" | \
+        grep "proto $mode" || \
         exit_fail "Incorrect protocol detected"
-    ip xfrm state | grep "src $ipsec_dst dst $ipsec_src" -A 5 | \
-        sed -n '2p' | grep "proto $mode" || \
+    ip -o xfrm state | grep "src $ipsec_dst dst $ipsec_src" | \
+        grep "proto $mode" || \
         exit_fail "Incorrect protocol detected"
 
     # Phase1 check.
@@ -303,11 +303,11 @@ function ipsec_add_sa_verify {
             grep "initiating Quick Mode" $pluto_log | grep $p2_bits || \
             exit_fail "Incorrect Phase2 bit size detected"; }
 
-        ip xfrm state | grep "src $ipsec_dst dst $ipsec_src" -A 5 | \
-            sed -n '5p' | grep "enc ${p2_mode}(.?$p2_algo" || \
+        ip -o xfrm state | grep "src $ipsec_dst dst $ipsec_src" | \
+            grep "enc ${p2_mode}(.?$p2_algo" || \
             exit_fail "Incorrect algorithm or mode detected"
-        ip xfrm state | grep "src $ipsec_src dst $ipsec_dst" -A 5 | \
-            sed -n '5p' | grep "enc ${p2_mode}(.?$p2_algo" || \
+        ip -o xfrm state | grep "src $ipsec_src dst $ipsec_dst" | \
+            grep "enc ${p2_mode}(.?$p2_algo" || \
             exit_fail "Incorrect algorithm or mode detected"
     fi
 

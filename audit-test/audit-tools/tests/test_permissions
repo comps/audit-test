@@ -50,7 +50,12 @@ function file_check {
     f_permissions=$(ls -lZ $file | awk '{print $1}')
     f_owner=$(ls -lZ $file | awk '{print $2}')
     f_group=$(ls -lZ $file | awk '{print $3}')
-    f_secontext=$(ls -lZ $file | awk '{print $4}')
+
+    if [[ $DISTRO == FEDORA ]]; then
+        f_secontext=$(ls -lZ $file | awk '{print $5}')
+    else
+        f_secontext=$(ls -lZ $file | awk '{print $4}')
+    fi
 
     [[ $PPROFILE == capp ]] && \
 	f_secontext=$(echo $f_secontext | awk -F ':' '{print $1":"$2":"$3 }')

@@ -119,7 +119,8 @@ runtests:
 
 .PHONY: report
 report:
-	@{ \
+	@grep -qs '^Summary:$$' ltp.rollup.log || \
+	{ \
 		echo "Summary:"; \
 		echo "--------"; \
 		echo; \

@@ -83,7 +83,6 @@ run:
 	$(check_TTY); \
 	$(MAKE) all && \
 	for x in $(RUN_DIRS); do make -C $$x $(MAKECMDGOALS); done
-	$(MAKE) report
 
 rerun: run
 

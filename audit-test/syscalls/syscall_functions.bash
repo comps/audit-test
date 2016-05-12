@@ -195,22 +195,10 @@ function test_runcon_msg_send {
 ######################################################################
 
 function augrok_default {
-    augrok --seek=$log_mark -m1 type==SYSCALL \
+    wait_for_cmd "augrok --seek=$log_mark -m1 type==SYSCALL \
         syscall=$syscall success=$success pid=$pid auid=$(</proc/self/loginuid) \
         uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
-        gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid exit=$exitval \
-        "$@"
-
-    if [ $? != 0 ]; then
-	echo "lets give it a few seconds and try again"
-        sleep 3;
-        augrok --seek=$log_mark -m1 type==SYSCALL \
-            syscall=$syscall success=$success pid=$pid \
-            auid=$(</proc/self/loginuid) \
-            uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
-            gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid exit=$exitval \
-            "$@"
-    fi
+        gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid exit=$exitval $*"
 }
 
 function augrok_name {
@@ -240,22 +228,20 @@ function augrok_op_no_exit {
 	exit_error "get_${syscall}_op function does not exist"
     a0=$(printf "%x" $(get_${syscall}_op $op))
 
-    augrok --seek=$log_mark -m1 type==SYSCALL \
+    wait_for_cmd "augrok --seek=$log_mark -m1 type==SYSCALL \
         syscall=$syscall success=$success pid=$pid auid=$(</proc/self/loginuid) \
         uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
         gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid \
-	a0=$a0
+        a0=$a0"
 }
 
 # Used for execve which according to man page does not return on success
 # don't check the exit value because the sycall doesn't return
 function augrok_no_exit {
-
-    augrok --seek=$log_mark -m1 type==SYSCALL \
+    wait_for_cmd "augrok --seek=$log_mark -m1 type==SYSCALL \
         syscall=$syscall success=$success pid=$pid auid=$(</proc/self/loginuid) \
         uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
-        gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid \
-        "$@"
+        gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid $*"
 }
 
 function augrok_mls_label {
@@ -289,12 +275,12 @@ function augrok_mls_op_label_no_exit {
 	exit_error "get_${syscall}_op function does not exist"
     a0=$(printf "%x" $(get_${syscall}_op $op))
 
-    augrok --seek=$log_mark -m1 type==SYSCALL \
+    wait_for_cmd "augrok --seek=$log_mark -m1 type==SYSCALL \
         syscall=$syscall success=$success pid=$pid auid=$(</proc/self/loginuid) \
         uid=$uid euid=$euid suid=$suid fsuid=$fsuid \
         gid=$gid egid=$egid sgid=$sgid fsgid=$fsgid \
-	subj=$subj obj=$obj \
-	a0=$a0
+        subj=$subj obj=$obj \
+        a0=$a0"
 }
 
 # if the object is not created, no object label is collected

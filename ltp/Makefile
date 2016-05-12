@@ -32,7 +32,7 @@ LTP_BASE = ltp-full
 PATCH_DIR = patch
 
 LTP_TARBALL = ltp-full.tar.bz2
-LTP_SRCURL = https://github.com/linux-test-project/ltp/releases/download/20160126/ltp-full-20160126.tar.bz2
+LTP_SRCURL = https://github.com/linux-test-project/ltp/releases/download/20160510/ltp-full-20160510.tar.bz2
 LTP_DESTDIR = /opt/ltp
 
 # set temporary directory for tests

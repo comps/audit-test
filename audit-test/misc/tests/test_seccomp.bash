@@ -241,6 +241,7 @@ out=$(./seccomp $syscall errno match none none)
 update_results "$out"
 [ "$out" \
  -a "$exitval" -eq 0 \
+ -a "$retval" -eq -1 \
  -a "$errno" -eq "$scerrno" \
  -a "$success" -eq 0 ] || exit_fail
 
@@ -250,6 +251,7 @@ out=$(./seccomp $syscall errno match match none)
 update_results "$out"
 [ "$out" \
  -a "$exitval" -eq 0 \
+ -a "$retval" -eq -1 \
  -a "$errno" -eq "$scerrno" \
  -a "$success" -eq 0 ] || exit_fail
 

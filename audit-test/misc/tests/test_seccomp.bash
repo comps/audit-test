@@ -241,7 +241,7 @@ out=$(./seccomp $syscall errno match none none)
 update_results "$out"
 [ "$out" \
  -a "$exitval" -eq 0 \
- -a "$retval" -eq "-$scerrno" \
+ -a "$errno" -eq "$scerrno" \
  -a "$success" -eq 0 ] || exit_fail
 
 # ERRNO, case 2: rule matches syscall #NR and rule argument matches the syscall
@@ -250,7 +250,7 @@ out=$(./seccomp $syscall errno match match none)
 update_results "$out"
 [ "$out" \
  -a "$exitval" -eq 0 \
- -a "$retval" -eq "-$scerrno" \
+ -a "$errno" -eq "$scerrno" \
  -a "$success" -eq 0 ] || exit_fail
 
 # ERRNO, case 3: rule matches syscall #NR and rule argument does not match

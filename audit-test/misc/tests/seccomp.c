@@ -51,7 +51,7 @@
  * definitions, global variables
  */
 
-#define TESTING_SCERRNO 0x1234
+#define TESTING_SCERRNO 0x123
 
 #define ARG_SYSCALL(x)    (strcmp(argv[1],x)==0)
 #define ARG_ACTION(x)     (strcmp(argv[2],x)==0)

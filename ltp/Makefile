@@ -45,7 +45,7 @@ ORIG_MSGMNI := $(shell sysctl -n kernel.msgmni)
 
 # runtest files to run - comma-separated list
 # - provided by upstream ltp
-RUNTESTS := syscalls fs_perms_simple
+RUNTESTS := syscalls fs_perms_simple containers
 # - additional from runtest/
 RUNTESTS += $(wildcard $(CURDIR)/runtest/*)
 # transform into comma-separated list

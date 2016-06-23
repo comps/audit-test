@@ -27,7 +27,8 @@ RUN_DIRS := \
 	syscalls \
 	syscalls-ns \
 	syscalls-dac \
-	network
+	network \
+	misc
 
 ifeq ($(MODE), $(NATIVE))
 RUN_DIRS += \
@@ -41,7 +42,6 @@ RUN_DIRS += \
 	audit-remote \
 	trustedprograms \
 	crypto \
-	misc \
 	netfilter \
 	netfilebt \
 	dbus \

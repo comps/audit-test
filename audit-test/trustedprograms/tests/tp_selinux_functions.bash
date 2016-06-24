@@ -42,9 +42,18 @@ function cleanup_policy {
 	fi
 }
 
+# load module via semodule -i
+# $1 - module to load
+# $2 - (optional) copy module to given file and install it instead
 function load_test_policy {
 	log_mark=$(stat -c %s $audit_log)
-	semodule -i $1
+    if [ -n "$2" ]; then
+        cp $1 $2
+        semodule -i $2
+        rm -f $2
+    else
+        semodule -i $1
+    fi
 	[[ $? != 0 ]] && exit_error "unable to load test policy $1"
 	augrok --seek=$log_mark type==MAC_POLICY_LOAD \
 		subj=$subj auid=$auid success=yes \
@@ -57,9 +66,18 @@ function load_test_policy_fail {
 	[[ $? == 0 ]] && exit_fail "incompatible test policy $1 loaded"
 }
 
+# load module via semodule -i
+# $1 - module to load
+# $2 - (optional) copy module to given file and update it instead
 function update_test_policy {
 	log_mark=$(stat -c %s $audit_log)
-	semodule -u $1
+    if [ -n "$2" ]; then
+        cp $1 $2
+        semodule -u $2
+        rm -f $2
+    else
+        semodule -u $1
+    fi
 	[[ $? != 0 ]] && exit_error "unable to update test policy $1"
 	augrok --seek=$log_mark type==MAC_POLICY_LOAD \
 		subj=$subj auid=$auid success=yes \

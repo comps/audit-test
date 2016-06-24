@@ -46,7 +46,7 @@ prepend_cleanup cleanup_policy
 
 set -x
 # load the policy module that gives no access
-load_test_policy policy/test_noaccess.pp
+load_test_policy policy/test_noaccess.pp policy/policy_tools_test.pp
 
 # create and label the test file
 touch $tmp1
@@ -58,7 +58,7 @@ test_open_fail test_open_t $subj_open
 test_open_fail test_noopen_t $subj_noopen
 
 # Update the policy to allow one domain to read
-update_test_policy policy/test_addread.pp
+update_test_policy policy/test_addread.pp policy/policy_tools_test.pp
 
 # Try reading the file.  test_open_t should success
 # and test_noopen_t should fail.

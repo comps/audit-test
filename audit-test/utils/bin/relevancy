@@ -198,7 +198,7 @@ uname			all
 unlink			all
 unlinkat		all
 unshare			all
-uselib			!x86_64:64,all  # exists on x86_64:64, but ENOSYS
+uselib			!x86_64,all  # exists on x86_64, but ENOSYS
 utime			all
 utimensat		all
 utimes			all

@@ -127,6 +127,7 @@ int allow_tester_exit(scmp_filter_ctx *ctx)
                      SCMP_SYS(sigreturn),     /* return from sigsys handler */
                      SCMP_SYS(rt_sigreturn),  /* return from sigsys handler */
                      SCMP_SYS(prctl),         /* for precedence testing */
+                     SCMP_SYS(seccomp),       /* for precedence testing */
                      SCMP_SYS(exit_group) };
 
     return add_scmp_exceptions(ctx, scalls, sizeof(scalls)/sizeof(int));

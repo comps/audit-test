@@ -39,8 +39,21 @@ TEST_BASEDIR := /usr/local/eal4_testing
 #
 .PHONY: verify distclean install uninstall
 
-# base SELinux module targets
-include $(SELINUX_DEV_BASEDIR)/Makefile
+# Current selinux tooling requires that the file name and policy_module name
+# are the same (see BZ#1345825). To comply with this requirement we build
+# the policy module in a temporary directory under the required name and copy
+# it back under the original name.
+install:
+	@for file in *.te; do \
+		mkdir tmpdir; \
+                module=$$(sed -n 's/policy_module(\(.*\),.*)/\1/p' $$file); \
+		cp $$file tmpdir/$${module}.te; \
+		cp $${file/.te/.if} tmpdir/$${module}.if 2>/dev/null; \
+		cp $${file/.te/.fc} tmpdir/${module}.fc 2>/dev/null; \
+		make -C tmpdir -f /usr/share/selinux/devel/Makefile; \
+		cp -v tmpdir/$${module}.pp $${file/.te/.pp}; \
+		rm -rf tmpdir; \
+	done
 
 verify:
 	@echo "Checking system for basic requirements"
@@ -59,6 +72,11 @@ verify:
 		echo "not installed"; \
 	fi;
 
+# selinux devel clean
+clean:
+	rm -fR tmp tmpdir
+	rm -f *.pp
+
 # remove only generated files
 distclean:
 	$(MAKE) clean
@@ -69,8 +87,6 @@ distclean:
 	for file in *.if; do \
 		[ -z "$$(grep -v '<summary></summary>' < $$file)" ] && rm -vf "$$file"; \
 	done;
-
-install:
 
 uninstall:
 

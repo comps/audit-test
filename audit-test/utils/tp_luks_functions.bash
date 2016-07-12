@@ -60,7 +60,7 @@ function check_luks {
 	egrep "Cipher name.*aes" $TMP || exit_fail "Failed check on cipher name"
 	egrep "Cipher mode.*(cbc-essiv:sha256|xts-plain64)" $TMP || \
 		exit_fail "Failed check on cipher mode"
-	egrep "Hash spec.*sha1" $TMP || exit_fail "Failed check on hash spec"
+    egrep "Hash spec.*sha256" $TMP || exit_fail "Failed check on hash spec"
 
 	# Check for correct count of used key slots
 	CNT=$(egrep "Key Slot.*ENABLED" $TMP | wc -l)

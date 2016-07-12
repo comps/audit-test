@@ -73,3 +73,5 @@ distclean:
 install:
 
 uninstall:
+
+all:

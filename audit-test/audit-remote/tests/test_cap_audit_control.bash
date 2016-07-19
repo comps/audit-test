@@ -69,19 +69,21 @@ capsh --drop=cap_dac_override,cap_audit_control -- -c 'getpcaps $$' 2>&1 | \
     egrep "(cap_dac_override|cap_audit_control)" && \
     exit_error "Failed to drop cap_dac_override or cap_audit_control"
 
-# Now we shoudl be NOT allowed to query or modify rules:
+# Now w should be NOT allowed to query or modify rules:
+
 # Query
-capsh --drop=cap_dac_override,cap_audit_control -- -c '/sbin/auditctl -l' 2>&1 | \
-  grep "(Operation not permitted)" || exit_fail "Should fail to query"
+capsh --drop=cap_dac_override,cap_audit_control -- \
+      -c '/sbin/auditctl -l' 2>&1 && exit_fail "Should fail to query"
+
 # Modify
-capsh --drop=cap_dac_override,cap_audit_control -- -c '/sbin/auditctl -D' 2>&1 | \
-  grep "(Operation not permitted)" || exit_fail "Should fail to modify (-D)"
 capsh --drop=cap_dac_override,cap_audit_control -- \
-  -c '/sbin/auditctl -a exit,always -F subj_clr=s0:c36,c446' 2>&1 | \
-  grep "(Operation not permitted)" || exit_fail "Should fail to modify (-a)"
+      -c '/sbin/auditctl -D' 2>&1 && exit_fail "Should fail to modify (-D)"
 capsh --drop=cap_dac_override,cap_audit_control -- \
-  -c '/sbin/auditctl -d exit,always -F subj_clr=s0:c36,c446' 2>&1 | \
-  grep "(Operation not permitted)" || exit_fail "Should fail to modify (-d)"
+      -c '/sbin/auditctl -a exit,always -F subj_clr=s0:c36,c446' 2>&1 && \
+    exit_fail "Should fail to modify (-a)"
+capsh --drop=cap_dac_override,cap_audit_control -- \
+      -c '/sbin/auditctl -d exit,always -F subj_clr=s0:c36,c446' 2>&1 && \
+    exit_fail "Should fail to modify (-d)"
 
 # If we got this far, we are good to PASS
 exit_pass

@@ -60,7 +60,7 @@ function file_check {
     [[ $PPROFILE == capp ]] && \
 	f_secontext=$(echo $f_secontext | awk -F ':' '{print $1":"$2":"$3 }')
 
-    [ "$f_permissions" == "$permissions" ] || \
+    [[ $f_permissions =~ $permissions ]] || \
 	exit_fail "$file has incorrect permissions ($f_permissions)"
 
     [ "$f_owner" == "$owner" ] || [ "$f_group" == "$group" ] || \
@@ -92,7 +92,7 @@ file_check $audit_log root root "-rw-------." \
     "system_u:object_r:auditd_log_t:SystemHigh"
 
 for F in $audit_conf $audit_rules; do
-    file_check $F root root "-rw-r-----." \
+    file_check $F root root "-rw-[r-]-----." \
 	"system_u:object_r:auditd_etc_t:SystemHigh"
 done
 

@@ -56,22 +56,14 @@ function check_event {
 
     local result=3
 
-    # Wait for empty audit backlog (but 10 seconds at most).
-    local counter=0
-    local timeout=10
-    while true; do
-        [ $(auditctl -s | grep "backlog " | awk '{print $2}') -gt 0 ] || break
-        echo "Waiting for audit backlog..."
-        sleep 1
-        counter=$[$counter + 1]
-        [ $counter -eq $timeout ] && break
-    done
+    # Wait for all events to populate (until the default timeout).
+    wait_for_cmd "[ $(ausearch -m $type -ts $date_mark --raw | wc -l) -ge $count ]"
 
-    # Store event for subsequent verification.
+    # Store events for subsequent verification.
     local event=$(mktemp)
     ausearch -m $type -ts $date_mark --raw > $event
 
-    # Verify event content and possible uniqueness.
+    # Verify event contents and possible uniqueness.
     if [ $? -eq 0 ]; then
         if [ $(cat $event | wc -l) -eq $count ]; then
             if ! egrep -q "msg='$message.*'" $event; then

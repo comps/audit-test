@@ -58,35 +58,68 @@ cases_node=(
     "node -D" "resrc=node op=delete laddr=127.0.0.2 netmask=255.255.255.0 proto=4|resrc=node op=delete laddr=::1 netmask=::1 proto=41"
 )
 
-cases_interface=(
-    "interface --add -t netif_t -r s0 testif1" "resrc=interface op=add netif=testif1 tcontext=system_u:object_r:netif_t:s0"
-    "interface --add -t netif_t -r s15 testif2" "resrc=interface op=add netif=testif2 tcontext=system_u:object_r:netif_t:s15"
-    "interface --delete testif1" "resrc=interface op=delete netif=testif1"
-    "interface --modify -t netif_t -r s2 testif2" "resrc=interface op=modify netif=testif2 tcontext=system_u:object_r:netif_t:s2"
-    "interface --add -t netif_t -r s1 testif1" "resrc=interface op=add netif=testif1 tcontext=system_u:object_r:netif_t:s1"
-    "interface -D" "resrc=interface op=delete netif=testif1|resrc=interface op=delete netif=testif2"
-)
+if [ "$PPROFILE" == "lspp" ]; then
+    cases_interface=(
+        "interface --add -t netif_t -r s0 testif1" "resrc=interface op=add netif=testif1 tcontext=system_u:object_r:netif_t:s0"
+        "interface --add -t netif_t -r s15 testif2" "resrc=interface op=add netif=testif2 tcontext=system_u:object_r:netif_t:s15"
+        "interface --delete testif1" "resrc=interface op=delete netif=testif1"
+        "interface --modify -t netif_t -r s2 testif2" "resrc=interface op=modify netif=testif2 tcontext=system_u:object_r:netif_t:s2"
+        "interface --add -t netif_t -r s1 testif1" "resrc=interface op=add netif=testif1 tcontext=system_u:object_r:netif_t:s1"
+        "interface -D" "resrc=interface op=delete netif=testif1|resrc=interface op=delete netif=testif2"
+    )
+else
+    cases_interface=(
+        "interface --add -t netif_t -r s0 testif1" "resrc=interface op=add netif=testif1 tcontext=system_u:object_r:netif_t:s0"
+        "interface --add -t netif_t -r s0:c20 testif2" "resrc=interface op=add netif=testif2 tcontext=system_u:object_r:netif_t:s0:c20"
+        "interface --delete testif1" "resrc=interface op=delete netif=testif1"
+        "interface --modify -t netif_t -r s0:c30 testif2" "resrc=interface op=modify netif=testif2 tcontext=system_u:object_r:netif_t:s0:c30"
+        "interface --add -t netif_t -r s0 testif1" "resrc=interface op=add netif=testif1 tcontext=system_u:object_r:netif_t:s0"
+        "interface -D" "resrc=interface op=delete netif=testif1|resrc=interface op=delete netif=testif2"
+    )
+fi
 
 # we won't be testing -D option, so we do not loose local modifications from evaluated configuration
-cases_fcontext=(
-    "fcontext --add -t var_t -s staff_u -r s15 -f s /somefile2" "resrc=fcontext op=add tglob=\"/somefile2\" ftype=socket tcontext=staff_u:object_r:var_t:s15"
-    "fcontext --modify -t bin_t -s user_u -r s0 -f s /somefile2" "resrc=fcontext op=modify tglob=\"/somefile2\" ftype=socket tcontext=user_u:object_r:bin_t:s0"
-    "fcontext --delete -f s /somefile2" "resrc=fcontext op=delete tglob=\"/somefile2\" ftype=socket"
-    "fcontext --add -t bin_t -s user_u -r s2 /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=any tcontext=user_u:object_r:bin_t:s2"
-    "fcontext --delete /somefile1" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=any"
-    "fcontext --add -t bin_t -s user_u -r s2 -f f /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=file tcontext=user_u:object_r:bin_t:s2"
-    "fcontext --delete /somefile1 -f f" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=file"
-    "fcontext --add -t bin_t -s user_u -r s2 -f d /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=dir tcontext=user_u:object_r:bin_t:s2"
-    "fcontext --delete /somefile1 -f d" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=dir"
-    "fcontext --add -t bin_t -s user_u -r s2 -f c /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=char tcontext=user_u:object_r:bin_t:s2"
-    "fcontext --delete /somefile1 -f c" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=char"
-    "fcontext --add -t bin_t -s user_u -r s2 -f b /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=block tcontext=user_u:object_r:bin_t:s2"
-    "fcontext --delete /somefile1 -f b" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=block"
-    "fcontext --add -t bin_t -s user_u -r s2 -f l /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=symlink tcontext=user_u:object_r:bin_t:s2"
-    "fcontext --delete /somefile1 -f l" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=symlink"
-    "fcontext --add -t bin_t -s user_u -r s2 -f p /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=pipe tcontext=user_u:object_r:bin_t:s2"
-    "fcontext --delete /somefile1 -f p" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=pipe"
-)
+if [ "$PPROFILE" == "lspp" ]; then
+    cases_fcontext=(
+        "fcontext --add -t var_t -s staff_u -r s15 -f s /somefile2" "resrc=fcontext op=add tglob=\"/somefile2\" ftype=socket tcontext=staff_u:object_r:var_t:s15"
+        "fcontext --modify -t bin_t -s user_u -r s0 -f s /somefile2" "resrc=fcontext op=modify tglob=\"/somefile2\" ftype=socket tcontext=user_u:object_r:bin_t:s0"
+        "fcontext --delete -f s /somefile2" "resrc=fcontext op=delete tglob=\"/somefile2\" ftype=socket"
+        "fcontext --add -t bin_t -s user_u -r s2 /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=any tcontext=user_u:object_r:bin_t:s2"
+        "fcontext --delete /somefile1" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=any"
+        "fcontext --add -t bin_t -s user_u -r s2 -f f /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=file tcontext=user_u:object_r:bin_t:s2"
+        "fcontext --delete /somefile1 -f f" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=file"
+        "fcontext --add -t bin_t -s user_u -r s2 -f d /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=dir tcontext=user_u:object_r:bin_t:s2"
+        "fcontext --delete /somefile1 -f d" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=dir"
+        "fcontext --add -t bin_t -s user_u -r s2 -f c /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=char tcontext=user_u:object_r:bin_t:s2"
+        "fcontext --delete /somefile1 -f c" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=char"
+        "fcontext --add -t bin_t -s user_u -r s2 -f b /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=block tcontext=user_u:object_r:bin_t:s2"
+        "fcontext --delete /somefile1 -f b" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=block"
+        "fcontext --add -t bin_t -s user_u -r s2 -f l /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=symlink tcontext=user_u:object_r:bin_t:s2"
+        "fcontext --delete /somefile1 -f l" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=symlink"
+        "fcontext --add -t bin_t -s user_u -r s2 -f p /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=pipe tcontext=user_u:object_r:bin_t:s2"
+        "fcontext --delete /somefile1 -f p" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=pipe"
+    )
+else
+    cases_fcontext=(
+        "fcontext --add -t var_t -s staff_u -r s0:c15 -f s /somefile2" "resrc=fcontext op=add tglob=\"/somefile2\" ftype=socket tcontext=staff_u:object_r:var_t:s0:c15"
+        "fcontext --modify -t bin_t -s user_u -r s0 -f s /somefile2" "resrc=fcontext op=modify tglob=\"/somefile2\" ftype=socket tcontext=user_u:object_r:bin_t:s0"
+        "fcontext --delete -f s /somefile2" "resrc=fcontext op=delete tglob=\"/somefile2\" ftype=socket"
+        "fcontext --add -t bin_t -s user_u -r s0:c99 /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=any tcontext=user_u:object_r:bin_t:s0:c99"
+        "fcontext --delete /somefile1" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=any"
+        "fcontext --add -t bin_t -s user_u -r s0:c99 -f f /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=file tcontext=user_u:object_r:bin_t:s0:c99"
+        "fcontext --delete /somefile1 -f f" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=file"
+        "fcontext --add -t bin_t -s user_u -r s0:c99 -f d /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=dir tcontext=user_u:object_r:bin_t:s0:c99"
+        "fcontext --delete /somefile1 -f d" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=dir"
+        "fcontext --add -t bin_t -s user_u -r s0:c99 -f c /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=char tcontext=user_u:object_r:bin_t:s0:c99"
+        "fcontext --delete /somefile1 -f c" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=char"
+        "fcontext --add -t bin_t -s user_u -r s0:c99 -f b /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=block tcontext=user_u:object_r:bin_t:s0:c99"
+        "fcontext --delete /somefile1 -f b" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=block"
+        "fcontext --add -t bin_t -s user_u -r s0:c99 -f l /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=symlink tcontext=user_u:object_r:bin_t:s0:c99"
+        "fcontext --delete /somefile1 -f l" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=symlink"
+        "fcontext --add -t bin_t -s user_u -r s0:c99 -f p /somefile1" "resrc=fcontext op=add tglob=\"/somefile1\" ftype=pipe tcontext=user_u:object_r:bin_t:s0:c99"
+        "fcontext --delete /somefile1 -f p" "resrc=fcontext op=delete tglob=\"/somefile1\" ftype=pipe"
+    )
+fi
 
 # we won't be testing --modify action as it calls --add in the code
 cases_fcontext_equal=(

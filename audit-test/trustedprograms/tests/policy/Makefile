@@ -49,7 +49,7 @@ install:
                 module=$$(sed -n 's/policy_module(\(.*\),.*)/\1/p' $$file); \
 		cp $$file tmpdir/$${module}.te; \
 		cp $${file/.te/.if} tmpdir/$${module}.if 2>/dev/null; \
-		cp $${file/.te/.fc} tmpdir/${module}.fc 2>/dev/null; \
+		cp $${file/.te/.fc} tmpdir/$${module}.fc 2>/dev/null; \
 		make -C tmpdir -f /usr/share/selinux/devel/Makefile; \
 		cp -v tmpdir/$${module}.pp $${file/.te/.pp}; \
 		rm -rf tmpdir; \

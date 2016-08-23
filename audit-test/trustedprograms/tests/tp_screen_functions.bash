@@ -83,10 +83,10 @@ function screen_check_lock {
     # expect script
     EXPSCRIPT="/home/$1/screen.exp"
 
-    # create expect script in users home, set timeout to 1s
+    # create expect script in users home, set timeout to 2s
     # after tested timeout
     cat > $EXPSCRIPT << EOT
-set timeout $(($3+1))
+set timeout $(($3+2))
 spawn screen $4
 expect {
     {<$1>} {

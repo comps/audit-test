@@ -142,8 +142,11 @@ check_variables_net() {
     local CHECK_FAILED
     local vars
 
-    # TODO: possible either LBLNET_SVR (hostname) or LBLNET_SVR_IPV[46]
-    vars="LBLNET_SVR_IPV4 LBLNET_SVR_IPV6"
+    if env | grep -q -e "^LBLNET_SVR_IPV4=" -e "^LBLNET_SVR_IPV6="; then
+        vars="LBLNET_SVR_IPV4 LBLNET_SVR_IPV6"
+    else
+        vars="LBLNET_SVR"  # expected default
+    fi
 
     for i in $vars; do
         check "env | grep \"^$i=\"" 0 "Var $i is present in environment"

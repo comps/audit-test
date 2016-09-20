@@ -1,23 +1,24 @@
 #!/bin/sh
 AUTHSRV_DIR="/usr/local/eal4_testing/audit-test/utils/auth-server"
 
-function exit_error() {
+exit_error() {
     echo "Error: $@"
     exit 1
 }
 
+[ "$@" ] || exit_error "No hosts given"
+
 # source ipa defaults
 source $AUTHSRV_DIR/ipa_env 2>&1 || exit
 
-[ -z "$@" ] && exit_error "No hosts given"
+echo $IPA_PASS | kinit ${IPA_ADMIN}@$IPA_REALM 2>&1 >/dev/null || \
+    exit_error "Failed to get kerberos ticket for admin"
 
 for HOST in "$@"; do
     STATUS="SKIP"
     if ! ipa host-show $HOST &>/dev/null; then
-        echo $IPA_PASS | kinit ${IPA_ADMIN}@$IPA_REALM &>/dev/null || \
-            exit_error "Failed to get kerberos ticket for admin"
         ipa host-add --force $HOST 2>&1 || exit
-	STATUS="OK"
+        STATUS="OK"
     fi
 
     if [ ! -f $IPA_DLDIR/${HOST}.keytab ]; then
@@ -29,7 +30,7 @@ for HOST in "$@"; do
     if ! ipa selinuxusermap-show | grep -q $HOST; then
         # set mapping of $IPA_STAFF to staff_u:s0-s0:c0.c1023 for given host
         ipa selinuxusermap-add-host staff --hosts=$HOST >/dev/null
-	STATUS="OK"
+        STATUS="OK"
     fi
 
     echo $STATUS

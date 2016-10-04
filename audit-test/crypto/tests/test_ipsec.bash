@@ -312,9 +312,9 @@ function ipsec_add_sa_verify {
     fi
 
     # Check audit event.
-    ausearch -ts $audit_mark -m MAC_IPSEC_EVENT
-    ausearch -ts $audit_mark -m CRYPTO_IPSEC_SA
-    ausearch -ts $audit_mark -m CRYPTO_IKE_SA
+    wait_for_cmd "ausearch -ts $audit_mark -m MAC_IPSEC_EVENT"
+    wait_for_cmd "ausearch -ts $audit_mark -m CRYPTO_IPSEC_SA"
+    wait_for_cmd "ausearch -ts $audit_mark -m CRYPTO_IKE_SA"
 
     if [ "$ikev" == "1" ] && [ "$PPROFILE" == "lspp" ]; then
         ikev1_filter="sec_alg=1 sec_doi=1 sec_obj=staff_u:lspp_test_r:lspp_test_ipsec_t:s0"
@@ -377,6 +377,8 @@ function ipsec_remove_sa_verify {
         exit_fail "Failed to remove SA"
 
     # Check audit event.
+    wait_for_cmd "ausearch -ts $audit_mark -m MAC_IPSEC_EVENT"
+
     ausearch -ts $audit_mark -m MAC_IPSEC_EVENT | \
         egrep "op=SAD-delete.*src=$normalized_ipsec_src.*dst=$normalized_ipsec_dst" || \
         exit_fail "Missing audit record"

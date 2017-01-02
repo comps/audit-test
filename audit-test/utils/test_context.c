@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <selinux/selinux.h>
-#include <selinux/flask.h>
 
 #define ERR_CTX_STR                    "error_no_context"
 #define ERR_CTX_RC                     1
@@ -57,9 +56,9 @@ int main(int argc, char *argv[])
   if (getfilecon(test_path, &test_file_ctx) < 0)
     err_fatal();
   if (security_compute_create(self_domain_ctx,
-			      test_file_ctx,
-			      SECCLASS_PROCESS,
-			      &test_domain_ctx) < 0)
+                              test_file_ctx,
+                              string_to_security_class("process"),
+                              &test_domain_ctx) < 0)
     err_fatal();
 
   printf("%s\n", test_domain_ctx);

@@ -129,7 +129,7 @@ int access_check(mode_t access[]) {
         printf(result);
 
         if (fd >= 0) {
-            if ((rc == close(fd)) < 0) {
+            if ((rc = close(fd)) < 0) {
                 goto EXIT;
             }
         }
@@ -146,7 +146,7 @@ int access_check(mode_t access[]) {
         printf(result);
 
         if (fd >= 0) {
-            if ((rc == close(fd)) < 0) {
+            if ((rc = close(fd)) < 0) {
                 goto EXIT;
             }
         }

@@ -52,7 +52,8 @@ log_mark=$(stat -c %s $audit_log)
 # generate an audit event
 eval "$gen_audit_event"
 
-augrok --seek=$log_mark "syscall==$syscall_num" "name==$tmp1" "success==$op" \
-    || exit_fail "Expected record not found."
+wait_for_cmd "augrok --seek=\"$log_mark\" \
+              syscall==\"$syscall_num\" name==\"$tmp1\" success==\"$op\"" || \
+    exit_fail "Expected record not found."
 
 exit_pass

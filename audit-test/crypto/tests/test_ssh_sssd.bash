@@ -168,7 +168,7 @@ pam_keyinit,pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_sss,pam_lastlog
         [ -z "$LINE" ] && break
         read EVENT PAMTYPE GRANTORS <<< "$LINE"
         augrok --seek=$AUDITMARK type==$EVENT msg_1="op=PAM:$PAMTYPE \
-grantors=$GRANTORS acct=\"$IPA_STAFF\" exe=\"/usr/sbin/sshd\" hostname=localhost \
+grantors=$GRANTORS acct=\"$IPA_STAFF\" exe=\"/usr/sbin/sshd\" hostname=::1 \
 addr=::1 terminal=ssh res=success" || exit_fail \
             "Expected $EVENT audit event for $IPA_STAFF user not found"
     done <<< "$msg"
@@ -180,7 +180,7 @@ addr=::1 terminal=ssh res=success" || exit_fail \
     ssh_connect_pass $IPA_USER $IPA_PASS $IPA_STAFF badpass; RET=$?
     [ $RET -eq 0 ] && exit_fail "Succeeded to connect with invalid password"
     augrok --seek=$AUDITMARK type==USER_AUTH msg_1="op=PAM:authentication \
-grantors=? acct=\"$IPA_STAFF\" exe=\"/usr/sbin/sshd\" hostname=localhost \
+grantors=? acct=\"$IPA_STAFF\" exe=\"/usr/sbin/sshd\" hostname=::1 \
 addr=::1 terminal=ssh res=failed" || exit_fail \
             "Expected failed $EVENT audit event for $IPA_STAFF user not found"
 }

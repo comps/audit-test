@@ -75,7 +75,7 @@ fi
 augrok --seek=$AUDITMARK type=USER_START
 msg_1="grantors=pam_selinux,pam_console,pam_selinux,pam_namespace,pam_keyinit,\
 pam_keyinit,pam_limits,pam_systemd,pam_unix,pam_lastlog acct=\"$TEST_USER\" \
-exe=\"/usr/bin/login\" hostname=? addr=? terminal=${pts#/dev/} res=success"
+exe=\"/usr/bin/login\" hostname=$(hostname) addr=? terminal=${pts#/dev/} res=success"
 augrok --seek=$AUDITMARK type=USER_START msg_1="op=PAM:session_open $msg_1" subj=$login_context || exit_fail
 
 # Check for USER_ROLE_CHANGE for login command

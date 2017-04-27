@@ -55,7 +55,7 @@ expect -c '
     exit_error "faillock reset for $TEST_USER user failed"
 
 augrok --seek=$AUDITMARK type=USER_MGMT
-MSG="op=faillock-reset id=$tuid exe=\"/usr/sbin/faillock\" hostname=\? addr=\? terminal=pts/[0-9]+ res=success"
+MSG="op=faillock-reset id=$tuid exe=\"/usr/sbin/faillock\" hostname=$(hostname) addr=\? terminal=pts/[0-9]+ res=success"
 augrok --seek=$AUDITMARK -q type=USER_MGMT msg_1=~"$MSG" || \
     exit_fail "USER_MGMT failock-reset message not found"
 

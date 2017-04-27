@@ -68,7 +68,7 @@ ssh_connect_pass $TEST_USER $TEST_USER_PASSWD \
         $TEST_ADMIN $TEST_ADMIN_PASSWD
 auid=$(id -u $TEST_ADMIN)
 # we don't care about grantors field here, this is already tested in crypto/ssh_sssd grantor testcase
-msg_1=".*acct=\"$TEST_ADMIN\" exe=\"/usr/sbin/sshd\" hostname=localhost addr=::1 terminal=ssh res=success"
+msg_1=".*acct=\"$TEST_ADMIN\" exe=\"/usr/sbin/sshd\" hostname=::1 addr=::1 terminal=ssh res=success"
 augrok --seek=$AUDITMARK -q type=USER_AUTH msg_1=~"op=PAM:authentication $msg_1" || \
     exit_fail "No correct USER_AUTH event found"
 augrok --seek=$AUDITMARK -q type=USER_ACCT msg_1=~"op=PAM:accounting $msg_1" || \

@@ -78,7 +78,7 @@ while read LINE; do
     read EVENT PAMTYPE GRANTORS <<< "$LINE"
     augrok --seek=$AUDITMARK type==$EVENT
     augrok --seek=$AUDITMARK type==$EVENT msg_1="op=PAM:$PAMTYPE \
-grantors=$GRANTORS acct=\"$TEST_USER\" exe=\"/usr/sbin/sshd\" hostname=localhost \
+grantors=$GRANTORS acct=\"$TEST_USER\" exe=\"/usr/sbin/sshd\" hostname=::1 \
 addr=::1 terminal=ssh res=success" || exit_fail \
         "Expected $EVENT audit event for $TEST_USER successful login not found"
 done <<< "$DATA"

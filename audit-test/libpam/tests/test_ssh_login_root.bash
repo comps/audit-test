@@ -44,7 +44,7 @@ for PASS in $PASSWD badpassword; do
     echo "RET=$?"
 
     MSG="op=PAM:authentication grantors=\? acct=\"root\""
-    MSG="$MSG exe=\"/usr/sbin/sshd\" hostname=localhost addr=::1 terminal=ssh res=failed"
+    MSG="$MSG exe=\"/usr/sbin/sshd\" hostname=::1 addr=::1 terminal=ssh res=failed"
     augrok --seek $AUDITMARK type=USER_AUTH
     augrok --seek $AUDITMARK type=USER_AUTH msg_1=~"$MSG" || \
         exit_fail "Failed authentication attempt for user $TUSR not audited correctly"

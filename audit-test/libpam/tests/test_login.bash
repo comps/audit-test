@@ -75,7 +75,7 @@ do_login() {
 
     while read LINE; do
         read EVENT PAMOP GRANTORS <<< "$LINE"
-        msg_1="acct=\"$TUSR\" exe=\"/usr/bin/login\" hostname=\? addr=\? terminal=pts/$PTS res=success"
+        msg_1="acct=\"$TUSR\" exe=\"/usr/bin/login\" hostname=$(hostname) addr=\? terminal=pts/$PTS res=success"
         augrok --seek $AUDITMARK type=$EVENT
         augrok --seek $AUDITMARK type=$EVENT \
             msg_1=~"op=PAM:$PAMOP (grantors=$GRANTORS )?$msg_1" || \
@@ -94,7 +94,7 @@ do_login_fail() {
         expect -nocase {login incorrect} {close; wait}"
 
     MSG="op=PAM:authentication (grantors=\? )?acct=\"$TUSR\""
-    MSG="$MSG exe=\"/usr/bin/login\" hostname=\? addr=\? terminal=pts/[0-9]+ res=failed"
+    MSG="$MSG exe=\"/usr/bin/login\" hostname=$(hostname) addr=\? terminal=pts/[0-9]+ res=failed"
     augrok --seek $AUDITMARK type=USER_AUTH
     augrok type=USER_AUTH msg_1=~"$MSG" || \
         exit_fail "Failed authentication attempt for user $TUSR not audited correctly"

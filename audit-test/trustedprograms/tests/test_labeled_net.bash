@@ -276,8 +276,8 @@ EOF
 # setup audit rules for systemd/xinetd tests
 #
 setup_audit_rules() {
-    auditctl -a entry,always -S execve
-    prepend_cleanup "auditctl -d entry,always -S execve"
+    auditctl -a exit,always -S execve
+    prepend_cleanup "auditctl -d exit,always -S execve"
 }
 
 case "$1" in

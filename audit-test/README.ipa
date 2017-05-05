@@ -10,7 +10,7 @@ IPA is an integrated Identity and Authentication solution for Linux/UNIX
 networked environments. A IPA server provides centralized authentication,
 authorization and account information by storing data about user, groups,
 hosts and other objects necessary to manage the security aspects of
-a network of computers. 
+a network of computers.
 
 IPA server consists from Kerberos, LDAP and some other services and specific
 management tools. The identity and authentication on the client machines
@@ -29,6 +29,9 @@ on the IPA server and the TOE(s).
 
 IPA server has no relation to the NS, i.e. they do not know about each other.
 
+This README deals only with does not explain the client side of configuration done on each
+TOE. See `docs/sssd.txt' for more information about that.
+
 
 Installation and configuration
 ------------------------------
@@ -45,31 +48,22 @@ To install and setup the authentication server follow these steps:
    also add an administrative `eal' user and set his password to the
    same password as for the eal/root users on the TOE machines.
 
-# useradd -m -c "EAL Test User" -G wheel eal
-# passwd eal <TOE root's password>
+    # useradd -m -c "EAL Test User" -G wheel eal
+    # passwd eal <TOE root's password>
 
 4. Install tools for extracting archives and make
 
-# yum -y install make bzip2 gzip
+    # yum -y install make bzip2 gzip
 
 5. Clone the audit-test suite repository or extract the audit-test archive
    to the root's home directory. Move the contents of the repository to the
-   test suite folder `/usr/local/eal4_testing' via make dist - see README.run.
+   test suite folder `/usr/local/eal4_testing' via `make dist' - see README.run.
 
-6. Create ipa_clients file in `audit-test/utils/auth-server/' with resolvable
-   hostnames of the TOE machines used for testing, one per line. Please note
-   there cannot be any other content (comments, newlines etc.) in the file.
-   For example this is a configuration with two TOE machines:
-
-# cat /usr/local/eal4_testing/audit-test/utils/auth-server/ipa_clients
-toe1.cctest.com
-toe2.cctest.com
-
-7. Run the autentication server installation and configuration via the
+6. Run the authentication server installation and configuration via the
 auth-server Makefile target:
 
-# cd /usr/local/eal4_testing/audit-test/
-# make auth-server
+    # cd /usr/local/eal4_testing/audit-test/
+    # make auth-server
 
 Note that this might take a while to complete, depending on your installation.
 The IPA server consists from a lot of additional packages.
@@ -90,57 +84,39 @@ verification phase.
 Please note that you can run `verify' phase anytime to check if the
 IPA configuration is intact via
 
-# cd /usr/local/eal4_testing/audit-test/
-# make auth-server-verify
+    # cd /usr/local/eal4_testing/audit-test/
+    # make auth-server-verify
 
-8. Make sure ntpd works correctly, especially if you are on a private network.
+7. Make sure ntpd works correctly, especially if you are on a private network.
 Synchronized time is required for Kerberos to work correctly. You can check
 the time synchronization via ntpdate tool querying pool.ntp.org for example:
 
-# ntpdate -q pool.ntp.org
-server 205.233.73.201, stratum 0, offset 0.000000, delay 0.00000
-server 108.61.56.35, stratum 0, offset 0.000000, delay 0.00000
-server 216.66.0.142, stratum 0, offset 0.000000, delay 0.00000
-server 107.170.242.27, stratum 0, offset 0.000000, delay 0.00000
-23 Aug 19:17:32 ntpdate[2270]: no server suitable for synchronization found
+    # ntpdate -q pool.ntp.org
+    server 205.233.73.201, stratum 0, offset 0.000000, delay 0.00000
+    server 108.61.56.35, stratum 0, offset 0.000000, delay 0.00000
+    server 216.66.0.142, stratum 0, offset 0.000000, delay 0.00000
+    server 107.170.242.27, stratum 0, offset 0.000000, delay 0.00000
+    23 Aug 19:17:32 ntpdate[2270]: no server suitable for synchronization found
 
 In the case above the pool is unreachable meaning that your private network
 firewall is probably blocking UTP that is used for time synchronization.
 You need to add a reachable NTP server in `/etc/ntp.conf' and restart ntpd:
 
-# vim /etc/ntp.conf
-# systemctl restart ntp
+    # vim /etc/ntp.conf
+    # systemctl restart ntp
 
 8. Note the resolvable hostname of the authentication server that needs to
 be exported on TOE. You can check the hostname of your server by running the
 command below. Please note that this hostname needs to be resolvable by your
 DNS system or via `/etc/hosts'.
 
-# hostname
+    # hostname
 
-10. You can easily uninstall the authentication server including package removal
+9. You can easily uninstall the authentication server including package removal
 via the auth-server-uninstall Makefile target:
 
-# cd /usr/local/eal4_testing/audit-test/
-# make auth-server-uninstall
-
-
-Adding a new TOE to the IPA server
-----------------------------------
-
-Note that during the execution of `make auth-server' one of the procedures
-is to generate keytabs which will be used for manual enrolling the TOE(s)
-to the IPA server. After adding a new TOE hostname to the `ipa_clients'
-file it is required to trigger manually the generation by calling the
-`auth-server-configure' makefile target:
-
-# cd /usr/local/eal4_testing/audit-test/
-# make auth-server-configure
-
-Note that all errors not related to the keytab generation and shown while
-running the above command can be safely ignored.
-
-This step needs to be done BEFORE executing `make sssd-configure' on the TOE.
+    # cd /usr/local/eal4_testing/audit-test/
+    # make auth-server-uninstall
 
 
 IPA Ports
@@ -166,7 +142,7 @@ The IPA_USER user maps to the default SELinux user, usually user_u with
 security level s0. This dependes on the SELinux configuration set on the
 TOE. You can check the default SELinux users via:
 
-# semanage user -l
+    # semanage user -l
 
 The IPA_STAFF user has a default SELinux mapping to the staff_u user with
 s0-s0:c0.c1023 range.
@@ -179,13 +155,11 @@ The testing with IPA server is built on the following assumptions:
 
 1. IPA server's OS is installed only once.
 2. IPA server is fully configured only once, after the first
-   installation of underlying OS and the edit of `ipa-clients' file.
-2. IPA server is reconfigured every time a new TOE is added - i.e. the 
-   `ipa_clients' file is altered.
+   installation of underlying OS.
 3. The tests do not alter the IPA server configuration - i.e. IPA server
    is reusable for unlimited number of test runs.
 4. TOE is manually enrolled to the IPA server and properly setup
-   (via `make sssd-configure') AFTER it has been added to the IPA server.
+   via `make sssd-configure' run on each TOE, see docs/sssd.txt for details.
 
 Below Makefile targets are available on the IPA server and can be called via `make'
 command in the `/usr/local/eal4_testing/audit-test' directory.
@@ -198,15 +172,14 @@ command in the `/usr/local/eal4_testing/audit-test' directory.
 
 Last three mentioned Makefile targets on the IPA server actually call
 `utils/auth-server/ipa_install' script. The script implements 4 commands:
- 
+
  * install
 Installs all required IPA server packages and runs `ipa-server-install' with
 specific parameters according to the settings in the `ipa_env' file.
 
  * configure
 Create users for testing and prepare all the required data needed for manual
-enrollment of all the TOEs listed in the `ipa_clients' file. Calling this
-command is also required when adding new TOE to the IPA configuration.
+enrollment of all TOEs.
 
  * verify
 Verify that IPA server configuration looks intact.
@@ -215,19 +188,43 @@ Verify that IPA server configuration looks intact.
 Completely removes IPA server configuration and the ipa* packages. This
 is also useful for testing as it can cleanup of mis-configured IPA server.
 
-On the TOE side, the below Makefile targets related to the correct setup of SSSD,
-NSS, PAM and manual enrollment can be called via `make' command
-in the `/usr/local/eal4_testing/audit-test' directory.
 
- * sssd-configure - manually enroll TOE, configure sssd, pam and nss
- * sssd-reconfigure - call remove, configure and verify 
- * sssd-remove - remove all configuration
- * sssd-start - start sssd daemon
- * sssd-stop - stop sssd deamon
- * sssd-verify - verify that TOE configuration is intact
+Common issues
+-------------
 
-All these targets actually call a command of the `sssd_setup' script, that can
-be found in the `utils/auth-server' directory.
+1. Time synchronization
+
+The kerberos won't work correctly if the time is not synchronized between
+the IPA and TOEs. Make sure you have correct time set on all machines.
+
+2. Expired passwords
+
+The IPA install should set password expire time to 20000 days via
+
+    # kinit admin
+    # ipa pwpolicy-mod --maxlife=20000 global_policy
+
+In case you would still get expired passwords, just remove the problematic
+users via
+
+    # ipa user-del USER
+
+And run again the `auth-server-configuration' make target
+
+    # cd /usr/local/eal4_testing/audit-test/
+    # make auth-server-configure
+
+This should recreate the users. Note that you can safely ignore other
+errors during the run.
+
+3. Rebuild of the IPA server
+
+As the last resort of solving issues you can try to rebuild the IPA server.
+You can do this by running uninstall and install again.
+
+    # cd /usr/local/eal4_testing/audit-test/
+    # make auth-server-uninstall
+    # make auth-server
 
 
 Links

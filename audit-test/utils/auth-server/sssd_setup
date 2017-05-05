@@ -21,11 +21,14 @@
 #
 # DESCRIPTION:
 # This script setups manually enrolls machine to an IPA domain.
-# It is able also to startp/stop sssd daemon, verify correct
+# It is able also to start/stop sssd daemon, verify correct
 # configuration (used in envcheck) and reconfigure enrollment.
 #
 # It does not start sssd after the setup. The tests need
 # to start sssd service for the authentication to work.
+#
+# The manual enrollment process is thoroughly documented
+# in the cmd_configure function.
 #
 
 # globals
@@ -120,7 +123,12 @@ function is_sssd_configured {
     return 1
 }
 
-# setup sssd
+#
+# Manual enrollment of TOE to the IPA domain
+#
+# This function mimics the minimal steps from `ipa-client-install' needed
+# to manually enroll the machine to the IPA domain.
+#
 function cmd_configure {
     local INFO=
 
@@ -131,7 +139,16 @@ function cmd_configure {
         exit
     fi
 
+    #
     # Add host to IPA server
+    #
+    # This calls the ns2 ipa exec plugin to
+    # - add this host to the IPA server
+    # - generate a host keytab
+    # - add staff SELinux user mapping for this host
+    #
+    # see `utils/ns2/exec/ipa' for more information
+    #
     print_info "Adding host to IPA server $IPA_SERVER"
     LOG=$(nc $IPA_SERVER 5000 <<< "exec,ipa,$IPA_SERVER_TOE_ID")
     [ $? -ne 0 ] && exit_error "Error communicating with ns2 on IPA server"
@@ -178,7 +195,14 @@ EOF
     # it is required for kerberos config to be readable by all
     chmod 644 $KRBCONF
 
-    # Setting up sssd
+    #
+    # Setting up sssd configuration
+    #
+    # IPA used to provide everything
+    # debug_level 4 is needed for auditing reasons
+    #
+    # SSSD is being run in non-root mode, under the sssd user
+    #
     print_info "Setting up SSSD"
     [ -e $SSSDCONF ] && mv $SSSDCONF $SSSDCONFBP
     cat > $SSSDCONF <<EOF
@@ -207,7 +231,10 @@ EOF
     restorecon -vvF $SSSDCONF > /dev/null
     chmod 600 $SSSDCONF
 
-    # Get keytab and CA
+    #
+    # Download host keytab and IPA CA certificate from the IPA server
+    # and place them to expected directories according to sssd.conf
+    #
     print_info "Copying keytab and CA"
     mkdir -p $IPA_ETC
     ssh_copy "eal@$IPA_SERVER:$IPA_DLDIR/$IPA_CA $IPA_ETC_CA" > /dev/null || \
@@ -219,7 +246,9 @@ EOF
             "\nMake sure ipa_clients on IPA server is correctly setup according to the README.ipa."
     restorecon -vvF /etc/krb5.keytab > /dev/null
 
-    # Create home directories for users
+    #
+    # Create home directories for IPA users with skel files
+    #
     cmd_start nolog
     for IUSER in $IPA_USER $IPA_STAFF; do
         print_info "Creating home directory for $IUSER"
@@ -231,7 +260,7 @@ EOF
     done
     cmd_stop nolog
 
-    # verify configuration
+    # verify configuration is intact
     cmd_verify
 }
 

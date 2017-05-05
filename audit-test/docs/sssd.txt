@@ -1,0 +1,167 @@
+SSSD client setup for IPA server
+--------------------------------
+
+Some of the tests in the `audit-test' suite require SSSD client setup.
+SSSD [1] is a set of to manage access to remote directories and authentication
+mechanisms. For `audit-test' suite a manual enrollment to a specially setup
+IPA server is used. Manual enrollment actually mimics what `ipa-client-install'
+does. In the time of writing these tests this tool did not work with SELinux
+in MLS mode, thus the need for manual enrollment.
+
+See the `sssd_setup' script's code for detailed information about the various
+manual enrollment steps.
+
+See 'How to debug SSSD related issues' for more information how to debug
+SSSD related issues.
+
+See README.ipa for more information about setting up the IPA server.
+
+All commands in this README expect the current working directory is
+
+    /usr/local/eal4_testing/audit-test
+
+
+Configuration
+-------------
+
+On the TOE side, the below Makefile targets are provided for sssd related
+tasks.
+
+ * sssd-configure - manually enroll TOE, configure SSSD, PAM and NSS
+ * sssd-reconfigure - call remove, configure and verify
+ * sssd-remove - remove all configuration
+ * sssd-start - start SSSD daemon
+ * sssd-stop - stop SSSD daemon
+ * sssd-verify - verify that TOE configuration is intact
+
+All these targets actually call a command of the `sssd_setup' script, that can
+be found in the `utils/auth-server' directory.
+
+    utils/auth-server/sssd_setup
+
+The configuration is part of the audit-test suite setup steps in the README file.
+
+
+Verifying the SSSD configuration
+--------------------------------
+
+The `sssd-configure' calls verification as the last step to make sure the SSSD
+client is correctly setup. To run the verification manually with more debug
+information use
+
+    # cd utils/auth-server
+    # bash -x sssd_setup verify
+
+If the test does print "SSSD configuration verification FAILED" there is some
+problem and debugging will be needed. In case the verification prints PASSED,
+the SSDS setup should be intact and no other action is needed.
+
+
+How to debug SSSD related issues
+--------------------------------
+
+IMPORTANT! The most common issue with sssd tests is incorrectly synchronized
+time between the TOE and the IPA server. Please make sure that the time
+is correct on both machines.
+
+1. SSSD does not start
+
+In our configuration sssd is being run as non-root for security reasons. This
+is not the standard way of running sssd and regressed in the past. If your
+sssd daemon does not start, check the logs via journactl and log files and
+look for obvious errors like permission denied, etc.
+
+    # journalctl -l -u sssd
+    # tail /var/log/sssd/sssd.log
+
+Example of error messages that can appear in the logs:
+
+May 16 11:04:35 cc-v6b.lab.eng.brq.redhat.com sssd[23159]: SSSD couldn't load the configuration database [22]: Invalid argument.
+
+(Tue May 16 11:04:35:177961 2017) [sssd] [get_service_user] (0x0010): Failed to set allowed UIDs.
+(Tue May 16 11:04:35:177993 2017) [sssd] [get_monitor_config] (0x0020): Failed to get the unprivileged user
+(Tue May 16 11:04:35:178042 2017) [sssd] [main] (0x0020): SSSD couldn't load the configuration database.
+
+2. Configuration issues
+
+To debug configuration issues, it is usually a good idea to run these scripts
+directly with `bash -x'. So for example to debug reconfiguration, you can run
+
+    # cd utils/auth-server
+    # bash -x sssd_setup reconfigure
+
+3. IPA user authentication issues
+
+The tests are designed to start the sssd client on demand and by default
+SSSD is not running. Before continuing to debug SSSD make sure to start it
+first
+
+    # systemctl start sssd
+
+Very often the authentication does not work, because pam_faillock denies
+the access to the user because of too many bad authentication attempts.
+So before continuing, make sure faillock for ipa* users is empty.
+
+    # faillock
+
+In case there are some valid records reset the faillock with
+
+    # faillock --reset
+
+To test that kerberos is correctly configured, you can use kinit
+
+    # kinit ipauser
+
+The password for all IPA users and IPA admin is the same and it is defined
+in the variable IPA_PASS in the file
+
+    utils/auth-server/ipa_env
+
+Before trying to debug more, it is advised to raise the debug level for
+the sssd daemon.
+
+    # vim /etc/sssd/sssd.conf
+    [domain/cctest.com]
+    ...
+    debug_level = 9
+
+    # systemctl reload sssd
+
+To test if sssd works well, you can just simply try to login to the machine
+as one of the IPA users, for example
+
+    $ ssh ipauser@localhost
+
+Also sssd can be tested by running getent
+
+    $ getent passwd ipastaff
+
+In both cases it is advised to check for errors in the log file
+
+    # tailf /var/log/sssd/sssd_cctest.com.log
+
+
+List of tests using sssd
+------------------------
+
+All tests that are using sssd can be easily found by their name.
+
+    $ find . -iname run.conf | xargs grep sssd
+    ./libpam/run.conf:+ login sssd
+    ./libpam/run.conf:+ su sssd
+    ./libpam/run.conf:+ su sssd_fail
+    ./misc/run.conf:+ sssd unprivileged
+    ./crypto/run.conf:    + ssh_sssd expired
+    ./crypto/run.conf:    + ssh_sssd grantor
+    ./crypto/run.conf:    + ssh_sssd login
+    ./crypto/run.conf:    + ssh_sssd selinux
+
+
+Links
+-----
+
+[1] https://pagure.io/docs/SSSD/sssd/
+
+#---------------------------------------------------------------
+# prevent shell-like incorrect vim syntax highlight of this file
+# vim: syntax=off :

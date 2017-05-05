@@ -11,24 +11,29 @@ exit_error() {
 # source ipa defaults
 source $AUTHSRV_DIR/ipa_env 2>&1 || exit
 
+# get kerberos ticket for IPA admin
 echo $IPA_PASS | kinit ${IPA_ADMIN}@$IPA_REALM 2>&1 >/dev/null || \
     exit_error "Failed to get kerberos ticket for admin"
 
+# add each given host
 for HOST in "$@"; do
     STATUS="SKIP"
+
+    # add host to IPA if needed
     if ! ipa host-show $HOST &>/dev/null; then
         ipa host-add --force $HOST 2>&1 || exit
         STATUS="OK"
     fi
 
+    # get kerberos keytab for the host and prepare it for downloading
     if [ ! -f $IPA_DLDIR/${HOST}.keytab ]; then
         ipa-getkeytab -s $(hostname) -p host/$HOST -k $IPA_DLDIR/${HOST}.keytab 2>&1 || exit
         chown eal:eal $IPA_DLDIR/${HOST}.keytab 2>&1 || exit
         STATUS="OK"
     fi
 
+    # set mapping of $IPA_STAFF user to staff_u:s0-s0:c0.c1023 for given host
     if ! ipa selinuxusermap-show | grep -q $HOST; then
-        # set mapping of $IPA_STAFF to staff_u:s0-s0:c0.c1023 for given host
         ipa selinuxusermap-add-host staff --hosts=$HOST >/dev/null
         STATUS="OK"
     fi

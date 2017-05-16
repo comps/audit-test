@@ -6,21 +6,41 @@
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of version 2 the GNU General Public License as
 #   published by the Free Software Foundation.
-#   
+#
 #   This program is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-#   
+#
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###############################################################################
 #
-# SFRs: FIA_USB.2
-# 
+#
 # PURPOSE:
-# Verify audit of successful and unsuccessful login via su
-# for local and IPA user
+# This file implements multiple test cases. The test cases are identified
+# by the first parameter passed to the script.
+#
+# Test 'local':
+#   Verify audit of successful '/bin/su - $USR' command and that all UIDs
+#   are correct. The test is actually reruning this script via non-root
+#   user and running su to do the actual test.
+#
+# Test 'sssd':
+#   The same as test 'local' just with an IPA user.
+#
+# Test 'local_fail':
+#   Verify audit of unsuccessful '/bin/su - $USR' command. The test is actually
+#   reruning this script via non-root user and running su to do the actual
+#   test.
+#
+# Test 'sssd_fail':
+#   The same as test 'local_fail' just with an IPA user.
+#
+# Test 'mls':
+#   Test that running '/bin/su - $USR' does not change MLS security level.
+#
+# SFRs: FIA_USB.2
 #
 
 if [[ $EUID == 0 ]]; then
@@ -31,6 +51,17 @@ fi
 
 EXEC="$0 $@"
 
+#
+# Positive test
+#
+# Rerun this test as $USR user an try to '/bin/su - $USR' (to himself)
+# with correct password. After successful login, verify that the su
+# call was actually correctly audited and the UIDs are correct.
+#
+# Params:
+#   $1 - user
+#   $2 - password
+#
 positive_test() {
     local USR=$1
     local USRPASS=$2
@@ -46,9 +77,9 @@ positive_test() {
         backup /etc/profile
         sed -i 's/\[ -w $(tty) \]/false/' /etc/profile
 
-        # test
-        # rerun this script as USR.  Confine the exports to a subshell
+        # Rerun this script as USR.  Confine the exports to a subshell
         # We must be in group 'wheel' to execute /bin/su.
+        # This will rerun this function with EUID != 0
         (
             export tmp1=$tmp1 tmp2=$tmp2
             local TEST_EUID=$(id -u "$USR")
@@ -80,7 +111,7 @@ positive_test() {
         echo "$uids" | egrep "([[:space:]]*$TUID){3}([[:space:]]*$TGID){3}" || \
             exit_fail "Unexpected UIDs after login"
     else
-        # This is reached through the perl -e 'system...' above
+        # This is reached through the perl -e 'system...' above when run with EUID == 0
         expect -c "
             set timeout 30
             spawn /bin/su - $USR
@@ -92,6 +123,17 @@ positive_test() {
     fi
 }
 
+#
+# Negative test
+#
+# Rerun this test as $USR user an try to '/bin/su - $USR' (to himself)
+# with incorrect password. After failed login verify that attempt is correctly
+# audited.
+#
+# Params:
+#   $1 - user
+#   $2 - password
+#
 negative_test() {
     local USR=$1
 
@@ -119,6 +161,13 @@ negative_test() {
     fi
 }
 
+#
+# Test that running '/bin/su - $USR' as SSH logged in user with various
+# MLS levels does not change MLS security level.
+#
+# Params:
+#  $1 - test user
+#  $2 - MLS level
 mls_test() {
     local USR=$1
     local LEVEL=$2
@@ -171,14 +220,15 @@ pam_unix,pam_xauth"
         positive_test $TEST_USER $TEST_USER_PASSWD
         ;;
     sssd)
-	# make sure strong rng is disabled
-	sssd_disable_strong_rng
+        # make sure strong rng is disabled
+        sssd_disable_strong_rng
         # expected AUDIT_EVENT PAM_OPERATION GRANTOR triple
         EPG="USER_AUTH authentication pam_faillock,pam_sss
              USER_ACCT accounting pam_faillock,pam_unix,pam_sss,pam_permit
              USER_START session_open pam_keyinit,pam_keyinit,pam_limits,\
 pam_systemd,pam_unix,pam_sss,pam_xauth"
         source $TOPDIR/utils/auth-server/ipa_env
+        # we need to start sssd before testing
         if [[ $EUID == 0 ]]; then
             restart_service sssd
             prepend_cleanup "stop_service sssd"

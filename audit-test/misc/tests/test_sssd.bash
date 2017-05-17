@@ -23,7 +23,7 @@
 # This test implements miscellaneous related sssd testcases.
 #
 # Testcases:
-#  unprivileged - tests if sssd runs as a unprivileged user and main
+#  unprivileged - tests if sssd subprocesses run under unprivileged user and main
 #                 sssd process runs as root
 #
 

@@ -57,11 +57,8 @@ function sanity {
         [ -z "$(eval echo \$$EVAR)" ] && exit_error "$EVAR not found in ipa_env"
     done
 
-    # check if ipa_clients exits and contains at least one host
-    [ -f $AUTHSRV_DIR/ipa_clients ] || exit_error \
-        "The ipa_clients file found. See README.ipa for details."
-    [ $(cat $AUTHSRV_DIR/ipa_clients | wc -l) -eq 0 ] && exit_error \
-        "The ipa_clients file is empty. See README.ipa for details."
+    # create empty ipa_clients if does not exist
+    [ -f $AUTHSRV_DIR/ipa_clients ] || touch $AUTHSRV_DIR/ipa_clients
 }
 
 # Install ipa-server

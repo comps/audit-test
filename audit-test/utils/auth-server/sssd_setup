@@ -67,7 +67,7 @@ function exit_error {
 function ssh_copy {
     expect -c "
         set timeout 60
-        spawn scp -o StrictHostKeyChecking=no $1
+        spawn scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $1
         expect {
             {*assword:} { send $PASSWD\r }
             {closed} { exit 1 }
@@ -103,7 +103,7 @@ function try_login {
 
     expect -c "
         set timeout 60
-        spawn ssh -oStrictHostKeyChecking=no ${1}@localhost exit
+        spawn ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${1}@localhost exit
         expect {*assword:} { send \"$IPA_PASS\r\" }
         expect {
             {*assword:} { exit 1 }

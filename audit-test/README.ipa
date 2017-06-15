@@ -29,8 +29,8 @@ on the IPA server and the TOE(s).
 
 IPA server has no relation to the NS, i.e. they do not know about each other.
 
-This README deals only with does not explain the client side of configuration done on each
-TOE. See `docs/sssd.txt' for more information about that.
+This README does not explain the client side of configuration done on each TOE.
+See `docs/sssd.txt' for more information about that.
 
 
 Installation and configuration
@@ -59,7 +59,14 @@ To install and setup the authentication server follow these steps:
    to the root's home directory. Move the contents of the repository to the
    test suite folder `/usr/local/eal4_testing' via `make dist' - see README.run.
 
-6. Run the authentication server installation and configuration via the
+6. Install Network Server (ns2), which is required for the manual enrollment
+   to work:
+
+    # cd /usr/local/eal4_testing/audit-test
+    # yum -y install $(make depmissing)
+    # make ns_install
+
+7. Run the authentication server installation and configuration via the
 auth-server Makefile target:
 
     # cd /usr/local/eal4_testing/audit-test/
@@ -87,7 +94,7 @@ IPA configuration is intact via
     # cd /usr/local/eal4_testing/audit-test/
     # make auth-server-verify
 
-7. Make sure ntpd works correctly, especially if you are on a private network.
+8. Make sure ntpd works correctly, especially if you are on a private network.
 Synchronized time is required for Kerberos to work correctly. You can check
 the time synchronization via ntpdate tool querying pool.ntp.org for example:
 
@@ -105,14 +112,14 @@ You need to add a reachable NTP server in `/etc/ntp.conf' and restart ntpd:
     # vim /etc/ntp.conf
     # systemctl restart ntp
 
-8. Note the resolvable hostname of the authentication server that needs to
+9. Note the resolvable hostname of the authentication server that needs to
 be exported on TOE. You can check the hostname of your server by running the
 command below. Please note that this hostname needs to be resolvable by your
 DNS system or via `/etc/hosts'.
 
     # hostname
 
-9. You can easily uninstall the authentication server including package removal
+10. You can easily uninstall the authentication server including package removal
 via the auth-server-uninstall Makefile target:
 
     # cd /usr/local/eal4_testing/audit-test/

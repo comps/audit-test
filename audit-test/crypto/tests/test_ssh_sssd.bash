@@ -17,17 +17,21 @@
 #   Boston, MA 02110-1301, USA.
 ###############################################################################
 #
-# FIA_UAU.1(RITE), FIA_UAU.5
-#
 # AUTHOR: Miroslav Vadkerti <mvadkert@redhat.com>
 #
 # DESCRIPTION:
 # This test implements ssh related sssd testcases.
 #
 # Testcases:
-#  login - tests simple pass/fail scenario for correct/incorrect credentials
-#  expired - test if expired password causes asking for change during login
-#  selinux - test if logged in user gets correct SELinux context
+#  login - tests login pass/fail scenario with an IPA user
+#  expired - test if an IPA user is asked to change the expired password
+#  selinux - test if logged in users (user_u and staff_u) get correct
+#            SELinux context
+#  grantor - test if successful and failed login with an sssd user generates
+#            correct audit events with expected grantor field
+#
+# SFRs:
+#  FIA_UAU.1(RITE), FIA_UAU.5
 #
 
 source testcase.bash || exit 2
@@ -53,7 +57,7 @@ function ssh_sssd_setup {
     source $AUTHSRV_DIR/ipa_env || \
         exit_error "Could not source ipa defaults from $AUTHSRV_DIR/ipa_env"
 
-    # check for required default from ipa_env
+    # check for required defaults from ipa_env
     for EVAR in IPA_PASS IPA_USER IPA_STAFF IPA_USER_EXPIRED; do
         [ -z "$(eval echo \$$EVAR)" ] && \
             exit_error "Required $EVAR not found in environment"
@@ -76,6 +80,7 @@ function ssh_sssd_setup {
 }
 
 ###############################################################################
+## tests login pass/fail scenario with an IPA user
 ## FIA_UAU.1(RITE)
 ###############################################################################
 
@@ -93,25 +98,29 @@ function login {
 }
 
 ###############################################################################
+## test if an IPA user is asked to change the expired password
 ## FIA_UAU.5
 ###############################################################################
 
 function expired {
     local RET=
 
+    # try to connect to ssh with an IPA user and verify that the login
+    # procedure asks for changing the expired password
+    # see utils/tp_ssh_functions.sh for details
     ssh_connect_pass $IPA_USER $IPA_PASS $IPA_USER_EXPIRED $IPA_PASS; RET=$?
     [ $RET -eq 0 ] && exit_fail "Succeeded to connect with expired password"
     [ $RET -eq 4 ] || exit_error "Connection failed unexpectedly. No expire info?"
 }
 
 ###############################################################################
-## SELinux
+## test if logged in users (user_u and staff_u) get correct SELinux context
 ###############################################################################
 
 function selinux {
     local OUT= IDZ= CONTEXT=
 
-    # user_u
+    # try to login with IPA_USER (user_u)
     CONTEXT="user_u:user_r:user_t:SystemLow"
     OUT=$(ssh_cmd $IPA_USER $IPA_PASS "id -Z"); RET=$?
     [ $RET -eq 0 ] || exit_error "Error connecting as $IPA_USER"
@@ -120,19 +129,21 @@ function selinux {
     [ "$CONTEXT" = "$IDZ" ] || \
         exit_fail "$IDZ does not match expected $CONTEXT"
 
-    # staff_u
+    # in MLS the user staff_u users have default security mapping
+    # to security level SystemLow-s0:c0.c1023
     if [ "$PPROFILE" == "lspp" ]; then
         CONTEXT="staff_u:staff_r:staff_t:SystemLow-s0:c0.c1023"
     else
         CONTEXT="staff_u:staff_r:staff_t:SystemLow-SystemHigh"
     fi
+
+    # try to login with IPA_STAFF user (staff_u)
     OUT=$(ssh_cmd $IPA_STAFF $IPA_PASS "id -Z"); RET=$?
     echo $OUT
     [ $RET -eq 0 ] || exit_error "Error connecting as $IPA_USER"
     IDZ=$(echo $OUT | egrep -o '[[:alnum:]_]+:[[:alnum:]_]+:[[:alnum:]_]+:[[:alnum:]:\.-]*')
     [ "$CONTEXT" = "$IDZ" ] || \
         exit_fail "$IDZ does not match expected $CONTEXT"
-
 }
 
 ###############################################################################
@@ -194,7 +205,7 @@ ssh_sssd_setup
 if [ "$(type -t $1)" = "function" ]; then
     eval $1
 else
-    exit_error "Uknown test or no test given"
+    exit_error "Unknown test or no test given"
 fi
 
 exit_pass

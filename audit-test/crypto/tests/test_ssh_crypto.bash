@@ -22,12 +22,28 @@
 # AUTHOR: Miroslav Vadkerti <mvadkert@redhat.com>
 #
 # DESCRIPTION:
-# The cipher test tries to connect with all required ciphers:
-# 3des-cbc 3des-ctr aes192-cbc aes256-cbc aes128-ctr aes192-ctr aes256-ctr
-# The test also checks if the sshd config is immutable to unauthorized access.
-# Legal access of privileged user is tested via sshd_config_set function.
+# This test implements multiple test cases. Tests 3., 4. and 6. iterate
+# through all HMAC x CIPHER combinations.
 #
-# The hmac test tests if all supported hmacs can be used for connecting
+# Test 1. - verify successful login from an ordinary (user_u) and admin user
+#           (sysadm_u) and vice versa with enabled strong rng and a supported
+#           cipher
+#
+# Test 2. - verify that successful login with a specific HMAC works correctly
+#
+# Test 3. - try out all HMAC x CIPHER combinations and verify that login
+#           from ordinary to admin user works and it is audited correctly
+#
+# Test 4. - try out login with all HMAC x CIPHER combinations
+#           in simulated FIPS mode and verify that it works for
+#           FIPS supported HMACs and does not work for not supported
+#           HMACs
+#
+# Test 5. - for all HMACs verify that login with and incompatible cipher type
+#           does not work
+#
+# Test 6. - for all HMAC x CIPHER combinations verify that login with an invalid
+#           cipher does not work
 #
 
 source testcase.bash || exit 2
@@ -66,15 +82,18 @@ function cipher {
     # Set all ciphers as supported
     sshd_config_set "Ciphers" "$(echo "$CIPHERS" | sed 's/ /,/g')"
 
-    # Try all cipher types
     for CIPHER in $CIPHERS; do
+        # Test 3. - try out successful login with all HMAC x CIPHER combinations
         AUDITMARK=$(get_audit_mark)
         ssh_connect_pass $TEST_USER $TEST_USER_PASSWD \
             $TEST_ADMIN $TEST_ADMIN_PASSWD "-c $CIPHER" || \
             exit_fail "Failed to connect from $TEST_USER to $TEST_ADMIN"
         ssh_check_audit $AUDITMARK pass $CIPHER
 
-        # test in simulated FIPS mode
+        # Test 4. - try out login with all HMAC x CIPHER combinations
+        #           in simulated FIPS mode and verify that it works for
+        #           FIPS supported HMACs and does not work for not supported
+        #           HMACs
         AUDITMARK=$(get_audit_mark)
         if grep -q "$HMAC" <<< "$HMACS_FIPS"; then
             OPENSSL_FORCE_FIPS_MODE=1 ssh_connect_pass $TEST_USER $TEST_USER_PASSWD \
@@ -88,7 +107,7 @@ function cipher {
         fi
     done
 
-    # Try incompatible cipher types
+    # Test 5. - verify that login with incompatible cipher type does not work
     sshd_config_set "Ciphers" "aes256-ctr"
     AUDITMARK=$(get_audit_mark)
     ssh_connect_pass $TEST_USER $TEST_USER_PASSWD \
@@ -97,7 +116,7 @@ function cipher {
         "Connection successful with incompatible ciphers"
     [ $RET -ne 6 ] && exit_error "Unexpected error message"
 
-    # Try invalid cipher type with all supported ciphers, only in non-FIPS mode
+    # Test 6. - verify that login with an invalid cipher type does not work
     if ! is_fips; then
         sshd_config_set "Ciphers" "blowfish-cbc"
         # Try all cipher types
@@ -109,7 +128,7 @@ function cipher {
         done
     fi
 
-    # FMT_MTD.1(CM) - Test 3
+    # FMT_MTD.1(CM)
     # check if admin user is unable to modify $SSHDCONF
     ssh_cmd $TEST_ADMIN $TEST_ADMIN_PASSWD "echo SOMETHING >> $SSHDCONF" && \
         exit_fail "Modifying $SSHDCONF was not denied"
@@ -123,13 +142,15 @@ function hmac {
         # make sure server supports only one MAC
         sshd_config_set "MACs" "$HMAC"
 
+        # Test 2. - verify that a successful login with only a specific
+        #           enabled HMAC works
         AUDITMARK=$(get_audit_mark)
         ssh_connect_pass $TEST_USER $TEST_USER_PASSWD \
             $TEST_ADMIN $TEST_ADMIN_PASSWD "-m $HMAC" || \
             exit_fail "Failed to connect from $TEST_USER to $TEST_ADMIN"
         ssh_check_audit $AUDITMARK pass
 
-        # try out all ciphers
+        # try out all ciphers with one enabled HMAC
         cipher
     done
 
@@ -143,8 +164,7 @@ function hmac {
     [ $RET -ne 5 ] && exit_error "Unexpected connection failure"
 }
 
-# Try out connecting with SSH_USE_STRONG_RNG enabled in env
-# aes128-cbc CIPHER should be enabled by default
+# Test 1. - try out connecting with SSH_USE_STRONG_RNG enabled in env
 for CIPHER in aes128-cbc; do
     AUDITMARK=$(get_audit_mark)
     ssh_connect_pass $TEST_ADMIN $TEST_ADMIN_PASSWD \
@@ -161,7 +181,6 @@ done
 # remove SSH_USE_STRONG_RNG from environment and disable screen
 disable_ssh_strong_rng
 
-# run testing
 hmac
 
 exit_pass

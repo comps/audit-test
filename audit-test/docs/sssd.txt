@@ -54,7 +54,21 @@ information use
 
 If the test does print "SSSD configuration verification FAILED" there is some
 problem and debugging will be needed. In case the verification prints PASSED,
-the SSDS setup should be intact and no other action is needed.
+the SSSD setup should be intact and no other action is needed.
+
+
+High level overview of how is SSSD used by the tests
+----------------------------------------------------
+
+After SSSD had been correctly setup on the TOE it stays stopped. Each test
+which requires SSSD enables it before testing and disables it again for the
+cleanup. The tests use this code achieve this
+
+    restart_service sssd
+    prepend_cleanup "stop_service sssd"
+
+The tests do not use sssd directly, they just try to login to users provided by
+the IPA server. The pam stack uses pam_sss(1) module to provide the login data.
 
 
 How to debug SSSD related issues

@@ -176,7 +176,8 @@ function nss_generate_pair {
         certutil -d $nss_db -L -n "$name" -a > "${name}.crt"
     else
         certutil -S -n $name -s $subject -c "$ca" -t "u,u,u" \
-            -m $nss_serial -v 120 -d $nss_db $key -f $nss_secret -z $nss_seed || return 1
+                 -m $nss_serial -v 120 -d $nss_db $key -f $nss_secret \
+                 -z $nss_seed -8 "$name" || return 1
         prepend_cleanup "rm -f \"$PWD/${name}.p12\" \"$PWD/${name}.crt\" \"$PWD/${name}.key\""
         pk12util -d $nss_db -o "${name}.p12" -n $name -w $nss_secret -k $nss_secret
         openssl pkcs12 -in "${name}.p12" -out "${name}.crt" -nodes \

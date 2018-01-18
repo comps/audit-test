@@ -128,6 +128,8 @@ conn ${ipsec_src}-to-${ipsec_dst}
 	type=transport
 	left=$ipsec_src
 	right=$ipsec_dst
+        leftid=@toe
+        rightid=@ns
 	ikev2=$ikev2
 	ike=${p1_enc}-${p1_auth}
 	phase2=$p2_type
@@ -453,7 +455,7 @@ if [ "$ikev" == "1" ]; then
         policy_label="system_u:object_r:ipsec_spd_t:s0-s15:c0.c1023"
     fi
 elif [ "$ikev" == "2" ]; then
-    ikev2="yes"
+    ikev2="insist"
 else
     exit_error "Unexpected IKE version!"
 fi

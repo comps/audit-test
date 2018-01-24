@@ -24,6 +24,9 @@
 #
 # For detailed description of the test scenarios see the test_* functions.
 #
+# For more information see this bugzilla:
+# https://bugzilla.redhat.com/show_bug.cgi?id=1118399
+#
 
 source testcase.bash || exit 2
 source tp_dbus_functions.bash || exit 2

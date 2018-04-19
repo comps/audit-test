@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 #endif
 
     errno = 0;
-    exitval = open(argv[1], flags, S_IRWXU);
+    exitval = syscall(__NR_open, argv[1], flags, S_IRWXU);
     result = exitval < 0;
 
     fprintf(stderr, "%d %d %d\n", result, result ? errno : exitval, getpid());

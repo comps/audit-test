@@ -419,9 +419,9 @@ function get_tmpfile_type {
     declare ftype
 
     # get only first line (6th column) after "Found N semantic te rules" header
-    ftype=$(sesearch --type_trans --type_change --type_member --class file \
-                     --source $1 --target $2 | \
-        awk '/Found [0-9]* semantic te rules:/ { next } { print $6; exit 0 }')
+    ftype=$(sesearch --type_trans --class file \
+                     --source $1 --target $2 | tail -n1 | \
+        awk '{ print $4 }')
 
     echo ${ftype%;}
 }

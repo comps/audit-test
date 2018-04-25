@@ -54,7 +54,7 @@ int do_bind(int argc, char **argv,
         addrlen = sizeof(struct sockaddr_un);
         memset(&addr, 0, addrlen);
         addr.un.sun_family = AF_UNIX;
-        strncpy(addr.un.sun_path, argv[1], UNIX_PATH_MAX);
+        strncpy(addr.un.sun_path, argv[1], UNIX_PATH_MAX-1);
     }
 
     sockfd = socket(domain, SOCK_STREAM, 0);

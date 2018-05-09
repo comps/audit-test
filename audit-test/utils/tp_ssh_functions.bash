@@ -316,9 +316,7 @@ function ssh_mls_cmd_user {
       }
       "
 
-    [ $? -ne 0 ] && exit_fail "Failed to run $1 as $CUSR in mls mode" && return 1
-
-    return 0
+    return $?
 }
 
 # Check permissions and selinux context of the .ssh directory and the

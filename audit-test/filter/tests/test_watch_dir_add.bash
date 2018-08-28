@@ -20,30 +20,30 @@
 
 source filter_functions.bash || exit 2
 
+op="$1"
+
 # setup
-op=$1
-opat="${op}at"
+syscalls="$op ${op}at"
 
 tmpd=$(mktemp -d) || exit_fail "create tempdir failed"
+prepend_cleanup "rm -rf \"$tmpd\""
 watch="$tmpd"
 name="$tmpd/foo"
-
-auditctl -a exit,always -F arch=b$MODE -S $op -F path=$watch
-auditctl -a exit,always -F arch=b$MODE -S $opat -F path=$watch
-
-prepend_cleanup "
-    auditctl -d exit,always -F arch=b$MODE -S $op -F path=$watch
-    auditctl -d exit,always -F arch=b$MODE -S $opat -F path=$watch
-    rm -rf $tmpd"
 
 case $op in
     link)    gen_audit_event="ln $tmp1 $name" ;;
     mkdir)   gen_audit_event="mkdir $name" ;;
     open)    gen_audit_event="touch $name" ;;
-    rename)  gen_audit_event="mv $tmp1 $name" ;;
+    rename)  gen_audit_event="mv $tmp1 $name"
+             syscalls+=" ${op}at2" ;;
     symlink) gen_audit_event="ln -s $tmp1 $name" ;;
     *) exit_fail "unknown test operation: $op" ;;
 esac
+
+for sc in $syscalls; do
+    auditctl -a exit,always -F arch=b$MODE -S $sc -F path=$watch
+    prepend_cleanup "auditctl -d exit,always -F arch=b$MODE -S $sc -F path=$watch"
+done
 
 log_mark=$(stat -c %s $audit_log)
 
@@ -51,9 +51,13 @@ log_mark=$(stat -c %s $audit_log)
 eval "$gen_audit_event"
 
 # verify audit record
-augrok --seek=$log_mark type==SYSCALL syscall==$op name=="$watch/" success==yes \
-    || augrok --seek=$log_mark type==SYSCALL syscall==$opat name=="$watch/" \
-        success==yes \
-    || exit_fail "Expected record not found."
+found=
+for sc in $syscalls; do
+    if augrok --seek=$log_mark type==SYSCALL syscall==$sc name=="$watch/" success==yes; then
+        found=1
+        break
+    fi
+done
+[ "$found" ] || exit_fail "Expected record not found."
 
 exit_pass

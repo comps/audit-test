@@ -182,9 +182,9 @@ configure_toe_server() {
 
 check_client_connected() {
     local rc=0
-    local msg="addr=$ns_server port=60 res=success"
+    local msg="addr=.*$ns_server .* res=success"
     /sbin/ausearch -n "REMOTE_LOGGING_SERVER" -m "DAEMON_ACCEPT" \
-        -ts $test_time_start | grep "$msg" || { rc=1 ;
+        -ts $test_time_start | grep -e "$msg" || { rc=1 ;
         echo "Missing DAEMON_ACCEPT record" ; }
 
     return $rc
@@ -192,9 +192,9 @@ check_client_connected() {
 
 check_client_disconnected() {
     local rc=0
-    local msg="addr=$ns_server port=60 res=success"
+    local msg="addr=.*$ns_server .* res=success"
     /sbin/ausearch -n "REMOTE_LOGGING_SERVER" -m "DAEMON_CLOSE" \
-        -ts $test_time_start | grep "$msg" || { rc=1 ;
+        -ts $test_time_start | grep -e "$msg" || { rc=1 ;
         echo "Missing DAEMON_CLOSE record" ; }
 
     return $rc

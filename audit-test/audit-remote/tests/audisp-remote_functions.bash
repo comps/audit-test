@@ -163,17 +163,17 @@ check_received_test_msg() {
     # for old version.
     #local client_addr_port="${local_audit_server_ip}:61"
     #msg_accept="type=DAEMON_ACCEPT msg=audit(.*): addr=$client_addr_port port=61 res=success"
-    msg_accept="type=DAEMON_ACCEPT msg=audit(.*): addr=$local_audit_server_ip port=61 res=success"
+    msg_accept="type=DAEMON_ACCEPT msg=audit(.*): addr=.*$local_audit_server_ip port=61 res=success"
     msg_test="type=USER.*audisp-remote test message"
     #msg_close="type=DAEMON_CLOSE msg=audit(.*): addr=$client_addr_port port=61 res=success"
-    msg_close="type=DAEMON_CLOSE msg=audit(.*): addr=$local_audit_server_ip port=61 res=success"
+    msg_close="type=DAEMON_CLOSE msg=audit(.*): addr=.*$local_audit_server_ip port=61 res=success"
 
     # Check message with augrok
-    augrok $opt "type=DAEMON_ACCEPT" | grep "$msg_accept" || \
+    augrok $opt "type=DAEMON_ACCEPT" | grep -e "$msg_accept" || \
         exit_fail "Missing DAEMON_ACCEPT record"
     augrok $opt "type=USER"          | grep "$msg_test" || \
         exit_fail "Missing USER test record"
-    augrok $opt "type=DAEMON_CLOSE"  | grep "$msg_close" || \
+    augrok $opt "type=DAEMON_CLOSE"  | grep -e "$msg_close" || \
         exit_fail "Missing DAEMON_CLOSE record"
 }
 

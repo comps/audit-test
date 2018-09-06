@@ -221,6 +221,7 @@ selinux_provider = ipa
 ipa_server = _srv_, $IPA_SERVER
 ldap_tls_cacert = $IPA_ETC_CA
 debug_level = 4
+session_provider = none
 
 [sssd]
 services = nss, pam, ssh

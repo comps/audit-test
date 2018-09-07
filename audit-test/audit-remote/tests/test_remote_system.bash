@@ -163,7 +163,8 @@ configure_toe_server() {
         tcp_listen_port=60 \
         name_format=user \
         name=REMOTE_LOGGING_SERVER \
-        disp_qos=lossless
+        disp_qos=lossless \
+        tcp_client_ports=1024-65535
 
     write_config -s "$audispd_conf" \
         name_format=user \

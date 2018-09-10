@@ -25,6 +25,10 @@ op="$1"
 # setup
 syscalls="$op ${op}at"
 
+tmpd=$(mktemp -d) || exit_fail "create tempdir failed"
+prepend_cleanup "rm -rf \"$tmpd\""
+name="$tmpd/foo"
+
 case $op in
     link)    gen_audit_event="ln $tmp1 $name"
              filter_fields="name#a==$tmp1 name#b==$name" ;;
@@ -39,10 +43,6 @@ case $op in
              filter_fields="name#a==$tmp1 name#b==$name" ;;
     *) exit_fail "unknown test operation" ;;
 esac
-
-tmpd=$(mktemp -d) || exit_fail "create tempdir failed"
-prepend_cleanup "rm -rf \"$tmpd\""
-name="$tmpd/foo"
 
 for sc in $syscalls; do
     auditctl -a exit,always -F arch=b$MODE -S $sc -F path=$name

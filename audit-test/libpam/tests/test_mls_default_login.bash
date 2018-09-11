@@ -76,7 +76,7 @@ augrok --seek=$AUDITMARK type=USER_START msg_1="op=PAM:session_open $msg_1" subj
 
 # Check for ROLE_ASSIGN event for testuser
 augrok --seek=$AUDITMARK type=ROLE_ASSIGN
-augrok --seek=$AUDITMARK type=ROLE_ASSIGN msg_1=~"op=login-sename,role,range acct=\"$TEST_USER\" old-seuser=user_u old-role=user_r old-range=s0-s0 new-seuser=staff_u new-role=auditadm_r,secadm_r,staff_r,sysadm_r,system_r,lspp_test_r new-range=$def_range" || exit_fail "ROLE_ASSIGN event does not match"
+augrok --seek=$AUDITMARK type=ROLE_ASSIGN msg_1=~"op=login-sename,role,range acct=\"$TEST_USER\" old-seuser=\? old-role=\? old-range=\? new-seuser=staff_u new-role=auditadm_r,secadm_r,staff_r,sysadm_r,system_r,lspp_test_r new-range=$def_range" || exit_fail "ROLE_ASSIGN event does not match"
 
 # Check for USER_ROLE_CHANGE for login command
 augrok --seek=$AUDITMARK type=USER_ROLE_CHANGE

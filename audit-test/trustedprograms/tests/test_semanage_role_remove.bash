@@ -60,7 +60,7 @@ augrok -q type=ROLE_ASSIGN auid=$auid msg_1=~"$msg_1" \
 	|| exit_fail "ROLE_ASSIGN event missing: \"$msg_1\""
 
 # check for ROLE_REMOVE audit record
-msg_1="op=login acct=\"$user\" old-seuser=$seuser old-role=$role old-range=$def_range new-seuser=user_u new-role=user_r new-range=s0-s0 exe=/usr/sbin/semanage.*res=success.*"
+msg_1="op=login acct=\"$user\" old-seuser=$seuser old-role=$role old-range=$def_range new-seuser=\? new-role=\? new-range=\? exe=/usr/sbin/semanage.*res=success.*"
 
 augrok -q type=ROLE_REMOVE auid=$auid msg_1=~"$msg_1" \
 	|| exit_fail "ROLE_REMOVE event missing: \"$msg_1\""

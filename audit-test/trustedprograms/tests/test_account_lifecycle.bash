@@ -157,9 +157,9 @@ function setpid {
 #
 # The following user/group account lifecycle is simulated:
 #
-# 1. User X is created, one AUDIT_ADD_USER. With MLS selinux policy there
-#    is also one AUDIT_ASSIGN_ROLE. In MLS, we also remove assigned role
-#    to see multiple AUDIT_ROLE_REMOTE events.
+# 1. User X is created, one ADD_USER. With MLS selinux policy there
+#    is also one ASSIGN_ROLE. In MLS, we also remove assigned role
+#    to see multiple ROLE_REMOTE events.
 
 [ "$PPROFILE" == "lspp" ] && seuser="-Z staff_u"
 
@@ -168,19 +168,19 @@ setpid useradd $seuser -u $uid $user || exit_error "useradd failed"
 prepend_cleanup "killall -9 -u '$user'; groupdel '$user'; userdel -rf '$user'"
 
 check_event 1 "ADD_USER" "op=add-user id=$uid" || \
-    exit_fail "AUDIT_ADD_USER was not generated correctly"
+    exit_fail "ADD_USER was not generated correctly"
 
 if [ "$PPROFILE" == "lspp" ]; then
     check_event 1 "ROLE_ASSIGN" "op=login-sename,role,range acct=\"$user\"" || \
-        exit_fail "AUDIT_ROLE_ASSIGN was not generated correctly"
+        exit_fail "ROLE_ASSIGN was not generated correctly"
 
     setpid semanage login -d $user
 
     check_event 2 "ROLE_REMOVE" "op=login acct=\"$user\"" || \
-        exit_fail "AUDIT_ROLE_REMOVE was not generated correctly"
+        exit_fail "ROLE_REMOVE was not generated correctly"
 fi
 
-# 2. Group Y is created, one AUDIT_ADD_GROUP event and one AUDIT_GRP_MGMT
+# 2. Group Y is created, one ADD_GROUP event and one GRP_MGMT
 #    evens are generated.
 
 read group gid <<<"$(generate_unique_group)"
@@ -188,87 +188,87 @@ setpid groupadd -g $gid $group || exit_error "groupadd failed"
 prepend_cleanup "groupdel '$group'"
 
 check_event 1 "ADD_GROUP" "op=add-group id=$gid" || \
-    exit_fail "AUDIT_ADD_GROUP was not generated correctly"
+    exit_fail "ADD_GROUP was not generated correctly"
 check_event 1 "GRP_MGMT" "op=add-shadow-group id=$gid" || \
-    exit_fail "AUDIT_ADD_GROUP was not generated correctly"
+    exit_fail "ADD_GROUP was not generated correctly"
 
 # 3. User X is added to users and Y groups, which should produce one
-#    AUDIT_USER_MGMT event, user X group assignment is then reverted
-#    by removing user X from group Y. It should produce another AUDIT_GRP_MGMT.
+#    USER_MGMT event, user X group assignment is then reverted
+#    by removing user X from group Y. It should produce another GRP_MGMT.
 
 setpid usermod -G users,$group $user || exit_error "usermod failed"
 
 check_event 4 "USER_MGMT" \
     "op=add-user-to-group grp=\"users\" acct=\"$user\"" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 check_event 4 "USER_MGMT" \
     "op=add-user-to-group grp=\"$group\" acct=\"$user\"" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 check_event 4 "USER_MGMT" \
     "op=add-user-to-shadow-group grp=\"users\" acct=\"$user\"" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 check_event 4 "USER_MGMT" \
     "op=add-user-to-shadow-group grp=\"$group\" acct=\"$user\"" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 
 setpid usermod -G users $user || exit_error "usermod failed"
 
 check_event 2 "USER_MGMT" \
     "op=delete-user-from-group grp=\"$group\" acct=\"$user\"" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 check_event 2 "USER_MGMT" \
     "op=delete-user-from-shadow-group grp=\"$group\" acct=\"$user\"" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 
 # 4. Then we modify various attributes of user X in the following
 #    order: comment, expiration date, primary group, home directory,
 #    inactive days, login name and login shell. All except primary
 #    group and login name changes should produce a single
-#    AUDIT_USER_MGMT event while primary group and login name changes
-#    should produce multiple AUDIT_USER_MGMT events.
+#    USER_MGMT event while primary group and login name changes
+#    should produce multiple USER_MGMT events.
 
 setpid usermod -c "test" $user || exit_error "usermod failed"
 
 check_event 1 "USER_MGMT" "op=changing-comment id=$uid" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 
 setpid usermod -e 20 $user || exit_error "usermod failed"
 
 check_event 1 "USER_MGMT" "op=changing-expiration-date id=$uid" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 
 setpid usermod -g $gid $user || exit_error "usermod failed"
 setpid usermod -g $uid $user || exit_error "usermod failed"
 
 check_event 2 "USER_MGMT" "op=changing-primary-group id=$uid" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 
 setpid usermod -d /home/${user}X  $user || exit_error "usermod failed"
 setpid usermod -d /home/$user  $user || exit_error "usermod failed"
 
 check_event 1 "USER_MGMT" "op=changing-home-dir id=$uid" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 
 setpid usermod -f 10 $user || exit_error "usermod failed"
 
 check_event 1 "USER_MGMT" "op=changing-inactive-days id=$uid" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 
 setpid usermod -l ${user}X $user || exit_error "usermod failed"
 setpid usermod -l $user ${user}X || exit_error "usermod failed"
 
 check_event 4 "USER_MGMT" "op=changing-name id=$uid" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 
 setpid usermod -s /bin/true $user || exit_error "usermod failed"
 
 check_event 1 "USER_MGMT" "op=changing-shell id=$uid" || \
-    exit_fail "AUDIT_USER_MGMT was not generated correctly"
+    exit_fail "USER_MGMT was not generated correctly"
 
 
 # 5. Finally, we change password of user X. First, via usermod command
 #    and then via passwd. First action should generate a single
-#    AUDIT_USER_CHAUTHTOK event, second should generate multiple
+#    USER_CHAUTHTOK event, second should generate multiple
 #    such events.
 
 setpid usermod -p "$PASSWD" $user || exit_error "usermod failed"
@@ -285,29 +285,29 @@ check_event 2 "USER_CHAUTHTOK" \
     exit_fail "USER_CHAUTHTOK was not generated correctly"
 
 # 6. At this point we do not need user X anymore and its account
-#    is deleted, it should generate a single AUDIT_DEL_USER event.
+#    is deleted, it should generate a single DEL_USER event.
 
 setpid userdel $user || exit_error "userdel failed"
 
 check_event 1 "DEL_USER" "op=delete-user id=$uid" || \
-    exit_fail "AUDIT_DEL_USER was not generated correctly"
+    exit_fail "DEL_USER was not generated correctly"
 
 # 7. Now we just change group ID and then revert it back, operation
-#    should produce three AUDIT_GRP_MGMT events distunguished by different
+#    should produce three GRP_MGMT events distunguished by different
 #    audit messages.
 
 setpid groupmod -g $[$gid+10] $group || exit_error "groupmod failed"
 setpid groupmod -g $gid $group || exit_error "groupmod failed"
 
 check_event 3 "GRP_MGMT" "op=changing-group grp=\"$group\"" || \
-    exit_fail "AUDIT_GRP_MGMT was not generated correctly"
+    exit_fail "GRP_MGMT was not generated correctly"
 check_event 3 "GRP_MGMT" "op=changing-group-passwd grp=\"$group\"" || \
-    exit_fail "AUDIT_GRP_MGMT was not generated correctly"
+    exit_fail "GRP_MGMT was not generated correctly"
 check_event 3 "GRP_MGMT" "op=modify-group acct=\"$group\"" || \
-    exit_fail "AUDIT_GRP_MGMT was not generated correctly"
+    exit_fail "GRP_MGMT was not generated correctly"
 
 # 8. Then we first change group password and then we remove the password
-#    completely, both actions should gnerate single AUDIT_GRP_CHAUTHTOK
+#    completely, both actions should gnerate single GRP_CHAUTHTOK
 #    events.
 
 set_password "group" $group $PASSWD
@@ -321,12 +321,12 @@ check_event 1 "GRP_CHAUTHTOK" "op=delete-group-password grp=\"$group\"" || \
     exit_fail "GRP_CHAUTHTOK was not generated correctly"
 
 # 9. At this point, we do not need group Y anymore and we delete it which
-#    generate a single AUDIT_DEL_GROUP and a single AUDIT_GRP_MGMT event.
+#    generate a single DEL_GROUP and a single GRP_MGMT event.
 
 setpid groupdel $group || exit_error "groupdel failed"
 check_event 1 "DEL_GROUP" "op=delete-group id=$gid" || \
-    exit_fail "AUDIT_DEL_GROUP was not generated correctly"
+    exit_fail "DEL_GROUP was not generated correctly"
 check_event 1 "GRP_MGMT" "op=delete-shadow-group id=$gid" || \
-    exit_fail "AUDIT_DEL_GROUP was not generated correctly"
+    exit_fail "DEL_GROUP was not generated correctly"
 
 exit_pass

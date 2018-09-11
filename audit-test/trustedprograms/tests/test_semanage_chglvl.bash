@@ -42,7 +42,7 @@ role=$(semanage user -l | awk "/$seuser/ {for(i=5; i<NF; i++) { printf \"%s,\", 
 [ -z "$role" ] && exit_error "Cannot determine $seuser role(s)"
 
 # check for correct ROLE_ASSIGN audit record
-msg_1="op=login-range acct=\"$user\" old-seuser=\? old-role=\? old-range=\? new-seuser=$seuser new-role=$role new-range=$range exe=/usr/sbin/semanage.*res=success.*"
+msg_1="op=login-range acct=\"$user\" old-seuser=\? old-role=\? old-range=\? new-seuser=$seuser new-role=$role new-range=$range exe=\"/usr/bin/python2.7\".*res=success.*"
 
 augrok -q type=ROLE_ASSIGN auid=$auid msg_1=~"$msg_1" \
 	|| exit_fail "ROLE_ASSIGN event missing: \"$msg_1\""

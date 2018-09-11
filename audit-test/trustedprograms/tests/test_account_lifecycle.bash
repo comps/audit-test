@@ -176,7 +176,7 @@ if [ "$PPROFILE" == "lspp" ]; then
 
     setpid semanage login -d $user
 
-    check_event 2 "ROLE_REMOVE" "op=login acct=\"$user\"" || \
+    check_event 1 "ROLE_REMOVE" "op=login acct=\"$user\"" || \
         exit_fail "ROLE_REMOVE was not generated correctly"
 fi
 

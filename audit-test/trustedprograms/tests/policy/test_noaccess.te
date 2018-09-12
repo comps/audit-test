@@ -33,10 +33,10 @@ gen_require(`
 
 ## Type for test file.
 type test_open_file_t;
-files_type(test_open_file_t);
+files_type(test_open_file_t)
 
 ## Domain for process that can open the test file for reading and writing.
-userdom_unpriv_user_template(test_open);
+userdom_unpriv_user_template(test_open)
 
 ## For this flavor of the policy, don't actually allow anything.
 #allow test_open_t test_open_file_t:file { getattr read };
@@ -44,7 +44,7 @@ userdom_unpriv_user_template(test_open);
 auditallow test_open_t test_open_file_t:file read;
 
 ## Domain for process that cannot open the test file for reading or writing.
-userdom_unpriv_user_template(test_noopen);
+userdom_unpriv_user_template(test_noopen)
 
 #allow test_noopen_t test_open_file_t:file { getattr };
 
@@ -64,4 +64,3 @@ seutil_run_newrole(test_noopen_t,lspp_test_r,{ ttynode ptynode })
 term_use_all_terms(test_open_t)
 term_use_all_terms(test_noopen_t)
 allow unlabeled_t lspp_harness_t:process sigchld;
-

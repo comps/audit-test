@@ -28,7 +28,6 @@
 #
 #################################
 
-
 policy_module(policy_tools_test, 1.1)
 gen_require(`
 	role user_r, lspp_test_r;
@@ -71,4 +70,3 @@ seutil_run_newrole(test_noopen_t,lspp_test_r,{ ttynode ptynode })
 term_use_all_terms(test_open_t)
 term_use_all_terms(test_noopen_t)
 allow unlabeled_t lspp_harness_t:process sigchld;
-

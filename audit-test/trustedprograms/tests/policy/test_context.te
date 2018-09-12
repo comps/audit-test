@@ -26,4 +26,3 @@ gen_require(`
 	role lspp_test_r;
 	type lspp_harness_t;
 ')
-

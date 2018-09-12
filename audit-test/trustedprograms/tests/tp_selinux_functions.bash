@@ -33,6 +33,15 @@ subj_noopen=staff_u:lspp_test_r:test_noopen_t:s0
 ######################################################################
 
 function cleanup_policy {
+	# just in case, newer SELinux userspace (post-RHEL-7.3) seems to
+	# embed the original name(s) into the .pp and then respects these
+	# names in semodule -l
+	semodule \
+		-r test_addnever \
+		-r test_addread \
+		-r test_context \
+		-r test_noaccess &>/dev/null
+
 	semodule -l | grep -q policy_tools_test
 	if [[ $? == 0 ]]
 	then

@@ -151,7 +151,7 @@ function ssh_create_key {
         [ -z "$3" ] && exit_error "Error: no key size given for $FUNCNAME"
 
         # generate the requested keys for running user
-        ssh-keygen -t $2 -b $3 -N "$4" -f $HOME/.ssh/id_$2
+        ssh-keygen -m PEM -t $2 -b $3 -N "$4" -f $HOME/.ssh/id_$2
     else
         # check if required user specified
         [ -z "$1" ] && exit_error "Error: no user given for $FUNCNAME"
@@ -161,7 +161,7 @@ function ssh_create_key {
 
         # generate the keys
         expect -c "set timeout $TIMEOUT
-            spawn ssh $1@localhost \"ssh-keygen -t $3 -b $4 -N '$5' -f \\\$(pwd)/.ssh/id_$3\"
+            spawn ssh $1@localhost \"ssh-keygen -m PEM -t $3 -b $4 -N '$5' -f \\\$(pwd)/.ssh/id_$3\"
             expect {
                 {yes/no} { after 100; send -- \"yes\r\"; exp_continue }
                 {assword:} { after 100; send -- \"$2\r\"; exp_continue }

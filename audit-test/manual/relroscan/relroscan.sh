@@ -13,7 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-is_elf() { [[ $(head -c4 "$1") = $'\x7FELF' ]]; }
+is_elf()
+{
+  local header=
+  IFS= read -r -d '' -n 4 header < "$1" && \
+    [[ "$header" = $'\x7FELF' ]]
+}
 echo_file_properties()
 {
 file="$1"
